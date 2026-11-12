@@ -314,3 +314,61 @@ test('phao-hoa: settings chặn giá trị vượt giới hạn', async () => {
     assert.equal(r.json.settings.bigShape, 'star', 'đổi hình pháo lớn sang sao');
   } finally { await stopTestServer(t); }
 });
+
+test('bau-troi: demo start/stop liên tục — pháo nổ, dừng thì số liệu đứng yên', async () => {
+  const t = await startTestServer();
+  try {
+    const u = uniq();
+    await enableDemo(t, u);
+    const start = await postJson(t, `/o/${GAME}/${u}/api/test/demo`, { action: 'start' });
+    assert.equal(start.status, 200);
+    assert.equal(start.json.success, true);
+    assert.equal(start.json.demoActive, true);
+    let st = await getState(t, u);
+    assert.equal(st.demoActive, true);
+    // Pháo nhỏ vào hàng đợi, tick 500ms mới bắn -> chờ tối đa 3s cho tổng pháo > 0.
+    for (let i = 0; i < 6 && st.totalFireworks === 0; i += 1) {
+      await sleep(500);
+      st = await getState(t, u);
+    }
+    assert.ok(st.totalFireworks > 0, 'demo phải bắn pháo ngay khi bật');
+    const activity = (s) => s.stats.taps + s.stats.comments + s.stats.gifts + s.stats.follows + s.stats.shares + s.stats.joins;
+    const a1 = activity(st);
+    await sleep(6000);
+    st = await getState(t, u);
+    assert.ok(activity(st) > a1, 'demo chạy thì số liệu phải tăng');
+    assert.ok(st.totalFireworks > 0, 'demo chạy thì pháo phải nổ thêm');
+    const stop = await postJson(t, `/o/${GAME}/${u}/api/test/demo`, { action: 'stop' });
+    assert.equal(stop.json.demoActive, false);
+    st = await getState(t, u);
+    const snap = JSON.stringify(st.stats);
+    await sleep(4000);
+    st = await getState(t, u);
+    assert.equal(JSON.stringify(st.stats), snap, 'dừng demo thì số liệu không tự đổi nữa');
+  } finally { await stopTestServer(t); }
+});
+
+test('bau-troi: demo tự dừng khi event thật tới; từ chối bật khi đã có event thật; overlay ?demo=1', async () => {
+  const t = await startTestServer();
+  try {
+    const room = await t.rooms.getOrCreate(GAME, uniq());
+    const u = room.username;
+    await enableDemo(t, u);
+    const start = await postJson(t, `/o/${GAME}/${u}/api/test/demo`, { action: 'start' });
+    assert.equal(start.json.demoActive, true);
+    await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-that', nickname: 'NguoiThat', content: 'đẹp quá' });
+    let st = await getState(t, u);
+    assert.equal(st.demoActive, false, 'event thật tới thì demo phải tự dừng');
+    assert.ok(st.webhookCount >= 1);
+    const start2 = await postJson(t, `/o/${GAME}/${u}/api/test/demo`, { action: 'start' });
+    assert.equal(start2.json.success, false, 'phòng có event thật thì không bật được demo');
+    assert.match(start2.json.message || '', /event thật/);
+    const ov = await fetchJson(t.base, `/o/${GAME}/${u}?demo=1`);
+    assert.equal(ov.status, 200);
+    assert.ok(ov.text.includes('demo-badge'), 'overlay phải có huy hiệu DEMO');
+    assert.ok(ov.text.includes("get('demo') === '1'"), 'overlay phải có autostart ?demo=1');
+    const db = await fetchJson(t.base, `/room/${GAME}/${u}`);
+    assert.ok(db.text.includes('Chạy demo'), 'dashboard phải có nút Chạy demo');
+    assert.ok(db.text.includes('Dừng demo'), 'dashboard phải có nút Dừng demo');
+  } finally { await stopTestServer(t); }
+});

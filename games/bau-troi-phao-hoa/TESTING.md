@@ -36,3 +36,13 @@
 - **Màn lớn trùng màn đại countdown**: ưu tiên countdown, màn 100 pháo dời lại 20s sau khi màn đại xong (đúng bản thiết kế).
 - **Pháo countdown mỗi 10s trong 60s cuối**: có tính vào tổng pháo; nếu chạm mốc 100 thì màn lớn vẫn bắn (không bỏ mốc).
 - **Nút "Đặt tổng pháo = X"**: chỉ tồn tại trong chế độ thử (API + dashboard đều chặn khi demoMode tắt) — live thật không có nút này, tổng pháo chỉ tăng khi pháo nổ thật.
+
+## Chế độ demo (2026-11-13)
+- Mở overlay với `?demo=1` → tự bật chế độ thử + chạy demo: 3 người xem ảo vào
+  bầu trời, bình luận/tim bắn pháo nhỏ, tặng quà bắn pháo tròn/chùm/hình, follow
+  bắn pháo chữ tên, share liên tục qua đúng đường event thật; huy hiệu `DEMO` ở
+  góc trái overlay. Đủ 100 pháo tự bắn màn lớn, chạy tiếp tới khi dừng.
+- Dashboard → mục Test: `▶ Chạy demo` / `■ Dừng demo` (+ `🎬 Demo 12 bước` 1 lượt mẫu).
+  API: `POST /api/test/demo {action:"start"|"stop"|"once"}`.
+- An toàn: từ chối bật khi phòng đã có event thật; event thật đầu tiên tới thì
+  demo tự dừng. Người xem demo không tính vào thống kê avatar.

@@ -106,6 +106,8 @@
       <button data-t="share">🔁 Share</button>
       <button data-t="bulk">👥 100 join</button>
       <button data-t="demo">🎬 Demo 12 bước</button>
+      <button data-t="demo-start">▶ Chạy demo</button>
+      <button data-t="demo-stop">■ Dừng demo</button>
     </p>
     <p id="demoOnly" style="display:none">
       <label>Đặt tổng pháo = X (CHỈ có trong chế độ thử — live thật không có nút này)</label>
@@ -213,9 +215,14 @@
       gift1: ['/api/test/gift', { coins: 1, giftName: 'Hoa hồng' }], gift10: ['/api/test/gift', { coins: 10, giftName: 'Kính râm' }],
       gift100: ['/api/test/gift', { coins: 100, giftName: 'Vương miện' }], follow: ['/api/test/follow', {}],
       share: ['/api/test/share', {}], bulk: ['/api/test/bulk-join', { count: 100 }], demo: ['/api/test/demo', {}],
+      demo-start: ['/api/test/demo', { action: 'start' }], demo-stop: ['/api/test/demo', { action: 'stop' }],
       settotal: ['/api/test/set-total', { total: +$('setTotalInput').value }] };
     const [p, body] = map[t];
-    api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const call = () => api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const req = t === 'demo-start'
+      ? api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) }).then(() => { $('s_demo').checked = true; return call(); })
+      : call();
+    req
       .then(r => { $('testMsg').innerHTML = r.success ? '<span class="ok">OK: ' + esc(JSON.stringify(r).slice(0, 300)) + '</span>' : '<span class="err">Bật demoMode trước khi test.</span>'; poll(); });
   });
   $('ovLink').textContent = location.origin + base + '/overlay.html';

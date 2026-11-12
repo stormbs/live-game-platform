@@ -9,6 +9,8 @@
   html, body { width: 1080px; height: 1920px; overflow: hidden; background: #050514; color: #fff;
     font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   .wrap { position: relative; width: 1080px; height: 1920px;
+  #demo-badge { position: absolute; top: 18px; left: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
+  #demo-badge.on { display: block; }
     background: linear-gradient(180deg, #050514 0%, #0b0b2a 45%, #1a0f3a 70%, #2a1230 100%); }
   .stars { position: absolute; inset: 0 0 500px 0; background-image:
     radial-gradient(2px 2px at 80px 120px, #fff, transparent), radial-gradient(2px 2px at 300px 260px, #ffe9a0, transparent),
@@ -49,6 +51,7 @@
 </style>
 </head>
 <body>
+<div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="wrap">
   <div class="stars"></div>
   <div class="moon">🌙</div>
@@ -231,6 +234,7 @@
   }
   function render(s) {
     voiceOn = !!(s.settings && s.settings.voiceEnabled);
+    document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
     $('totalLine').textContent = '🎆 ' + s.totalFireworks + ' pháo đã nổ';
     $('nextLine').textContent = s.grandShow ? '🎆 MÀN PHÁO LỚN ĐANG CHẠY!' : 'Còn ' + s.fireworksToGrand + ' pháo nữa tới màn lớn';
     $('top3').innerHTML = (s.top || []).map((p, i) =>
@@ -252,6 +256,14 @@
   }
   function poll() { fetch('/api/state').then(r => r.json()).then(render).catch(() => {}); }
   poll(); setInterval(poll, 1500);
+  // ?demo=1: tự bật chế độ thử + chạy demo (chỉ khi phòng chưa có event thật).
+  if (new URLSearchParams(location.search).get('demo') === '1') {
+    fetch('/api/state').then((r) => r.json()).then((st) => {
+      if ((st.webhookCount || 0) > 0) return;
+      return fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+        .then(() => fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) }));
+    }).catch(() => {});
+  }
   const socket = io();
   socket.on('state-update', render);
   socket.on('firework', spawnFirework);
