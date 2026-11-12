@@ -43,7 +43,7 @@
 <body>
 <div class="wrap">
   <h1>🎮 Live Game TikTok</h1>
-  <p class="sub">Nhập TikTok ID của bạn, chọn game, copy link overlay và dán vào TikTok LIVE Studio là chạy — không cần cài đặt gì. Game tự kết nối vào LIVE của bạn và phản ứng theo like, bình luận, quà tặng của khán giả.</p>
+  <p class="sub">Nhập TikTok ID của bạn, chọn game, copy link overlay và dán vào TikTok LIVE Studio. Game nhận sự kiện live (like, bình luận, quà tặng) qua <b>TikFinity</b> — sau khi tạo phòng, mở dashboard của phòng để tải file TikFinity (.tfc) và xem hướng dẫn import (chỉ làm 1 lần).</p>
 
   <label for="username">TikTok ID của bạn (không cần @)</label>
   <input id="username" type="text" placeholder="vd. ten_tiktok_cua_ban" autocomplete="off" spellcheck="false">
@@ -68,24 +68,25 @@
       <button class="btn" id="copyRoom">Copy</button>
     </div>
     <p style="color:#aab3d6;font-size:14px;line-height:1.6;margin:10px 0 0">
-      Mở dashboard để cài đặt game, gửi event thử và reset phiên.
+      Mở dashboard để cài TikFinity (tải file .tfc của phòng rồi import vào TikFinity — chỉ làm 1 lần), cài đặt game, gửi event thử và reset phiên.
       Muốn đổi game: chọn game khác rồi bấm "Lấy link overlay" lại.
     </p>
   </div>
 
   <div class="steps">
-    <h2>Cách chạy trong 3 bước</h2>
+    <h2>Cách chạy trong 4 bước</h2>
     <ol>
       <li>Nhập TikTok ID, chọn game, bấm <b>Lấy link overlay</b>.</li>
       <li>Trong TikTok LIVE Studio: thêm nguồn <b>Link</b> (Browser Source), dán link overlay, đặt kích thước <b>1080 × 1920</b>.</li>
-      <li>Bấm <b>Go LIVE</b> — game tự kết nối vào LIVE của bạn. Khán giả like / bình luận / tặng quà là game phản ứng ngay.</li>
+      <li>Mở dashboard của phòng (link “Dashboard của streamer” ở trên) → mục <b>🎯 Cài đặt TikFinity</b>: tải file TikFinity (.tfc) của phòng rồi import vào TikFinity — chỉ làm 1 lần, có cả cách tạo tay nếu file import lỗi.</li>
+      <li>Bấm <b>Go LIVE</b> TRƯỚC, rồi mới bấm <b>Connect</b> trong TikFinity. Khán giả like / bình luận / tặng quà là game phản ứng ngay — số sự kiện trên dashboard phải &gt; 0.</li>
     </ol>
   </div>
 
   <div class="note">
     <b>Lưu ý:</b> Máy chủ chạy 24/7 trên Railway; sau mỗi lần deploy, đợi khoảng 1 phút rồi tải lại trang.
     Nguồn Link trong TikTok LIVE Studio đôi khi hơi lag; nếu cần mượt hơn, dùng OBS Virtual Camera.
-    TikTok không có API LIVE chính thức nên kết nối có thể đổi theo thời gian; nếu game không nhận event, kiểm tra lại trạng thái LIVE trên trang này và chắc chắn link overlay dùng đúng TikTok ID của tài khoản đang live (nhập sai nick là game theo dõi nhầm tài khoản, không có event nào).
+    TikTok không có API LIVE chính thức nên kết nối có thể đổi theo thời gian; nếu game không nhận event, kiểm tra lại trạng thái LIVE trên trang này, chắc chắn link overlay dùng đúng TikTok ID của tài khoản đang live (nhập sai nick là game theo dõi nhầm tài khoản, không có event nào), và TikFinity đã <b>Connect</b> sau khi Go LIVE (xem hướng dẫn trên dashboard của phòng).
   </div>
 </div>
 
@@ -121,10 +122,10 @@ function showErr(msg) {
 
 function statusHtml(state, detail) {
   if (state === 'live') return '<span class="dot live"></span> 🟢 Đang LIVE — game đã kết nối, sẵn sàng nhận event.';
-  if (state === 'offline') return '<span class="dot offline"></span> 🟡 Tài khoản chưa LIVE — link vẫn dùng được, game sẽ tự kết nối khi bạn bấm Go LIVE.';
+  if (state === 'offline') return '<span class="dot offline"></span> 🟡 Tài khoản chưa LIVE — link vẫn dùng được. Go LIVE rồi bấm Connect trong TikFinity (xem hướng dẫn trên dashboard của phòng).';
   if (state === 'connecting' || state === 'reconnecting') return '<span class="dot"></span> ⏳ Đang kết nối tới TikTok…';
   if (state === 'error') {
-    if (/euler|business plan/i.test(detail || '')) return '<span class="dot error"></span> 🔴 Lỗi kết nối: máy chủ cần API key Euler (đăng ký miễn phí tại eulerstream.com) để nối TikTok LIVE. Chưa có key thì game không nhận event live nào.';
+    if (/euler|business plan/i.test(detail || '')) return '<span class="dot error"></span> 🔴 Kết nối trực tiếp không dùng được (Euler yêu cầu gói Business). Game vẫn nhận event qua TikFinity — xem số sự kiện trên dashboard của phòng.';
     return '<span class="dot error"></span> 🔴 Lỗi kết nối: ' + detail;
   }
   return '<span class="dot"></span> Chưa kết nối.';

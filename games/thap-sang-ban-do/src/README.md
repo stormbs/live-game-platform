@@ -28,10 +28,12 @@ Yêu cầu: đã cài **Node.js** (bản LTS, tải tại nodejs.org).
    - Overlay: `http://localhost:3009/`
    - Dashboard: `http://localhost:3009/dashboard`
 
-## Kết nối trực tiếp (nền tảng tự nối)
+## Kết nối TikTok LIVE (qua TikFinity — đường sự kiện chính)
 
-Trên nền tảng tập trung, máy chủ tự kết nối vào LIVE bằng TikTok ID trong
-link overlay — không cần cài thêm gì. Các loại event nhận được:
+Trên nền tảng tập trung, game nhận sự kiện live qua **TikFinity** chạy trên
+máy Windows của bạn: TikFinity gửi event về webhook của room (xem mục
+"🎯 Cài đặt TikFinity" trên dashboard — tải file .tfc của phòng rồi import,
+hoặc tạo Action bằng tay). Các loại event nhận được:
 
 | Event | Ghi chú |
 |---|---|
@@ -41,9 +43,12 @@ link overlay — không cần cài thêm gì. Các loại event nhận được:
 | Tap / Like (1+) | Tim cộng điểm cho tỉnh quê |
 | Follow | Follow thắp 1 tỉnh |
 
-Thứ tự khi live: **mở dashboard → mở OBS/TikTok LIVE Studio → Go LIVE**.
-Máy chủ tự kết nối trong tối đa 1 phút. Kiểm tra lại TikTok ID trong link:
-nhập sai nick là máy chủ theo dõi nhầm tài khoản.
+Thứ tự khi live: **mở dashboard → mở OBS/TikTok LIVE Studio → Go LIVE →
+bấm Connect trong TikFinity** (xem mục "Cài đặt TikFinity" trên dashboard).
+Kiểm tra lại TikTok ID trong link: nhập sai nick là game theo dõi nhầm tài
+khoản. Adapter trực tiếp (`tiktok-live-connector`) hiện KHÔNG nhận được
+event (Euler chặn ký websocket, key miễn phí đã thử và không mở được) — chỉ
+còn để kiểm tra live/offline và đếm event TikFinity.
 
 ## Đưa vào TikTok LIVE Studio
 
@@ -90,14 +95,14 @@ Ví dụ comment hợp lệ: `Hà Nội`, `ha noi`, `hn`, `12`, `#12`, `sài gò
 `Đà Lạt` (→ Lâm Đồng), `Nha Trang` (→ Khánh Hòa), `Phú Quốc` (→ An Giang),
 `Hội An` (→ Đà Nẵng), `cho mình đà nẵng nhé` (cả câu có tên tỉnh vẫn nhận).
 
-**Avatar — ảnh đại diện thật của người comment:** adapter trực tiếp lấy kèm link
+**Avatar — ảnh đại diện thật của người comment:** TikFinity gửi kèm link
 ảnh đại diện của viewer trong mỗi event — dạng JSON là field
 `profilePictureUrl`, dạng form-urlencoded là field `avatar_url` (dạng
 `https://p16-sign-*.tiktokcdn.com/...`). Khi ai comment tên tỉnh, ảnh thật
 của người đó **rơi xuống đúng vị trí tỉnh vừa comment** (hình tròn viền vàng
 + tên bên dưới). Comment tỉnh khác thì ảnh bay sang tỉnh mới (overlay có
 sẵn hiệu ứng trượt 0.6s + rơi lại).
-Server đã đọc được đủ các dạng field avatar mà adapter có thể gửi
+Server đã đọc được đủ các dạng field avatar mà TikFinity có thể gửi
 (`profilePictureUrl`, `avatar_url`, `user.profilePictureUrl`,
 `userDetails.profilePictureUrls`, cả dạng viết tắt) — đã test cả 4 dạng.
 Chỉ khi nào event thiếu hẳn avatar thì overlay mới vẽ vòng tròn chữ cái
@@ -261,15 +266,15 @@ Không còn phải đoán "link có chạy không" — nhìn đèn là biết:
 - **Overlay (cuối dòng phụ đề):** `● LIVE` (xanh, nhấp nháy) = vừa nhận sự kiện thật trong 60 giây qua; `● TÍN HIỆU YẾU` (vàng) = im hơn 60 giây; `○ CHỜ KẾT NỐI` (xám) = chưa từng nhận sự kiện nào từ khi server chạy.
 - **Dashboard (khung "Kết nối trực tiếp TikTok LIVE"):** chi tiết hơn — trạng thái LIVE của tài khoản, sự kiện cuối cách đây bao lâu, loại sự kiện gần nhất (chat/gift/like/follow/join), tổng số sự kiện đã nhận, kèm hướng dẫn sửa khi chưa kết nối. Dashboard còn cảnh báo khi bạn đang bật "Giả lập người xem" (sự kiện giả cũng làm sáng bản đồ, dễ nhầm với sự kiện thật — tắt trước khi live thật).
 
-**Lưu ý:** đèn báo chỉ tính sự kiện **LIVE thật từ adapter trực tiếp** — sự kiện giả lập và gửi tay qua Dashboard KHÔNG làm đèn xanh. Đó là chủ ý: đèn xanh = đường link live đang sống thật.
+**Lưu ý:** đèn báo tính mọi sự kiện **LIVE thật qua webhook** (chủ yếu từ TikFinity) — sự kiện giả lập và gửi tay qua Dashboard KHÔNG làm đèn xanh. Đó là chủ ý: đèn xanh = đường link live đang sống thật.
 
 ## 🔧 Comment không sáng thì kiểm tra (theo thứ tự)
 
 1. **Nhìn đèn báo:** overlay góc phải trên hoặc Dashboard → khung "Kết nối trực tiếp TikTok LIVE".
    - Đèn xám/vàng → lỗi ở đường kết nối LIVE: xem bước 2.
    - Đèn xanh nhưng tỉnh không sáng → lỗi ở phía server: xem bước 3.
-2. **Đèn chưa xanh:** (a) kiểm tra lại TikTok ID trong link overlay — nhập sai nick là máy chủ theo dõi nhầm tài khoản; (b) tài khoản đã Go LIVE chưa — thẻ kết nối báo "chưa LIVE" thì Go LIVE rồi đợi tối đa 1 phút; (c) thẻ báo lỗi Euler / Business plan thì máy chủ cần API key Euler (đăng ký miễn phí, xem README nền tảng).
-3. **Đèn xanh nhưng không sáng:** (a) Dashboard → "Trạng thái": nếu báo "ĐÃ SÁNG ĐỦ 34/34" thì game đang ở màn ăn mừng, comment không tính — bấm "Chơi lại từ đầu"; (b) thử gửi tay trong Dashboard: comment `Thanh Hoá` — nếu sáng thì server ổn, vấn đề nằm ở nội dung comment thật (gửi lại nội dung đó cho mình xem); (c) log của server: mỗi sự kiện LIVE đều in 1 dòng — nếu thấy dòng `[webhook] event lạ, bỏ qua` thì chụp lại gửi mình, nghĩa là adapter gửi 1 dạng sự kiện lạ chưa nhận ra.
+2. **Đèn chưa xanh:** (a) kiểm tra lại TikTok ID trong link overlay — nhập sai nick là máy chủ theo dõi nhầm tài khoản; (b) tài khoản đã Go LIVE chưa — thẻ kết nối báo "chưa LIVE" thì Go LIVE rồi đợi tối đa 1 phút; (c) TikFinity đã bấm **Connect** sau khi Go LIVE chưa, Action TikFinity đã bật chưa, webhook URL trong Action có đúng URL trên dashboard không (xem mục "Cài đặt TikFinity"); (d) thẻ báo lỗi Euler / Business plan thì đó là adapter trực tiếp (đường dự phòng, hiện không dùng được) — game vẫn nhận event qua TikFinity, kiểm tra lại (c).
+3. **Đèn xanh nhưng không sáng:** (a) Dashboard → "Trạng thái": nếu báo "ĐÃ SÁNG ĐỦ 34/34" thì game đang ở màn ăn mừng, comment không tính — bấm "Chơi lại từ đầu"; (b) thử gửi tay trong Dashboard: comment `Thanh Hoá` — nếu sáng thì server ổn, vấn đề nằm ở nội dung comment thật (gửi lại nội dung đó cho mình xem); (c) log của server: mỗi sự kiện LIVE đều in 1 dòng — nếu thấy dòng `[webhook] event lạ, bỏ qua` thì chụp lại gửi mình, nghĩa là TikFinity gửi 1 dạng sự kiện lạ chưa nhận ra.
 4. **v7.2 — event body rỗng `{}`:** đã gặp 1 lần (2026-11-12 01:31, 6 event liên tiếp đều `{}`): đèn vẫn xanh vì event tới được server, nhưng không có dữ liệu nên không thắp được tỉnh nào. Server giờ **ghi lại body thô + content-type của mọi event** (xem log server, dòng `[webhook] nhận: ...`, và trong Dashboard → khung "Kết nối trực tiếp" → "Xem sự kiện gần nhất"). Server cũng đã học cách đọc nhiều dạng body (JSON, JSON 2 lớp, form-urlencoded, dữ liệu thô không kèm tên loại) để lần sau gặp dạng nào cũng nhận được.
 4. **Test trước khi live thật:** xem mục "Test trước khi live thật" bên dưới. **Không có nút chuyển demo → live** — server lúc nào cũng nghe event live thật; "Giả lập người xem" chỉ là bộ phát sự kiện giả để test, tắt nó trước khi live thật.
 
@@ -282,7 +287,7 @@ Không còn phải đoán "link có chạy không" — nhìn đèn là biết:
    màn hình 1 lần để bật tiếng\" ở dòng voice dưới bản đồ; sau 1 lần nhấn
    (Interact → nhấn vào overlay) thì đọc tiếp từ câu đang dở, không mất câu
    nào. Xem thêm mục Voice ở trên.
-2. **Avatar không đúng:** adapter trực tiếp gửi avatar thật qua field `avatar_url`
+2. **Avatar không đúng:** TikFinity gửi avatar thật qua field `avatar_url`
    (dạng form-urlencoded), nhưng code chỉ đọc các dạng `profilePictureUrl` /
    `avatarUrl` nên avatar toàn rơi về vòng tròn chữ cái. Đã thêm `avatar_url`
    (+ `avatarURL`, `profile_picture_url`) vào danh sách field avatar; tên

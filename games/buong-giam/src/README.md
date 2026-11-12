@@ -1,6 +1,6 @@
 # Buồng Giam — TikTok LIVE Interactive Game
 
-Game tương tác 2D cho TikTok LIVE. Tương tác của viewer làm thay đổi điểm buồng, vị trí tầng và hoạt ảnh trên overlay dọc 1080 × 1920. Project có dashboard điều khiển, âm thanh/giọng đọc tiếng Việt, kết nối trực tiếp TikTok LIVE (không cần phần mềm trung gian).
+Game tương tác 2D cho TikTok LIVE. Tương tác của viewer làm thay đổi điểm buồng, vị trí tầng và hoạt ảnh trên overlay dọc 1080 × 1920. Project có dashboard điều khiển, âm thanh/giọng đọc tiếng Việt, nhận sự kiện live qua TikFinity (webhook — xem mục "Cài đặt TikFinity" trên dashboard).
 
 ## Chạy local
 
@@ -18,9 +18,15 @@ Trên Windows, có thể chạy `CHAY_BUONG_GIAM.bat`.
 
 Giữ server chạy trong khi dùng LIVE Studio. Trong TikTok LIVE Studio, thêm nguồn Link và dùng URL overlay ở trên; chọn kích thước 1080 × 1920.
 
-## Kết nối trực tiếp TikTok LIVE
+## Kết nối TikTok LIVE (qua TikFinity — đường sự kiện chính)
 
-Trên nền tảng tập trung, máy chủ tự nối TikTok LIVE bằng username trong link overlay (`/o/buong-giam/<username>`) — không cần cài thêm gì. Event live (chat/gift/like/follow/share/join) đi vào engine qua intake nội bộ `POST /api/webhook`. Chạy bản local này cũng tự nối trực tiếp khi có mạng.
+Trên nền tảng tập trung, game nhận sự kiện live qua **TikFinity** chạy trên
+máy Windows của bạn: TikFinity gửi event (chat/gift/like/follow/share/join)
+về webhook của room (xem mục "🎯 Cài đặt TikFinity" trên dashboard — tải file
+.tfc của phòng rồi import, hoặc tạo Action bằng tay). Adapter trực tiếp
+(`tiktok-live-connector`) hiện KHÔNG nhận được event (Euler chặn ký
+websocket, key miễn phí đã thử và không mở được) — chỉ còn để kiểm tra
+live/offline và đếm event TikFinity.
 
 ## Dữ liệu cục bộ
 
