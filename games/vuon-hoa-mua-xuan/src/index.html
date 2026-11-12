@@ -116,7 +116,9 @@
       <button class="btn-test" onclick="testCall('follow')">🌹 Follow (hồng vàng)</button>
       <button class="btn-test" onclick="testCall('share')">🔁 Chia sẻ</button>
       <button class="btn-test" onclick="testCall('bulk-join', {count: 100})">👥 Test 100 người vào</button>
-      <button class="btn-test" onclick="testCall('demo')">▶️ Chạy demo tự động</button>
+      <button class="btn-test" onclick="demoStart()">▶ Chạy demo</button>
+      <button class="btn-test" onclick="demoStop()">■ Dừng demo</button>
+      <button class="btn-test" onclick="testCall('demo')">▶ Demo 1 lượt mẫu</button>
     </div>
     <div id="test-result" style="margin-top:10px; font-size:14px; color:#b8f0a8;"></div>
     <div class="card" style="margin-top:14px; background:#0e1f11;">
@@ -201,6 +203,16 @@ async function saveSettings() {
 }
 async function resetSession() { if (confirm('Làm mới toàn bộ phiên?')) { await api('/api/session/reset'); render.filled = false; } }
 async function resetRound() { await api('/api/round/reset'); }
+async function demoStart() {
+  await api('/api/settings', { demoMode: true });
+  $('demo-toggle').checked = true;
+  const r = await api('/api/test/demo', { action: 'start' });
+  $('test-result').textContent = r.success ? '✅ Demo đang chạy — xem trên overlay.' : '❌ ' + (r.message || 'Không bật được demo.');
+}
+async function demoStop() {
+  const r = await api('/api/test/demo', { action: 'stop' });
+  $('test-result').textContent = r.success ? '✅ Đã dừng demo.' : '❌ ' + (r.message || 'Lỗi.');
+}
 async function testCall(kind, extra) {
   const r = await api('/api/test/' + kind, extra || {});
   $('test-result').textContent = r.success ? '✅ ' + kind + ' OK' + (r.count !== undefined ? ' (' + r.count + ')' : '') : '❌ ' + (r.message || 'Lỗi — bật chế độ thử trước.');

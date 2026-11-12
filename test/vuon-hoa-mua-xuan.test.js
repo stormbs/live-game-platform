@@ -217,3 +217,64 @@ test('vuon-hoa: settings chặn giá trị vượt giới hạn', async () => {
     assert.equal(r.json.settings.growthPerStage, 1, 'growthPerStage = 0 -> kẹp lên tối thiểu 1');
   } finally { await stopTestServer(t); }
 });
+
+test('vuon-hoa: demo start/stop liên tục — mô phỏng khán giả, dừng thì state đứng yên', async () => {
+  const t = await startTestServer();
+  try {
+    const user = uniq('hoa_demoloop');
+    await enableDemo(t, user);
+    const post = (p, b) => fetchJson(t.base, `/o/${GAME}/${user}${p}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b || {}),
+    });
+    const start = await post('/api/test/demo', { action: 'start' });
+    assert.equal(start.status, 200);
+    assert.equal(start.json.success, true);
+    assert.equal(start.json.demoActive, true);
+    const st1 = await getState(t, user);
+    assert.equal(st1.demoActive, true, 'state phải báo demoActive');
+    assert.ok(st1.flowers.length > 0, 'demo phải gieo hoa ngay khi bật');
+    const activity = (s) => s.stats.taps + s.stats.comments + s.stats.gifts + s.stats.follows + s.stats.shares + s.stats.joins;
+    await sleep(6000);
+    const st2 = await getState(t, user);
+    assert.ok(activity(st2) > activity(st1), 'demo chạy thì số liệu phải tăng');
+    const stop = await post('/api/test/demo', { action: 'stop' });
+    assert.equal(stop.json.demoActive, false);
+    const st3 = await getState(t, user);
+    assert.equal(st3.demoActive, false);
+    const snap = JSON.stringify([st3.stats, st3.flowers.length]);
+    await sleep(4000);
+    const st4 = await getState(t, user);
+    assert.equal(JSON.stringify([st4.stats, st4.flowers.length]), snap, 'dừng demo thì state không tự đổi nữa');
+  } finally { await stopTestServer(t); }
+});
+
+test('vuon-hoa: demo tự dừng khi event thật tới; từ chối bật khi đã có event thật; overlay ?demo=1 có autostart', async () => {
+  const t = await startTestServer();
+  try {
+    const room = await t.rooms.getOrCreate(GAME, uniq('hoa_demostop'));
+    const user = room.username;
+    await enableDemo(t, user);
+    const post = (p, b) => fetchJson(t.base, `/o/${GAME}/${user}${p}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b || {}),
+    });
+    const start = await post('/api/test/demo', { action: 'start' });
+    assert.equal(start.json.demoActive, true);
+    // Event thật đầu tiên tới -> demo tự dừng.
+    await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-that', nickname: 'NguoiThat', content: 'hello' });
+    let st = await getState(t, user);
+    assert.equal(st.demoActive, false, 'event thật tới thì demo phải tự dừng');
+    assert.ok(st.webhookCount >= 1);
+    // Phòng đã có event thật -> từ chối bật lại.
+    const start2 = await post('/api/test/demo', { action: 'start' });
+    assert.equal(start2.json.success, false, 'phòng có event thật thì không bật được demo');
+    assert.match(start2.json.message || '', /event thật/);
+    // Overlay ?demo=1: trang overlay có huy hiệu DEMO + code tự chạy demo.
+    const ov = await fetchJson(t.base, `/o/${GAME}/${user}?demo=1`);
+    assert.equal(ov.status, 200);
+    assert.ok(ov.text.includes('demo-badge'), 'overlay phải có huy hiệu DEMO');
+    assert.ok(ov.text.includes("get('demo') === '1'"), 'overlay phải có autostart ?demo=1');
+    const db = await fetchJson(t.base, `/room/${GAME}/${user}`);
+    assert.ok(db.text.includes('Chạy demo'), 'dashboard phải có nút Chạy demo');
+    assert.ok(db.text.includes('Dừng demo'), 'dashboard phải có nút Dừng demo');
+  } finally { await stopTestServer(t); }
+});

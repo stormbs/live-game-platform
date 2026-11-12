@@ -13,6 +13,8 @@
     background: linear-gradient(180deg, #7ec8f7 0%, #aee3ff 22%, #e8f7d9 45%, #8fce62 100%);
   }
   .sun { position: absolute; top: 40px; right: 60px; font-size: 90px; filter: drop-shadow(0 0 24px #ffd94d); }
+  #demo-badge { position: absolute; top: 18px; left: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
+  #demo-badge.on { display: block; }
   .cloud { position: absolute; font-size: 64px; opacity: .85; animation: drift 26s linear infinite; }
   @keyframes drift { from { transform: translateX(-140px); } to { transform: translateX(1180px); } }
   .rainbow { position: absolute; top: 150px; left: 50%; transform: translateX(-50%); font-size: 120px; opacity: .9; display: none; }
@@ -56,6 +58,7 @@
 </style>
 </head>
 <body>
+<div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="sun">☀️</div>
 <div class="cloud" style="top:90px; animation-delay:-6s;">☁️</div>
 <div class="cloud" style="top:190px; animation-delay:-18s; font-size:48px;">☁️</div>
@@ -133,6 +136,7 @@ function render(s) {
   document.getElementById('round-line').textContent = 'Ván ' + s.roundNo + ' · Bình luận / thả tim để gieo hạt — quà tưới nước, follow tặng hồng vàng';
   document.getElementById('phase-label').textContent =
     s.phase === 'festival' ? '🎉 LỄ HỘI HOA!' : s.phase === 'results' ? '🏆 Kết quả ván' : 'Đang trồng…';
+  document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
   document.getElementById('milestones').innerHTML = s.milestones.map((m) =>
     '<span class="ms' + (s.milestonesHit.includes(m) ? ' hit' : '') + '">' + (m >= s.target ? '🎉' : '🌸') + ' ' + m + ' hoa</span>').join('');
   document.getElementById('rainbow').classList.toggle('on', s.milestonesHit.includes(75));
@@ -187,6 +191,14 @@ socket.on('milestone', (d) => { if (d) playTts('Mốc ' + d.milestone + ' hoa n�
 socket.on('rainbow', (d) => { if (d) playTts('Cầu vồng! Cảm ơn ' + d.name + ' đã tặng quà lớn!'); });
 
 fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
+// ?demo=1: tự bật chế độ thử + chạy demo để xem game chơi thật (chỉ khi phòng chưa có event thật).
+if (new URLSearchParams(location.search).get('demo') === '1') {
+  fetch('/api/state').then((r) => r.json()).then((st) => {
+    if ((st.webhookCount || 0) > 0) return;
+    return fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+      .then(() => fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) }));
+  }).catch(() => {});
+}
 setInterval(() => { if (lastState) render(lastState); }, 1000); // đếm ngược lễ hội/kết quả
 </script>
 </body>

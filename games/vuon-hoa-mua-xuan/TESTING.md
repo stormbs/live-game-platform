@@ -49,3 +49,14 @@ Cơ chế lấy từ `~/workspace/overlay-moi/prompt-agent-vuon-hoa-mua-xuan.md`
 - **Giọng đọc:** overlay dùng proxy TTS của server (`/api/tts`, Google TTS
   tiếng Việt, có cache) với fallback giọng trình duyệt; không dùng
   Azure Neural (cần key).
+
+## Chế độ demo (2026-11-13)
+- Mở overlay với `?demo=1` (vd. `…/o/vuon-hoa-mua-xuan/<tiktok-id>?demo=1`) → tự
+  bật chế độ thử + chạy demo: 3 người xem ảo (An, Bình, Chi…) vào vườn, bình
+  luận/tim/quà/follow/share liên tục qua đúng đường event thật; huy hiệu `DEMO`
+  hiện ở góc trái overlay. Hết ván tự sang ván mới, demo chạy tiếp tới khi dừng.
+- Dashboard → mục Test: nút `▶ Chạy demo` / `■ Dừng demo` (+ `▶ Demo 1 lượt mẫu`
+  chạy 1 lượt An/Bình như cũ). API: `POST /api/test/demo {action:"start"|"stop"|"once"}`.
+- An toàn: demo từ chối bật khi phòng đã có event thật (`webhookCount > 0`);
+  event thật đầu tiên tới thì demo tự dừng. Người xem demo không có avatar thật,
+  không tính vào thống kê avatar.

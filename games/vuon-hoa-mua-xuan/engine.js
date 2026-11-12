@@ -116,7 +116,7 @@ function createEngine(ctx) {
     return v;
   }
   function trackAvatar(ev) {
-    if (!ev.uid) return;
+    if (!ev.uid || ev.isDemo) return; // người xem demo không tính vào thống kê avatar thật
     session.avatarStats.total += 1;
     if (ev.avatar) session.avatarStats.withAvatar += 1;
   }
@@ -439,6 +439,7 @@ function createEngine(ctx) {
       settings,
       logs: session.logs.slice(-60),
       webhookCount: session.webhookCount,
+      demoActive: demo.active,
       avatarStats: session.avatarStats,
       avatarWarning: session.avatarStats.total > 0 && session.avatarStats.withAvatar === 0,
       stats: session.stats,
@@ -450,6 +451,8 @@ function createEngine(ctx) {
   // ---------------- API ----------------
   app.post('/api/webhook', (req, res) => {
     session.webhookCount = (session.webhookCount || 0) + 1;
+    // Live thật tiếp quản: demo đang chạy thì tự dừng ngay khi event thật đầu tiên tới.
+    if (demo.active) stopDemo('có event thật');
     const ev = parseTikFinityEvent(req.body, req.query);
     if (ev.kind === 'other' || !ev.uid) {
       let rawPrev = '';
@@ -505,6 +508,7 @@ function createEngine(ctx) {
   });
 
   app.post('/api/session/reset', (req, res) => {
+    stopDemo();
     session = defaultSession();
     tapDelta.reset();
     addLog('🔄 Đã làm mới phiên: vườn + điểm + log về trống.', 'system');
@@ -578,8 +582,73 @@ function createEngine(ctx) {
     }
     res.json({ success: true, count, viewersOnline: Object.values(session.viewers).filter((v) => v.online).length });
   });
-  app.post('/api/test/demo', (req, res) => {
-    if (!needDemo(req, res)) return;
+  // ---------------- Demo tự động (xem ~/workspace/overlay-moi/demo-mode-contract.md) ----------------
+  // Vòng lặp mô phỏng khán giả liên tục qua ĐÚNG đường handleIntake như event
+  // thật. Người xem demo dùng uid demo_<lượt>_<số> (không avatar TikTok thật).
+  const DEMO_CAST_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khánh', 'Lan', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo'];
+  const DEMO_COMMENTS = ['hoa đẹp quá', 'vườn xinh quá', 'gieo hạt nào', 'hoa nở đi', 'đẹp quá đi', 'mùa xuân về rồi', 'cúc vàng đẹp quá', 'sen hồng kìa'];
+  const DEMO_GIFTS = [[1, 'Hoa hồng'], [5, 'Hoa hồng'], [10, 'Hoa hồng'], [50, 'Heo may mắn'], [100, 'Heo may mắn']];
+  const demo = { active: false, timer: null, cast: new Map(), runId: 0 };
+  function demoEnsureCast(n) {
+    let added = 0;
+    for (let i = 0; i < DEMO_CAST_NAMES.length && demo.cast.size < n; i += 1) {
+      const name = DEMO_CAST_NAMES[i];
+      const uid = `demo_${demo.runId}_${i}`;
+      if (demo.cast.has(uid)) continue;
+      const m = { uid, name, likeTotal: 0 };
+      demo.cast.set(uid, m);
+      handleIntake({ uid, name, avatar: '', kind: 'join', isDemo: true });
+      // 2 lần tap: lần 1 làm mốc delta, lần 2 +10 tim thật → gieo hạt ngay.
+      handleIntake({ uid, name, avatar: '', kind: 'tap', totalLikeCount: 1, isDemo: true });
+      m.likeTotal = 11;
+      handleIntake({ uid, name, avatar: '', kind: 'tap', totalLikeCount: 11, isDemo: true });
+      added += 1;
+    }
+    return added;
+  }
+  function demoStep() {
+    if (!demo.active) return;
+    if (demo.cast.size < 8 && Math.random() < 0.12) { demoEnsureCast(demo.cast.size + 1); return; }
+    const members = [...demo.cast.values()];
+    if (!members.length) { demoEnsureCast(3); return; }
+    const m = members[Math.floor(Math.random() * members.length)];
+    const roll = Math.random();
+    if (roll < 0.35) {
+      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'comment', text: DEMO_COMMENTS[Math.floor(Math.random() * DEMO_COMMENTS.length)], isDemo: true });
+    } else if (roll < 0.70) {
+      m.likeTotal += 5 + Math.floor(Math.random() * 16); // +5..20 tim
+      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'tap', totalLikeCount: m.likeTotal, isDemo: true });
+    } else if (roll < 0.85) {
+      const [coins, giftName] = DEMO_GIFTS[Math.floor(Math.random() * DEMO_GIFTS.length)];
+      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'gift', coins, giftName, giftId: 'demo', isDemo: true });
+    } else if (roll < 0.93) {
+      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'follow', isDemo: true });
+    } else {
+      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'share', isDemo: true });
+    }
+  }
+  function startDemo() {
+    if (!settings.demoMode) return { success: false, message: 'Bật chế độ thử trước khi thử.' };
+    if ((session.webhookCount || 0) > 0) return { success: false, message: 'Phòng đang có event thật — không bật được demo.' };
+    if (demo.active) return { success: true, demoActive: true };
+    demo.runId += 1;
+    demo.cast.clear();
+    demo.active = true;
+    demoEnsureCast(3);
+    demo.timer = timers.setInterval(demoStep, 2500);
+    addLog('🧪 Demo tự động BẬT — đang mô phỏng khán giả (tự dừng khi có event thật).', 'system');
+    saveSession(); broadcast();
+    return { success: true, demoActive: true };
+  }
+  function stopDemo(reason) {
+    if (!demo.active) return { success: true, demoActive: false };
+    demo.active = false;
+    if (demo.timer !== null) { timers.clearInterval(demo.timer); demo.timer = null; }
+    addLog(`🧪 Demo tự động TẮT${reason ? ` (${reason})` : ''}.`, 'system');
+    saveSession(); broadcast();
+    return { success: true, demoActive: false };
+  }
+  function demoOnce() {
     const steps = [];
     const an = testUid('demo-an');
     const binh = testUid('demo-binh');
@@ -592,7 +661,15 @@ function createEngine(ctx) {
     session.stats.taps += 20;
     for (let i = 0; i < 20; i += 1) plantSeed({ uid: an, name: 'An', avatar: '' });
     steps.push('An tap x20');
-    res.json({ success: true, steps });
+    return { success: true, steps };
+  }
+  app.post('/api/test/demo', (req, res) => {
+    if (!needDemo(req, res)) return;
+    const action = (req.body && req.body.action) || 'once';
+    if (action === 'start') return res.json(startDemo());
+    if (action === 'stop') return res.json(stopDemo());
+    const r = demoOnce();
+    return res.json({ success: true, steps: r.steps, demoActive: demo.active });
   });
 
   io.on('connection', (socket) => {
