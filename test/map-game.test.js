@@ -151,3 +151,116 @@ test('avatar: rơi vào quê, rời live vẫn neo, chỉ hết ván mới dọn
     await stopTestServer(t);
   }
 });
+
+// ---------- Demo tự động (demo-mode-contract.md) ----------
+async function postDemo(tBase, roomBase, action) {
+  return fetchJson(tBase, `${roomBase}/api/test/demo`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action }),
+  });
+}
+function statsKey(state) { return JSON.stringify(state.stats); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+test('demo: start → demoActive, state tiến triển; stop → state đứng yên', async () => {
+  const t = await startTestServer();
+  try {
+    const base = `/o/${GAME}/demo_user`;
+    const start = await postDemo(t.base, base, 'start');
+    assert.equal(start.status, 200);
+    assert.equal(start.json.success, true);
+    assert.equal(start.json.demoActive, true);
+    let state = await getState(t.base, base);
+    assert.equal(state.demoActive, true, 'state phải có demoActive=true sau khi start');
+    assert.equal(state.simulator, true, 'demo bật simulator');
+    // Đợi vòng lặp mô phỏng chạy: stats phải đổi trong 8s (simStep mỗi 1.2s).
+    const before = statsKey(state);
+    let changed = false;
+    for (let i = 0; i < 16; i++) {
+      await sleep(500);
+      state = await getState(t.base, base);
+      if (statsKey(state) !== before) { changed = true; break; }
+    }
+    assert.ok(changed, 'demo phải làm state tiến triển trong vài giây');
+    // Stop → state đứng yên.
+    const stop = await postDemo(t.base, base, 'stop');
+    assert.equal(stop.json.success, true);
+    assert.equal(stop.json.demoActive, false);
+    const s1 = await getState(t.base, base);
+    assert.equal(s1.demoActive, false);
+    await sleep(2500);
+    const s2 = await getState(t.base, base);
+    assert.equal(statsKey(s2), statsKey(s1), 'sau khi stop, state phải đứng yên');
+  } finally {
+    await stopTestServer(t);
+  }
+});
+
+test('demo: từ chối start khi phòng đã có event thật', async () => {
+  const t = await startTestServer();
+  try {
+    const base = `/o/${GAME}/demo_refuse_user`;
+    await postChat(t.base, base, 'real_user', 'Người Thật', 'Hà Nội');
+    const state = await getState(t.base, base);
+    assert.equal(state.webhook.count, 1);
+    const r = await postDemo(t.base, base, 'start');
+    assert.equal(r.json.success, false);
+    assert.match(r.json.message, /event thật/);
+    const s2 = await getState(t.base, base);
+    assert.equal(s2.demoActive, false, 'phòng có event thật thì demoActive vẫn false');
+  } finally {
+    await stopTestServer(t);
+  }
+});
+
+test('demo: event thật tới thì demo tự dừng', async () => {
+  const t = await startTestServer();
+  try {
+    const base = `/o/${GAME}/demo_autostop_user`;
+    await postDemo(t.base, base, 'start');
+    let state = await getState(t.base, base);
+    assert.equal(state.demoActive, true);
+    await postChat(t.base, base, 'real_user', 'Người Thật', 'Đà Nẵng');
+    state = await getState(t.base, base);
+    assert.equal(state.demoActive, false, 'webhook thật phải dừng demo');
+    assert.equal(state.simulator, false, 'simulator cũng phải tắt theo');
+  } finally {
+    await stopTestServer(t);
+  }
+});
+
+test('demo: once chạy 3 lượt mô phỏng ngay', async () => {
+  const t = await startTestServer();
+  try {
+    const base = `/o/${GAME}/demo_once_user`;
+    const before = statsKey(await getState(t.base, base));
+    const r = await postDemo(t.base, base, 'once');
+    assert.equal(r.json.success, true);
+    const after = statsKey(await getState(t.base, base));
+    assert.notEqual(after, before, 'once phải làm stats đổi (3 lượt mô phỏng)');
+  } finally {
+    await stopTestServer(t);
+  }
+});
+
+test('demo: overlay có huy hiệu DEMO + autostart ?demo=1; dashboard có nút Chạy/Dừng demo', async () => {
+  const t = await startTestServer();
+  try {
+    const base = `/o/${GAME}/demo_ui_user`;
+    const ov = await fetch(t.base + base + '/');
+    assert.equal(ov.status, 200);
+    const ovHtml = await ov.text();
+    assert.ok(ovHtml.includes('id="demo-badge"'), 'overlay có huy hiệu DEMO');
+    assert.ok(ovHtml.includes("get('demo') === '1'"), 'overlay có autostart ?demo=1');
+    assert.ok(ovHtml.includes("/api/test/demo"), 'overlay autostart gọi /api/test/demo');
+    const db = await fetch(t.base + base + '/dashboard');
+    assert.equal(db.status, 200);
+    const dbHtml = await db.text();
+    assert.ok(dbHtml.includes('▶ Chạy demo'), 'dashboard có nút Chạy demo');
+    assert.ok(dbHtml.includes('■ Dừng demo'), 'dashboard có nút Dừng demo');
+    assert.ok(dbHtml.includes('demoStart()') && dbHtml.includes('demoStop()'), 'dashboard có hàm demoStart/demoStop');
+  } finally {
+    await stopTestServer(t);
+  }
+});

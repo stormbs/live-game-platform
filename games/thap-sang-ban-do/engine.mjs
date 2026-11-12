@@ -984,6 +984,7 @@ function publicState() {
     viewers: game.viewers.size,
     stats: { ...game.stats },
     simulator: simOn,
+    demoActive,
     // Trạng thái đường link TikFinity (v7.1): overlay + dashboard dùng để vẽ
     // đèn báo. secondsAgo = null khi chưa từng nhận sự kiện nào.
     webhook: {
@@ -1015,12 +1016,13 @@ setInterval(() => {
 }, 500);
 
 let simOn = config.simulator;
+let demoActive = false; // demo loop qua /api/test/demo (demo-mode-contract.md)
 let simTimer = null;
 const SIM_NAMES = ['AnNhien', 'BaoTran', 'MinhKhang', 'ThuHa', 'DucAnh', 'LinhChi', 'QuocBao', 'PhuongAnh', 'HoangNam', 'KhanhLinh', 'TuanKiet', 'MyDuyen', 'GiaHuy', 'NgocTram'];
 const SIM_PROVINCES = ['Hà Nội', 'TP.HCM', 'Đà Nẵng', 'Nghệ An', 'Thanh Hóa', 'Hải Phòng', 'Cần Thơ', 'Đắk Lắk', 'Khánh Hòa', 'Quảng Ninh', 'thu do', 'tphcm', 'hoi an', 'nam dinh', 'phu quoc', 'da lat', 'sai gon', 'hue', 'vinh long', 'ca mau'];
 const SIM_GIFTS = [{ name: 'Hoa hồng', coins: 1 }, { name: 'Trái tim', coins: 5 }, { name: 'Bánh kem', coins: 20 }, { name: 'Vương miện', coins: 199 }, { name: 'Sư tử', coins: 500 }];
-function simStep() {
-  if (!simOn) return;
+function simStep(force) {
+  if (!force && !simOn) return;
   const r = Math.random();
   const name = SIM_NAMES[Math.floor(Math.random() * SIM_NAMES.length)];
   if (r < 0.45) onChat(name, SIM_PROVINCES[Math.floor(Math.random() * SIM_PROVINCES.length)]);
@@ -1038,6 +1040,28 @@ function setSimulator(on) {
   log('sim', on ? 'bật giả lập' : 'tắt giả lập');
 }
 if (simOn) setSimulator(true);
+
+// ---------------- Demo tu dong (demo-mode-contract.md) ----------------
+// Tai dung vong lap gia lap co san (simStep moi 1.2s): start/stop chi bat/tat
+// no + gan co demoActive. Tu choi khi phong da co event that; event that dau
+// tien toi thi tu dung (xem handleTikFinityEvent).
+function startDemo() {
+  if (game.webhook.count > 0) return { success: false, message: 'Phòng đang có event thật — không bật được demo.' };
+  if (demoActive) return { success: true, demoActive: true };
+  setSimulator(true);
+  demoActive = true;
+  log('demo', 'Demo tự động BẬT — đang mô phỏng khán giả (tự dừng khi có event thật).');
+  broadcast();
+  return { success: true, demoActive: true };
+}
+function stopDemo(reason) {
+  if (!demoActive) return { success: true, demoActive: false };
+  setSimulator(false);
+  demoActive = false;
+  log('demo', 'Demo tự động TẮT' + (reason ? ` (${reason})` : '') + '.');
+  broadcast();
+  return { success: true, demoActive: false };
+}
 
 // ---------------------------------------------------------------------------
 // Webhook TikFinity: parse linh hoạt (TikFinity đổi tên field theo bản).
@@ -1130,6 +1154,7 @@ function handleTikFinityEvent(body) {
   // Đèn báo (v7.1): ghi nhận NGAY khi webhook tới, kể cả event lạ chưa nhận
   // ra — chỉ cần TikFinity gửi được tới server là link đã sống.
   game.webhook.count++;
+  if (demoActive) stopDemo('có event thật');
   game.webhook.lastAt = Date.now();
   const data = ev.data || ev.payload || ev.eventData || ev;
   const userObj = data.user || ev.user || {};
@@ -1312,13 +1337,24 @@ const handleRequest = async (req, res) => {
     return;
   }
   // API action (dashboard): {action, ...}
+  // Demo tu dong (demo-mode-contract.md): vong lap gia lap co san (simStep),
+  // chuan hoa qua /api/test/demo start/stop/once nhu cac game khac.
+  if (p === '/api/test/demo' && req.method === 'POST') {
+    const b = await readBody(req);
+    const action = (b && b.action) || 'once';
+    if (action === 'start') { sendJson(res, 200, startDemo()); return; }
+    if (action === 'stop') { sendJson(res, 200, stopDemo()); return; }
+    simStep(true); simStep(true); simStep(true);
+    sendJson(res, 200, { success: true, steps: ['3 lượt mô phỏng: comment/tim/quà/follow'], demoActive });
+    return;
+  }
   if (p === '/api/action' && req.method === 'POST') {
     const b = await readBody(req);
     try {
       if (b.action === 'reset') resetRound();
       else if (b.action === 'lightAll') { for (const pr of PROVINCES) lightProvince(pr.num, null, 'dashboard'); }
       else if (b.action === 'lightRandom') lightRandom(null, 'dashboard', 1);
-      else if (b.action === 'simulator') setSimulator(!!b.on);
+      else if (b.action === 'simulator') { setSimulator(!!b.on); demoActive = !!b.on; }
       else if (b.action === 'speak') pushAnnounce(b.text || 'Đã thắp sáng Hà Nội, thủ đô ngàn năm văn hiến!', [b.clip || 'prov-12'], { priority: 2, ttsText: b.text || 'Đã thắp sáng Hà Nội, thủ đô ngàn năm văn hiến!' });
       else if (b.action === 'music') {
         if (b.cmd === 'play') game_music.playing = true;

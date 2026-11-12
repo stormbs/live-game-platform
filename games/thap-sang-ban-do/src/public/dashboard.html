@@ -87,6 +87,8 @@ Vào phòng (Join) — triggerTypeId 6:
   <button onclick="act('lightAll')">🌟 Sáng hết (xem màn ăn mừng)</button>
   <button onclick="act('reset')">🔄 Chơi lại từ đầu</button>
   <label style="margin-left:12px"><input type="checkbox" id="sim" onchange="act('simulator',{on:this.checked})"> Giả lập người xem</label>
+  <button onclick="demoStart()">▶ Chạy demo</button>
+  <button onclick="demoStop()">■ Dừng demo</button>
 </div>
 
 <div class="card">
@@ -279,6 +281,14 @@ fillTfWebhook();
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fmtAgo(sec){ if(sec==null) return '—'; if(sec<60) return sec+' giây'; const m=Math.floor(sec/60); return m+' phút'+(sec%60?' '+(sec%60)+' giây':''); }
 function fmtTime(ms){ const s=Math.max(0,Math.ceil(ms/1000)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60; const p=n=>String(n).padStart(2,'0'); return h>0?`${h}:${p(m)}:${p(ss)}`:`${p(m)}:${p(ss)}`; }
+async function demoStart() {
+  await fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) });
+  load();
+}
+async function demoStop() {
+  await fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stop' }) });
+  load();
+}
 async function act(action, extra={}) {
   await fetch('/api/action', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action, ...extra }) });
   load();

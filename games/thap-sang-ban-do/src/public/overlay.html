@@ -64,6 +64,7 @@
   /* Header */
   #header { top:16px; text-align:center; background:transparent; border:none; box-shadow:none; padding:0; z-index:3; }
   #headerRow { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+  #demo-badge { display:none; position:fixed; top:14px; right:14px; z-index:9998; background:#b45309; color:#fff; font-weight:800; font-size:15px; padding:6px 12px; border-radius:999px; box-shadow:0 2px 10px rgba(0,0,0,.45); }
   #headerRow p { flex:1; }
   #header h1 { font-size:52px; letter-spacing:1px;
     background:linear-gradient(90deg,#ff9d00,#ffd700,#fff3a3,#ffd700,#ff9d00);
@@ -195,6 +196,7 @@
     <div id="headerRow">
       <p>Comment <b>tên quê</b> — tỉnh nhiều điểm nhất thắng!</p>
       <div id="liveBadge" class="off">○ CHỜ KẾT NỐI</div>
+      <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
     </div>
   </div>
 
@@ -734,6 +736,8 @@ function tierOf(p, top3Nums) {
 let lastAllLitAt = null;
 function render(s) {
   // Đồng hồ ván (v8): đếm ngược tới hết giờ.
+  const db = document.getElementById('demo-badge');
+  if (db) db.style.display = s.demoActive ? 'block' : 'none';
   const tEl = document.getElementById('timerText');
   if (tEl) tEl.textContent = s.phase === 'playing' ? fmtTime(s.msRoundLeft) : '00:00';
   const tb = document.getElementById('timerBar');
@@ -939,6 +943,13 @@ initMap().then(() => {
   es.onmessage = (e) => { try { render(JSON.parse(e.data)); } catch (_) {} };
   es.onerror = () => { fetch('/api/state').then(r => r.json()).then(render).catch(() => {}); };
 });
+// ?demo=1: tu chay demo (chi khi phong chua co event that).
+if (new URLSearchParams(location.search).get('demo') === '1') {
+  fetch('/api/state').then(r => r.json()).then(st => {
+    if ((st.webhook && st.webhook.count) > 0) return;
+    return fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) });
+  }).catch(() => {});
+}
 </script>
 
 <script>
