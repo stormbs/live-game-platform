@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đua Thuyền Rồng — LIVE Overlay</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #fff; }
+  #stage { position: relative; width: 1080px; height: 1920px; background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 30%, #0ea5e9 100%); }
+  .clouds { position: absolute; top: 0; left: 0; right: 0; height: 260px; background: radial-gradient(ellipse 30% 40% at 20% 40%, rgba(255,255,255,.9), transparent), radial-gradient(ellipse 25% 35% at 70% 60%, rgba(255,255,255,.8), transparent), radial-gradient(ellipse 20% 30% at 45% 20%, rgba(255,255,255,.7), transparent); }
+  header { position: absolute; top: 24px; left: 0; right: 0; text-align: center; z-index: 5; }
+  header h1 { font-size: 62px; letter-spacing: 4px; text-shadow: 0 4px 0 rgba(0,0,0,.3); }
+  header .sub { font-size: 26px; opacity: .95; margin-top: 6px; text-shadow: 0 2px 4px rgba(0,0,0,.3); }
+  #score { position: absolute; top: 180px; left: 40px; right: 40px; display: flex; gap: 16px; z-index: 5; }
+  .team-box { flex: 1; border-radius: 22px; padding: 16px 20px; background: rgba(0,0,0,.4); border: 4px solid; }
+  .team-box.vang { border-color: #facc15; }
+  .team-box.do { border-color: #f87171; }
+  .team-box .tname { font-size: 30px; font-weight: 800; }
+  .team-box.vang .tname { color: #fde047; }
+  .team-box.do .tname { color: #fca5a5; }
+  .team-box .meters { font-size: 64px; font-weight: 900; line-height: 1; }
+  .team-box .meters small { font-size: 28px; }
+  .team-box .bar { height: 18px; border-radius: 9px; background: rgba(255,255,255,.25); margin-top: 10px; overflow: hidden; }
+  .team-box .bar i { display: block; height: 100%; }
+  .team-box.vang .bar i { background: #facc15; }
+  .team-box.do .bar i { background: #ef4444; }
+  #timer { position: absolute; top: 180px; left: 50%; transform: translateX(-50%); width: 180px; text-align: center; background: rgba(0,0,0,.55); border-radius: 20px; padding: 12px 6px; z-index: 6; }
+  #timer .clock { font-size: 46px; font-weight: 900; }
+  #timer .lbl { font-size: 20px; opacity: .85; }
+  #river { position: absolute; top: 480px; left: 0; right: 0; bottom: 340px; }
+  .lane { position: relative; height: 46%; margin: 2% 0; background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.05)); border-top: 3px dashed rgba(255,255,255,.5); border-bottom: 3px dashed rgba(255,255,255,.5); overflow: hidden; }
+  .lane .milestones { position: absolute; inset: 0; }
+  .lane .ms { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,.55); }
+  .lane .ms span { position: absolute; top: 6px; left: 4px; font-size: 20px; font-weight: 700; color: rgba(255,255,255,.9); text-shadow: 0 1px 3px rgba(0,0,0,.4); }
+  .lane .finish { position: absolute; top: 0; bottom: 0; right: 8px; width: 10px; background: repeating-linear-gradient(180deg, #111 0 16px, #fff 16px 32px); }
+  .lane .finish span { position: absolute; top: 6px; right: 16px; font-size: 22px; font-weight: 800; }
+  .boat { position: absolute; top: 50%; transform: translateY(-50%); font-size: 110px; line-height: 1; transition: left 0.6s ease; filter: drop-shadow(0 6px 6px rgba(0,0,0,.35)); white-space: nowrap; }
+  .boat .crew { font-size: 30px; letter-spacing: 2px; }
+  .boat .bname { font-size: 24px; font-weight: 800; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,.5); }
+  .boat.combo { animation: surge .5s ease 3; }
+  @keyframes surge { 0% { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-58%) scale(1.08); } 100% { transform: translateY(-50%) scale(1); } }
+  .lane-label { position: absolute; left: 12px; top: 8px; font-size: 26px; font-weight: 800; z-index: 3; text-shadow: 0 2px 4px rgba(0,0,0,.5); }
+  #drum-flash { position: absolute; top: 480px; left: 0; right: 0; bottom: 340px; display: flex; align-items: center; justify-content: center; font-size: 90px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); opacity: 0; pointer-events: none; z-index: 8; }
+  #drum-flash.on { animation: flash 1.2s ease; }
+  @keyframes flash { 0% { opacity: 0; transform: scale(.8); } 20% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(1); } }
+  #tops { position: absolute; left: 40px; right: 40px; bottom: 210px; display: flex; gap: 20px; z-index: 5; }
+  .top-list { flex: 1; background: rgba(0,0,0,.4); border-radius: 18px; padding: 14px 18px; }
+  .top-list h3 { font-size: 26px; margin-bottom: 8px; }
+  .top-list.vang h3 { color: #fde047; }
+  .top-list.do h3 { color: #fca5a5; }
+  .top-list .row { font-size: 24px; padding: 3px 0; display: flex; justify-content: space-between; }
+  #ticker { position: absolute; left: 0; right: 0; bottom: 130px; height: 64px; background: rgba(0,0,0,.55); display: flex; align-items: center; padding: 0 24px; font-size: 28px; white-space: nowrap; overflow: hidden; z-index: 5; }
+  #statusbar { position: absolute; left: 0; right: 0; bottom: 56px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 26px; background: rgba(0,0,0,.4); z-index: 5; }
+  #banner { position: absolute; top: 820px; left: 90px; right: 90px; text-align: center; font-size: 72px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); display: none; z-index: 9; }
+  #demo-badge { position: absolute; top: 24px; right: 24px; background: #f59e0b; color: #111; font-weight: 900; font-size: 26px; padding: 10px 18px; border-radius: 14px; display: none; z-index: 10; }
+  #hint { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 22px; opacity: .8; z-index: 5; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="clouds"></div>
+  <header>
+    <h1>🐉 ĐUA THUYỀN RỒNG</h1>
+    <div class="sub" id="race-label">Cuộc đua 1 — chờ người chơi vào đội</div>
+  </header>
+  <div id="demo-badge">🧪 DEMO</div>
+  <div id="score">
+    <div class="team-box vang"><div class="tname">🟡 ĐỘI VÀNG</div><div class="meters"><span id="m-vang">0</span><small>m</small></div><div class="bar"><i id="bar-vang" style="width:0%"></i></div></div>
+    <div class="team-box do"><div class="tname">🔴 ĐỘI ĐỎ</div><div class="meters"><span id="m-do">0</span><small>m</small></div><div class="bar"><i id="bar-do" style="width:0%"></i></div></div>
+  </div>
+  <div id="timer"><div class="clock" id="clock">5:00</div><div class="lbl" id="dist-label">Đích 500m</div></div>
+  <div id="river">
+    <div class="lane" id="lane-vang">
+      <div class="lane-label">🟡 Đội Vàng</div>
+      <div class="milestones" id="ms-vang"></div>
+      <div class="finish"><span>🏁</span></div>
+      <div class="boat" id="boat-vang" style="left:0px"><div>🐉🛶</div><div class="crew" id="crew-vang"></div><div class="bname">THUYỀN VÀNG</div></div>
+    </div>
+    <div class="lane" id="lane-do">
+      <div class="lane-label">🔴 Đội Đỏ</div>
+      <div class="milestones" id="ms-do"></div>
+      <div class="finish"><span>🏁</span></div>
+      <div class="boat" id="boat-do" style="left:0px"><div>🐉🛶</div><div class="crew" id="crew-do"></div><div class="bname">THUYỀN ĐỎ</div></div>
+    </div>
+  </div>
+  <div id="drum-flash">🥁 TRỐNG DỒN!</div>
+  <div id="tops">
+    <div class="top-list vang"><h3>🟡 Top chèo — Đội Vàng</h3><div id="top-vang"></div></div>
+    <div class="top-list do"><h3>🔴 Top chèo — Đội Đỏ</h3><div id="top-do"></div></div>
+  </div>
+  <div id="ticker"><span id="ticker-text">Bình luận "vàng" hoặc "đỏ" để vào đội • 1 tim +1m, 1 bình luận +5m, 1 xu quà +5m • 10 tim/2s cùng đội = trống dồn +10m</span></div>
+  <div id="statusbar"><span id="phase-label">Chờ cuộc đua</span><span id="counts"></span><span id="combos"></span></div>
+  <div id="banner"></div>
+  <div id="hint">Đua thuyền rồng — thả tim để chèo, cả đội chèo dồn dập thì trống dồn, thuyền vọt lên.</div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  const path = location.pathname.split('/').filter(Boolean);
+  const username = path[2] || 'live';
+  const apiBase = `/o/dua-thuyen-rong/${username}`;
+  const demoParam = params.get('demo') === '1';
+  let state = null;
+  let voiceOn = true;
+  const ttsQueue = [];
+  let ttsPlaying = false;
+
+  function fmtClock(ms) {
+    if (ms == null) return '--:--';
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return String(Math.floor(s / 60)) + ':' + String(s % 60).padStart(2, '0');
+  }
+  function playTts(text) {
+    if (!voiceOn || !text) return;
+    ttsQueue.push(text);
+    nextTts();
+  }
+  function nextTts() {
+    if (ttsPlaying || !ttsQueue.length) return;
+    ttsPlaying = true;
+    const text = ttsQueue.shift();
+    const audio = new Audio('/api/tts?text=' + encodeURIComponent(text));
+    audio.onended = () => { ttsPlaying = false; nextTts(); };
+    audio.onerror = () => {
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'vi-VN';
+        u.onend = () => { ttsPlaying = false; nextTts(); };
+        speechSynthesis.speak(u);
+      } catch (e) { ttsPlaying = false; nextTts(); }
+    };
+    audio.play().catch(() => { ttsPlaying = false; nextTts(); });
+  }
+  // Tiếng trống WebAudio (không cần file nhạc).
+  function playDrum() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      const ac = playDrum._ac || (playDrum._ac = new AC());
+      [0, 180, 360, 540].forEach((dt) => {
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(120, ac.currentTime + dt / 1000);
+        o.frequency.exponentialRampToValueAtTime(45, ac.currentTime + dt / 1000 + 0.15);
+        g.gain.setValueAtTime(0.5, ac.currentTime + dt / 1000);
+        g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dt / 1000 + 0.18);
+        o.connect(g).connect(ac.destination);
+        o.start(ac.currentTime + dt / 1000);
+        o.stop(ac.currentTime + dt / 1000 + 0.2);
+      });
+    } catch (e) {}
+  }
+  function buildMilestones(dist) {
+    const step = dist / 5;
+    for (const id of ['ms-vang', 'ms-do']) {
+      const el = document.getElementById(id);
+      if (el.dataset.dist == dist) continue;
+      el.dataset.dist = dist;
+      let html = '';
+      for (let i = 1; i <= 4; i++) {
+        const m = Math.round(step * i);
+        const pct = (m / dist) * 100;
+        html += `<div class="ms" style="left:${pct}%"><span>${m}m</span></div>`;
+      }
+      el.innerHTML = html;
+    }
+  }
+  function render(s) {
+    if (!s || s.game !== 'dua-thuyen-rong') return;
+    state = s;
+    voiceOn = s.settings.voiceEnabled !== false;
+    document.getElementById('m-vang').textContent = s.meters.vang;
+    document.getElementById('m-do').textContent = s.meters.do;
+    document.getElementById('bar-vang').style.width = s.progress.vang + '%';
+    document.getElementById('bar-do').style.width = s.progress.do + '%';
+    document.getElementById('dist-label').textContent = 'Đích ' + s.raceDistanceM + 'm';
+    document.getElementById('clock').textContent = s.phase === 'racing' && s.raceEndsAt ? fmtClock(s.raceEndsAt - Date.now()) : (s.phase === 'spotlight' ? '⏳' : '--:--');
+    document.getElementById('race-label').textContent = 'Cuộc đua ' + s.raceNo + (s.phase === 'lobby' ? ' — chờ người chơi vào đội' : s.phase === 'racing' ? ' — đang diễn ra' : ' — vinh danh đội thắng');
+    buildMilestones(s.raceDistanceM);
+    const laneW = 1080 - 220;
+    document.getElementById('boat-vang').style.left = Math.round((s.progress.vang / 100) * laneW) + 'px';
+    document.getElementById('boat-do').style.left = Math.round((s.progress.do / 100) * laneW) + 'px';
+    document.getElementById('crew-vang').textContent = '🚣'.repeat(Math.min(6, s.rowers.vang.length));
+    document.getElementById('crew-do').textContent = '🚣'.repeat(Math.min(6, s.rowers.do.length));
+    const topV = s.top.vang.map((p, i) => `<div class="row"><span>${i + 1}. ${escapeHtml(p.name)}</span><span>${p.meters}m</span></div>`).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
+    const topD = s.top.do.map((p, i) => `<div class="row"><span>${i + 1}. ${escapeHtml(p.name)}</span><span>${p.meters}m</span></div>`).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
+    document.getElementById('top-vang').innerHTML = topV;
+    document.getElementById('top-do').innerHTML = topD;
+    document.getElementById('phase-label').textContent =
+      s.phase === 'lobby' ? '🕒 Chờ cuộc đua' : s.phase === 'racing' ? '🚣 Cuộc đua đang diễn ra' : '🏆 Vinh danh đội thắng';
+    document.getElementById('counts').textContent = `🟡 ${s.teamCounts.vang} • 🔴 ${s.teamCounts.do} • 👥 ${s.teamCounts.none} chưa chọn đội`;
+    document.getElementById('combos').textContent = `🥁 Trống dồn: 🟡${s.combos.vang} 🔴${s.combos.do}`;
+    const banner = document.getElementById('banner');
+    if (s.phase === 'spotlight' && s.winner) {
+      banner.style.display = 'block';
+      banner.textContent = s.winner.team ? (s.winner.team === 'vang' ? '🟡 ĐỘI VÀNG VỀ NHẤT!' : '🔴 ĐỘI ĐỎ VỀ NHẤT!') : '🤝 HÒA!';
+    } else banner.style.display = 'none';
+    document.getElementById('demo-badge').style.display = s.demoActive ? 'block' : 'none';
+    if (s.logs && s.logs.length) {
+      document.getElementById('ticker-text').textContent = s.logs[s.logs.length - 1].text;
+    }
+  }
+  function escapeHtml(x) { return String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function drumFlash(team) {
+    const el = document.getElementById('drum-flash');
+    el.textContent = '🥁 TRỐNG DỒN! ' + (team === 'vang' ? 'ĐỘI VÀNG' : 'ĐỘI ĐỎ');
+    el.classList.remove('on');
+    void el.offsetWidth;
+    el.classList.add('on');
+    const boat = document.getElementById(team === 'vang' ? 'boat-vang' : 'boat-do');
+    boat.classList.remove('combo');
+    void boat.offsetWidth;
+    boat.classList.add('combo');
+    playDrum();
+  }
+  async function poll() {
+    try {
+      const r = await fetch(apiBase + '/api/state');
+      const s = await r.json();
+      render(s);
+    } catch (e) { /* keep last */ }
+    setTimeout(poll, 1500);
+  }
+  function boot() {
+    try {
+      const socket = io();
+      socket.on('state-update', (s) => render(s));
+      socket.on('drum', (d) => { if (d && d.team) { drumFlash(d.team); if (d.text) playTts(d.text); } });
+      socket.on('race-win', (d) => { if (d && d.text) playTts(d.text); });
+    } catch (e) { /* polling fallback */ }
+    poll();
+    if (demoParam) {
+      fetch(apiBase + '/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+        .then(() => fetch(apiBase + '/api/demo/start', { method: 'POST' })).catch(() => {});
+    }
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
