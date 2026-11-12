@@ -205,6 +205,16 @@
             </div>
 
             <div class="test-actions-grid">
+              <button class="btn-test" onclick="demoStart()">
+                <span class="icon">▶</span>
+                <span class="title">Chạy demo</span>
+                <span class="desc">Khán giả ảo vào buồng liên tục</span>
+              </button>
+              <button class="btn-test" onclick="demoStop()">
+                <span class="icon">■</span>
+                <span class="title">Dừng demo</span>
+                <span class="desc">Dừng vòng lặp mô phỏng</span>
+              </button>
               <button class="btn-test" onclick="simulateEvent('join')">
                 <span class="icon">👤</span>
                 <span class="title">Thử Join LIVE</span>
@@ -1096,6 +1106,16 @@ Vào phòng (Join) — triggerTypeId 6:
         'tab-backup': 'Sao Lưu & Khôi Phục Dữ Liệu'
       };
       document.getElementById('topbar-title').innerText = titles[tabId] || 'Buồng Giam Dashboard';
+    }
+
+    // Demo tự động: vòng lặp mô phỏng liên tục phía server (xem demo-mode-contract.md).
+    function demoStart() {
+      fetch('/api/demo-mode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: true }) })
+        .then(() => { document.getElementById('toggle-demo').checked = true; return fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) }); })
+        .then(r => r.json()).then(j => { if (!j.success) alert('Không bật được demo: ' + (j.message || 'lỗi.')); });
+    }
+    function demoStop() {
+      fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stop' }) });
     }
 
     // Toggle Demo Mode

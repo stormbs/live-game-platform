@@ -625,6 +625,7 @@ io.on('connection', (socket) => {
     chicken: gameState.chicken,
     activeClimbers: gameState.activeClimbers,
     isDemoMode: gameState.isDemoMode,
+    demoActive: demo.active,
     isReleasing: Boolean(gameState.isReleasing || gameState.isReleaseCoolingDown || gameState.chicken?.isExiting),
     isReleaseCoolingDown: Boolean(gameState.isReleaseCoolingDown),
     settings: {
@@ -1578,6 +1579,7 @@ function broadcastState() {
     chicken: gameState.chicken,
     activeClimbers: gameState.activeClimbers,
     isDemoMode: gameState.isDemoMode,
+    demoActive: demo.active,
     isReleasing: Boolean(gameState.isReleasing || gameState.isReleaseCoolingDown || gameState.chicken?.isExiting),
     isReleaseCoolingDown: Boolean(gameState.isReleaseCoolingDown),
     settings: {
@@ -2006,6 +2008,93 @@ app.post('/api/demo-mode', (req, res) => {
   res.json({ success: true, isDemoMode: gameState.isDemoMode });
 });
 
+// ---------------- Demo tự động (xem ~/workspace/overlay-moi/demo-mode-contract.md) ----------------
+// Vòng lặp mô phỏng khán giả liên tục qua ĐÚNG các hàm intake thật
+// (getOrCreateUser/handleChat/handleTaps/handleFollow/addPoints — cùng đường
+// webhook thật gọi). Người xem demo: uid demo_<lượt>_<số>, isSimulated = true
+// (miễn đá idle + trừ điểm), KHÔNG có avatar TikTok thật (dùng nhân vật vẽ sẵn).
+// GIỮ NGUYÊN /api/demo-mode + watermark + demoFastChicken — vòng lặp này chỉ
+// thêm lên trên.
+const DEMO_CAST_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khánh', 'Lan', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo'];
+const DEMO_CHATS = ['Cố gắng cải tạo, sớm ngày hoà nhập xã hội', 'Chào buồng giam anh em ơi!', 'Cố lên anh em', 'Hôm nay ăn gà không?', 'Cải tạo tốt nhé mọi người'];
+const DEMO_GIFTS = [['Hoa hồng', 5], ['Kính râm', 10], ['Heo may mắn', 50]];
+const demo = { active: false, timer: null, cast: new Map(), runId: 0 };
+function demoMember(i) {
+  const name = DEMO_CAST_NAMES[i % DEMO_CAST_NAMES.length];
+  const uid = `demo_${demo.runId}_${i}`;
+  let m = demo.cast.get(uid);
+  if (!m) {
+    m = { uid, name };
+    demo.cast.set(uid, m);
+    const u = getOrCreateUser(uid, name, '', true);
+    u.isSimulated = true; // ở lại buồng cho đông (miễn đá idle + trừ điểm)
+    handleTaps(uid, name, '', 50); // 50 tap = +1đ
+    // Quà mở đầu: người đầu tiên tặng Heo 50 xu (250đ) -> lên Mâm 1 ăn gà ngay.
+    const [gName, gCoins] = i === 0 ? ['Heo may mắn', 50] : DEMO_GIFTS[i % DEMO_GIFTS.length];
+    const resolved = resolveGiftPoints(gName, gCoins, 1, 'demo');
+    if (!resolved.isUnknown && resolved.totalPoints > 0) {
+      addPoints(uid, name, '', resolved.totalPoints, `Đóng họ ${gName}`, true, gName, resolved.count, 'demo', resolved.unitCoins, resolved.totalCoins);
+    }
+  }
+  return m;
+}
+function demoEnsureCast(n) {
+  for (let i = 0; i < DEMO_CAST_NAMES.length && demo.cast.size < n; i += 1) demoMember(i);
+}
+function demoStep() {
+  if (!demo.active) return;
+  if (demo.cast.size < 8 && Math.random() < 0.12) { demoEnsureCast(demo.cast.size + 1); return; }
+  const members = [...demo.cast.values()];
+  if (!members.length) { demoEnsureCast(3); return; }
+  const m = members[Math.floor(Math.random() * members.length)];
+  const roll = Math.random();
+  if (roll < 0.40) {
+    handleChat(m.uid, m.name, '', DEMO_CHATS[Math.floor(Math.random() * DEMO_CHATS.length)]);
+  } else if (roll < 0.70) {
+    handleTaps(m.uid, m.name, '', 50 + Math.floor(Math.random() * 51)); // 50-100 tap
+  } else if (roll < 0.88) {
+    const [gName, gCoins] = DEMO_GIFTS[Math.floor(Math.random() * DEMO_GIFTS.length)];
+    const resolved = resolveGiftPoints(gName, gCoins, 1, 'demo');
+    if (!resolved.isUnknown && resolved.totalPoints > 0) {
+      addPoints(m.uid, m.name, '', resolved.totalPoints, `Đóng họ ${gName}`, true, gName, resolved.count, 'demo', resolved.unitCoins, resolved.totalCoins);
+    }
+  } else {
+    handleFollow(m.uid, m.name, '');
+  }
+}
+function startDemo() {
+  if (!gameState.isDemoMode) return { success: false, message: 'Bật chế độ DEMO trước khi thử.' };
+  if (webhookCount > 0) return { success: false, message: 'Phòng đang có event thật — không bật được demo.' };
+  if (demo.active) return { success: true, demoActive: true };
+  demo.runId += 1;
+  demo.cast.clear();
+  demo.active = true;
+  demoEnsureCast(3);
+  demo.timer = setInterval(demoStep, 2500);
+  addLog('🧪 Demo tự động BẬT — đang mô phỏng khán giả (tự dừng khi có event thật).', 'system');
+  broadcastState();
+  return { success: true, demoActive: true };
+}
+function stopDemo(reason) {
+  if (!demo.active) return { success: true, demoActive: false };
+  demo.active = false;
+  if (demo.timer !== null) { clearInterval(demo.timer); demo.timer = null; }
+  addLog(`🧪 Demo tự động TẮT${reason ? ` (${reason})` : ''}.`, 'system');
+  broadcastState();
+  return { success: true, demoActive: false };
+}
+app.post('/api/test/demo', (req, res) => {
+  const action = (req.body && req.body.action) || 'once';
+  if (action === 'start') return res.json(startDemo());
+  if (action === 'stop') return res.json(stopDemo());
+  // once: 1 lượt mẫu — 3 người vào buồng (quà mở đầu đủ lên mâm).
+  if (!gameState.isDemoMode) return res.status(400).json({ success: false, message: 'Bật chế độ DEMO trước khi thử.' });
+  demo.runId += 1;
+  demo.cast.clear();
+  demoEnsureCast(3);
+  return res.json({ success: true, steps: ['An vào buồng + Heo 50 xu (Mâm 1)', 'Bình vào buồng + quà', 'Chi vào buồng + quà'], demoActive: demo.active });
+});
+
 // WALL DECORATION CONFIGURATION
 app.post('/api/decor/save', (req, res) => {
   const { mam1, mam2 } = req.body;
@@ -2055,6 +2144,7 @@ app.get('/api/state', (req, res) => {
     chicken: gameState.chicken,
     activeClimbers: gameState.activeClimbers,
     isDemoMode: gameState.isDemoMode,
+    demoActive: demo.active,
     isReleasing: Boolean(gameState.isReleasing || gameState.isReleaseCoolingDown || gameState.chicken?.isExiting),
     isReleaseCoolingDown: Boolean(gameState.isReleaseCoolingDown),
     settings,
@@ -2211,6 +2301,7 @@ app.post('/api/audio/periodic-voice/trigger', (req, res) => {
 });
 
 app.post('/api/session/reset', (req, res) => {
+  stopDemo();
   resetSession();
   res.json({ success: true, message: 'Đã làm mới phiên LIVE.' });
 });
@@ -2474,6 +2565,8 @@ function processWebhookData(rawReqBody, reqQuery, reqMethod, reqUrl) {
 
 function handleWebhookRequest(req, res) {
   webhookCount++;
+  // Live thật tiếp quản: demo đang chạy thì tự dừng ngay khi event thật đầu tiên tới.
+  if (demo.active) stopDemo('có event thật');
   const p = processWebhookData(req.body, req.query, req.method, req.originalUrl);
   const { uid, uname, avatar, data, innerData, args, isLeave, isFollow, isGift, isLike, isChat, isJoin, actionName } = p;
 

@@ -2651,6 +2651,15 @@
 
     // Tự động kéo state khởi tạo ngay khi tải trang không cần chờ sự kiện webhook
     fetch('/api/state').then(r => r.json()).then(handleStateUpdate).catch(e => console.warn(e));
+    // ?demo=1: tự bật chế độ DEMO + chạy demo (chỉ khi phòng chưa có event thật).
+    // Watermark "CHẾ ĐỘ DEMO ĐANG BẬT" có sẵn sẽ hiện khi isDemoMode bật.
+    if (new URLSearchParams(location.search).get('demo') === '1') {
+      fetch('/api/state').then(r => r.json()).then(st => {
+        if ((st.webhook && st.webhook.count) > 0) return;
+        return fetch('/api/demo-mode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: true }) })
+          .then(() => fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) }));
+      }).catch(e => console.warn(e));
+    }
 
     // SOCKET LISTENERS
     socket.on('state-update', handleStateUpdate);
