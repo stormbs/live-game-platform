@@ -244,7 +244,8 @@ function statePayload() {
     avatarWarning: session.avatarStats.total > 0 && session.avatarStats.withAvatar === 0,
     voiceStatus: session.voiceStatus || null,
     waitingCount: session.queue.length,
-    webhook: { count: session.webhookCount || 0 }
+    webhook: { count: session.webhookCount || 0 },
+    demoActive: demo.active
   };
 }
 function broadcast() { io.emit('state-update', statePayload()); }
@@ -468,8 +469,8 @@ function handleIntake(ev, source) {
       return { queued: false };
     }
     if (coins === null || isNaN(coins) || coins < settings.minGiftCoins) {
-      if (uid) session.avatarStats.total += 1;
-      if (avatar && uid) session.avatarStats.withAvatar += 1;
+      if (uid && !ev.isDemo) session.avatarStats.total += 1;
+      if (avatar && uid && !ev.isDemo) session.avatarStats.withAvatar += 1;
       addLog(`⚠️ [${name}] tặng "${giftName}" nhưng không rõ số xu (>= ${settings.minGiftCoins}) — chỉ log, không vào hàng đợi, không tính tổng xu quà.`, 'warn');
       saveSession(); broadcast();
       return { queued: false };
@@ -480,13 +481,13 @@ function handleIntake(ev, source) {
       updatedAt: prev ? prev.updatedAt : Date.now()
     };
     addLog(`🎁 [${name}] tặng "${giftName}" +${coins} xu (tổng xu quà: ${session.vipCoins[uid].coins} xu).`, 'gift');
-    if (uid) { session.avatarStats.total += 1; if (avatar) session.avatarStats.withAvatar += 1; }
+    if (uid && !ev.isDemo) { session.avatarStats.total += 1; if (avatar) session.avatarStats.withAvatar += 1; }
     const r = tryEnqueue({ ...ev, coins });
     saveSession(); broadcast();
     return r;
   }
   if (kind === 'comment') {
-    if (uid) { session.avatarStats.total += 1; if (avatar) session.avatarStats.withAvatar += 1; }
+    if (uid && !ev.isDemo) { session.avatarStats.total += 1; if (avatar) session.avatarStats.withAvatar += 1; }
     if (!commentMatches(text, settings.commentKeyword)) {
       addLog(`💬 [${name}] bình luận "${String(text || '').slice(0, 60)}" — không khớp nội dung "${settings.commentKeyword}", chỉ log, không vào mốc 1.`, 'chat');
       saveSession(); broadcast();
@@ -503,7 +504,7 @@ function handleIntake(ev, source) {
       saveSession(); broadcast();
       return { queued: false };
     }
-    if (uid) { session.avatarStats.total += 1; if (avatar) session.avatarStats.withAvatar += 1; }
+    if (uid && !ev.isDemo) { session.avatarStats.total += 1; if (avatar) session.avatarStats.withAvatar += 1; }
     if (settings.followOncePerSession && session.followedUids.includes(uid)) {
       addLog(`ℹ️ [${name}] đã theo dõi trong phiên này rồi, không tạo khung mới.`, 'info');
       saveSession(); broadcast();
@@ -516,14 +517,14 @@ function handleIntake(ev, source) {
     return r;
   }
   if (kind === 'share') {
-    if (uid) { session.avatarStats.total += 1; if (avatar) session.avatarStats.withAvatar += 1; }
+    if (uid && !ev.isDemo) { session.avatarStats.total += 1; if (avatar) session.avatarStats.withAvatar += 1; }
     addLog(`🔁 [${name}] đã chia sẻ live — xét vào hàng đợi.`, 'share');
     const r = tryEnqueue(ev);
     saveSession(); broadcast();
     return r;
   }
   if (kind === 'tap') {
-    if (uid) { session.avatarStats.total += 1; if (avatar) session.avatarStats.withAvatar += 1; }
+    if (uid && !ev.isDemo) { session.avatarStats.total += 1; if (avatar) session.avatarStats.withAvatar += 1; }
     if (!settings.tapEnabled) {
       addLog(`❤️ [${name}] thả tim — sự kiện tim đang TẮT, chỉ log.`, 'info');
       saveSession(); broadcast();
@@ -653,6 +654,8 @@ app.post('/api/webhook', (req, res) => {
   // Đếm mọi event thật qua intake nội bộ (adapter đẩy vào đây) — dashboard
   // dùng số này làm "số sự kiện đã nhận".
   session.webhookCount = (session.webhookCount || 0) + 1;
+  // Live thật tiếp quản: demo đang chạy thì tự dừng ngay khi event thật đầu tiên tới.
+  if (demo.active) stopDemo('có event thật');
   const ev = parseEvent(req.body, req.query);
   if (ev.kind === 'other' || !ev.uid) {
     // Event từ adapter TikTok LIVE gửi về nhưng không nhận diện được: ghi rõ để sửa cho đúng
@@ -694,6 +697,7 @@ app.post('/api/settings', (req, res) => {
 });
 
 app.post('/api/session/reset', (req, res) => {
+  stopDemo();
   if (drawTimer) { clearTimeout(drawTimer); drawTimer = null; }
   if (advanceTimer) { clearTimeout(advanceTimer); advanceTimer = null; }
   if (clearTimer) { clearTimeout(clearTimer); clearTimer = null; }
@@ -772,6 +776,81 @@ app.post('/api/test/tap', (req, res) => {
   const uid = (req.body && req.body.uid) ? String(req.body.uid) : testUid('tap');
   const r = handleIntake({ uid, name: n, avatar: '', kind: 'tap', likeCount: count, test: true });
   res.json({ success: true, queued: !!r.queued, count });
+});
+
+// ---------------- Demo tự động (xem ~/workspace/overlay-moi/demo-mode-contract.md) ----------------
+// Vòng lặp mô phỏng khán giả liên tục qua ĐÚNG đường handleIntake như event
+// thật. Mỗi lượt dùng uid demo mới (tránh chống spam 600s/người) — tên tiếng
+// Việt xoay vòng, KHÔNG có avatar TikTok thật (khung vẽ dùng chữ cái đầu tên).
+const DEMO_CAST_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khánh', 'Lan', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo'];
+const DEMO_COMMENTS = ['vẽ đẹp quá', 'cho mình 1 bức', 'đẹp quá đi', 'vẽ mình với'];
+const DEMO_GIFTS = [[1, 'Hoa hồng'], [5, 'Hoa hồng'], [10, 'Kính râm'], [20, 'Heo may mắn'], [50, 'Vương miện']];
+const demo = { active: false, timer: null, runId: 0, seq: 0 };
+function demoNextViewer() {
+  demo.seq += 1;
+  const name = DEMO_CAST_NAMES[demo.seq % DEMO_CAST_NAMES.length];
+  return { uid: `demo_${demo.runId}_${demo.seq}`, name };
+}
+function demoEnsureCast(n) {
+  for (let i = 0; i < n; i += 1) {
+    const v = demoNextViewer();
+    handleIntake({ uid: v.uid, name: v.name, avatar: '', kind: 'gift', coins: 1, giftName: 'Hoa hồng', qty: 1, test: true, isDemo: true }, 'demo');
+    const v2 = demoNextViewer();
+    handleIntake({ uid: v2.uid, name: v2.name, avatar: '', kind: 'comment', coins: 0, giftName: '', text: 'vẽ đẹp quá', test: true, isDemo: true }, 'demo');
+    const v3 = demoNextViewer();
+    handleIntake({ uid: v3.uid, name: v3.name, avatar: '', kind: 'follow', coins: 0, giftName: '', test: true, isDemo: true }, 'demo');
+  }
+}
+function demoStep() {
+  if (!demo.active) return;
+  // Hàng đợi dài thì nghỉ 1 nhịp để máy vẽ kịp in, tránh ùn.
+  if (session.queue.length >= 16) return;
+  const v = demoNextViewer();
+  const roll = Math.random();
+  if (roll < 0.40) {
+    const [coins, giftName] = DEMO_GIFTS[Math.floor(Math.random() * DEMO_GIFTS.length)];
+    handleIntake({ uid: v.uid, name: v.name, avatar: '', kind: 'gift', coins, giftName, qty: 1, test: true, isDemo: true }, 'demo');
+  } else if (roll < 0.65) {
+    handleIntake({ uid: v.uid, name: v.name, avatar: '', kind: 'comment', coins: 0, giftName: '', text: DEMO_COMMENTS[Math.floor(Math.random() * DEMO_COMMENTS.length)], test: true, isDemo: true }, 'demo');
+  } else if (roll < 0.80) {
+    handleIntake({ uid: v.uid, name: v.name, avatar: '', kind: 'tap', likeCount: 20, test: true, isDemo: true }, 'demo');
+  } else if (roll < 0.90) {
+    handleIntake({ uid: v.uid, name: v.name, avatar: '', kind: 'follow', coins: 0, giftName: '', test: true, isDemo: true }, 'demo');
+  } else {
+    handleIntake({ uid: v.uid, name: v.name, avatar: '', kind: 'share', coins: 0, giftName: '', test: true, isDemo: true }, 'demo');
+  }
+}
+function startDemo() {
+  if (!settings.demoMode) return { success: false, message: 'Bật chế độ thử trước khi thử.' };
+  if ((session.webhookCount || 0) > 0) return { success: false, message: 'Phòng đang có event thật — không bật được demo.' };
+  if (demo.active) return { success: true, demoActive: true };
+  demo.runId += 1;
+  demo.seq = 0;
+  demo.active = true;
+  demoEnsureCast(1);
+  demo.timer = setInterval(demoStep, 3000);
+  addLog('🧪 Demo tự động BẬT — đang mô phỏng khán giả (tự dừng khi có event thật).', 'system');
+  saveSession(); broadcast();
+  return { success: true, demoActive: true };
+}
+function stopDemo(reason) {
+  if (!demo.active) return { success: true, demoActive: false };
+  demo.active = false;
+  if (demo.timer !== null) { clearInterval(demo.timer); demo.timer = null; }
+  addLog(`🧪 Demo tự động TẮT${reason ? ` (${reason})` : ''}.`, 'system');
+  saveSession(); broadcast();
+  return { success: true, demoActive: false };
+}
+app.post('/api/test/demo', (req, res) => {
+  if (!needDemo(req, res)) return;
+  const action = (req.body && req.body.action) || 'once';
+  if (action === 'start') return res.json(startDemo());
+  if (action === 'stop') return res.json(stopDemo());
+  // once: 1 lượt mẫu (3 người: quà + bình luận + follow).
+  demo.runId += 1;
+  demo.seq = 0;
+  demoEnsureCast(1);
+  return res.json({ success: true, steps: ['An gift 1 xu', 'Bình comment', 'Chi follow'], demoActive: demo.active });
 });
 
 // ---------------- KHUNG VẼ 5 MỐC ----------------

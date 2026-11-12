@@ -169,8 +169,8 @@
     <button class="btn-test" onclick="runTestMilestone(50)">Thử 50 xu (bậc 5)</button>
   </div>
   <div class="test-grid">
-    <button class="btn-test" id="btn-demo-auto" onclick="runAutoDemo()">▶ Chạy thử tự động (có sẵn dữ liệu)</button>
-    <button class="btn-test" id="btn-demo-stop" onclick="stopAutoDemo()" style="display:none;">⏹ Dừng chạy thử</button>
+    <button class="btn-test" id="btn-demo-auto" onclick="runAutoDemo()">▶ Chạy demo</button>
+    <button class="btn-test" id="btn-demo-stop" onclick="stopAutoDemo()" style="display:none;">■ Dừng demo</button>
     <button class="btn-test" onclick="runTest('gift')">Thử quà</button>
     <button class="btn-test" onclick="runTest('comment')">Thử bình luận</button>
     <button class="btn-test" onclick="runTest('follow')">Thử theo dõi</button>
@@ -180,7 +180,7 @@
     <button class="btn-test" onclick="clearTestQueue()">Xóa hàng đợi thử</button>
     <button class="btn-test" onclick="resetSession()">Đặt lại phiên thử</button>
   </div>
-  <div id="demo-status" style="margin-top:10px; font-size:14px; color:#c9a86a;">Chạy thử tự động: bấm ▶ là chạy, không cần nhập gì.</div>
+  <div id="demo-status" style="margin-top:10px; font-size:14px; color:#c9a86a;">Demo: khán giả ảo vào vẽ liên tục tới khi bấm ■ dừng (tự dừng khi có event thật).</div>
 </div>
 
 <div class="grid row3" style="margin-top:14px;">
@@ -631,62 +631,35 @@ Vào phòng (Join) — triggerTypeId 6:
         if (!j.success) alert(j.message || 'Thử thất bại (cần bật chế độ thử).');
       });
   }
-  // Chạy thử tự động: dữ liệu có sẵn, bấm ▶ là chạy, không hỏi tên từng bước.
-  var DEMO_SCRIPT = [
-    { kind: 'gift', name: 'Anh Tho' },
-    { kind: 'comment', name: 'Be Bon' },
-    { kind: 'follow', name: 'Chi Bay' },
-    { kind: 'gift', name: 'Chu Tu' },
-    { kind: 'comment', name: 'Co Nam' },
-    { kind: 'gift', name: 'Bac Sau' },
-    { kind: 'top1' },
-    { kind: 'follow', name: 'Em Ut' }
-  ];
-  var demoRunning = false, demoStarting = false, demoTimers = [];
+  // Chạy demo: vòng lặp mô phỏng liên tục phía server (xem demo-mode-contract.md).
+  var demoRunning = false, demoStarting = false;
   function demoStatus(t) { document.getElementById('demo-status').textContent = t; }
   function runAutoDemo() {
     if (demoRunning || demoStarting) return;
     demoStarting = true;
-    fetch('/api/state').then(function (r) { return r.json(); }).then(function (st) {
-      var dirty = (st.queue && st.queue.length) || (st.drawingRow && st.drawingRow.length) || (st.drawn && st.drawn.length);
-      if (dirty) {
-        if (!confirm('Phiên đang có dữ liệu. Làm mới rồi chạy thử tự động?')) { demoStarting = false; return; }
-        fetch('/api/session/reset', { method: 'POST' }).then(startDemoScript);
-      } else startDemoScript();
-    }).catch(function () { demoStarting = false; demoStatus('⛔ Chạy thử dừng: mất kết nối server.'); });
-  }
-  function startDemoScript() {
-    demoStarting = false;
-    demoRunning = true;
-    document.getElementById('btn-demo-auto').style.display = 'none';
-    document.getElementById('btn-demo-stop').style.display = '';
-    var i = 0;
-    var step = function () {
-      if (!demoRunning) return;
-      if (i >= DEMO_SCRIPT.length) {
-        stopAutoDemo('✅ Chạy thử đã nạp xong ' + DEMO_SCRIPT.length + ' lượt — xem màn hình live vẽ dần.');
-        return;
-      }
-      var s = DEMO_SCRIPT[i];
-      i++;
-      demoStatus('▶ Chạy thử ' + i + '/' + DEMO_SCRIPT.length + ': ' + (s.name || 'Top 1') + ' (' + (s.kind === 'top1' ? 'quà lớn' : kindVi(s.kind)) + ')…');
-      fetch('/api/test/' + s.kind, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(s.name ? { name: s.name } : {}) })
-        .then(function (r) { return r.json(); }).then(function (j) {
-          if (!j.success) { stopAutoDemo('⛔ Chạy thử dừng: ' + (j.message || 'cần bật chế độ thử.')); return; }
-          demoTimers.push(setTimeout(step, 1200));
-        }).catch(function () { stopAutoDemo('⛔ Chạy thử dừng: mất kết nối server.'); });
-    };
-    step();
+    demoStatus('▶ Đang bật demo…');
+    fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+      .then(function () {
+        document.getElementById('demo-toggle').checked = true;
+        return fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) });
+      })
+      .then(function (r) { return r.json(); }).then(function (j) {
+        demoStarting = false;
+        if (!j.success) { demoStatus('⛔ Không bật được demo: ' + (j.message || 'lỗi.')); return; }
+        demoRunning = true;
+        document.getElementById('btn-demo-auto').style.display = 'none';
+        document.getElementById('btn-demo-stop').style.display = '';
+        demoStatus('▶ Demo đang chạy — khán giả ảo vào vẽ liên tục. Bấm ■ để dừng.');
+      }).catch(function () { demoStarting = false; demoStatus('⛔ Chạy demo dừng: mất kết nối server.'); });
   }
   function stopAutoDemo(msg) {
+    fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stop' }) })
+      .catch(function () {});
     demoRunning = false;
     demoStarting = false;
-    demoTimers.forEach(clearTimeout);
-    demoTimers = [];
     document.getElementById('btn-demo-auto').style.display = '';
     document.getElementById('btn-demo-stop').style.display = 'none';
-    demoStatus(msg || '⏹ Đã dừng chạy thử.');
+    demoStatus(msg || '■ Đã dừng demo.');
   }
   function clearTestQueue() {
     fetch('/api/test/clear-queue', { method: 'POST' });

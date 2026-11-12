@@ -223,6 +223,8 @@
     font-size: 26px; font-weight: bold; text-align: center; padding: 12px 20px; border-radius: 14px;
     cursor: pointer; box-shadow: 0 2px 12px rgba(0,0,0,.6); }
   /* Den bao dang doc: sang moi khi voice cat tieng */
+  #demo-badge { position: absolute; left: 24px; top: 24px; z-index: 60; background: #b8860b; color: #1c1c1c; font-size: 26px; font-weight: 800; padding: 10px 18px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.4); display: none; }
+  #demo-badge.on { display: block; }
   #speak-badge { position: absolute; right: 70px; top: 318px; z-index: 11; pointer-events: none;
     background: rgba(20,12,6,.9); border: 2px solid #c9a86a; color: #ffe9a3;
     font-family: Arial, sans-serif; font-size: 22px; font-weight: bold; letter-spacing: 1px;
@@ -235,6 +237,7 @@
 <body>
 <div id="direct-warn" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#b91c1c;color:#fff;text-align:center;padding:12px;font-size:20px;font-weight:700;line-height:1.5"></div>
 <div id="scaler"><div id="stage">
+  <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
   <div id="bg"></div>
   <div id="strip"><div id="rows"></div></div>
   <div id="curlbed"></div>
@@ -1175,6 +1178,7 @@ function vaEase(k) {
   // Mo hinh 1 hang: giay chi giu hang dang ve, khong dung lai lich su cu.
   socket.on('state-update', function (st) {
     if (!st) return;
+    var db = document.getElementById('demo-badge'); if (db) db.classList.toggle('on', !!st.demoActive);
     vaProtoCheck(st.proto);
     if (st.frames) vaFrames = st.frames;
     lastVipTop = st.vipTop || [];
@@ -1267,6 +1271,15 @@ function vaEase(k) {
   }
   poll();
   setInterval(poll, 15000);
+  // ?demo=1: tự bật chế độ thử + chạy demo (chỉ khi phòng chưa có event thật).
+  if (new URLSearchParams(location.search).get('demo') === '1') {
+    fetch('/api/state').then(function (r) { return r.json(); }).then(function (st) {
+      var wc = (st.webhook && st.webhook.count) || 0;
+      if (wc > 0) return;
+      return fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+        .then(function () { return fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) }); });
+    }).catch(function () {});
+  }
 })();
 </script>
 </body>
