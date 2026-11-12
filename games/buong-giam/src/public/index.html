@@ -61,7 +61,7 @@
         <!-- 7. CẤU HÌNH KẾT NỐI -->
         <button class="nav-item" data-tab="tab-connection" onclick="switchTab('tab-connection')">
           <span class="nav-icon">🔌</span>
-          <span class="nav-text">Cầu nối TikFinity</span>
+          <span class="nav-text">Kết nối LIVE</span>
         </button>
 
         <!-- 8. HƯỚNG DẪN SỬ DỤNG -->
@@ -920,41 +920,66 @@
           </div>
         </section>
 
-        <!-- TAB 7: CẤU HÌNH KẾT NỐI -->
+        <!-- TAB 7: KẾT NỐI TRỰC TIẾP -->
         <section id="tab-connection" class="tab-pane">
           <div class="card">
             <div class="card-header">
-              <div class="card-title">🔌 Cầu Nối TikFinity & Streamer.bot (1 Action Duy Nhất)</div>
+              <div class="card-title">📡 Kết nối trực tiếp TikTok LIVE</div>
             </div>
-
-            <div style="display:flex; flex-direction:column; gap:16px;">
-              <div style="background:#161c27; padding:18px; border-radius:10px; border:1px solid var(--border-color);">
-                <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin-bottom:6px;">
-                  1. Địa Chỉ Webhook Nhận Sự Kiện TikFinity Desktop:
-                </h4>
-                <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
-                  <input type="text" id="webhook-url-input" class="form-control" value="http://localhost:3003/api/webhook" readonly>
-                  <button onclick="copyWebhookUrl()" class="btn btn-gold" style="white-space:nowrap;">
-                    📋 Copy Link
-                  </button>
-                </div>
-                <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">
-                  Trong TikFinity: Tạo đúng 1 Action duy nhất (Webhook POST) gửi toàn bộ sự kiện (Join, Chat, Gift 1+ Coins, Tap 1+ Likes, Follow) tới địa chỉ trên.
-                </p>
+            <div id="direct-box" style="font-size:14px; line-height:1.8; padding:4px 2px;">Đang kiểm tra kết nối LIVE…</div>
+            <div style="margin-top:14px; background:#161c27; padding:18px; border-radius:10px; border:1px solid var(--border-color);">
+              <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin-bottom:6px;">Link overlay cho TikTok LIVE Studio</h4>
+              <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
+                <input type="text" id="overlay-url-input" class="form-control" value="" readonly>
+                <button onclick="copyOverlayUrl()" class="btn btn-gold" style="white-space:nowrap;">📋 Copy Link</button>
               </div>
-
-              <div style="background:#161c27; padding:18px; border-radius:10px; border:1px solid var(--border-color);">
-                <h4 style="color:var(--color-info); font-size:15px; font-weight:800; margin-bottom:6px;">
-                  2. Cổng WebSocket Streamer.bot:
-                </h4>
-                <div style="font-family:monospace; color:#29b6f6; font-size:14px; margin-top:6px;">
-                  ws://127.0.0.1:8080/
-                </div>
-                <p style="font-size:13px; color:var(--text-muted); margin-top:6px;">
-                  Server Buồng Giam tự động lắng nghe và làm cầu nối trực tiếp với Streamer.bot khi mở ứng dụng.
-                </p>
-              </div>
+              <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">
+                Dán link này vào LIVE Studio làm nguồn Link (1080 × 1920), rồi bấm <b>Go LIVE</b>, sau đó bấm <b>Connect</b> trong TikFinity (xem mục “Cài đặt TikFinity” trong tab này). Chỉ cần link đúng TikTok ID của tài khoản đang live.
+              </p>
             </div>
+          </div>
+
+          <div class="card" id="tfc-card" style="margin-top:14px;">
+            <div class="card-header">
+              <div class="card-title">🎯 Cài đặt TikFinity (đường sự kiện chính)</div>
+            </div>
+            <div style="font-size:14px; line-height:1.8; padding:4px 2px;">Game nhận sự kiện live (bình luận, quà, tim, follow, share, vào phòng) qua <b>TikFinity</b> chạy trên máy Windows của bạn. TikFinity gửi sự kiện về máy chủ qua webhook bên dưới. Thẻ “Kết nối trực tiếp” ở trên cũng đếm mọi sự kiện này — khi số sự kiện &gt; 0 là TikFinity đã nối đúng.</div>
+            <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin:14px 0 6px;">Webhook của phòng này</h4>
+            <div style="font-size:14px;"><code id="tf-webhook-url" style="word-break:break-all;">…</code> <button onclick="copyTfWebhook()" class="btn btn-gold" style="white-space:nowrap;">📋 Sao chép</button> <span id="tf-copy-msg"></span></div>
+            <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin:14px 0 6px;">1. Tải file TikFinity (.tfc)</h4>
+            <div style="font-size:14px; line-height:1.8;"><a href="tikfinity.tfc" download><button class="btn btn-gold">⬇️ Tải file TikFinity (.tfc)</button></a> File đã có sẵn webhook URL của phòng này: 1 Action “Buong Giam - Moi su kien”, 6 sự kiện (quà, bình luận, tim, follow, share, vào phòng).</div>
+            <div style="font-size:14px; line-height:1.8;">⚠️ <b>File .tfc là bản thử nghiệm, chưa xác minh được việc import sẽ thành công</b> (định dạng export của TikFinity được mã hóa, mật khẩu mã hóa không công khai, không có tài liệu chính thức). Nếu TikFinity báo lỗi khi import, dùng cách tạo tay ở mục 3 bên dưới — cách đó đã chạy thật trong các live trước.</div>
+            <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin:14px 0 6px;">2. Import file vào TikFinity</h4>
+            <ol style="margin-left:24px; font-size:14px; color:#cbd5e1; line-height:1.9;">
+              <li>Mở TikFinity trên máy Windows → bấm <b>Setup &amp; Options</b> → <b>Import and Export Settings</b> → <b>Select File</b> (hoặc kéo-thả file .tfc vào cửa sổ TikFinity) → chọn file vừa tải → đợi báo <b>“Settings successfully imported!”</b>.</li>
+              <li>Kiểm tra Action mới đã có và đang <b>bật</b>: tên Action “Buong Giam - Moi su kien”, chứa 1 Webhook POST tới đúng URL webhook ở trên. Nếu Action chưa bật, bật nó lên.</li>
+              <li><b>Thứ tự lên live:</b> mở TikTok LIVE Studio → bấm <b>Go LIVE</b> TRƯỚC → rồi mới bấm <b>Connect</b> trong TikFinity.</li>
+              <li>Kiểm chứng: quay lại dashboard này — thẻ “Kết nối trực tiếp” phải hiện số sự kiện &gt; 0 sau comment/tim/quà đầu tiên.</li>
+            </ol>
+            <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin:14px 0 6px;">3. Cách tạo tay (chắc chắn chạy — dùng khi file .tfc import lỗi)</h4>
+            <ol style="margin-left:24px; font-size:14px; color:#cbd5e1; line-height:1.9;">
+              <li>Trong TikFinity: tạo 1 Action mới, đặt tên “Buong Giam - Moi su kien”.</li>
+              <li>Thêm trigger <b>Webhook POST</b>: Method <b>POST</b>, Content-Type <b>application/json</b>, URL = webhook ở trên.</li>
+              <li>Gắn 6 sự kiện vào cùng Action này (Gift, Chat, Like, Follow, Share, Viewer joined), mỗi sự kiện gửi đúng body mẫu của nó:</li>
+            </ol>
+            <details><summary style="cursor:pointer">Body JSON mẫu cho từng sự kiện (bấm để xem)</summary><pre style="font-size:12px;word-break:break-all;background:#161c27;color:#cbd5e1;padding:12px;border-radius:8px;margin-top:4px;white-space:pre-wrap">Quà tặng (Gift) — triggerTypeId 3:
+{"triggerTypeId":3,"event":"gift","userId":"$userId","nickname":"$nickname","uniqueId":"$uniqueId","profilePictureUrl":"$profilePictureUrl","giftName":"$giftName","diamondCount":$diamondCount,"repeatCount":$repeatCount}
+
+Bình luận (Chat) — triggerTypeId 11:
+{"triggerTypeId":11,"event":"chat","userId":"$userId","nickname":"$nickname","uniqueId":"$uniqueId","profilePictureUrl":"$profilePictureUrl","content":"$comment"}
+
+Thả tim (Like) — triggerTypeId 7:
+{"triggerTypeId":7,"event":"like","userId":"$userId","nickname":"$nickname","uniqueId":"$uniqueId","profilePictureUrl":"$profilePictureUrl","likeCount":$likeCount}
+
+Theo dõi (Follow) — triggerTypeId 1:
+{"triggerTypeId":1,"event":"follow","userId":"$userId","nickname":"$nickname","uniqueId":"$uniqueId","profilePictureUrl":"$profilePictureUrl"}
+
+Chia sẻ (Share) — triggerTypeId 4 (⚠️ buồng giam đọc 8 là "rời phòng", KHÔNG dùng 8 cho share):
+{"triggerTypeId":4,"event":"share","userId":"$userId","nickname":"$nickname","uniqueId":"$uniqueId","profilePictureUrl":"$profilePictureUrl"}
+
+Vào phòng (Join) — triggerTypeId 6:
+{"triggerTypeId":6,"event":"join","userId":"$userId","nickname":"$nickname","uniqueId":"$uniqueId","profilePictureUrl":"$profilePictureUrl"}</pre></details>
+            <div style="font-size:13px; line-height:1.8; margin-top:8px;">Tên biến ($userId, $nickname, $uniqueId, $comment…) tùy phiên bản TikFinity — bấm nút chèn biến (insert variable) của TikFinity để lấy đúng tên. Nếu không có $uniqueId thì dùng biến tên TikTok mà TikFinity gợi ý, hoặc bỏ trường uniqueId (engine tự dùng nickname thay thế). Số xu chỉ lấy $diamondCount thật, không bịa.</div>
           </div>
         </section>
 
@@ -968,7 +993,7 @@
             <ol style="margin-left:24px; font-size:14px; color:#cbd5e1; line-height:1.9;">
               <li>Mở phần mềm <b>TikTok LIVE Studio</b> trên máy tính của bạn.</li>
               <li>Tại bảng điều khiển nguồn (Sources), nhấn <b>+ Thêm nguồn</b> ➔ Chọn loại <b>Liên kết (Link Source / Browser Source)</b>.</li>
-              <li>Dán địa chỉ Overlay Local: <code style="color:#ffd700; background:#000; padding:2px 8px; border-radius:4px;">http://localhost:3003/overlay.html</code>.</li>
+              <li>Dán địa chỉ Overlay (lấy ở tab <b>Kết nối LIVE</b>): <code id="guide-overlay-url" style="color:#ffd700; background:#000; padding:2px 8px; border-radius:4px;">…</code>.</li>
               <li>Tích chọn <b>Bật âm thanh (Capture Audio / Desktop Audio)</b>.</li>
               <li>Đặt độ phân giải tùy chỉnh: <b>Rộng 1080 x Cao 1920</b> (tỉ lệ chuẩn dọc 9:16).</li>
               <li>Chế độ hiển thị: Chọn <b>Fit to screen</b> (tuyệt đối không chọn Stretch).</li>
@@ -1022,7 +1047,7 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label>Tên Quà Tặng (trùng với tên TikFinity / TikTok):</label>
+          <label>Tên Quà Tặng (trùng với tên trên TikTok):</label>
           <input type="text" id="modal-gift-name" class="form-control" placeholder="Ví dụ: Rose, Hoa hồng, Cap...">
         </div>
         <div class="form-group">
@@ -1074,7 +1099,7 @@
         'tab-gifts': 'Quà Tặng & Quy Đổi Điểm',
         'tab-prisoners': 'Quản Lý Danh Sách Tù Nhân',
         'tab-audio': 'Cài Đặt Âm Thanh & Audio Ducking',
-        'tab-connection': 'Cầu Nối TikFinity & Streamer.bot',
+        'tab-connection': 'Kết nối LIVE',
         'tab-guide': 'Hướng Dẫn Tích Hợp LIVE Studio',
         'tab-backup': 'Sao Lưu & Khôi Phục Dữ Liệu'
       };
@@ -1285,12 +1310,64 @@
       });
     }
 
-    function copyWebhookUrl() {
-      const copyText = document.getElementById('webhook-url-input');
+    function copyOverlayUrl() {
+      const copyText = document.getElementById('overlay-url-input');
       copyText.select();
       navigator.clipboard.writeText(copyText.value);
-      alert('Đã sao chép Webhook URL vào bộ nhớ tạm!');
+      alert('Đã sao chép link overlay vào bộ nhớ tạm!');
     }
+
+    // --- Kết nối trực tiếp TikTok LIVE (thẻ trạng thái; đường sự kiện chính là TikFinity, xem mục "Cài đặt TikFinity") ---
+    let DIRECT_BG = null; // { state, detail } từ GET /api/rooms/<game>/<username>/status
+    let LAST_BG_STATE = null;
+    function escBG(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    function directPartsBG() { const p = location.pathname.split('/').filter(Boolean); return { game: p[1] || '', username: p[2] || '' }; }
+    function directStatusUrlBG() { const d = directPartsBG(); return ['', 'api', 'rooms', d.game, d.username, 'status'].join('/'); }
+    function directRoomOverlayBG() { const d = directPartsBG(); return (d.game && d.username) ? location.origin + '/o/' + d.game + '/' + d.username : ''; }
+    function directHtmlBG(st) {
+      const u = directPartsBG().username || 'tài khoản trong link';
+      const n = (st && st.webhook && st.webhook.count) || 0;
+      if (!DIRECT_BG) return '⏳ Đang kiểm tra kết nối LIVE…';
+      if (DIRECT_BG.state === 'live') return n > 0 ? '🟢 <b>ĐÃ KẾT NỐI LIVE</b> — đang nhận sự kiện từ @' + u + ' (' + n + ' sự kiện).' : '🟢 <b>ĐÃ KẾT NỐI LIVE</b> — @' + u + ' đang live, chờ sự kiện đầu tiên.';
+      if (DIRECT_BG.state === 'offline') return '🟡 <b>@' + u + ' CHƯA LIVE</b> — kiểm tra lại username trong link, hoặc Go LIVE rồi đợi tối đa 1 phút. Kiểm tra TikFinity đã Connect chưa (mục "Cài đặt TikFinity" trong tab này).';
+      if (DIRECT_BG.state === 'connecting' || DIRECT_BG.state === 'reconnecting') return '⏳ <b>ĐANG KẾT NỐI</b> tới LIVE của @' + u + '…';
+      if (DIRECT_BG.state === 'error') return /euler|business plan/i.test(DIRECT_BG.detail || '') ? '🔴 <b>KẾT NỐI TRỰC TIẾP KHÔNG DÙNG ĐƯỢC</b> — Euler yêu cầu gói Business (key miễn phí đã thử và không mở được). Dùng TikFinity theo hướng dẫn trong tab này — thẻ này vẫn đếm sự kiện TikFinity gửi về.' : '🔴 <b>CHƯA KẾT NỐI ĐƯỢC LIVE</b> — @' + u + ': ' + escBG(DIRECT_BG.detail || 'lỗi không rõ') + '. Máy chủ tự thử lại mỗi phút.';
+      return '⚪ Chưa rõ trạng thái kết nối.';
+    }
+    function renderDirectBG(st) {
+      const el = document.getElementById('direct-box');
+      if (el) el.innerHTML = directHtmlBG(st);
+      const ov = directRoomOverlayBG();
+      const inp = document.getElementById('overlay-url-input');
+      if (inp && ov) inp.value = ov;
+      const g = document.getElementById('guide-overlay-url');
+      if (g && ov) g.textContent = ov;
+    }
+    async function pollDirectBG() {
+      const d = directPartsBG();
+      if (!d.game || !d.username) return;
+      try {
+        const r = await fetch(directStatusUrlBG());
+        const j = await r.json();
+        DIRECT_BG = j.tiktok || null;
+        renderDirectBG(LAST_BG_STATE);
+      } catch (e) {}
+    }
+    pollDirectBG();
+    setInterval(pollDirectBG, 10000);
+
+    // --- TikFinity: webhook URL của phòng + nút sao chép ---
+    // Ghép URL bằng join để transform.js không viết lại đường dẫn (đây là URL
+    // webhook công khai của room, TikFinity POST sự kiện về đó).
+    function tfWebhookUrlBG() { const d = directPartsBG(); return location.origin + ['', 'o', d.game, d.username, 'api', 'webhook'].join('/'); }
+    function fillTfWebhook() { const el = document.getElementById('tf-webhook-url'); if (el) el.textContent = tfWebhookUrlBG(); }
+    function copyTfWebhook() {
+      const url = tfWebhookUrlBG();
+      const done = () => { const m = document.getElementById('tf-copy-msg'); if (m) m.textContent = '✅ Đã sao chép!'; };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);
+      else { const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(t); done(); }
+    }
+    fillTfWebhook();
 
     function cleanIdleUsers() {
       const min = parseInt(document.getElementById('idle-minutes-input')?.value || 10);
@@ -1343,6 +1420,7 @@
     });
 
     socket.on('state-update', (state) => {
+      LAST_BG_STATE = state; renderDirectBG(state);
       currentUsers = state.users || {};
       const ranking = state.ranking || [];
       document.getElementById('stat-total-users').innerText = Object.keys(currentUsers).length;
@@ -1614,6 +1692,7 @@
 
     // Lấy State ban đầu & Render quà tặng
     fetch('/api/state').then(r => r.json()).then(st => {
+      LAST_BG_STATE = st; renderDirectBG(st);
       if (st.logs) st.logs.forEach(l => addLogToUI(l));
       if (st.settings && st.settings.gifts) {
         renderGiftTable(st.settings.gifts, st.settings.pointsPerCoin);

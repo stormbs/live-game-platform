@@ -1426,6 +1426,7 @@
   </style>
 </head>
 <body>
+<div id="direct-warn" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#b91c1c;color:#fff;text-align:center;padding:12px;font-size:20px;font-weight:700;line-height:1.5"></div>
   <!-- MỤC 9.1: BỘ PHÓNG TO / THU NHỎ TỰ ĐỘNG THEO KHUNG MÀN HÌNH -->
   <div id="overlay-scaler">
     <div id="game-stage">
@@ -2981,5 +2982,35 @@
       }
     });
   </script>
+
+<script>
+// Cảnh báo khi chưa nối được LIVE: hiện ngay trên overlay để streamer thấy
+// trong LIVE Studio (sai username trong link, hoặc chưa Go LIVE).
+(function () {
+  var box = document.getElementById('direct-warn');
+  function parts() { var p = location.pathname.split('/').filter(Boolean); return { game: p[1] || '', username: p[2] || '' }; }
+  function statusUrl() { var d = parts(); return ['', 'api', 'rooms', d.game, d.username, 'status'].join('/'); }
+  function warnText(t) {
+    var u = parts().username || 'tài khoản trong link';
+    if (t.state === 'offline') return '⚠️ @' + u + ' CHƯA LIVE — kiểm tra lại username trong link overlay, hoặc Go LIVE rồi tải lại trang này.';
+    if (t.state === 'connecting' || t.state === 'reconnecting') return '⏳ Đang kết nối tới LIVE của @' + u + '…';
+    if (t.state === 'error') return /euler|business plan/i.test(t.detail || '') ? '⚠️ CHƯA KẾT NỐI ĐƯỢC LIVE — máy chủ cần API key Euler (đăng ký miễn phí) để nối TikTok LIVE.' : '⚠️ CHƯA KẾT NỐI ĐƯỢC LIVE — @' + u + ': ' + (t.detail || 'lỗi không rõ') + ' (máy chủ tự thử lại mỗi phút).';
+    return '';
+  }
+  async function poll() {
+    var d = parts();
+    if (!d.game || !d.username || !box) return;
+    try {
+      var r = await fetch(statusUrl());
+      var j = await r.json();
+      var t = j.tiktok || {};
+      if (t.state === 'live') { box.style.display = 'none'; }
+      else { box.textContent = warnText(t); box.style.display = 'block'; }
+    } catch (e) {}
+  }
+  poll();
+  setInterval(poll, 15000);
+})();
+</script>
 </body>
 </html>
