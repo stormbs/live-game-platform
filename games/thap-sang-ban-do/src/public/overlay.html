@@ -18,24 +18,18 @@
   /* Bố cục mới (v8): header trên cùng; dưới là hàng ngang — bản đồ bên
      trái (to xuống dưới vì bảng đã dời sang phải), khung dọc trong suốt
      bên phải chứa đồng hồ + BXH + bảng điểm. */
-  /* Lớp quần đảo riêng (v8.1): phủ kín stage, dưới khung chính (z-index 1
-     < mainRow 2) để đảo nằm sau khung bảng trong suốt, nhìn xuyên qua. */
-  #islandSvg { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
   #mainRow { position:absolute; top:158px; left:0; right:0; bottom:0; display:flex; z-index:2; }
   #mapArea { position:relative; flex:1; overflow:hidden; }
-  /* (v8.2) Bố cục 3 cột — user dặn KHÔNG ĐƯỢC che 2 quần đảo, cùng lắm
-     chia bảng thông báo sang 2 bên: bảng điểm sang TRÁI, cột phải chỉ
-     giữ sự kiện gần đây (trên) + diễn biến (dưới), GIỮA 2 MỤC ĐÓ LÀ
-     KHOẢNG TRỐNG TRONG SUỐT đúng chỗ 2 quần đảo (y 340–913) nên đảo
-     hiện rõ, không bị che chút nào. Vì đảo không còn nằm sau khung nên
-     khung được trở lại kính mờ đẹp như v8 (nền 45% + blur 8px). */
+  /* (v8.2) Bố cục 3 cột — bảng điểm sang TRÁI, cột phải chỉ giữ sự kiện
+     gần đây (trên) + diễn biến (dưới). Quần đảo nay vẽ TRONG SVG bản đồ
+     (cột giữa) nên không còn nằm sau khung nào, không bị che chút nào. */
   #leftPanel { flex:none; width:240px; margin:0 0 14px 14px; display:flex; flex-direction:column; gap:10px;
     background:rgba(8,12,24,.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     border:1px solid rgba(255,255,255,.22); border-radius:20px; padding:14px 12px 12px; overflow:hidden; }
   #rightCol { flex:none; width:240px; margin:0 14px 14px 0; display:flex; flex-direction:column; gap:10px; }
   #rightTop { flex:none; }
-  /* Khoảng trống trong suốt đúng vị trí 2 quần đảo — đảo ở lớp SVG riêng
-     (z-index 1, dưới mainRow) nên nhìn xuyên qua khoảng này. */
+  /* Khoảng trống giữa 2 mục của cột phải (giữ bố cục 3 cột thoáng;
+     quần đảo nay nằm trong SVG bản đồ nên không cần chừa chỗ cho đảo nữa). */
   #rightSpacer { flex:1; }
   #rightBottom { flex:none; }
   .sideSec { background:rgba(10,18,40,.55); border:1px solid rgba(255,215,0,.28);
@@ -119,23 +113,22 @@
   @keyframes topPulse { 0%,100% { filter:drop-shadow(0 0 14px rgba(255,122,0,.8)); } 50% { filter:drop-shadow(0 0 26px rgba(255,122,0,1)); } }
   .prov.flash { animation:flash 1.2s ease; }
   @keyframes flash { 0%{ filter:drop-shadow(0 0 22px rgba(255,255,255,1)); } 100%{ filter:drop-shadow(0 0 10px rgba(255,255,255,.85)); } }
-  .provNum { font-size:17px; font-weight:800; fill:#8fa3c7; text-anchor:middle; pointer-events:none;
-    transition:transform .5s ease; }
-  .provNum.lit { fill:#1c1503; }
   #crown { font-size:40px; text-anchor:middle; pointer-events:none;
     filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)); animation:bob 1.6s ease-in-out infinite; }
   @keyframes bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
   .ring { fill:none; stroke:#ffd700; stroke-width:4; animation:ringExp 1s ease-out forwards; }
   .ring.purple { stroke:#c084fc; }
   @keyframes ringExp { from { r:14; opacity:1; } to { r:120; opacity:0; } }
-  .islandBox { fill:rgba(10,18,40,.72); stroke:rgba(255,215,0,.45); stroke-width:1.5; }
-  .islandTitle { font-size:23px; font-weight:800; fill:#ffd700; text-anchor:middle; }
-  .islandSub { font-size:18px; fill:#c3d2f0; text-anchor:middle; }
-  .islandSide { fill:#0e1626; stroke:#26344f; stroke-width:2; }
+  /* Quần đảo VẼ TRONG BẢN ĐỒ (2026-11-12): đảo là 1 phần của map, gộp vào
+     tỉnh chủ quản (Hoàng Sa → Đà Nẵng, Trường Sa → Khánh Hòa) — cùng màu
+     và cùng trạng thái sáng với tỉnh. Không còn khung riêng, không còn lớp
+     SVG riêng; nhãn nhỏ "QĐ. ..." đặt ngay dưới cụm đảo như ảnh mẫu. */
   .islandPath { fill:#7d90b5; stroke:#aebdd8; stroke-width:2;
     transition:transform .5s ease, fill .5s ease; }
   .islandPath.lit { stroke-width:2.2;
     filter:drop-shadow(0 0 12px rgba(255,255,255,.9)); }
+  .islandLabel { font-size:20px; font-weight:700; fill:#c3d2f0; text-anchor:middle; pointer-events:none; }
+  .islandLabel.lit { fill:#ffd700; }
   /* Bảng top + mới thắp (v8: dời sang khung dọc phải, bỏ vị trí tuyệt đối
      cũ ở chân màn hình). Các id giữ nguyên để JS không đổi. */
   #boards h2 { font-size:20px; color:#ffd700; margin-bottom:6px; white-space:nowrap; }
@@ -200,18 +193,10 @@
   <div id="header" class="panel">
     <h1>🗺️ THẮP SÁNG BẢN ĐỒ VIỆT NAM</h1>
     <div id="headerRow">
-      <p>Comment <b>tên quê</b> hoặc <b>số 1–34</b> — tỉnh nhiều điểm nhất thắng!</p>
+      <p>Comment <b>tên quê</b> — tỉnh nhiều điểm nhất thắng!</p>
       <div id="liveBadge" class="off">○ CHỜ KẾT NỐI</div>
     </div>
   </div>
-
-  <!-- (v8.1) Lớp quần đảo RIÊNG, hệ tọa độ 1080x1920 đầy đủ của stage —
-       Hoàng Sa / Trường Sa ở ĐÚNG vị trí cũ bên phải (x 855, y 340/620),
-       nằm DƯỚI khung bảng dọc trong suốt nên nhìn xuyên qua được. Không
-       nằm trong SVG bản đồ (viewBox đã crop) nên không bị cắt mất. -->
-  <svg id="islandSvg" viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid meet">
-    <g id="islandLayer"></g>
-  </svg>
 
   <div id="mainRow">
     <!-- (v8.2) Bố cục 3 cột: bảng điểm TRÁI + bản đồ GIỮA + cột phải.
@@ -245,7 +230,7 @@
     </div>
 
     <div id="mapArea">
-      <svg id="mapSvg" viewBox="240 260 600 1300" preserveAspectRatio="xMidYMid meet">
+      <svg id="mapSvg" viewBox="240 260 815 1300" preserveAspectRatio="xMidYMid meet">
         <defs>
           <!-- 4 màu tỉnh (v8, định lý bốn màu): mỗi gradient = 1 nhóm màu -->
           <linearGradient id="c0Grad" x1="0" y1="0" x2="1" y2="1">
@@ -263,7 +248,7 @@
         </defs>
         <g id="sideLayer"></g>
         <g id="provLayer"></g>
-        <g id="numLayer"></g>
+        <g id="islandLayer"></g>
         <g id="burstLayer"></g>
         <text id="crown" x="-100" y="-100" style="display:none">👑</text>
       </svg>
@@ -323,7 +308,6 @@ async function initMap() {
   provMeta = await (await fetch('/provinces.json')).json();
   const sideLayer = document.getElementById('sideLayer');
   const layer = document.getElementById('provLayer');
-  const nums = document.getElementById('numLayer');
   for (const p of provMeta) {
     // Mặt hông 3D (lớp dưới, màu tối) + mặt trên (lớp trên, vàng khi sáng).
     const side = document.createElementNS(NS, 'path');
@@ -336,47 +320,29 @@ async function initMap() {
     path.setAttribute('class', 'prov');
     path.setAttribute('id', 'prov-' + p.num);
     layer.appendChild(path);
-    const t = document.createElementNS(NS, 'text');
-    t.setAttribute('x', p.cx); t.setAttribute('y', p.cy + 5);
-    t.setAttribute('class', 'provNum');
-    t.setAttribute('id', 'num-' + p.num);
-    t.textContent = p.num;
-    nums.appendChild(t);
   }
-  // Hoàng Sa + Trường Sa: khung riêng bên phải (vị trí gốc trong hệ tọa
-  // độ 1080x1920), hình đảo thật, sáng cùng tỉnh chủ quản. Lớp đảo là SVG
-  // riêng phủ kín stage (xem #islandSvg) nên không bị viewBox crop của
-  // bản đồ cắt mất — đảo nằm dưới khung bảng dọc trong suốt, nhìn xuyên qua.
+  // Hoàng Sa + Trường Sa: VẼ TRONG BẢN ĐỒ (2026-11-12), đúng vị trí gốc
+  // ở Biển Đông, hình đảo thật từ GeoJSON — không còn khung riêng, không
+  // còn lớp SVG riêng. ViewBox bản đồ đã mở rộng sang phải (x tới 1055)
+  // để chứa đảo. Đảo gộp vào tỉnh chủ quản: tô màu + sáng cùng tỉnh
+  // (xem render(): island-<số tỉnh> ăn theo tỉnh đó). Nhãn nhỏ "QĐ. ..."
+  // đặt ngay dưới cụm đảo, như ảnh mẫu của Chủ tịch.
   const isl = await (await fetch('/islands.json')).json();
   const il = document.getElementById('islandLayer');
   for (const key of ['hoangSa', 'truongSa']) {
     const d = isl[key];
-    const box = d.box;
-    const rect = document.createElementNS(NS, 'rect');
-    rect.setAttribute('x', box.x); rect.setAttribute('y', box.y);
-    rect.setAttribute('width', box.w); rect.setAttribute('height', box.h);
-    rect.setAttribute('rx', 14); rect.setAttribute('class', 'islandBox');
-    il.appendChild(rect);
-    const title = document.createElementNS(NS, 'text');
-    title.setAttribute('x', box.x + box.w / 2); title.setAttribute('y', box.y - 12);
-    title.setAttribute('class', 'islandTitle');
-    title.textContent = d.label;
-    il.appendChild(title);
-    const sub = document.createElementNS(NS, 'text');
-    sub.setAttribute('x', box.x + box.w / 2); sub.setAttribute('y', box.y + box.h + 24);
-    sub.setAttribute('class', 'islandSub');
-    sub.textContent = 'thuộc ' + d.provinceName;
-    il.appendChild(sub);
-    const side = document.createElementNS(NS, 'path');
-    side.setAttribute('d', d.path);
-    side.setAttribute('class', 'islandSide');
-    side.setAttribute('id', 'islandSide-' + d.provinceNum);
-    il.appendChild(side);
     const path = document.createElementNS(NS, 'path');
     path.setAttribute('d', d.path);
     path.setAttribute('class', 'islandPath');
     path.setAttribute('id', 'island-' + d.provinceNum);
     il.appendChild(path);
+    const label = document.createElementNS(NS, 'text');
+    label.setAttribute('x', 955);
+    label.setAttribute('y', key === 'hoangSa' ? 555 : 835);
+    label.setAttribute('class', 'islandLabel');
+    label.setAttribute('id', 'islandLabel-' + d.provinceNum);
+    label.textContent = 'QĐ. ' + d.label.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+    il.appendChild(label);
   }
 }
 // 4 màu tỉnh (v8, định lý bốn màu): [màu nền khi chưa sáng, màu sáng khi
@@ -399,9 +365,11 @@ function fmtTime(ms) {
 }
 
 // ---------- Zoom phóng to / thu nhỏ: bay tới tỉnh vừa thắp rồi về toàn cảnh ----------
-// (v8.2) ViewBox gốc đã crop theo nội dung tỉnh (x 240–840, y 260–1560).
-// Khu vực bản đồ giữa 2 bảng: 572x1762 trong stage.
-const FULL_VB = { x: 240, y: 260, w: 600, h: 1300 };
+// ViewBox gốc bao cả đất liền + Biển Đông (x 240–1055, y 260–1560) để chứa
+// 2 quần đảo trong bản đồ (2026-11-12; trước đây chỉ crop đất liền
+// x 240–840 nên đảo phải vẽ lớp riêng). Khu vực bản đồ giữa 2 bảng:
+// 572x1762 trong stage.
+const FULL_VB = { x: 240, y: 260, w: 815, h: 1300 };
 const MAP_W = 572, MAP_H = 1762;
 const MAP_ASPECT = MAP_W / MAP_H;
 let zoomBusy = false, zoomPending = null;
@@ -789,7 +757,6 @@ function render(s) {
   for (const p of s.provinces) {
     const el = document.getElementById('prov-' + p.num);
     const side = document.getElementById('provSide-' + p.num);
-    const num = document.getElementById('num-' + p.num);
     if (!el) continue;
     const tier = tierOf(p, top3Nums);
     const depth = DEPTHS[tier];
@@ -805,10 +772,6 @@ function render(s) {
     if (side) {
       side.style.fill = p.lit ? col.side : '#0e1626';
       side.classList.toggle('lit', p.lit);
-    }
-    if (num) {
-      num.classList.toggle('lit', p.lit);
-      num.setAttribute('transform', 'translate(0,' + (-depth) + ')');
     }
     if (p.lit && !litSet.has(p.num)) {
       litSet.add(p.num);
@@ -845,18 +808,16 @@ function render(s) {
     showSpotlight(s.spotlight);
   }
   // Hoàng Sa sáng cùng Đà Nẵng (6), Trường Sa sáng cùng Khánh Hòa (18) —
-  // đảo cũng nổi 3D theo đúng độ dày của tỉnh chủ quản + cùng nhóm màu.
-  // (v8.1) Đảo ở lớp SVG riêng (hệ 1080x1920) nên chỉ cần nâng theo chiều
-  // dọc, không còn độ dịch chuyển vị trí như bản v8.
+  // đảo nằm TRONG SVG bản đồ nên nổi 3D theo đúng độ dày của tỉnh chủ
+  // quản + cùng nhóm màu (2026-11-12: không còn khung/lớp riêng).
   const dn = s.provinces.find(p => p.num === 6), kh = s.provinces.find(p => p.num === 18);
   const hs = document.getElementById('island-6'), ts = document.getElementById('island-18');
-  const hsSide = document.getElementById('islandSide-6'), tsSide = document.getElementById('islandSide-18');
+  const hsLabel = document.getElementById('islandLabel-6'), tsLabel = document.getElementById('islandLabel-18');
   if (hs) {
     hs.classList.toggle('lit', !!(dn && dn.lit));
     hs.setAttribute('transform', 'translate(0,' + (-(provDepth.get(6) || 0)) + ')');
-    // (v8.1) Đảo nhỏ vài px nên tô MÀU ĐẶC của nhóm (stroke) thay vì
-    // gradient như tỉnh lớn — gradient trên chấm nhỏ không thấy mà còn
-    // nhạt; màu đặc tím/xanh lá nhìn rõ qua khung trong suốt.
+    // Đảo nhỏ vài px nên tô MÀU ĐẶC của nhóm (stroke) thay vì gradient
+    // như tỉnh lớn — gradient trên chấm nhỏ không thấy mà còn nhạt.
     hs.style.fill = (dn && dn.lit) ? FOUR[colorOf(6)].stroke : '#7d90b5';
   }
   if (ts) {
@@ -864,8 +825,8 @@ function render(s) {
     ts.setAttribute('transform', 'translate(0,' + (-(provDepth.get(18) || 0)) + ')');
     ts.style.fill = (kh && kh.lit) ? FOUR[colorOf(18)].stroke : '#7d90b5';
   }
-  if (hsSide) { hsSide.classList.toggle('lit', !!(dn && dn.lit)); hsSide.style.fill = (dn && dn.lit) ? FOUR[colorOf(6)].side : '#0e1626'; }
-  if (tsSide) { tsSide.classList.toggle('lit', !!(kh && kh.lit)); tsSide.style.fill = (kh && kh.lit) ? FOUR[colorOf(18)].side : '#0e1626'; }
+  if (hsLabel) hsLabel.classList.toggle('lit', !!(dn && dn.lit));
+  if (tsLabel) tsLabel.classList.toggle('lit', !!(kh && kh.lit));
   // Top tỉnh — LUÔN đủ 5 hàng, tỉnh chưa sáng hiện mờ 0đ.
   const maxP = Math.max(1, ...s.topProvinces.map(p => p.points));
   const MEDALS = ['🥇', '🥈', '🥉'];
