@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bếp Ăn Tập Thể — Nấu Cỗ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #2a0e02; color: #fff8ee;
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { position: relative; width: 1080px; height: 1920px; padding: 34px 40px 0;
+    background:
+      radial-gradient(700px 400px at 50% 38%, rgba(255, 140, 40, .55), transparent 70%),
+      linear-gradient(180deg, #3d1503 0%, #5c2204 34%, #7a2e06 68%, #3d1503 100%); }
+  h1 { font-size: 58px; text-align: center; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
+  .sub { text-align: center; font-size: 28px; color: #ffd9a0; margin-top: 6px; }
+  .potzone { position: relative; height: 660px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+  .steam { font-size: 74px; animation: steam 2.4s ease-in-out infinite; opacity: .85; }
+  @keyframes steam { 0%,100% { transform: translateY(14px) scale(1); opacity: .35; } 50% { transform: translateY(-16px) scale(1.12); opacity: .95; } }
+  .pot { font-size: 330px; line-height: 1; filter: drop-shadow(0 22px 18px rgba(0,0,0,.5)); }
+  .pot.bubble { animation: bubble .55s ease-in-out infinite alternate; }
+  @keyframes bubble { from { transform: scale(1); } to { transform: scale(1.03) translateY(-4px); } }
+  .fire { font-size: 120px; margin-top: -30px; }
+  .fire.big { animation: flame .35s ease-in-out infinite alternate; }
+  @keyframes flame { from { transform: scale(1); } to { transform: scale(1.15) translateY(-6px); } }
+  .barWrap { margin-top: 26px; background: rgba(0,0,0,.45); border: 3px solid #ffd9a0; border-radius: 22px; padding: 18px 22px; }
+  .barTop { display: flex; justify-content: space-between; font-size: 30px; font-weight: 800; }
+  .bar { height: 34px; border-radius: 17px; background: rgba(255,255,255,.18); margin-top: 12px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0%; background: linear-gradient(90deg, #ff9a3d, #ff5e3a, #ffc53d); transition: width .5s; }
+  .counts { display: flex; gap: 18px; margin-top: 22px; }
+  .count { flex: 1; background: rgba(0,0,0,.4); border-radius: 18px; padding: 16px 10px; text-align: center; font-size: 30px; font-weight: 800; }
+  .count small { display: block; font-size: 22px; color: #ffd9a0; font-weight: 600; margin-top: 4px; }
+  .dishes { margin-top: 22px; background: rgba(0,0,0,.4); border-radius: 18px; padding: 18px 22px; }
+  .dishes h2 { font-size: 30px; margin-bottom: 12px; }
+  .dishRow { display: flex; gap: 14px; }
+  .dish { flex: 1; text-align: center; padding: 14px 6px; border-radius: 14px; background: rgba(255,255,255,.08); font-size: 26px; font-weight: 700; opacity: .45; filter: grayscale(1); }
+  .dish.on { opacity: 1; filter: none; background: rgba(255, 197, 61, .25); border: 2px solid #ffc53d; }
+  .dish small { display: block; font-size: 20px; font-weight: 600; margin-top: 6px; }
+  .nextDish { margin-top: 14px; font-size: 26px; color: #ffe9c4; text-align: center; }
+  .top { margin-top: 22px; background: rgba(0,0,0,.4); border-radius: 18px; padding: 18px 22px; }
+  .top h2 { font-size: 30px; margin-bottom: 10px; }
+  .topRow { display: flex; align-items: center; gap: 14px; font-size: 28px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,.15); }
+  .topRow:last-child { border-bottom: 0; }
+  .topRow img, .ava { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; }
+  .topRow b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ticker { margin-top: 22px; background: rgba(0,0,0,.55); border-radius: 16px; padding: 16px 20px; font-size: 27px; min-height: 76px; color: #ffe9c4; }
+  .banner { display: none; position: absolute; left: 40px; right: 40px; top: 640px; background: rgba(20, 8, 0, .92); border: 4px solid #ffc53d; border-radius: 26px; padding: 34px 30px; text-align: center; z-index: 5; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
+  .banner.show { display: block; }
+  .banner h2 { font-size: 52px; margin-bottom: 10px; }
+  .banner p { font-size: 30px; color: #ffe9c4; }
+  .winners { font-size: 30px; line-height: 1.7; margin-top: 12px; }
+  .status { position: absolute; bottom: 22px; left: 40px; right: 40px; display: flex; justify-content: space-between; font-size: 22px; color: rgba(255,233,196,.75); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🍲 BẾP ĂN TẬP THỂ 🍲</h1>
+  <div class="sub">Bình luận thả nguyên liệu — 50 tim thổi lửa — Quà mở món đặc biệt</div>
+
+  <div class="potzone">
+    <div class="steam" id="steam">♨️</div>
+    <div class="pot bubble" id="pot">🍲</div>
+    <div class="fire" id="fire">🔥</div>
+  </div>
+
+  <div class="barWrap">
+    <div class="barTop"><span id="potLabel">🍲 Cỗ đang nấu — Nồi #1</span><span id="potPct">0%</span></div>
+    <div class="bar"><div id="potBar"></div></div>
+    <div class="barTop" style="margin-top:10px;font-size:26px"><span id="potPts">0 / 300 điểm nấu</span><span id="fireLabel">🔥 Lửa cấp 2</span></div>
+  </div>
+
+  <div class="counts">
+    <div class="count">🥩 <span id="cThit">0</span><small>Thịt +3</small></div>
+    <div class="count">🥬 <span id="cRau">0</span><small>Rau +2</small></div>
+    <div class="count">🧂 <span id="cGiaVi">0</span><small>Gia vị +1</small></div>
+  </div>
+
+  <div class="dishes">
+    <h2>🎖️ Món đặc biệt trên mâm</h2>
+    <div class="dishRow" id="dishRow"></div>
+    <div class="nextDish" id="nextDish"></div>
+  </div>
+
+  <div class="top">
+    <h2>🏆 Top đầu bếp</h2>
+    <div id="topList"></div>
+  </div>
+
+  <div class="ticker" id="ticker">🔥 Bếp đã nóng! Bình luận "thịt bò", "rau muống", "muối"... để thả nguyên liệu vào nồi.</div>
+
+  <div class="banner" id="banner"><h2 id="bannerTitle"></h2><p id="bannerText"></p><div class="winners" id="bannerWinners"></div></div>
+
+  <div class="status"><span id="stPhase">Nồi #1 — Đang nấu</span><span id="stViewers">👥 0 người trong bếp</span></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  let lastState = null;
+  let voiceOn = true, voiceQueue = [], speaking = false;
+  function speak(text) {
+    if (!voiceOn || !text) return;
+    voiceQueue.push(text);
+    if (voiceQueue.length > 3) voiceQueue.shift();
+    pumpVoice();
+  }
+  function pumpVoice() {
+    if (speaking || !voiceQueue.length) return;
+    const text = voiceQueue.shift();
+    speaking = true;
+    fetch('/api/tts?text=' + encodeURIComponent(text)).then(r => r.ok ? r.blob() : null).then(b => {
+      if (!b) throw 0;
+      const a = new Audio(URL.createObjectURL(b));
+      a.onended = () => { speaking = false; pumpVoice(); };
+      a.onerror = () => { speaking = false; pumpVoice(); };
+      a.play().catch(() => { speaking = false; pumpVoice(); });
+    }).catch(() => {
+      try { const u = new SpeechSynthesisUtterance(text); u.lang = 'vi-VN'; u.onend = () => { speaking = false; pumpVoice(); }; speechSynthesis.speak(u); }
+      catch (e) { speaking = false; pumpVoice(); }
+    });
+  }
+  function avatarHtml(p) {
+    if (p.avatar) return '<img src="' + p.avatar + '" alt="">';
+    return '<span class="ava">' + (p.name ? p.name.charAt(0).toUpperCase() : '🍲') + '</span>';
+  }
+  function render(s) {
+    lastState = s;
+    voiceOn = !!(s.settings && s.settings.voiceEnabled);
+    const pct = Math.min(100, Math.round(100 * s.pot.points / s.potTarget));
+    $('potLabel').textContent = '🍲 ' + (s.phase === 'cooking' ? 'Cỗ đang nấu' : s.phase === 'serving' ? '🎉 Cỗ đã chín — Dọn cỗ!' : '🎁 Kết quả bốc thăm') + ' — Nồi #' + s.potNo;
+    $('potPct').textContent = pct + '%';
+    $('potBar').style.width = pct + '%';
+    $('potPts').textContent = s.pot.points + ' / ' + s.potTarget + ' điểm nấu';
+    $('fireLabel').textContent = s.fireLevel === 3 ? '🔥🔥 Lửa TO cấp 3 — nguyên liệu +1!' : '🔥 Lửa cấp 2';
+    $('fire').className = 'fire' + (s.fireLevel === 3 ? ' big' : '');
+    $('fire').textContent = s.fireLevel === 3 ? '🔥🔥🔥' : '🔥';
+    $('cThit').textContent = s.pot.counts.thit;
+    $('cRau').textContent = s.pot.counts.rau;
+    $('cGiaVi').textContent = s.pot.counts.giavi;
+    const unlocked = new Set((s.pot.dishesUnlocked || []).map(d => d.name));
+    $('dishRow').innerHTML = (s.settings.dishMilestones || []).map(d =>
+      '<div class="dish' + (unlocked.has(d.name) ? ' on' : '') + '">' + d.icon + '<small>' + d.name + '<br>' + d.coins + ' xu</small></div>').join('');
+    $('nextDish').textContent = s.nextDish
+      ? '🎯 Món tiếp theo: ' + s.nextDish.icon + ' ' + s.nextDish.name + ' — còn ' + (s.nextDish.coins - s.pot.giftCoins) + ' xu quà nữa'
+      : '🎉 Đã mở hết món đặc biệt!';
+    $('topList').innerHTML = (s.top || []).map((p, i) =>
+      '<div class="topRow"><span>' + ['🥇','🥈','🥉','4.','5.'][i] + '</span>' + avatarHtml(p) + '<b>' + esc(p.name) + '</b><span>' + p.points + 'đ</span></div>').join('')
+      || '<div style="font-size:26px;color:#ffd9a0">Chưa có đầu bếp nào — bình luận nguyên liệu để lên bảng!</div>';
+    const last = (s.logs || []).slice(-1)[0];
+    if (last) $('ticker').textContent = last.text;
+    $('stPhase').textContent = 'Nồi #' + s.potNo + ' — ' + (s.phase === 'cooking' ? 'Đang nấu' : s.phase === 'serving' ? 'Dọn cỗ' : 'Kết quả');
+    $('stViewers').textContent = '👥 ' + s.viewersOnline + ' người trong bếp';
+    const banner = $('banner');
+    if (s.phase === 'serving') {
+      banner.className = 'banner show';
+      $('bannerTitle').textContent = '🎉 CỖ ĐÃ CHÍN!';
+      $('bannerText').textContent = 'Mời cả nhà ăn cỗ — sắp bốc thăm 10 người may mắn!';
+      $('bannerWinners').textContent = '';
+    } else if (s.phase === 'results') {
+      banner.className = 'banner show';
+      $('bannerTitle').textContent = '🎁 10 NGƯỜI MAY MẮN';
+      $('bannerText').textContent = 'Nồi #' + s.potNo + ' — chúc mừng các đầu bếp:';
+      $('bannerWinners').textContent = (s.winners || []).map(w => w.name).join(' • ') || 'Không có ai trong phòng';
+    } else banner.className = 'banner';
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function poll() { fetch('/api/state').then(r => r.json()).then(render).catch(() => {}); }
+  poll(); setInterval(poll, 2500);
+  const socket = io();
+  socket.on('state-update', render);
+  socket.on('serving', d => speak('Cỗ đã chín! Mời cả nhà ăn cỗ, sắp bốc thăm mười người may mắn!'));
+  socket.on('dish', d => speak('Món đặc biệt đã mở: ' + (d.dish && d.dish.name)));
+  socket.on('draw', d => speak('Chúc mừng mười người may mắn của nồi số ' + d.potNo + '!'));
+})();
+</script>
+</body>
+</html>

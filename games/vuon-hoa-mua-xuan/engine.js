@@ -463,7 +463,7 @@ function createEngine(ctx) {
       return res.json({ received: true, demoMode: true });
     }
     const r = handleIntake(ev);
-    res.json({ received: true, kind: ev.kind, ok: !!r.ok });
+    res.json({ received: true, kind: ev.kind, ok: !!r.ok, taps: r.taps, points: r.points, reason: r.reason });
   });
 
   app.get('/api/state', (req, res) => res.json(statePayload()));
@@ -471,7 +471,10 @@ function createEngine(ctx) {
   app.post('/api/settings', (req, res) => {
     const b = req.body || {};
     const num = (k, min, max, dflt) => {
-      if (b[k] !== undefined) settings[k] = Math.min(max, Math.max(min, Number(b[k]) || dflt));
+      if (b[k] !== undefined) {
+        const n = Number(b[k]);
+        settings[k] = Math.min(max, Math.max(min, Number.isFinite(n) ? n : dflt));
+      }
     };
     num('plots', 1, 100, 40);
     num('maxFlowersPerViewer', 1, 20, 8);

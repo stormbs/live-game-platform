@@ -214,6 +214,6 @@ test('vuon-hoa: settings chặn giá trị vượt giới hạn', async () => {
     });
     assert.equal(r.status, 200);
     assert.equal(r.json.settings.plots, 100, 'plots chặn tối đa 100');
-    assert.equal(r.json.settings.growthPerStage, 3, 'growthPerStage = 0 (không hợp lệ) -> về mặc định 3');
+    assert.equal(r.json.settings.growthPerStage, 1, 'growthPerStage = 0 -> kẹp lên tối thiểu 1');
   } finally { await stopTestServer(t); }
 });

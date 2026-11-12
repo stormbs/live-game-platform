@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Bếp Ăn Tập Thể</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #1c0d02; color: #fff8ee; }
+  header { padding: 16px 20px; background: #3d1503; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  h1 { font-size: 22px; margin: 0; }
+  main { padding: 16px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; max-width: 1200px; margin: 0 auto; }
+  section { background: #2a1607; border: 1px solid #6b3a14; border-radius: 12px; padding: 16px; }
+  h2 { font-size: 17px; margin: 0 0 10px; color: #ffcf8a; }
+  .row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,.12); font-size: 14px; }
+  .bar { height: 16px; background: rgba(255,255,255,.15); border-radius: 8px; overflow: hidden; margin: 8px 0; }
+  .bar > div { height: 100%; background: linear-gradient(90deg,#ff9a3d,#ffc53d); width: 0; }
+  button { background: #ff7a1a; color: #fff; border: 0; border-radius: 8px; padding: 9px 14px; font-size: 14px; cursor: pointer; margin: 3px; }
+  button.ghost { background: #5a3a20; }
+  button.danger { background: #c0392b; }
+  input, select { background: #1c0d02; color: #fff8ee; border: 1px solid #6b3a14; border-radius: 6px; padding: 7px 9px; font-size: 14px; width: 100%; margin: 3px 0; }
+  label { font-size: 13px; color: #ffd9a0; display: block; margin-top: 6px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #logs { font-size: 13px; max-height: 320px; overflow: auto; }
+  #logs div { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .warn { color: #ffb3b3; } .dish { color: #ffd24d; } .serving { color: #9be7a0; }
+  .ok { color: #9be7a0; } .err { color: #ff9a9a; }
+  code { background: rgba(0,0,0,.4); padding: 2px 6px; border-radius: 4px; word-break: break-all; }
+  small { color: #e8c9a0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🍲 Bếp Ăn Tập Thể — Dashboard</h1>
+  <div><a href="/huong-dan-tikfinity?game=bep-an-tap-the" target="_blank" style="color:#ffcf8a">📖 Hướng dẫn TikFinity</a> &nbsp; <span id="mode"></span></div>
+</header>
+<main>
+  <section>
+    <h2>🍲 Trạng thái nồi</h2>
+    <div class="row"><span>Nồi</span><b id="potNo">—</b></div>
+    <div class="row"><span>Giai đoạn</span><b id="phase">—</b></div>
+    <div class="row"><span>Điểm nấu</span><b id="potPts">—</b></div>
+    <div class="bar"><div id="potBar"></div></div>
+    <div class="row"><span>🥩 Thịt</span><b id="cThit">0</b></div>
+    <div class="row"><span>🥬 Rau</span><b id="cRau">0</b></div>
+    <div class="row"><span>🧂 Gia vị</span><b id="cGiaVi">0</b></div>
+    <div class="row"><span>🔥 Lửa</span><b id="fire">—</b></div>
+    <div class="row"><span>🎖️ Món đã mở</span><b id="dishes">—</b></div>
+    <div class="row"><span>🎯 Món tiếp theo</span><b id="nextDish">—</b></div>
+    <div class="row"><span>🎁 Người trúng nồi này</span><b id="winners">—</b></div>
+    <div class="row"><span>👥 Trong bếp</span><b id="viewers">0</b></div>
+    <div class="row"><span>📨 Webhook đã nhận</span><b id="wc">0</b></div>
+    <div class="row"><span>🖼️ Avatar thật</span><b id="av">—</b></div>
+    <p><button id="btnNewPot">🍲 Nồi mới ngay</button> <button id="btnReset" class="danger">🔄 Làm mới phiên</button></p>
+    <p><small>⚠️ Quà lạ (không rõ số xu) chỉ được ghi log, KHÔNG cộng điểm — xem nhật ký bên dưới.</small></p>
+  </section>
+  <section>
+    <h2>🏆 Top đầu bếp</h2>
+    <div id="top"></div>
+    <h2 style="margin-top:14px">📊 Thống kê</h2>
+    <div id="stats"></div>
+  </section>
+  <section>
+    <h2>⚙️ Cài đặt</h2>
+    <div class="grid2">
+      <div><label>Điểm nấu để chín (potTarget)</label><input id="s_potTarget" type="number" min="1"></div>
+      <div><label>Tim để thổi lửa (tapPerBlow)</label><input id="s_tapPerBlow" type="number" min="1"></div>
+      <div><label>Thổi lửa: nồi +điểm (blowPotPoints)</label><input id="s_blowPotPoints" type="number" min="0"></div>
+      <div><label>Tap = +1đ cá nhân (tapPersonalPer)</label><input id="s_tapPersonalPer" type="number" min="1"></div>
+      <div><label>Lửa to kéo dài (giây)</label><input id="s_fireBigS" type="number" min="1"></div>
+      <div><label>Lửa to: nguyên liệu +điểm</label><input id="s_fireBigBonus" type="number" min="0"></div>
+      <div><label>Chống spam bình luận (giây)</label><input id="s_commentSpamS" type="number" min="1"></div>
+      <div><label>Quà: 1 xu = điểm nấu</label><input id="s_giftPointPerCoin" type="number" min="1"></div>
+      <div><label>Dọn cỗ (giây)</label><input id="s_serveS" type="number" min="1"></div>
+      <div><label>Hiện kết quả (giây)</label><input id="s_resultsS" type="number" min="1"></div>
+      <div><label>Số người trúng / nồi</label><input id="s_winnersCount" type="number" min="1"></div>
+      <div><label>Follow +điểm cá nhân</label><input id="s_followPoints" type="number" min="0"></div>
+      <div><label>Share +điểm cá nhân</label><input id="s_sharePoints" type="number" min="0"></div>
+      <div><label>Dọn người im (phút)</label><input id="s_inactivityCleanupMin" type="number" min="1"></div>
+    </div>
+    <label>Mốc món đặc biệt (xu: tên — vd 100: Gà luộc)</label>
+    <input id="s_dishes" type="text" placeholder="100:Gà luộc,300:Bánh chưng,500:Giò chả,1000:Mâm cỗ đầy đủ">
+    <label><input id="s_demo" type="checkbox" style="width:auto"> Chế độ thử (demoMode — bật để test, tắt khi live thật)</label>
+    <label><input id="s_voice" type="checkbox" style="width:auto"> Giọng đọc (voiceEnabled)</label>
+    <p><button id="btnSave">💾 Lưu cài đặt</button> <span id="saveMsg"></span></p>
+    <p><small>⚠️ Sau khi live thật, tắt demoMode — webhook thật mới được tính điểm.</small></p>
+  </section>
+  <section>
+    <h2>🧪 Test (chỉ chạy khi demoMode bật)</h2>
+    <p>
+      <button data-t="join">👋 Join</button>
+      <button data-t="follow">➕ Follow</button>
+      <button data-t="share">🔁 Share</button>
+      <button data-t="tap">❤️ Tap x50</button>
+      <button data-t="gift">🎁 Quà 10 xu</button>
+      <button data-t="gift100">🎁 Quà 100 xu</button>
+      <button data-t="giftbig">🎁 Quà 500 xu</button>
+      <button data-t="bulk">👥 100 join</button>
+      <button data-t="demo">🎬 Demo 6 bước</button>
+    </p>
+    <label>Bình luận thử (vd: thịt bò / rau muống / muối / hello)</label>
+    <input id="cmtText" type="text" value="thịt bò">
+    <button data-t="comment">💬 Gửi bình luận thử</button>
+    <p id="testMsg"></p>
+    <h2 style="margin-top:14px">🔗 Link</h2>
+    <p><small>Overlay (dán vào OBS):</small><br><code id="ovLink"></code></p>
+    <p><small>Webhook TikFinity (1 link riêng cho phòng này):</small><br><code id="whLink"></code></p>
+    <p><small>⚠️ KHÔNG dùng chung link webhook cho nhiều phòng/game.</small></p>
+  </section>
+  <section>
+    <h2>📜 Nhật ký</h2>
+    <div id="logs"></div>
+  </section>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const path = location.pathname.replace(/\/$/, '');
+  const base = path.replace(/\/dashboard$/, '').replace(/\/index\.html$/, '');
+  const api = (p, o) => fetch(base + p, o).then(r => r.json());
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let settings = null;
+  function render(s) {
+    settings = s.settings;
+    $('potNo').textContent = '#' + s.potNo;
+    $('phase').textContent = s.phase === 'cooking' ? 'Đang nấu' : s.phase === 'serving' ? 'Dọn cỗ' : 'Kết quả bốc thăm';
+    $('potPts').textContent = s.pot.points + ' / ' + s.potTarget + ' (' + Math.min(100, Math.round(100 * s.pot.points / s.potTarget)) + '%)';
+    $('potBar').style.width = Math.min(100, 100 * s.pot.points / s.potTarget) + '%';
+    $('cThit').textContent = s.pot.counts.thit; $('cRau').textContent = s.pot.counts.rau; $('cGiaVi').textContent = s.pot.counts.giavi;
+    $('fire').textContent = s.fireLevel === 3 ? '🔥🔥 Cấp 3 (to)' : '🔥 Cấp 2';
+    $('dishes').textContent = (s.pot.dishesUnlocked || []).map(d => d.icon + ' ' + d.name).join(', ') || 'chưa mở món nào';
+    $('nextDish').textContent = s.nextDish ? s.nextDish.icon + ' ' + s.nextDish.name + ' — cần ' + (s.nextDish.coins - s.pot.giftCoins) + ' xu nữa' : 'đã mở hết';
+    $('winners').textContent = (s.winners || []).map(w => w.name).join(', ') || '—';
+    $('viewers').textContent = s.viewersOnline;
+    $('wc').textContent = s.webhookCount;
+    $('av').textContent = s.avatarStats.withAvatar + '/' + s.avatarStats.total + (s.avatarWarning ? ' ⚠️ CHƯA CÓ AVATAR THẬT — kiểm tra TikFinity có gửi profilePictureUrl không' : '');
+    $('mode').textContent = s.settings.demoMode ? '🧪 Chế độ thử' : '🔴 LIVE thật';
+    $('top').innerHTML = (s.top || []).map((p, i) => '<div class="row"><span>' + (i + 1) + '. ' + esc(p.name) + '</span><b>' + p.points + 'đ</b></div>').join('') || 'Chưa có đầu bếp nào.';
+    const st = s.stats;
+    $('stats').innerHTML = '<div class="row"><span>Bình luận</span><b>' + st.comments + ' (chặn spam ' + st.commentsBlocked + ')</b></div>'
+      + '<div class="row"><span>Tim</span><b>' + st.taps + '</b></div>'
+      + '<div class="row"><span>Thổi lửa</span><b>' + st.blows + '</b></div>'
+      + '<div class="row"><span>Quà</span><b>' + st.gifts + ' (lạ ' + st.giftsUnknown + ')</b></div>'
+      + '<div class="row"><span>Follow / Share / Join</span><b>' + st.follows + ' / ' + st.shares + ' / ' + st.joins + '</b></div>';
+    $('logs').innerHTML = (s.logs || []).slice().reverse().map(l =>
+      '<div class="' + (l.kind || '') + '">[' + new Date(l.t).toLocaleTimeString('vi-VN') + '] ' + esc(l.text) + '</div>').join('');
+    if (!document.activeElement || document.activeElement.tagName !== 'INPUT') fillSettings();
+  }
+  function fillSettings() {
+    if (!settings) return;
+    const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v; };
+    set('s_potTarget', settings.potTarget); set('s_tapPerBlow', settings.tapPerBlow);
+    set('s_blowPotPoints', settings.blowPotPoints); set('s_tapPersonalPer', settings.tapPersonalPer);
+    set('s_fireBigS', settings.fireBigS); set('s_fireBigBonus', settings.fireBigBonus);
+    set('s_commentSpamS', settings.commentSpamS); set('s_giftPointPerCoin', settings.giftPointPerCoin);
+    set('s_serveS', settings.serveS); set('s_resultsS', settings.resultsS);
+    set('s_winnersCount', settings.winnersCount); set('s_followPoints', settings.followPoints);
+    set('s_sharePoints', settings.sharePoints); set('s_inactivityCleanupMin', settings.inactivityCleanupMin);
+    const d = $('s_dishes'); if (d && document.activeElement !== d) d.value = (settings.dishMilestones || []).map(m => m.coins + ':' + m.name).join(',');
+    $('s_demo').checked = !!settings.demoMode; $('s_voice').checked = !!settings.voiceEnabled;
+  }
+  function poll() { api('/api/state').then(render).catch(() => {}); }
+  poll(); setInterval(poll, 2500);
+  const socket = io(); socket.on('state-update', render);
+  $('btnSave').onclick = () => {
+    const dishStr = $('s_dishes').value;
+    const icons = { 'Gà luộc': '🍗', 'Bánh chưng': '🍙', 'Giò chả': '🍖', 'Mâm cỗ đầy đủ': '🎉' };
+    const dishMilestones = dishStr.split(',').map(x => x.trim()).filter(Boolean).map(x => {
+      const i = x.indexOf(':'); const coins = parseInt(x.slice(0, i), 10); const name = x.slice(i + 1).trim();
+      return { coins, name, icon: icons[name] || '🍽️' };
+    }).filter(m => m.coins > 0 && m.name);
+    const body = { potTarget: +$('s_potTarget').value, tapPerBlow: +$('s_tapPerBlow').value, blowPotPoints: +$('s_blowPotPoints').value,
+      tapPersonalPer: +$('s_tapPersonalPer').value, fireBigS: +$('s_fireBigS').value, fireBigBonus: +$('s_fireBigBonus').value,
+      commentSpamS: +$('s_commentSpamS').value, giftPointPerCoin: +$('s_giftPointPerCoin').value, serveS: +$('s_serveS').value,
+      resultsS: +$('s_resultsS').value, winnersCount: +$('s_winnersCount').value, followPoints: +$('s_followPoints').value,
+      sharePoints: +$('s_sharePoints').value, inactivityCleanupMin: +$('s_inactivityCleanupMin').value,
+      dishMilestones, demoMode: $('s_demo').checked, voiceEnabled: $('s_voice').checked };
+    api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(r => { $('saveMsg').innerHTML = r.success ? '<span class="ok">Đã lưu ✅</span>' : '<span class="err">Lỗi</span>'; poll(); });
+  };
+  $('btnReset').onclick = () => { if (confirm('Làm mới toàn bộ phiên (nồi + điểm + log)?')) api('/api/session/reset', { method: 'POST' }).then(poll); };
+  $('btnNewPot').onclick = () => api('/api/pot/reset', { method: 'POST' }).then(poll);
+  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+    const t = b.dataset.t;
+    const map = { join: ['/api/test/join', {}], follow: ['/api/test/follow', {}], share: ['/api/test/share', {}],
+      tap: ['/api/test/tap', { count: 50 }], gift: ['/api/test/gift', { coins: 10, giftName: 'Hoa hồng' }],
+      gift100: ['/api/test/gift', { coins: 100, giftName: 'Heo may mắn' }], giftbig: ['/api/test/gift', { coins: 500, giftName: 'Du thuyền' }],
+      bulk: ['/api/test/bulk-join', { count: 100 }], demo: ['/api/test/demo', {}],
+      comment: ['/api/test/comment', { text: $('cmtText').value }] };
+    const [p, body] = map[t];
+    api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(r => { $('testMsg').innerHTML = r.success ? '<span class="ok">OK: ' + esc(JSON.stringify(r).slice(0, 200)) + '</span>' : '<span class="err">Bật demoMode trước khi test.</span>'; poll(); });
+  });
+  $('ovLink').textContent = location.origin + base + '/overlay.html';
+  $('whLink').textContent = location.origin + base + '/api/webhook';
+})();
+</script>
+</body>
+</html>
