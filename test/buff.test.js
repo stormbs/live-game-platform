@@ -348,3 +348,55 @@ test('POST /api/buff/topup: hash sai / chưa có giao dịch đều từ chối,
   assert.equal(notFound.json.ok, true);
   assert.equal(notFound.json.credited_usdt, 10);
 });
+
+// ---------- Đồng bộ trạng thái đơn hàng loạt ----------
+test('PanelClient.orderStatuses: 1 lần gọi, trả map theo mã đơn panel', async () => {
+  const { PanelClient } = require('../lib/buff');
+  const calls = [];
+  const fakeFetch = async (url, opts) => {
+    calls.push(opts.body);
+    return {
+      json: async () => ({
+        '777001': { status: 'In progress', remains: 4000, start_count: 1000, currency: 'VND' },
+        '777002': { status: 'Completed', remains: 0, start_count: 500, currency: 'VND' },
+      }),
+    };
+  };
+  const pc = new PanelClient({ apiKey: 'test-key', fetchImpl: fakeFetch });
+  const out = await pc.orderStatuses(['777001', '777002']);
+  assert.equal(calls.length, 1);
+  assert.ok(calls[0].includes('action=status'), 'gọi action=status');
+  assert.ok(calls[0].includes('orders=777001%2C777002') || calls[0].includes('orders=777001,777002'), 'gửi kèm danh sách mã đơn');
+  assert.equal(out['777001'].status, 'In progress');
+  assert.equal(out['777001'].remains, 4000);
+  assert.equal(out['777001'].startCount, 1000);
+  assert.equal(out['777002'].status, 'Completed');
+});
+
+test('POST /api/buff/orders/refresh: chỉ đồng bộ đơn chưa xong, gắn thông tin panel', async (t) => {
+  const deps = makeFakeDeps({ balance: 100 });
+  const rows = [
+    { id: 'uuid-1', service_id: 513, server: 'View TikTok', link: 'https://www.tiktok.com/@test/video/123', quantity: 20000, cost_usdt: 59, status: 'in_progress', provider_order_id: '777001', created_at: '2026-11-12T10:00:00Z' },
+    { id: 'uuid-2', service_id: 444, server: 'Like FB', link: 'https://www.facebook.com/post/1', quantity: 1000, cost_usdt: 1.7, status: 'completed', provider_order_id: '777002', created_at: '2026-11-11T10:00:00Z' },
+    { id: 'uuid-3', service_id: 444, server: 'Like FB', link: 'https://www.facebook.com/post/2', quantity: 1000, cost_usdt: 1.7, status: 'created', provider_order_id: null, created_at: '2026-11-12T11:00:00Z' },
+  ];
+  deps.store.listOrders = async () => rows;
+  deps.panel.orderStatuses = async () => ({
+    '777001': { status: 'Completed', remains: 0, startCount: 1000, currency: 'VND' },
+  });
+  const srv = await startBuffOnlyServer(deps);
+  t.after(() => new Promise((resolve) => srv.server.close(resolve)));
+  const r = await fetchJson(srv.base, '/api/buff/orders/refresh', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer good-token' },
+  });
+  assert.equal(r.status, 200);
+  assert.equal(r.json.ok, true);
+  assert.equal(r.json.refreshed, 1, 'chỉ 1 đơn chưa xong được đồng bộ');
+  const first = r.json.orders.find((o) => o.id === 'uuid-1');
+  assert.equal(first.status, 'completed', 'trạng thái được cập nhật từ panel');
+  assert.equal(first.panel.remains, 0);
+  assert.equal(first.panel.startCount, 1000);
+  const done = r.json.orders.find((o) => o.id === 'uuid-2');
+  assert.equal(done.panel, undefined, 'đơn đã xong không gọi panel');
+});
