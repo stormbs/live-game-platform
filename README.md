@@ -2,8 +2,7 @@
 
 Một service Node duy nhất host 3 game TikTok LIVE: **Vẽ Avatar**, **Buồng Giam**,
 **Thắp Sáng Bản Đồ Việt Nam**. Streamer chỉ cần nhập TikTok ID, chọn game, copy
-link overlay và dán vào TikTok LIVE Studio là chạy — không cần cài đặt gì, không
-cần TikFinity hay Streamer.bot.
+link overlay và dán vào TikTok LIVE Studio là chạy — không cần cài đặt gì thêm.
 
 ## Cách dùng (người dùng cuối)
 
@@ -81,12 +80,26 @@ Adapter chuyển mỗi event về **đúng định dạng webhook mà game đã 
   không POST HTTP vòng lại.
 - Kết nối tự nối lại khi rớt; tài khoản chưa live thì báo trạng thái `offline`
   và thử lại mỗi 60 giây; không bao giờ hỏi mật khẩu.
+- Trạng thái `offline` bao gồm cả lỗi "Failed to retrieve Room ID from all
+  sources" (tài khoản không live thì không có room để lấy) và thông báo
+  "The requested user isn't online" của thư viện — cả hai đều nghĩa là chưa
+  live, không phải lỗi hệ thống.
+- **Khóa ký Euler (`EULER_API_KEY`):** websocket của TikTok cần ký URL qua máy
+  chủ ký của Euler Stream. Không có key, Euler chặn ký ẩn danh ("This endpoint
+  requires a Business plan") nên KHÔNG tài khoản live nào nối được — adapter
+  vẫn kiểm tra được live/offline nhưng không vào được phòng live. Đăng ký tài
+  khoản miễn phí tại eulerstream.com, lấy API key, đặt biến môi trường
+  `EULER_API_KEY` trên máy chủ (Railway → Variables). Adapter đọc key này qua
+  `signApiKey` của `TikTokLiveConnection`; không có key vẫn chạy nhưng chỉ
+  báo trạng thái, không nhận event live.
 
-### Webhook dự phòng
+### Intake nội bộ `/api/webhook` (không phải setup cho người dùng)
 
-TikFinity vẫn dùng được như trước: `POST /o/<game>/<username>/api/webhook`
-với body JSON dạng `triggerTypeId` (gift=3, like=7, share=8, chat=11, follow=1,
-join=6). Dispatcher chuyển tiếp vào đúng room.
+Adapter TikTok đẩy event vào engine qua `POST /o/<game>/<username>/api/webhook`
+nội bộ, body JSON dạng `triggerTypeId` (gift=3, like=7, share=8, chat=11,
+follow=1, join=6). Đây là đường đi nội bộ của nền tảng — người dùng không cần
+cài đặt, không cần biết tới endpoint này. Mọi engine phải đếm event qua intake
+này vào `state.webhook.count` để dashboard hiển thị "số sự kiện đã nhận".
 
 ### Overlay chạy dưới prefix room như thế nào
 
@@ -114,6 +127,7 @@ Biến môi trường:
 | `PORT` | 3000 | Cổng nghe (Render cấp qua env) |
 | `MAX_ROOMS` | 8 | Số room tối đa cùng lúc |
 | `ROOM_IDLE_MINUTES` | 30 | Hủy room sau từng ấy phút không có người xem |
+| `EULER_API_KEY` | _(trống)_ | API key Euler Stream (miễn phí) để ký websocket TikTok LIVE — bắt buộc để nhận event live thật (xem mục Adapter) |
 
 Cập nhật game gốc (khi repo game có bản mới): copy code mới vào
 `games/<game>/src/` rồi chạy `npm run build` để sinh lại `engine.js`.
@@ -134,8 +148,9 @@ Chuẩn bị trước: code đã push lên một repo GitHub (riêng, chỉ thư
    trong một buổi live thật.
 5. Sau này cập nhật code: push lên GitHub là Render tự deploy lại.
 
-Không cần thẻ tín dụng cho gói Free. Không có biến môi trường bí mật nào cần
-đặt — TikTok adapter không dùng key/token.
+Không cần thẻ tín dụng cho gói Free. Biến môi trường duy nhất nên đặt là
+`EULER_API_KEY` (xem bảng trên) — không có key thì adapter không nối được
+phòng live nào.
 
 ## Giới hạn đã biết
 
@@ -144,8 +159,9 @@ Không cần thẻ tín dụng cho gói Free. Không có biến môi trường b
   khi máy ngủ, overlay có thể mất ~30–60 giây để tải.
 - **TikTok không có API LIVE chính thức.** `tiktok-live-connector` đọc feed
   LIVE không chính thức; TikTok có thể đổi phía server bất cứ lúc nào khiến
-  kết nối trực tiếp ngừng hoạt động. Khi đó dùng webhook TikFinity làm đường
-  dự phòng (`POST /o/<game>/<username>/api/webhook`).
+  kết nối trực tiếp ngừng hoạt động. Chữ ký websocket đi qua máy chủ ký của
+  Euler Stream — nếu Euler đổi chính sách (vd. chặn ký ẩn danh như đã gặp
+  ngày 2026-11-12), cần API key Euler hoặc đổi backend ký khác.
 - **Nguồn Link trong TikTok LIVE Studio có thể lag** so với OBS. Nếu cần mượt
   hơn, dùng OBS Virtual Camera đưa overlay vào LIVE Studio.
 - **Tối đa ~8 room** cùng lúc trên gói Free (giới hạn RAM). Vượt giới hạn,
@@ -154,11 +170,36 @@ Không cần thẻ tín dụng cho gói Free. Không có biến môi trường b
   khi máy ngủ lâu. Điểm số/phiên của room chỉ sống trong lúc live; sau khi
   room bị hủy (30 phút không có người xem) thì mất. Đây là giới hạn chấp nhận
   được cho game live theo phiên.
-- **Buồng Giam** vẫn còn code Streamer.bot (`localhost:8080`) trong engine
+- **Buồng Giam** vẫn còn code cầu nối desktop cũ (`localhost:8080`) trong engine
   gốc nhưng không bắt buộc — lỗi kết nối được bỏ qua im lặng, game chạy bình
-  thường bằng TikTok trực tiếp hoặc webhook.
+  thường bằng TikTok trực tiếp.
 - Game **Thắp Sáng Bản Đồ** không dùng Socket.io mà dùng SSE; overlay của nó
   không có `io()`.
+
+## Thêm game mới
+
+Luật cứng cho mọi game mới thêm vào nền tảng (và cho mọi sửa đổi game cũ):
+
+1. **Không nhắc tới phần mềm trung gian cũ** (cầu nối/webhook bên ngoài) trong
+   bất kỳ dashboard, overlay, trang chính hay docs nào — người dùng chỉ cần
+   dán link overlay vào TikTok LIVE Studio và Go LIVE.
+2. **Trạng thái kết nối chỉ lấy từ** `GET /api/rooms/<game>/<username>/status`
+   (trả `{ tiktok: { state, detail } }`, state: `connecting` / `live` /
+   `offline` / `reconnecting` / `error`). Dashboard/overlay tự suy game +
+   username từ `location.pathname` (`/room/<game>/<username>/...` hoặc
+   `/o/<game>/<username>/...`), ghép URL bằng `['', 'api', 'rooms', game,
+   username, 'status'].join('/')` để `transform.js` không viết lại thành
+   `<prefix>/api/...`.
+3. **Event vào engine qua intake nội bộ** `POST /api/webhook` do adapter
+   nền tảng đẩy — engine phải đếm chúng vào `state.webhook.count` như game
+   bản đồ đã làm, để dashboard hiển thị "số sự kiện đã nhận".
+4. **Link overlay luôn là** `/o/<game>/<username>`; dashboard luôn là
+   `/room/<game>/<username>`. Không hardcode `localhost` hay cổng trong
+   copy hiển thị cho người dùng.
+5. **Khi room `offline` (tài khoản chưa live), overlay và dashboard phải hiện
+   cảnh báo rõ ràng ngay trên màn hình** ("Tài khoản @X chưa LIVE — kiểm tra
+   lại username trong link, hoặc Go LIVE rồi tải lại"), để test sai nick là
+   thấy ngay.
 
 ## Test
 
@@ -172,7 +213,10 @@ npm test
   chuẩn hóa username; giới hạn số room.
 - `routes.test.js` — landing, healthz, tạo room, overlay 200 đúng game,
   dashboard, game không tồn tại.
-- `webhook.test.js` — tương thích webhook TikFinity cũ (cả 3 game, qua HTTP).
+- `webhook.test.js` — intake `/api/webhook` nội bộ (cả 3 game, qua HTTP).
+- `no-tikfinity.test.js` — không file dashboard/landing HTML nào còn nhắc tới
+  phần mềm trung gian cũ (quét `games/*/src/public/*.html`,
+  `games/*/src/*.html`, `public/landing.html`).
 - `socket.test.js` — client Socket.io thật nối đúng path room, nhận
   state-update đúng room, không lọt chéo.
 - `smoke.test.js` — khởi động server thật, tải `/` và một URL overlay.

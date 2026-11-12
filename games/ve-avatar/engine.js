@@ -243,7 +243,8 @@ function statePayload() {
     avatarStats: session.avatarStats,
     avatarWarning: session.avatarStats.total > 0 && session.avatarStats.withAvatar === 0,
     voiceStatus: session.voiceStatus || null,
-    waitingCount: session.queue.length
+    waitingCount: session.queue.length,
+    webhook: { count: session.webhookCount || 0 }
   };
 }
 function broadcast() { io.emit('state-update', statePayload()); }
@@ -649,13 +650,16 @@ function finishDrawing() {
 
 // ---------------- API ----------------
 app.post('/api/webhook', (req, res) => {
+  // Đếm mọi event thật qua intake nội bộ (adapter đẩy vào đây) — dashboard
+  // dùng số này làm "số sự kiện đã nhận".
+  session.webhookCount = (session.webhookCount || 0) + 1;
   const ev = parseEvent(req.body, req.query);
   if (ev.kind === 'other' || !ev.uid) {
-    // Event TikFinity gửi về nhưng không nhận diện được: ghi rõ để sửa config cho đúng
+    // Event từ adapter TikTok LIVE gửi về nhưng không nhận diện được: ghi rõ để sửa cho đúng
     let rawPrev = '';
     try { rawPrev = (typeof req.body === 'string' ? req.body : JSON.stringify(req.body)).slice(0, 300); }
     catch (e) { rawPrev = String(req.body).slice(0, 300); }
-    addLog(`🔍 Webhook chưa nhận diện (loại=${ev.kind}, content-type=${req.get('content-type') || 'không có'}): ${rawPrev || '(body trống)'}. Kiểm tra body trong TikFinity có đủ userId + loại sự kiện không.`, 'warn');
+    addLog(`🔍 Webhook chưa nhận diện (loại=${ev.kind}, content-type=${req.get('content-type') || 'không có'}): ${rawPrev || '(body trống)'}. Kiểm tra event có đủ userId + loại sự kiện không.`, 'warn');
   }
   if (settings.demoMode) {
     addLog(`🧪 Chế độ thử: bỏ qua sự kiện thật (${kindVi(ev.kind)}) từ [${ev.name}].`, 'info');

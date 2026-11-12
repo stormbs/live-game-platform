@@ -1,8 +1,16 @@
-# Kết nối Vẽ Avatar với TikTok LIVE Studio và TikFinity
+# Kết nối trực tiếp Vẽ Avatar với TikTok LIVE
 
-Hướng dẫn này dành cho bản demo chạy trên máy Windows của bạn. Repo GitHub chứa mã nguồn, không phải một máy chủ demo đang chạy sẵn.
+Không cần cài thêm gì. Nền tảng tự kết nối vào LIVE của bạn bằng TikTok ID trong link overlay.
 
-## 1. Chạy demo trên máy
+## 1. Cách chạy (nền tảng)
+
+1. Mở trang chính nền tảng, nhập TikTok ID, chọn game Vẽ Avatar, bấm **Lấy link overlay**.
+2. Trong TikTok LIVE Studio: thêm nguồn **Link**, dán link overlay, đặt kích thước **1080 × 1920**.
+3. Bấm **Go LIVE** — máy chủ tự kết nối trong tối đa 1 phút. Khán giả like / bình luận / tặng quà là game phản ứng ngay.
+
+> Kiểm tra lại TikTok ID trong link: nhập sai nick là máy chủ theo dõi nhầm tài khoản, game không nhận event nào. Thẻ "Kết nối trực tiếp" trên dashboard và banner trên overlay sẽ báo ngay khi tài khoản chưa live.
+
+## 2. Chạy local (bản gốc, chỉ để phát triển)
 
 1. Cài Node.js 18 trở lên.
 2. Mở thư mục project và chạy:
@@ -16,38 +24,11 @@ Hướng dẫn này dành cho bản demo chạy trên máy Windows của bạn. 
 3. Mở dashboard: <http://localhost:3005>
 4. Mở overlay: <http://localhost:3005/overlay.html>
 
-Giữ cửa sổ server chạy trong suốt buổi live. TikTok LIVE Studio và TikFinity cần chạy trên cùng máy để dùng các địa chỉ `localhost` bên dưới.
+Giữ cửa sổ server chạy trong suốt buổi live. Bản local cũng tự nối TikTok LIVE trực tiếp, không cần phần mềm trung gian.
 
-## 2. Thêm overlay vào TikTok LIVE Studio
+## 3. Định dạng event nội bộ (để tham khảo khi debug)
 
-1. Mở TikTok LIVE Studio và chọn scene đang dùng.
-2. Trong **Sources**, chọn **Add source → Link**.
-3. Dán URL overlay:
-
-   ```text
-   http://localhost:3005/overlay.html
-   ```
-
-4. Đặt kích thước nguồn theo khung dọc **1080 × 1920**, rồi sắp xếp overlay trên scene.
-5. Nếu overlay có tiếng nhưng chưa phát, bấm một lần vào trang overlay để trình duyệt cho phép phát âm thanh.
-
-## 3. Kết nối TikFinity
-
-1. Mở TikFinity, đăng nhập và nhập đúng **@username** TikTok trong phần Setup.
-2. Bắt đầu LIVE trong TikTok LIVE Studio. Trong TikFinity, bấm **Connect** nếu chưa tự kết nối. TikFinity chỉ nhận sự kiện của phòng LIVE khi stream đang chạy.
-3. Trong dashboard Vẽ Avatar, xem địa chỉ webhook. Với demo chạy local, địa chỉ sẽ là:
-
-   ```text
-   http://localhost:3005/api/webhook
-   ```
-
-4. Trong TikFinity, mở **Actions & Events** và tạo một Action, ví dụ `Ve Avatar`.
-5. Thêm hành động **Trigger Webhook** (tên mục có thể khác nhẹ giữa các phiên bản). Đặt phương thức **POST**, Content-Type `application/json`, URL là địa chỉ webhook từ dashboard.
-6. Tạo các Event cần dùng và gắn chúng vào Action này. Dùng biến chèn từ TikFinity để điền các trường trong mẫu dưới đây; tên placeholder có thể thay đổi theo phiên bản TikFinity.
-
-### JSON body cho các loại tương tác
-
-Gửi các body này tới cùng endpoint. Mỗi Event dùng body tương ứng:
+Máy chủ nền tảng tự nối TikTok LIVE và đẩy event vào engine qua `POST /api/webhook` nội bộ với body dạng sau. Không cần cấu hình gì — chỉ để đối chiếu khi đọc log:
 
 **Quà tặng (Gift)**
 
@@ -79,32 +60,22 @@ Gửi các body này tới cùng endpoint. Mỗi Event dùng body tương ứng:
 {"triggerTypeId":7,"userId":"$userId","nickname":"$nickname","profilePictureUrl":"$profilePictureUrl","likeCount":$likeCount}
 ```
 
-Trong TikFinity, chèn giá trị từ menu biến thay vì gõ placeholder nếu giao diện có nút chọn biến. `userId` nhận diện viewer; `profilePictureUrl` cung cấp ảnh đại diện; `diamondCount` là số xu thực của quà; `likeCount` là số tim trong đợt.
+`userId` nhận diện viewer; `profilePictureUrl` cung cấp ảnh đại diện thật từ LIVE (tuyệt đối không bịa avatar); `diamondCount` là số xu thực của quà; `likeCount` là số tim trong đợt.
 
 ## 4. Chạy thử an toàn
 
-- Demo mode được bật mặc định. Khi bật, dashboard bỏ qua webhook TikFinity và chỉ nhận nút mô phỏng trong dashboard.
-- Để kiểm tra webhook, chuyển **Chế độ thử (Demo)** sang tắt. Sau đó gửi thử một Event/Action trong TikFinity và xem log cùng hàng đợi trên dashboard.
-- Trước buổi live thật, kiểm tra lại URL overlay, kết nối TikFinity, avatar viewer và log. Bấm **Làm mới phiên** nếu muốn bắt đầu hàng đợi mới.
-- Trong TikFinity, bạn cũng có thể dùng Event Simulator/test action nếu phiên bản đang dùng có hỗ trợ.
+- Demo mode được bật mặc định. Khi bật, dashboard bỏ qua sự kiện live thật và chỉ nhận nút mô phỏng trong dashboard.
+- Để kiểm tra event thật, chuyển **Chế độ thử (Demo)** sang tắt, Go LIVE rồi thử thả tim / bình luận / tặng quà nhỏ và xem log cùng hàng đợi trên dashboard.
+- Trước buổi live thật, kiểm tra lại URL overlay, thẻ kết nối trực tiếp, avatar viewer và log. Bấm **Làm mới phiên** nếu muốn bắt đầu hàng đợi mới.
 
 ## 5. Sự cố thường gặp
 
 | Hiện tượng | Kiểm tra |
 | --- | --- |
-| Overlay trống hoặc không tải | Server Node.js còn chạy không; URL có đúng `http://localhost:3005/overlay.html`; nguồn Link trong LIVE Studio đã refresh chưa. |
-| TikFinity không kết nối | LIVE đã bắt đầu chưa; `@username` trong TikFinity có đúng handle, không phải tên hiển thị. |
-| Webhook tới nhưng không vào hàng đợi | Demo mode phải tắt để xử lý webhook; kiểm tra Event đã gắn Action, body JSON hợp lệ và có `userId` cùng `triggerTypeId`. |
-| Viewer hiện chữ cái thay avatar | Body cần có `profilePictureUrl` (hoặc trường avatar tương đương). |
+| Overlay trống hoặc không tải | Server còn chạy không; URL overlay có đúng dạng `…/o/ve-avatar/<tên TikTok>`; nguồn Link trong LIVE Studio đã refresh chưa. |
+| Thẻ kết nối báo "chưa LIVE" | Sai TikTok ID trong link, hoặc chưa Go LIVE. Sửa lại username rồi Go LIVE, đợi tối đa 1 phút. |
+| Thẻ kết nối báo lỗi Euler / Business plan | Máy chủ cần API key Euler (đăng ký miễn phí) để nối TikTok LIVE. Xem README của nền tảng, mục "Kết nối trực tiếp". |
+| Event tới nhưng không vào hàng đợi | Demo mode phải tắt để xử lý event thật; kiểm tra body JSON có `userId` cùng `triggerTypeId`. |
+| Viewer hiện chữ cái thay avatar | Event cần có `profilePictureUrl` (hoặc trường avatar tương đương). |
 | Gift không lên hàng đợi | Kiểm tra `diamondCount` và ngưỡng xu đặt trong dashboard. |
-| Like không lên hàng đợi | Kiểm tra Event Like có gửi `likeCount`; số tim tích lũy phải đạt mục tiêu. |
-
-### Lưu ý mạng
-
-`localhost` chỉ trỏ tới máy đang mở ứng dụng. Chạy TikFinity, TikTok LIVE Studio và server demo trên cùng máy. Không mở cổng server ra Internet hoặc chuyển tiếp cổng router: webhook demo không có xác thực.
-
-## Tài liệu tham khảo
-
-- [TikFinity: hướng dẫn thiết lập TikTok LIVE](https://blog.tikfinity.com/tikfinity-setup/)
-- [TikFinity: Actions & Events](https://tikfinity.zerody.one/tiktok/actionsandevents)
-- [TikFinity: LIVE Studio/OBS overlays](https://tikfinity.zerody.one/tiktok/obsoverlays)
+| Like không lên hàng đợi | Số tim tích lũy phải đạt mục tiêu trong dashboard. |

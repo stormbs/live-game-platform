@@ -330,7 +330,7 @@ function resolveGiftPoints(rawName, rawCoins, rawCount = 1, rawGiftId = '') {
   // Nếu quà hoàn toàn KHÔNG CÓ giá trị xu:
   if (totalCoins <= 0 || unitCoins <= 0) {
     console.warn(`[GIFT WARNING] Quà "${rawName}" (ID: ${rawGiftId || 'N/A'}) chưa rõ giá trị xu. Không thể quy đổi điểm buồng!`);
-    addLog(`⚠️ Quà [${rawName}] (ID: ${rawGiftId || 'N/A'}) chưa rõ giá trị xu trong sự kiện TikFinity. Chờ chủ phòng xác nhận!`, 'warning');
+    addLog(`⚠️ Quà [${rawName}] (ID: ${rawGiftId || 'N/A'}) chưa rõ giá trị xu trong sự kiện LIVE. Chờ chủ phòng xác nhận!`, 'warning');
     return {
       pointsPerUnit: 0,
       totalPoints: 0,
@@ -356,6 +356,7 @@ function resolveGiftPoints(rawName, rawCoins, rawCount = 1, rawGiftId = '') {
 }
 
 // In-Memory Live State
+let webhookCount = 0; // Số event thật qua /api/webhook (adapter đẩy vào) — dashboard dùng làm "số sự kiện đã nhận".
 let gameState = {
   users: {},          // id -> user object
   ranking: [],        // array of user ids sorted by points desc
@@ -2057,7 +2058,8 @@ app.get('/api/state', (req, res) => {
     isReleasing: Boolean(gameState.isReleasing || gameState.isReleaseCoolingDown || gameState.chicken?.isExiting),
     isReleaseCoolingDown: Boolean(gameState.isReleaseCoolingDown),
     settings,
-    logs: gameState.logs
+    logs: gameState.logs,
+    webhook: { count: webhookCount }
   });
 });
 
@@ -2471,6 +2473,7 @@ function processWebhookData(rawReqBody, reqQuery, reqMethod, reqUrl) {
 }
 
 function handleWebhookRequest(req, res) {
+  webhookCount++;
   const p = processWebhookData(req.body, req.query, req.method, req.originalUrl);
   const { uid, uname, avatar, data, innerData, args, isLeave, isFollow, isGift, isLike, isChat, isJoin, actionName } = p;
 
@@ -2505,7 +2508,7 @@ function handleWebhookRequest(req, res) {
 
     const resolved = resolveGiftPoints(rawGiftName, rawCoins, rawCount, rawGiftId);
     if (!resolved.isUnknown && resolved.totalPoints > 0) {
-      addPoints(uid, uname, avatar, resolved.totalPoints, `TikFinity: Đóng họ ${rawGiftName}`, true, rawGiftName, resolved.count, rawGiftId, resolved.unitCoins, resolved.totalCoins);
+      addPoints(uid, uname, avatar, resolved.totalPoints, `LIVE: Đóng họ ${rawGiftName}`, true, rawGiftName, resolved.count, rawGiftId, resolved.unitCoins, resolved.totalCoins);
     }
     return res.status(200).json({ received: true, action: 'gift', userId: uid });
   } else if (isLike) {

@@ -21,20 +21,20 @@
 </head>
 <body>
 <h1>🗺️ Dashboard — Thắp Sáng Bản Đồ Việt Nam <span id="status"></span></h1>
-<p>Overlay: <a href="/overlay.html" target="_blank">http://localhost:3009/overlay.html</a> &nbsp;•&nbsp; Dashboard: <a href="/dashboard" target="_blank">http://localhost:3009/dashboard</a> &nbsp;•&nbsp; Webhook TikFinity: <code>POST http://localhost:3009/api/webhook</code></p>
+<p>Overlay: <a id="topOverlayLink" href="/overlay.html" target="_blank">…</a> &nbsp;•&nbsp; Dashboard: <a href="/dashboard" target="_blank">trang này</a></p>
 
 <div class="card" style="border:2px solid #d4a900">
   <h2>🔗 Link overlay cho TikTok LIVE Studio</h2>
-  <div style="font-size:16px">Link overlay: <code id="overlayLink" style="font-size:16px;background:#fff7d6;padding:4px 8px;border-radius:6px">http://localhost:3009/overlay.html</code>
+  <div style="font-size:16px">Link overlay: <code id="overlayLink" style="font-size:16px;background:#fff7d6;padding:4px 8px;border-radius:6px">…</code>
   <button class="primary" onclick="copyLink()">📋 Sao chép link</button>
   <a href="/overlay.html" target="_blank"><button>Mở overlay ↗</button></a> <span id="copyMsg"></span></div>
   <p style="font-size:14px;line-height:1.7"><b>Cách thêm vào TikTok LIVE Studio:</b><br>
-  1. Chạy <code>start.bat</code> trước (server phải đang chạy thì link mới hiện hình).<br>
+  1. Không cần chạy gì trên máy của bạn — máy chủ nền tảng đã chạy sẵn, link trên dùng được ngay.<br>
   2. Trong LIVE Studio: bấm <b>+ Thêm nguồn → Link</b> (nguồn trang web).<br>
   3. Dán link trên vào ô URL. Đặt <b>độ phân giải tùy chỉnh 1080 x 1920</b> (không để mặc định 800x600).<br>
   4. Kéo cho nguồn vừa đúng khung dọc 9:16 (chọn <b>Fit</b>, đừng chọn Stretch kẻo hình bị kéo dài).<br>
   5. Bật âm thanh của nguồn (để nghe voice + nhạc nền), tích <b>giữ trạng thái hoạt động</b> nếu có.<br>
-  ⚠️ Nếu LIVE Studio báo "Enter correct URL" thì kiểm tra lại: phải gõ đủ <code>http://localhost:3009/overlay.html</code> (có <code>/overlay.html</code> ở cuối, không gõ thiếu).</p>
+  ⚠️ Nếu LIVE Studio báo "Enter correct URL" thì kiểm tra lại: phải gõ đủ link overlay trên (dạng <code>…/o/thap-sang-ban-do/&lt;tên TikTok của bạn&gt;</code>), không gõ thiếu phần cuối.</p>
 </div>
 
 <div class="card">
@@ -43,8 +43,8 @@
 </div>
 
 <div class="card">
-  <h2>📡 Kết nối TikFinity <span style="font-size:13px;color:#666">(đèn báo v7.1 — chỉ tính sự kiện webhook thật)</span></h2>
-  <div id="webhookBox">Đang tải…</div>
+  <h2>📡 Kết nối trực tiếp TikTok LIVE</h2>
+  <div id="directBox">Đang kiểm tra kết nối LIVE…</div>
 </div>
 
 <div class="card">
@@ -148,25 +148,8 @@ async function render(s) {
     `<b>Ván ${s.roundNo}</b> — đã sáng <b>${s.lit}/34</b> tỉnh • ${s.viewers} người xem • ` +
     `${s.stats.totalGifts} quà (${s.stats.totalCoins} xu) • ${s.stats.totalTaps} tim • ${s.stats.totalLights} lượt thắp` +
     (s.phase === 'complete' ? ` • <span class="warn">Ván mới sau ${Math.ceil(s.msLeft / 1000)}s</span>` : ` • ⏰ còn ${fmtTime(s.msRoundLeft)}`);
-  // Đèn báo TikFinity (v7.1): chỉ tính sự kiện webhook THẬT, không tính
-  // sự kiện giả lập / gửi tay — để biết đường link live có đang chạy không.
-  const wh = s.webhook || { count: 0, secondsAgo: null };
-  let whHtml;
-  if (!wh.count) {
-    whHtml = '🔴 <b>CHƯA NHẬN SỰ KIỆN NÀO</b> — TikFinity chưa gửi gì tới server. Kiểm tra: <b>(1)</b> server đã chạy lại sau khi giải nén zip mới chưa (Ctrl+C cửa sổ đen cũ → chạy lại <code>start.bat</code>); <b>(2)</b> Action trong TikFinity đã bật chưa, URL đúng <code>http://localhost:3009/api/webhook</code>; <b>(3)</b> thứ tự: Go LIVE trước, rồi mới Connect trong TikFinity.';
-  } else if (wh.secondsAgo != null && wh.secondsAgo <= 60) {
-    whHtml = `🟢 <b>ĐÃ KẾT NỐI</b> — sự kiện cuối ${fmtAgo(wh.secondsAgo)} trước (loại: ${escapeHtml(wh.lastType || '?')}, tổng ${wh.count} sự kiện). Comment/quà/tim trên live đang chảy về server.`;
-  } else {
-    whHtml = `🟡 <b>TÍN HIỆU YẾU</b> — sự kiện cuối ${fmtAgo(wh.secondsAgo)} trước (tổng ${wh.count} sự kiện). Có thể live đã ngắt hoặc TikFinity mất kết nối — kiểm tra tab TikFinity còn Connected không, thử Connect lại.`;
-  }
-  if (s.simulator) whHtml += '<br>⚠️ <b>Đang bật "Giả lập người xem"</b> — sự kiện giả cũng làm sáng bản đồ, dễ nhầm với sự kiện thật. Tắt giả lập trước khi live thật (đèn báo trên chỉ tính sự kiện thật nên vẫn đúng).';
-  // Soi payload thô (v7.2): hiện đúng những gì TikFinity gửi sang lần cuối,
-  // để khỏi phải mò cửa sổ đen khi comment không sáng.
-  if (wh.lastRaw !== undefined) {
-    const rawShown = wh.count === 0 ? '(chưa có webhook nào)' : (wh.lastRaw || '(body rỗng — TikFinity gửi POST không kèm dữ liệu)');
-    whHtml += `<details style="margin-top:8px"><summary style="cursor:pointer">🔍 Xem payload thô gần nhất (để đối chiếu dạng TikFinity gửi)</summary><div style="font-size:12px;word-break:break-all;background:#111;color:#8f8;padding:8px;border-radius:6px;margin-top:4px">content-type: ${escapeHtml(wh.lastContentType || '(không có)')}<br>${escapeHtml(rawShown)}</div></details>`;
-  }
-  document.getElementById('webhookBox').innerHTML = whHtml;
+  LAST_STATE = s;
+  renderDirect(s);
   document.getElementById('sfxOn').checked = CFG.sfxEnabled !== false;
   document.getElementById('sim').checked = !!s.simulator;
   document.getElementById('voiceOn').checked = s.voice ? !!s.voice.enabled : true;
@@ -183,6 +166,61 @@ async function render(s) {
     '<br><b>Top tặng quà:</b> ' + ((s.topGifters || []).map(u => `${u.name} (${u.coins} xu)`).join(' • ') || '—') +
     '<br><b>Mới thắp:</b> ' + (s.recent.map(r => `${r.viewer} → ${r.provinceName} (${r.via})`).join(' • ') || '—');
   document.getElementById('log').innerHTML = s.feed.map(f => `<div>[${new Date(f.t).toLocaleTimeString('vi-VN')}] ${escapeHtml(f.text)}</div>`).join('') || 'Chưa có sự kiện.';
+}
+
+// --- Kết nối trực tiếp TikTok LIVE (nền tảng tự nối, không cài gì thêm) ---
+let DIRECT = null; // { state, detail } từ GET /api/rooms/<game>/<username>/status
+let LAST_STATE = null;
+function directParts() {
+  const p = location.pathname.split('/').filter(Boolean); // ['room', game, username, ...]
+  return { game: p[1] || '', username: p[2] || '' };
+}
+function directStatusUrl() {
+  const d = directParts();
+  // Ghép bằng join để transform.js không viết lại '/api/...' thành
+  // '<prefix>/api/...' (đây là route của nền tảng, không phải của engine).
+  return ['', 'api', 'rooms', d.game, d.username, 'status'].join('/');
+}
+function directHtml(s) {
+  const u = directParts().username || 'tài khoản trong link';
+  const wh = (s && s.webhook) || { count: 0, secondsAgo: null };
+  let h = '';
+  if (!DIRECT) h = '⏳ Đang kiểm tra kết nối LIVE…';
+  else if (DIRECT.state === 'live') {
+    h = wh.count > 0
+      ? `🟢 <b>ĐÃ KẾT NỐI LIVE</b> — đang nhận sự kiện từ @${u} (tổng ${wh.count} sự kiện, cuối ${wh.secondsAgo != null ? fmtAgo(wh.secondsAgo) + ' trước' : '—'}).`
+      : `🟢 <b>ĐÃ KẾT NỐI LIVE</b> — @${u} đang live, chờ sự kiện đầu tiên. Thử comment/tap trong live để kiểm tra.`;
+  }
+  else if (DIRECT.state === 'offline') h = `🟡 <b>@${u} CHƯA LIVE</b> — kiểm tra lại username trong link, hoặc Go LIVE trên TikTok rồi đợi tối đa 1 phút. Máy chủ tự kết nối, không cần cài gì thêm.`;
+  else if (DIRECT.state === 'connecting' || DIRECT.state === 'reconnecting') h = `⏳ <b>ĐANG KẾT NỐI</b> tới LIVE của @${u}…`;
+  else if (DIRECT.state === 'error') {
+    h = /euler|business plan/i.test(DIRECT.detail || '')
+      ? '🔴 <b>CHƯA KẾT NỐI ĐƯỢC LIVE</b> — máy chủ cần API key Euler (đăng ký miễn phí) để nối TikTok LIVE. Xem README mục "Kết nối trực tiếp".'
+      : `🔴 <b>CHƯA KẾT NỐI ĐƯỢC LIVE</b> — @${u}: ${escapeHtml(DIRECT.detail || 'lỗi không rõ')}. Máy chủ tự thử lại mỗi phút.`;
+  }
+  else h = '⚪ Chưa rõ trạng thái kết nối.';
+  if (s && s.simulator) h += '<br>⚠️ <b>Đang bật "Giả lập người xem"</b> — sự kiện giả cũng làm sáng bản đồ, dễ nhầm với sự kiện thật. Tắt giả lập trước khi live thật (số sự kiện trên chỉ tính sự kiện thật nên vẫn đúng).';
+  // Soi sự kiện gần nhất (debug cho adapter trực tiếp): hiện đúng event
+  // cuối mà engine nhận được, để khỏi phải mò log khi comment không sáng.
+  if (wh.lastRaw !== undefined) {
+    const rawShown = wh.count === 0 ? '(chưa có sự kiện nào)' : (wh.lastRaw || '(body rỗng)');
+    h += `<details style="margin-top:8px"><summary style="cursor:pointer">🔍 Xem sự kiện gần nhất (để đối chiếu dạng adapter gửi)</summary><div style="font-size:12px;word-break:break-all;background:#111;color:#8f8;padding:8px;border-radius:6px;margin-top:4px">content-type: ${escapeHtml(wh.lastContentType || '(không có)')}<br>${escapeHtml(rawShown)}</div></details>`;
+  }
+  return h;
+}
+function renderDirect(s) {
+  const el = document.getElementById('directBox');
+  if (el) el.innerHTML = directHtml(s);
+}
+async function pollDirect() {
+  const d = directParts();
+  if (!d.game || !d.username) return;
+  try {
+    const r = await fetch(directStatusUrl());
+    const j = await r.json();
+    DIRECT = j.tiktok || null;
+    renderDirect(LAST_STATE);
+  } catch {}
 }
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fmtAgo(sec){ if(sec==null) return '—'; if(sec<60) return sec+' giây'; const m=Math.floor(sec/60); return m+' phút'+(sec%60?' '+(sec%60)+' giây':''); }
@@ -266,8 +304,18 @@ async function testVoice() {
 }
 load();
 setInterval(load, 1000); // dashboard cập nhật mỗi 1s (v7.9: 2s -> 1s)
-// Link overlay hiển thị theo đúng địa chỉ đang mở dashboard (thường là localhost:3009).
-document.getElementById('overlayLink').textContent = location.origin + '/overlay.html';
+// Link overlay theo đúng room đang mở (/room/<game>/<username>/...).
+(function () {
+  const d = directParts();
+  if (d.game && d.username) {
+    const ov = location.origin + '/o/' + d.game + '/' + d.username;
+    document.getElementById('overlayLink').textContent = ov;
+    const top = document.getElementById('topOverlayLink');
+    if (top) { top.href = ov; top.textContent = ov; }
+  }
+})();
+pollDirect();
+setInterval(pollDirect, 10000);
 </script>
 </body>
 </html>
