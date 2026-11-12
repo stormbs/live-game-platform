@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đấu Trí — Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; }
+  header { padding: 18px 24px; background: #1e293b; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+  header h1 { margin: 0; font-size: 24px; }
+  header a { color: #7dd3fc; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px; display: grid; gap: 18px; }
+  .card { background: #1e293b; border-radius: 14px; padding: 18px 20px; }
+  .card h2 { margin: 0 0 12px; font-size: 19px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .stat { background: #0f172a; border-radius: 10px; padding: 12px; }
+  .stat .k { font-size: 13px; opacity: .8; }
+  .stat .v { font-size: 26px; font-weight: 800; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { padding: 7px 8px; border-bottom: 1px solid #334155; text-align: left; vertical-align: top; }
+  label { display: block; font-size: 13px; opacity: .85; margin-bottom: 4px; }
+  input[type=number], input[type=text], select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  button { background: #0284c7; color: #fff; border: 0; border-radius: 9px; padding: 10px 16px; font-size: 15px; cursor: pointer; }
+  button.big { background: #4f46e5; font-size: 17px; padding: 12px 22px; }
+  button.warn { background: #b45309; }
+  button.ghost { background: #334155; }
+  button.danger { background: #991b1b; }
+  button:disabled { opacity: .5; cursor: default; }
+  .log { font-size: 13px; line-height: 1.5; max-height: 220px; overflow: auto; background: #0f172a; border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; }
+  .muted { opacity: .75; font-size: 14px; }
+  .badge-demo { background: #f59e0b; color: #111; font-weight: 800; border-radius: 8px; padding: 4px 10px; display: none; }
+  .copy-btn { padding: 5px 10px; font-size: 13px; }
+  .url-cell { word-break: break-all; font-size: 12px; }
+  .q-item { background: #0f172a; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+  .q-item .qtext { font-weight: 700; font-size: 15px; }
+  .q-item .opts { font-size: 13px; opacity: .85; margin-top: 6px; line-height: 1.6; }
+  .q-item .opts b { color: #4ade80; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧠 Đấu Trí — Dashboard <span class="badge-demo" id="demo-badge">🧪 DEMO ĐANG BẬT</span></h1>
+  <div><a id="overlay-link" href="#" target="_blank">Mở overlay</a> · <a id="demo-link" href="#" target="_blank">Mở overlay demo</a></div>
+</header>
+<main>
+  <div class="card">
+    <h2>Trận đấu</h2>
+    <div class="grid" id="match-grid"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="big" id="btn-next">▶️ Câu tiếp theo</button>
+      <button id="btn-lock">✅ Chốt đáp án ngay</button>
+      <button class="warn" id="btn-reset">🔄 Trận mới</button>
+      <label style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="set-auto" style="width:auto"> Tự động chuyển câu</label>
+      <span class="muted" id="phase-text"></span>
+    </div>
+    <div id="current-q" style="margin-top:14px"></div>
+    <div class="grid" style="margin-top:14px">
+      <div class="stat"><div class="k">🔵 Đội A — điểm</div><div class="v" id="pts-a">0</div></div>
+      <div class="stat"><div class="k">🟠 Đội B — điểm</div><div class="v" id="pts-b">0</div></div>
+      <div class="stat"><div class="k">👥 Người chơi</div><div class="v" id="players-count">0</div></div>
+      <div class="stat"><div class="k">📝 Đã trả lời / Đúng</div><div class="v" id="answers-count">0 / 0</div></div>
+    </div>
+    <h3 style="margin:16px 0 8px">Top cá nhân (câu đúng)</h3>
+    <div class="grid">
+      <div><strong>🔵 Đội A</strong><div id="top-a" class="muted">—</div></div>
+      <div><strong>🟠 Đội B</strong><div id="top-b" class="muted">—</div></div>
+    </div>
+    <h3 style="margin:16px 0 8px">Nhật ký</h3>
+    <div class="log" id="logs">—</div>
+  </div>
+
+  <div class="card">
+    <h2>📚 Ngân hàng câu hỏi (<span id="bank-count">0</span> câu)</h2>
+    <div id="bank-list">Đang tải…</div>
+    <h3 style="margin:16px 0 8px">Thêm câu hỏi mới</h3>
+    <div class="grid">
+      <div style="grid-column:1/-1"><label>Nội dung câu hỏi</label><input type="text" id="new-q-text" placeholder="Ví dụ: Thủ đô của Pháp là thành phố nào?"></div>
+      <div><label>Đáp án A</label><input type="text" id="new-q-a"></div>
+      <div><label>Đáp án B</label><input type="text" id="new-q-b"></div>
+      <div><label>Đáp án C</label><input type="text" id="new-q-c"></div>
+      <div><label>Đáp án D</label><input type="text" id="new-q-d"></div>
+      <div><label>Đáp án đúng</label><select id="new-q-correct"><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select></div>
+    </div>
+    <div class="row" style="margin-top:12px"><button id="btn-add-q">➕ Thêm câu hỏi</button><span class="muted" id="add-msg"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>⚙️ Cài đặt trận</h2>
+    <div class="grid">
+      <div><label>Điểm/câu đúng</label><input type="number" id="set-correct" value="10" min="1" max="100"></div>
+      <div><label>Thưởng đúng đầu tiên</label><input type="number" id="set-first" value="5" min="0" max="50"></div>
+      <div><label>Giây/câu</label><input type="number" id="set-qs" value="30" min="2" max="300"></div>
+      <div><label>Giây hiện đáp án (reveal)</label><input type="number" id="set-reveal" value="5" min="1" max="30"></div>
+      <div><label>Số câu/trận</label><input type="number" id="set-per" value="10" min="1" max="50"></div>
+      <div><label>Điểm/xu quà</label><input type="number" id="set-coin" value="2" min="1" max="100"></div>
+      <div><label>Điểm/follow (1 lần/trận)</label><input type="number" id="set-follow" value="10" min="0" max="100"></div>
+      <div><label>Vinh danh (giây)</label><input type="number" id="set-spot" value="30" min="1" max="120"></div>
+      <div><label><input type="checkbox" id="set-voice" checked style="width:auto"> Bật giọng đọc (TTS)</label></div>
+    </div>
+    <div class="row" style="margin-top:12px"><button id="btn-save">💾 Lưu cài đặt</button><span class="muted" id="save-msg"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>🧪 Test (chỉ khi bật chế độ thử)</h2>
+    <label><input type="checkbox" id="set-demo" style="width:auto"> Bật chế độ thử (demoMode) — cho phép nút test + demo</label>
+    <div class="row" style="margin-top:12px">
+      <button class="ghost" id="btn-demo-start">▶ Chạy demo</button>
+      <button class="ghost" id="btn-demo-stop">■ Dừng demo</button>
+      <button class="ghost" id="btn-test-demo">⚡ Test 1 lượt</button>
+      <button class="ghost" id="btn-test-tap">👆 Thả 20 tim (test)</button>
+      <button class="ghost" id="btn-test-gift">🎁 Tặng 10 xu (test)</button>
+      <button class="ghost" id="btn-test-follow">➕ Follow (test)</button>
+      <button class="ghost" id="btn-bulk">👥 Thêm 100 người xem</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <select id="test-letter" style="width:auto"><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option></select>
+      <button class="ghost" id="btn-test-answer">💬 Trả lời thử</button>
+      <button class="ghost" id="btn-test-join-a">🔵 Vào đội A (test)</button>
+      <button class="ghost" id="btn-test-join-b">🟠 Vào đội B (test)</button>
+    </div>
+    <p class="muted">Luật: bình luận "đội a"/"đội b" (hoặc 1/2) để vào đội; trả lời bằng 1 chữ A/B/C/D (1 lần/câu); đúng +10, đúng đầu tiên +5. Demo tự trả lời ngẫu nhiên A–D cho cả 2 đội, tự dừng khi có event thật từ TikTok.</p>
+  </div>
+
+  <div class="card">
+    <h2>🎯 Cài đặt TikFinity</h2>
+    <p class="muted">Tạo <strong>6 Action webhook</strong>, mỗi action dán 1 URL riêng dưới đây (copy từ bảng). Sau đó tạo <strong>6 Event</strong>, mỗi event chọn đúng trigger + đúng action ở mục "Trigger all of these actions". Xem bài hướng dẫn đầy đủ: <a href="/huong-dan-tikfinity" target="_blank">/huong-dan-tikfinity</a></p>
+    <table>
+      <thead><tr><th>Sự kiện</th><th>Tên Action</th><th>Trigger (chọn trong TikFinity)</th><th>URL webhook (riêng từng sự kiện)</th><th></th></tr></thead>
+      <tbody id="actions-body"><tr><td colspan="5">Đang tải…</td></tr></tbody>
+    </table>
+    <p class="muted">Webhook chung của phòng: <code id="webhook-url"></code></p>
+  </div>
+
+  <div class="card">
+    <h2>📖 Cách chơi</h2>
+    <p class="muted">Streamer mở từng câu hỏi (bấm "Câu tiếp theo" hoặc bật tự động). Khán giả bình luận "đội a"/"đội b" để vào đội, rồi trả lời bằng 1 chữ A, B, C hoặc D — mỗi người chỉ được trả lời 1 lần/câu. Trả lời đúng +10 điểm cho đội, người đúng đầu tiên của câu +5 thưởng. Hết 30s/câu thì chốt đáp án. Hết 10 câu, đội nhiều điểm hơn thắng; hòa thì xét số lần đúng đầu tiên.</p>
+  </div>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const path = location.pathname.split('/').filter(Boolean);
+  const username = path[2] || 'live';
+  const apiBase = `/o/dau-tri/${username}`;
+  document.getElementById('overlay-link').href = apiBase + '/overlay';
+  document.getElementById('demo-link').href = apiBase + '/overlay?demo=1';
+  let state = null;
+
+  async function api(p, body, method) {
+    const r = await fetch(apiBase + p, { method: method || 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    return r.json();
+  }
+  function esc(x) { return String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function render(s) {
+    if (!s || s.game !== 'dau-tri') return;
+    state = s;
+    document.getElementById('demo-badge').style.display = s.demoActive ? 'inline-block' : 'none';
+    document.getElementById('set-demo').checked = !!s.demoMode;
+    document.getElementById('set-auto').checked = !!s.autoMode;
+    document.getElementById('bank-count').textContent = s.bankCount;
+    document.getElementById('match-grid').innerHTML =
+      `<div class="stat"><div class="k">Trận</div><div class="v">${s.matchNo}</div></div>` +
+      `<div class="stat"><div class="k">Câu</div><div class="v">${s.questionNo} / ${s.questionsPerMatch}</div></div>` +
+      `<div class="stat"><div class="k">Giai đoạn</div><div class="v" style="font-size:20px">${s.phase === 'lobby' ? 'Chờ mở câu' : s.phase === 'question' ? 'Đang trả lời' : s.phase === 'reveal' ? 'Đã chốt' : s.phase === 'between' ? 'Chờ câu kế' : 'Vinh danh'}</div></div>` +
+      `<div class="stat"><div class="k">Đội thắng</div><div class="v" style="font-size:20px">${s.winner ? (s.winner.team === 'a' ? '🔵 A' : s.winner.team === 'b' ? '🟠 B' : '🤝 Hòa') : '—'}</div></div>`;
+    document.getElementById('phase-text').textContent = s.winner ? ('Kết quả: ' + (s.winner.reason || '')) : '';
+    document.getElementById('pts-a').textContent = s.points.a;
+    document.getElementById('pts-b').textContent = s.points.b;
+    document.getElementById('players-count').textContent = (s.teamCounts.a + s.teamCounts.b + s.teamCounts.none) + ` (🔵${s.teamCounts.a} 🟠${s.teamCounts.b} 👥${s.teamCounts.none})`;
+    document.getElementById('answers-count').textContent = (s.current ? s.current.totalAnswers : 0) + ' / ' + s.stats.answersCorrect;
+    const cq = document.getElementById('current-q');
+    if (s.current) {
+      const letters = ['A', 'B', 'C', 'D'];
+      cq.innerHTML = `<div class="stat"><div class="k">Câu ${s.questionNo}/${s.questionsPerMatch} ${s.current.locked ? '(đã chốt — đáp án đúng: ' + s.current.correct.toUpperCase() + ')' : ''}</div><div style="font-size:18px;font-weight:700;margin:6px 0">${esc(s.current.text)}</div>` +
+        letters.map((L, i) => `<div>${L}. ${esc(s.current.options[i])} — <b>${s.current.counts[L.toLowerCase()]}</b> người</div>`).join('') +
+        (s.current.firstCorrect ? `<div style="margin-top:6px">⚡ Đúng đầu tiên: <b>${esc(s.current.firstCorrect.name)}</b></div>` : '') + `</div>`;
+    } else {
+      cq.innerHTML = '<div class="muted">Chưa có câu hỏi đang mở.</div>';
+    }
+    document.getElementById('top-a').innerHTML = s.top.a.map((p) => esc(p.name) + ' — ' + p.correct + ' câu đúng').join('<br>') || '—';
+    document.getElementById('top-b').innerHTML = s.top.b.map((p) => esc(p.name) + ' — ' + p.correct + ' câu đúng').join('<br>') || '—';
+    document.getElementById('logs').textContent = (s.logs || []).map((l) => new Date(l.t).toLocaleTimeString('vi-VN') + '  ' + l.text).join('\n') || '—';
+  }
+  async function poll() {
+    try {
+      const r = await fetch(apiBase + '/api/state');
+      render(await r.json());
+    } catch (e) {}
+    setTimeout(poll, 2000);
+  }
+  async function loadBank() {
+    try {
+      const r = await fetch(apiBase + '/api/questions');
+      const d = await r.json();
+      const letters = ['A', 'B', 'C', 'D'];
+      document.getElementById('bank-list').innerHTML = d.questions.map((q) => `<div class="q-item"><div class="qtext">${esc(q.text)}</div><div class="opts">` +
+        q.options.map((o, i) => `${letters[i]}. ${esc(o)}${q.correct === letters[i].toLowerCase() ? ' <b>✓ đúng</b>' : ''}`).join(' &nbsp;·&nbsp; ') +
+        `</div><div class="row" style="margin-top:8px"><button class="ghost" data-del="${q.id}">🗑️ Xóa</button></div></div>`).join('');
+      document.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => {
+        await api('/api/questions/' + b.getAttribute('data-del'), null, 'DELETE');
+        loadBank();
+      }));
+    } catch (e) {
+      document.getElementById('bank-list').textContent = 'Không tải được ngân hàng câu hỏi.';
+    }
+  }
+  async function loadActions() {
+    try {
+      const r = await fetch(apiBase + '/api/tikfinity-actions');
+      const d = await r.json();
+      document.getElementById('webhook-url').textContent = d.webhookUrl;
+      document.getElementById('actions-body').innerHTML = d.actions.map((a, i) => `<tr><td>${a.key}</td><td>${esc(a.actionName)}</td><td>${esc(a.triggerLabel)}</td><td class="url-cell">${esc(a.url)}</td><td><button class="copy-btn" data-url="${esc(a.url)}">Sao chép</button></td></tr>`).join('');
+      document.querySelectorAll('.copy-btn').forEach((b) => b.addEventListener('click', () => {
+        navigator.clipboard.writeText(b.getAttribute('data-url')).then(() => { b.textContent = 'Đã sao chép ✓'; setTimeout(() => { b.textContent = 'Sao chép'; }, 1500); });
+      }));
+    } catch (e) {
+      document.getElementById('actions-body').innerHTML = '<tr><td colspan="5">Không tải được danh sách action.</td></tr>';
+    }
+  }
+  document.getElementById('btn-next').addEventListener('click', async () => { await api('/api/question/next'); poll(); });
+  document.getElementById('btn-lock').addEventListener('click', async () => { await api('/api/question/lock'); poll(); });
+  document.getElementById('btn-reset').addEventListener('click', async () => { await api('/api/match/reset'); poll(); });
+  document.getElementById('set-auto').addEventListener('change', async (e) => { await api('/api/settings', { autoMode: e.target.checked }); });
+  document.getElementById('btn-save').addEventListener('click', async () => {
+    const body = {
+      correctPoints: +document.getElementById('set-correct').value,
+      firstBonus: +document.getElementById('set-first').value,
+      questionS: +document.getElementById('set-qs').value,
+      revealS: +document.getElementById('set-reveal').value,
+      questionsPerMatch: +document.getElementById('set-per').value,
+      coinToPoints: +document.getElementById('set-coin').value,
+      followPoints: +document.getElementById('set-follow').value,
+      spotlightS: +document.getElementById('set-spot').value,
+      voiceEnabled: document.getElementById('set-voice').checked,
+    };
+    const r = await api('/api/settings', body);
+    document.getElementById('save-msg').textContent = r.success ? 'Đã lưu ✓' : 'Lỗi lưu';
+    setTimeout(() => { document.getElementById('save-msg').textContent = ''; }, 2000);
+  });
+  document.getElementById('btn-add-q').addEventListener('click', async () => {
+    const body = {
+      text: document.getElementById('new-q-text').value,
+      options: [document.getElementById('new-q-a').value, document.getElementById('new-q-b').value, document.getElementById('new-q-c').value, document.getElementById('new-q-d').value],
+      correct: document.getElementById('new-q-correct').value,
+    };
+    const r = await api('/api/questions', body);
+    document.getElementById('add-msg').textContent = r.success ? 'Đã thêm ✓' : ('Lỗi: ' + (r.message || ''));
+    if (r.success) {
+      document.getElementById('new-q-text').value = '';
+      ['a', 'b', 'c', 'd'].forEach((k) => { document.getElementById('new-q-' + k).value = ''; });
+      loadBank();
+    }
+    setTimeout(() => { document.getElementById('add-msg').textContent = ''; }, 2000);
+  });
+  document.getElementById('set-demo').addEventListener('change', async (e) => { await api('/api/settings', { demoMode: e.target.checked }); });
+  document.getElementById('btn-demo-start').addEventListener('click', async () => { const r = await api('/api/demo/start'); if (!r.success) alert('Không chạy được demo: ' + (r.reason || r.message || 'lỗi')); });
+  document.getElementById('btn-demo-stop').addEventListener('click', async () => { await api('/api/demo/stop'); });
+  document.getElementById('btn-test-demo').addEventListener('click', async () => { await api('/api/test/demo'); });
+  document.getElementById('btn-test-tap').addEventListener('click', async () => { await api('/api/test/tap', { count: 20 }); });
+  document.getElementById('btn-test-gift').addEventListener('click', async () => { await api('/api/test/gift', { coins: 10 }); });
+  document.getElementById('btn-test-follow').addEventListener('click', async () => { await api('/api/test/follow', {}); });
+  document.getElementById('btn-bulk').addEventListener('click', async () => { await api('/api/test/bulk-join', { count: 100 }); });
+  document.getElementById('btn-test-answer').addEventListener('click', async () => {
+    await api('/api/test/answer', { letter: document.getElementById('test-letter').value });
+  });
+  document.getElementById('btn-test-join-a').addEventListener('click', async () => { await api('/api/test/join', { team: 'a' }); });
+  document.getElementById('btn-test-join-b').addEventListener('click', async () => { await api('/api/test/join', { team: 'b' }); });
+  try {
+    const socket = io();
+    socket.on('state-update', (s) => { if (s && s.game === 'dau-tri') render(s); });
+  } catch (e) {}
+  poll();
+  loadBank();
+  loadActions();
+})();
+</script>
+</body>
+</html>
