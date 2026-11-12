@@ -120,6 +120,8 @@
       <button data-t="share">🔁 Share</button>
       <button data-t="bulk">👥 100 join</button>
       <button data-t="demo">🎬 Demo tự động</button>
+      <button data-t="demo-start">▶ Chạy demo</button>
+      <button data-t="demo-stop">■ Dừng demo</button>
     </p>
     <p>
       <button data-t="tiers">📊 Test bảng quy đổi quà</button>
@@ -240,12 +242,15 @@
       tap: ['/api/test/tap', { totalLikeCount: 10 }], gift: ['/api/test/gift', { coins: 10, giftName: 'Kính râm' }],
       gift50: ['/api/test/gift', { coins: 50, giftName: 'Heo may mắn' }], gift1000: ['/api/test/gift', { coins: 1000, giftName: 'Du thuyền' }],
       follow: ['/api/test/follow', {}], share: ['/api/test/share', {}], bulk: ['/api/test/bulk-join', { count: 100 }],
-      demo: ['/api/test/demo', {}], tiers: ['/api/test/gift-tiers', {}],
+      demo: ['/api/test/demo', {}], demo-start: ['/api/test/demo', { action: 'start' }], demo-stop: ['/api/test/demo', { action: 'stop' }], tiers: ['/api/test/gift-tiers', {}],
       rare: ['/api/test/force-segment', { segmentId: 1, name: 'Người Thử Ô Hiếm' }],
       extra: ['/api/test/force-segment', { segmentId: 10, name: 'Người Thử Ô Quay Thêm' }] };
     const [p, body] = map[t];
-    api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      .then(r => { $('testMsg').innerHTML = r.success ? '<span class="ok">OK: ' + esc(JSON.stringify(r).slice(0, 300)) + '</span>' : '<span class="err">Bật demoMode trước khi test.</span>'; poll(); });
+    const call = () => api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const req = t === 'demo-start'
+      ? api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) }).then(() => { $('s_demo').checked = true; return call(); })
+      : call();
+    req.then(r => { $('testMsg').innerHTML = r.success ? '<span class="ok">OK: ' + esc(JSON.stringify(r).slice(0, 300)) + '</span>' : '<span class="err">Bật demoMode trước khi test.</span>'; poll(); });
   });
   $('ovLink').textContent = location.origin + base + '/overlay.html';
   $('whLink').textContent = location.origin + base + '/api/webhook';

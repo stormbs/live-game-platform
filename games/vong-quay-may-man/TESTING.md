@@ -36,3 +36,13 @@
 - **Quay chung khi pool trống**: nếu chỉ còn người vừa trúng trong phòng thì lượt quay chung vẫn chờ (pendingShared giữ nguyên), không quay cho cùng 1 người, không mất lượt — có người mới vào là quay tiếp.
 - **Ép ô hiếm / ép ô quay thêm**: chỉ có trong chế độ Test (dashboard + API test), live thật không có.
 - **Vòng đang quay dở khi server restart**: bỏ lượt đó (currentSpin reset khi load session) — trạng thái còn lại (thanh, hàng chờ, lịch sử, top) vẫn giữ.
+
+## Chế độ demo (2026-11-13)
+- Mở overlay với `?demo=1` → tự bật chế độ thử + chạy demo: 3 người xem ảo vào
+  phòng, bình luận/tim cộng điểm thanh chung (tôn trọng giới hạn 10 tim + 2 bình
+  luận/phút/người), tặng quà lấy lượt quay riêng, follow/share liên tục qua đúng
+  đường event thật; huy hiệu `DEMO` ở góc trái overlay. Đủ 50đ tự quay chung.
+- Dashboard → mục Test: `▶ Chạy demo` / `■ Dừng demo` (+ `🎬 Demo tự động` 1 lượt mẫu).
+  API: `POST /api/test/demo {action:"start"|"stop"|"once"}`.
+- An toàn: từ chối bật khi phòng đã có event thật; event thật đầu tiên tới thì
+  demo tự dừng. Người xem demo không tính vào thống kê avatar.
