@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vòng Quay May Mắn Khổng Lồ</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #1a0b2e; color: #fff;
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { position: relative; width: 1080px; height: 1920px; padding: 26px 36px 0;
+    background: radial-gradient(800px 500px at 50% 30%, #6b21a8 0%, #2a0a4a 55%, #150627 100%); }
+  header { display: flex; justify-content: space-between; align-items: center; }
+  header h1 { font-size: 48px; text-shadow: 0 4px 0 rgba(0,0,0,.4); }
+  .viewers { font-size: 28px; background: rgba(0,0,0,.5); border-radius: 14px; padding: 10px 16px; }
+  .progress { margin-top: 16px; background: rgba(0,0,0,.5); border: 3px solid #ffd24d; border-radius: 20px; padding: 14px 20px; }
+  .progTop { display: flex; justify-content: space-between; font-size: 29px; font-weight: 800; }
+  .bar { height: 30px; border-radius: 15px; background: rgba(255,255,255,.15); margin-top: 10px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0%; background: linear-gradient(90deg, #ff9a3d, #ffd24d, #7CFC00); transition: width .4s; }
+  .progSub { font-size: 23px; color: #ffe9a0; margin-top: 8px; text-align: center; }
+  .wheelZone { position: relative; width: 1000px; height: 1000px; margin: 14px auto 0; }
+  .pointer { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); font-size: 72px; z-index: 5; filter: drop-shadow(0 4px 4px rgba(0,0,0,.6)); }
+  .wheel { position: absolute; width: 1000px; height: 1000px; border-radius: 50%; border: 10px solid #ffd24d;
+    box-shadow: 0 0 60px rgba(255, 210, 77, .45), inset 0 0 40px rgba(0,0,0,.35); }
+  .wheel.epic { border-color: #fff; box-shadow: 0 0 90px rgba(255, 215, 0, .9), inset 0 0 40px rgba(0,0,0,.35); animation: epicGlow 0.7s ease-in-out infinite alternate; }
+  @keyframes epicGlow { from { box-shadow: 0 0 60px rgba(255,215,0,.6); } to { box-shadow: 0 0 110px rgba(255,215,0,1); } }
+  #labels { position: absolute; left: 0; top: 0; width: 1000px; height: 1000px; pointer-events: none; }
+  .segLabel { position: absolute; left: 50%; top: 50%; width: 150px; margin-left: -75px; margin-top: -22px; text-align: center;
+    font-size: 21px; font-weight: 800; color: #fff; text-shadow: 0 2px 3px rgba(0,0,0,.8); line-height: 1.15; pointer-events: none; }
+  .segLabel .ic { font-size: 30px; display: block; }
+  .hub { position: absolute; left: 50%; top: 50%; width: 200px; height: 200px; margin: -100px 0 0 -100px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffe98a, #ff9a3d 60%, #c25e00); border: 6px solid #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 96px; z-index: 3; box-shadow: 0 8px 20px rgba(0,0,0,.5); }
+  .free { text-align: center; font-size: 25px; color: #ffe9a0; margin-top: 10px; }
+  .result { display: none; position: absolute; left: 36px; right: 36px; top: 1250px; background: rgba(10, 5, 30, .95); border: 4px solid #ffd24d; border-radius: 26px; padding: 26px 28px; text-align: center; z-index: 10; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
+  .result.show { display: block; }
+  .result h2 { font-size: 46px; margin-bottom: 8px; }
+  .result p { font-size: 30px; color: #ffe9c4; line-height: 1.5; }
+  .result img, .result .ava { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 48px; border: 4px solid #ffd24d; }
+  .history { margin-top: 16px; background: rgba(0,0,0,.5); border-radius: 18px; padding: 14px 20px; }
+  .history h2, .top h2 { font-size: 28px; margin-bottom: 8px; }
+  .hrow { font-size: 25px; padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,.15); color: #ffe9c4; }
+  .hrow:last-child { border-bottom: 0; }
+  .top { margin-top: 14px; background: rgba(0,0,0,.5); border-radius: 18px; padding: 14px 20px; }
+  .trow { display: flex; gap: 12px; align-items: center; font-size: 26px; padding: 5px 0; }
+  .trow b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ticker { margin-top: 14px; background: rgba(0,0,0,.6); border-radius: 16px; padding: 14px 20px; font-size: 26px; min-height: 70px; color: #ffe9c4; }
+  .status { position: absolute; bottom: 16px; left: 36px; right: 36px; display: flex; justify-content: space-between; font-size: 21px; color: rgba(255,233,196,.8); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1>🎡 VÒNG QUAY MAY MẮN</h1><div class="viewers" id="viewers">👥 0 đang xem</div></header>
+
+  <div class="progress">
+    <div class="progTop"><span>🎡 Lượt quay chung</span><span id="progText">0/50</span></div>
+    <div class="bar"><div id="progBar"></div></div>
+    <div class="progSub">Tim +1đ • Bình luận +5đ • Quà tặng = quay riêng ngay • Hàng chờ: <span id="queueText">0</span> lượt</div>
+  </div>
+
+  <div class="wheelZone">
+    <div class="pointer">🔻</div>
+    <div class="wheel" id="wheel"></div>
+    <div id="labels"></div>
+    <div class="hub">🎡</div>
+  </div>
+  <div class="free">Quay vui miễn phí — trúng thưởng chỉ là vinh danh trong live</div>
+
+  <div class="result" id="result">
+    <div id="resultAvatar"></div>
+    <h2 id="resultTitle"></h2>
+    <p id="resultText"></p>
+  </div>
+
+  <div class="history"><h2>🕒 Lịch sử trúng thưởng</h2><div id="history"></div></div>
+  <div class="top"><h2>🏆 Top May Mắn</h2><div id="topList"></div></div>
+  <div class="ticker" id="ticker">🎡 Cả phòng cùng góp tim và bình luận để quay chung! Ai tặng quà thì quay riêng ngay!</div>
+
+  <div class="status"><span id="stSpins">🎡 Tổng 0 lượt quay</span><span id="stQueue">Hàng chờ: 0</span></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const PALETTE = ['#e74c3c','#f39c12','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e67e22','#16a085','#c0392b','#d35400','#27ae60','#2980b9','#8e44ad','#f39c12','#e74c3c','#2ecc71','#3498db','#95a5a6','#7f8c8d'];
+  let lastState = null, voiceOn = true, voiceQueue = [], speaking = false;
+  let wheelRotation = 0, lastSpinId = 0, segmentsCache = null, resultTimer = null;
+  function speak(text) {
+    if (!voiceOn || !text) return;
+    voiceQueue.push(text);
+    if (voiceQueue.length > 3) voiceQueue.shift();
+    pumpVoice();
+  }
+  function pumpVoice() {
+    if (speaking || !voiceQueue.length) return;
+    const text = voiceQueue.shift();
+    speaking = true;
+    fetch('/api/tts?text=' + encodeURIComponent(text)).then(r => r.ok ? r.blob() : null).then(b => {
+      if (!b) throw 0;
+      const a = new Audio(URL.createObjectURL(b));
+      a.onended = () => { speaking = false; pumpVoice(); };
+      a.onerror = () => { speaking = false; pumpVoice(); };
+      a.play().catch(() => { speaking = false; pumpVoice(); });
+    }).catch(() => {
+      try { const u = new SpeechSynthesisUtterance(text); u.lang = 'vi-VN'; u.onend = () => { speaking = false; pumpVoice(); }; speechSynthesis.speak(u); }
+      catch (e) { speaking = false; pumpVoice(); }
+    });
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function buildWheel(segments) {
+    segmentsCache = segments;
+    const stops = [];
+    let acc = 0;
+    segments.forEach((s, i) => {
+      const w = (Number(s.prob) || 0) * 3.6;
+      stops.push(PALETTE[i % PALETTE.length] + ' ' + acc + 'deg ' + (acc + w) + 'deg');
+      acc += w;
+    });
+    $('wheel').style.background = 'conic-gradient(from -9deg, ' + stops.join(', ') + ')';
+    let html = '';
+    segments.forEach((s, i) => {
+      const a = i * 18 + 9;
+      html += '<div class="segLabel" style="transform: rotate(' + a + 'deg) translateY(-390px)">' +
+        '<span class="ic">' + esc(s.icon) + '</span>' + esc((s.name || '').slice(0, 12)) + '</div>';
+    });
+    $('labels').innerHTML = html;
+  }
+  function animateWheel(spin) {
+    const k = spin.segmentIndex;
+    const targetMod = (360 - (k * 18 + 9) + 360) % 360;
+    const currentMod = ((wheelRotation % 360) + 360) % 360;
+    let delta = (targetMod - currentMod + 360) % 360;
+    const total = 1800 + delta; // ít nhất 5 vòng rồi dừng đúng ô
+    wheelRotation += total;
+    const wheel = $('wheel');
+    const dur = Math.max(1000, (spin.endsAt - Date.now()));
+    wheel.style.transition = 'transform ' + (dur / 1000) + 's cubic-bezier(0.15, 0.85, 0.1, 1)';
+    wheel.style.transform = 'rotate(' + wheelRotation + 'deg)';
+    $('labels').style.transition = wheel.style.transition;
+    $('labels').style.transform = 'rotate(' + wheelRotation + 'deg)';
+    $('wheel').classList.toggle('epic', !!spin.epic);
+  }
+  function showResult(spin) {
+    const seg = spin.segment;
+    const av = spin.winnerAvatar ? '<img src="' + spin.winnerAvatar + '" alt="">' : '<span class="ava">' + (spin.winnerName ? spin.winnerName.charAt(0).toUpperCase() : '🎡') + '</span>';
+    $('resultAvatar').innerHTML = av;
+    if (seg.miss) {
+      $('resultTitle').textContent = '🍂 Chúc bạn may mắn lần sau, ' + spin.winnerName + '!';
+      $('resultText').textContent = 'Lượt quay ' + (spin.type === 'shared' ? 'chung' : 'riêng') + ' — ' + seg.name + '. Cố lên lần sau nhé!';
+      speak('Tiếc quá, ' + spin.winnerName + ' ơi, chúc bạn may mắn lần sau!');
+    } else {
+      $('resultTitle').textContent = '🎉 ' + spin.winnerName + ' trúng ' + seg.icon + ' ' + seg.name + '!';
+      $('resultText').textContent = seg.prize + (spin.epic ? ' ✨ Hiệu ứng Epic!' : '');
+      speak('Chúc mừng ' + spin.winnerName + ' đã trúng ' + seg.name + '!');
+    }
+    $('result').className = 'result show';
+    clearTimeout(resultTimer);
+    resultTimer = setTimeout(() => { $('result').className = 'result'; }, 8000);
+  }
+  function render(s) {
+    lastState = s;
+    voiceOn = !!(s.settings && s.settings.voiceEnabled);
+    if (s.settings && s.settings.segments) {
+      const key = JSON.stringify(s.settings.segments.map(x => [x.icon, x.name, x.prob]));
+      if (key !== (render._segKey || '')) { render._segKey = key; buildWheel(s.settings.segments); }
+    }
+    $('viewers').textContent = '👥 ' + s.viewersOnline + ' đang xem';
+    $('progText').textContent = s.progress + '/' + s.spinThreshold;
+    $('progBar').style.width = Math.min(100, 100 * s.progress / s.spinThreshold) + '%';
+    $('queueText').textContent = s.queueLength + (s.pendingShared ? ' (+' + s.pendingShared + ' chung)' : '');
+    $('history').innerHTML = (s.recentWins || []).map(w =>
+      '<div class="hrow">' + new Date(w.time).toLocaleTimeString('vi-VN') + ' — ' + esc(w.name) + ' trúng ' + w.icon + ' ' + esc(w.segment) + (w.miss ? ' (trượt)' : '') + '</div>').join('')
+      || '<div class="hrow">Chưa có lượt quay nào.</div>';
+    $('topList').innerHTML = (s.top || []).map((p, i) =>
+      '<div class="trow"><span>' + ['🥇','🥈','🥉','4.','5.'][i] + '</span><b>' + esc(p.name) + '</b><span>' + p.wins + ' lần trúng</span></div>').join('')
+      || '<div style="font-size:24px;color:#ffe9a0">Chưa ai trúng thưởng.</div>';
+    const last = (s.logs || []).slice(-1)[0];
+    if (last) $('ticker').textContent = last.text;
+    $('stSpins').textContent = '🎡 Tổng ' + s.totalSpins + ' lượt quay';
+    $('stQueue').textContent = 'Hàng chờ: ' + s.queueLength + ' lượt';
+    // Đồng bộ vòng quay khi load lại giữa chừng (vòng đang quay dở).
+    if (s.currentSpin && s.currentSpin.id !== lastSpinId) {
+      lastSpinId = s.currentSpin.id;
+      animateWheel(s.currentSpin);
+      if (s.currentSpin.resultShown) showResult(s.currentSpin);
+    }
+    if (!s.currentSpin) lastSpinId = 0;
+  }
+  function poll() { fetch('/api/state').then(r => r.json()).then(render).catch(() => {}); }
+  poll(); setInterval(poll, 2500);
+  const socket = io();
+  socket.on('state-update', render);
+  socket.on('spin-start', d => { if (d.spin) { lastSpinId = d.spin.id; animateWheel(d.spin); } });
+  socket.on('spin-result', d => { if (d.spin) showResult(d.spin); });
+})();
+</script>
+</body>
+</html>
