@@ -285,7 +285,7 @@ function parseEvent(rawBody, query) {
   const uid = String(
     userObj.userId || userObj.id || userObj.user_id || data.userId || data.id || data.user_id ||
     innerData.userId || innerData.id || innerData.user_id || args.userId || args.user_id ||
-    userObj.uniqueId || userObj.username || data.username || innerData.username || ''
+    userObj.uniqueId || userObj.username || data.username || innerData.username || data.value1 || innerData.value1 || ''
   ).trim();
   const name = String(
     userObj.nickname || userObj.name || data.nickname || data.userName || data.user_name ||
@@ -338,7 +338,7 @@ function parseEvent(rawBody, query) {
   // Xu quà: CHỈ lấy số thật trong sự kiện, không bao giờ đoán/mặc định
   const coinRaw = data.diamondCount ?? data.diamond_count ?? data.coins ?? data.diamonds ??
     innerData.diamondCount ?? innerData.coins ?? args.coins ?? data.gift?.diamond_count ??
-    data.gift?.coins ?? null;
+    data.gift?.coins ?? data.value3 ?? innerData.value3 ?? null;
   const repeatRaw = data.repeatCount ?? data.count ?? data.combo ?? innerData.repeatCount ?? args.repeatCount ?? 1;
   const qty = Math.max(1, parseInt(repeatRaw) || 1); // số lượng quà: đọc "5 Hoa hồng", 1 thì chỉ đọc tên
   let coins = null;
@@ -348,7 +348,7 @@ function parseEvent(rawBody, query) {
   }
   const giftName = String(
     data.giftName || data.gift?.name || data.gift?.gift_name || innerData.giftName ||
-    innerData.gift?.name || args.giftName || (typeof data.gift === 'string' ? data.gift : '') || 'Quà'
+    innerData.gift?.name || args.giftName || (typeof data.gift === 'string' ? data.gift : '') || data.value2 || innerData.value2 || 'Quà'
   ).slice(0, 60);
   const text = String(
     data.comment ?? data.content ?? data.text ?? data.message ?? data.commandParams ??

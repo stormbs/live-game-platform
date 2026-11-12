@@ -45,3 +45,7 @@ simulator mới.
 - [ ] Comment số (1–34) không thắp gì; chỉ comment tên tỉnh mới tính.
 - [ ] Avatar neo ở quê tới hết ván dù người chơi đã rời live.
 - [ ] 2 room khác username không thấy event của nhau.
+
+## TikFinity — cơ chế mới (không body, 6 URL riêng)
+- Mỗi sự kiện 1 Action webhook riêng, URL `.../api/webhook?event=gift|chat|like|follow|share|join` (xem bài hướng dẫn `/huong-dan-tikfinity?game=thap-sang-ban-do`). Action chỉ có ô URL, không nhập body.
+- Engine đọc form TikFinity (`value1`/`value2`/`value3`/`content`/`avatar_url`) + loại sự kiện từ `?event=` trên URL. Share không cộng điểm (chỉ ghi nhận loại sự kiện).

@@ -2590,12 +2590,12 @@ function handleWebhookRequest(req, res) {
   // 3. Xử lý sự kiện quà (theo giá trị xu × tỷ giá hiện hành)
   if (isGift) {
     const rawGiftName = data.giftName || innerData.giftName || args.giftName ||
-                        data.gift?.name || data.gift?.gift_name || data.name || 'Hoa hồng';
+                        data.gift?.name || data.gift?.gift_name || data.name || data.value2 || innerData.value2 || 'Hoa hồng';
     const rawCount = data.repeatCount || data.count || data.combo || data.comboCount ||
                      innerData.repeatCount || innerData.count || args.repeatCount || args.count || 1;
     const rawCoins = data.diamondCount || data.diamond_count || data.coins || data.diamonds ||
                      innerData.diamondCount || innerData.coins || args.coins ||
-                     data.gift?.diamond_count || data.gift?.coins || data.coinCount || 0;
+                     data.gift?.diamond_count || data.gift?.coins || data.coinCount || data.value3 || innerData.value3 || 0;
     const rawGiftId = data.giftId || innerData.giftId || args.giftId ||
                       data.gift?.gift_id || data.gift?.id || data.id || '';
 

@@ -10,3 +10,7 @@
   API: `POST /api/test/demo {action:"start"|"stop"|"once"}` (once = 3 người mẫu).
 - An toàn: từ chối bật khi phòng đã có event thật; event thật đầu tiên tới thì
   demo tự dừng. Dừng demo không xóa tù nhân đang trong buồng.
+
+## TikFinity — cơ chế mới (không body, 6 URL riêng)
+- Mỗi sự kiện 1 Action webhook riêng, URL `.../api/webhook?event=gift|chat|like|follow|share|join` (xem bài hướng dẫn `/huong-dan-tikfinity?game=buong-giam`). Action chỉ có ô URL, không nhập body.
+- Engine đọc form TikFinity: `value1` = tên tài khoản, `value2` = tên quà, `value3` = số xu (10 xu = 50đ). Quà lạ/không rõ xu → fallback danh mục, không mặc định +5.

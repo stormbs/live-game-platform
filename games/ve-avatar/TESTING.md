@@ -10,3 +10,7 @@
 - An toàn: từ chối bật khi phòng đã có event thật; event thật đầu tiên tới thì
   demo tự dừng; dừng demo không xóa hàng đợi đang vẽ. Người xem demo không
   tính vào thống kê avatar (không gây cảnh báo avatar giả).
+
+## TikFinity — cơ chế mới (không body, 6 URL riêng)
+- Mỗi sự kiện 1 Action webhook riêng, URL `.../api/webhook?event=gift|chat|like|follow|share|join` (xem bài hướng dẫn `/huong-dan-tikfinity?game=ve-avatar`). Action chỉ có ô URL, không nhập body.
+- Engine đọc form TikFinity: `value1` = tên tài khoản (uid/tên), `value2` = tên quà, `value3` = số xu. Quà không rõ xu → chỉ log, không vào hàng đợi.

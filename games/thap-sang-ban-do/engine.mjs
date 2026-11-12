@@ -1143,14 +1143,16 @@ function parseWebhookBody(raw) {
   return { body: {}, empty: false, note: 'chuoi-tho-khong-phan-tich-duoc' };
 }
 
-function handleTikFinityEvent(body) {
+function handleTikFinityEvent(body, qEvent) {
   // Body có thể là chuỗi (JSON 2 lớp chưa parse hết) — parse nốt.
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch { body = {}; }
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
   }
   const ev = body || {};
-  const rawType = String(pick(ev, ['event', 'type', 'eventType', 'eventName', 'event_name', 'msgType', 'action']) || '').toLowerCase();
+  // qEvent = ?event= tren URL webhook (co che TikFinity moi): loai su kien
+  // khong nam trong form, phai lay tu query — uu tien truoc cac field trong body.
+  const rawType = String(qEvent || pick(ev, ['event', 'type', 'eventType', 'eventName', 'event_name', 'msgType', 'action']) || '').toLowerCase();
   // Đèn báo (v7.1): ghi nhận NGAY khi webhook tới, kể cả event lạ chưa nhận
   // ra — chỉ cần TikFinity gửi được tới server là link đã sống.
   game.webhook.count++;
@@ -1187,6 +1189,7 @@ function handleTikFinityEvent(body) {
   let isChat = rawType.includes('chat') || rawType.includes('comment');
   let isLike = rawType.includes('like') || rawType.includes('tap');
   let isFollow = rawType.includes('follow');
+  let isShare = rawType.includes('share');
   let isJoin = rawType.includes('join') || rawType.includes('member');
   // Rời live: "leave" / "member leave" / "member_left" — kiểm tra TRƯỚC
   // isJoin vì chuỗi "member leave" cũng chứa "member" (không thì bị nhận
@@ -1202,7 +1205,7 @@ function handleTikFinityEvent(body) {
   }
   // Loại cuối cùng sau khi suy luận — dashboard hiện loại này (không hiện
   // 'unknown' cho event đã nhận ra qua hình dạng dữ liệu).
-  game.webhook.lastType = isGift ? 'gift' : isChat ? 'chat' : isLike ? 'like' : isFollow ? 'follow' : isLeave ? 'leave' : isJoin ? 'join' : (rawType || 'unknown');
+  game.webhook.lastType = isGift ? 'gift' : isChat ? 'chat' : isLike ? 'like' : isFollow ? 'follow' : isShare ? 'share' : isLeave ? 'leave' : isJoin ? 'join' : (rawType || 'unknown');
   if (isGift) {
     const giftName = giftNameNorm || 'quà tặng';
     const coins = Number(coinsNorm ?? pick(data.gift || {}, ['diamondCount', 'coins']) ?? 1) || 1;
@@ -1221,6 +1224,9 @@ function handleTikFinityEvent(body) {
     return 'like';
   }
   if (isFollow) { onFollow(name, avatar, key); return 'follow'; }
+  // Share: game bản đồ không cộng điểm cho chia sẻ — chỉ ghi nhận loại
+  // sự kiện (đèn báo + lastType) để streamer biết TikFinity đã nối đúng.
+  if (isShare) return 'share';
   if (isLeave) { onLeave(name, key); return 'leave'; }
   if (isJoin) { onJoin(name, key); return 'join'; }
   log('webhook', 'event lạ, bỏ qua. Raw: ' + ((game.webhook.lastRaw || '(rỗng)') + '').slice(0, 300));
@@ -1314,7 +1320,7 @@ const handleRequest = async (req, res) => {
     const parsed = parseWebhookBody(raw);
     log('webhook', `nhận: url=${req.url} content-type=${game.webhook.lastContentType || '(không có)'} len=${raw.length} dạng=${parsed.note} raw=${raw.slice(0, 300) || '(rỗng)'}`);
     let result = 'ok';
-    try { result = handleTikFinityEvent(parsed.body); } catch (e) { log('webhook', 'lỗi xử lý event: ' + e.message); }
+    try { result = handleTikFinityEvent(parsed.body, url.searchParams.get('event') || ''); } catch (e) { log('webhook', 'lỗi xử lý event: ' + e.message); }
     broadcast();
     sendJson(res, 200, { ok: true, result });
     return;
