@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kéo Co — Overlay</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", Verdana, sans-serif; color: #fff;
+    background: linear-gradient(180deg, #1b4d8a 0%, #3a7bd5 30%, #8a5a2b 62%, #6b4423 100%);
+  }
+  .demo-badge { position: absolute; top: 14px; left: 14px; z-index: 30; background: #b8860b; color: #1c1c1c; font-weight: 900; font-size: 24px; padding: 8px 16px; border-radius: 10px; display: none; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+  .demo-badge.on { display: block; }
+  .demo-note { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 30; background: rgba(0,0,0,.75); color: #ffd94d; font-weight: 800; font-size: 22px; padding: 10px 18px; border-radius: 10px; display: none; text-align: center; width: 900px; }
+  .demo-note.on { display: block; }
+  header { position: relative; z-index: 5; text-align: center; padding: 30px 30px 0; }
+  h1 { font-size: 64px; text-shadow: 0 3px 0 #123, 0 6px 18px rgba(0,0,0,.4); letter-spacing: 2px; }
+  .sub { font-size: 26px; text-shadow: 0 2px 6px rgba(0,0,0,.5); margin-top: 6px; }
+  .scoreboard { margin: 18px auto 0; width: 920px; background: rgba(0,0,0,.45); border-radius: 20px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .scoreboard .team { font-size: 40px; font-weight: 900; }
+  .scoreboard .team small { font-size: 26px; display: block; font-weight: 700; opacity: .85; }
+  .scoreboard .mid { text-align: center; }
+  .scoreboard .mid .score { font-size: 52px; font-weight: 900; }
+  .scoreboard .mid .round { font-size: 24px; font-weight: 700; }
+  .timer { font-size: 30px; font-weight: 900; color: #ffd94d; }
+  .forcebars { margin: 16px auto 0; width: 920px; }
+  .forcebars .row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+  .forcebars .lbl { width: 130px; font-size: 26px; font-weight: 900; text-align: right; }
+  .forcebars .bar { flex: 1; height: 26px; background: rgba(0,0,0,.4); border-radius: 999px; overflow: hidden; }
+  .forcebars .bar i { display: block; height: 100%; transition: width .5s; }
+  .forcebars .val { width: 110px; font-size: 26px; font-weight: 900; }
+  .field { position: absolute; top: 560px; left: 0; width: 1080px; height: 900px; z-index: 4; }
+  .ground { position: absolute; top: 330px; left: 0; width: 1080px; height: 570px; background: linear-gradient(180deg, #a9743f, #7a4e22); border-top: 6px solid #c89b5e; }
+  .centerline { position: absolute; top: 320px; left: 50%; transform: translateX(-50%); width: 10px; height: 130px; background: #fff; opacity: .9; border-radius: 4px; }
+  .centerline::after { content: "VẠCH GIỮA"; position: absolute; top: -34px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; color: #fff; white-space: nowrap; text-shadow: 0 2px 4px #000; }
+  .finish { position: absolute; top: 320px; width: 8px; height: 130px; border-radius: 4px; }
+  .finish.left { left: 70px; background: #1e90ff; }
+  .finish.right { right: 70px; background: #e63946; }
+  .finish span { position: absolute; top: -34px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; white-space: nowrap; text-shadow: 0 2px 4px #000; }
+  .rope { position: absolute; top: 360px; left: 60px; width: 960px; height: 22px; background: repeating-linear-gradient(90deg, #d9a066 0 26px, #b57e42 26px 52px); border-radius: 11px; box-shadow: 0 4px 8px rgba(0,0,0,.4); }
+  .flag { position: absolute; top: 300px; left: 50%; transform: translateX(-50%); font-size: 72px; z-index: 6; transition: left .5s ease; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+  .team-side { position: absolute; top: 60px; width: 470px; }
+  .team-side.left { left: 30px; }
+  .team-side.right { right: 30px; }
+  .team-side h2 { font-size: 32px; text-shadow: 0 2px 6px rgba(0,0,0,.5); text-align: center; margin-bottom: 12px; }
+  .pullers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .puller { text-align: center; }
+  .puller .av { width: 96px; height: 96px; border-radius: 50%; border: 4px solid #fff; margin: 0 auto; overflow: hidden; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 900; }
+  .puller .av img { width: 100%; height: 100%; object-fit: cover; }
+  .puller .nm { font-size: 19px; font-weight: 800; text-shadow: 0 1px 3px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
+  .puller .fc { font-size: 17px; font-weight: 700; color: #ffd94d; text-shadow: 0 1px 3px #000; }
+  .bench { text-align: center; font-size: 22px; font-weight: 700; margin-top: 10px; color: #ffe9bd; text-shadow: 0 1px 3px #000; }
+  .hint { position: absolute; top: 500px; left: 0; width: 1080px; text-align: center; font-size: 26px; font-weight: 800; color: #fff; text-shadow: 0 2px 6px #000; z-index: 5; }
+  .top5 { position: absolute; top: 1480px; left: 30px; width: 1020px; z-index: 6; background: rgba(0,0,0,.5); border-radius: 16px; padding: 14px 20px; }
+  .top5 h3 { font-size: 26px; margin-bottom: 6px; }
+  .top5 div { font-size: 23px; line-height: 1.5; }
+  .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
+  .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
+  .statusbar { position: absolute; left: 0; bottom: 0; width: 1080px; height: 140px; z-index: 5; background: #123a5c; color: #fff; display: flex; align-items: center; justify-content: space-around; font-size: 26px; font-weight: 800; padding: 0 30px; }
+  .statusbar .big { font-size: 34px; }
+  .banner { position: absolute; left: 50%; top: 700px; transform: translateX(-50%); z-index: 20; width: 980px; text-align: center; background: rgba(255,255,255,.96); border: 6px solid #1e90ff; border-radius: 28px; padding: 34px 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4); display: none; }
+  .banner.on { display: block; animation: pop .4s ease; }
+  @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+  .banner h2 { font-size: 54px; color: #123a5c; }
+  .banner p { font-size: 30px; margin-top: 10px; line-height: 1.4; color: #333; }
+</style>
+</head>
+<body>
+<div class="demo-badge" id="demo-badge">🧪 DEMO</div>
+<div class="demo-note" id="demo-note"></div>
+<header>
+  <h1>🪢 KÉO CO 🪢</h1>
+  <div class="sub" id="round-line">Bình luận "xanh" hoặc "đỏ" để chọn đội — tim +1, bình luận +5, 1 xu quà +10 lực</div>
+  <div class="scoreboard">
+    <div class="team" style="color:#7cc4ff;">🔵 XANH<small id="cnt-xanh">0 người</small></div>
+    <div class="mid">
+      <div class="score"><span id="wins-xanh">0</span> – <span id="wins-do">0</span></div>
+      <div class="round" id="round-label">Trận 1 · Hiệp 1/5</div>
+      <div class="timer" id="timer"></div>
+    </div>
+    <div class="team" style="color:#ff8a94;">ĐỎ 🔴<small id="cnt-do">0 người</small></div>
+  </div>
+  <div class="forcebars">
+    <div class="row"><div class="lbl" style="color:#7cc4ff;">🔵 Xanh</div><div class="bar"><i id="bar-xanh" style="width:0%; background:#1e90ff;"></i></div><div class="val" id="force-xanh">0</div></div>
+    <div class="row"><div class="lbl" style="color:#ff8a94;">🔴 Đỏ</div><div class="bar"><i id="bar-do" style="width:0%; background:#e63946;"></i></div><div class="val" id="force-do">0</div></div>
+  </div>
+</header>
+
+<div class="field">
+  <div class="ground"></div>
+  <div class="centerline"></div>
+  <div class="finish left"><span>ĐÍCH XANH</span></div>
+  <div class="finish right"><span>ĐÍCH ĐỎ</span></div>
+  <div class="rope"></div>
+  <div class="flag" id="flag">🚩</div>
+  <div class="team-side left">
+    <h2>🔵 ĐỘI XANH</h2>
+    <div class="pullers" id="pullers-xanh"></div>
+    <div class="bench" id="bench-xanh"></div>
+  </div>
+  <div class="team-side right">
+    <h2>🔴 ĐỘI ĐỎ</h2>
+    <div class="pullers" id="pullers-do"></div>
+    <div class="bench" id="bench-do"></div>
+  </div>
+  <div class="hint" id="hint">Kéo mạnh lên! Bên nào kéo cờ về vạch đích của mình thì thắng hiệp!</div>
+</div>
+
+<div class="top5" id="top5"><h3>🏆 Top kéo mạnh nhất trận</h3><div>Chưa có ai kéo…</div></div>
+<div class="ticker" id="ticker"></div>
+<div class="statusbar">
+  <span>👀 <span class="big" id="st-online">0</span> đang xem</span>
+  <span>❤️ <span class="big" id="st-taps">0</span> tim</span>
+  <span>🎁 <span class="big" id="st-gifts">0</span> quà</span>
+</div>
+<div class="banner" id="banner"><h2 id="banner-title"></h2><p id="banner-text"></p></div>
+
+<script>
+const socket = io();
+let lastState = null;
+let voiceOn = true;
+const ttsQueue = [];
+let ttsPlaying = false;
+const TEAM_NAME = { xanh: 'Xanh', do: 'Đỏ' };
+
+function playTts(text) {
+  if (!voiceOn || !text) return;
+  ttsQueue.push(text);
+  nextTts();
+}
+function nextTts() {
+  if (ttsPlaying || !ttsQueue.length) return;
+  ttsPlaying = true;
+  const text = ttsQueue.shift();
+  const audio = new Audio('/api/tts?text=' + encodeURIComponent(text));
+  audio.onended = () => { ttsPlaying = false; nextTts(); };
+  audio.onerror = () => {
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'vi-VN';
+      u.onend = () => { ttsPlaying = false; nextTts(); };
+      speechSynthesis.speak(u);
+    } catch (e) { ttsPlaying = false; nextTts(); }
+  };
+  audio.play().catch(() => { ttsPlaying = false; nextTts(); });
+}
+
+function showBanner(title, text, ms) {
+  const b = document.getElementById('banner');
+  document.getElementById('banner-title').textContent = title;
+  document.getElementById('banner-text').textContent = text || '';
+  b.classList.add('on');
+  if (ms) setTimeout(() => b.classList.remove('on'), ms);
+}
+
+function pullerHtml(p, color) {
+  const av = p.avatarUrl
+    ? '<img src="' + escapeHtml(p.avatarUrl) + '" alt="">'
+    : '<span>' + escapeHtml((p.name || '?')[0].toUpperCase()) + '</span>';
+  return '<div class="puller"><div class="av" style="border-color:' + color + '">' + av + '</div>' +
+    '<div class="nm">' + escapeHtml(p.name) + '</div><div class="fc">' + p.force + ' lực</div></div>';
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function render(s) {
+  lastState = s;
+  voiceOn = s.settings.voiceEnabled !== false;
+  document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
+  document.getElementById('wins-xanh').textContent = s.wins.xanh;
+  document.getElementById('wins-do').textContent = s.wins.do;
+  document.getElementById('round-label').textContent = 'Trận ' + s.matchNo + ' · Hiệp ' + s.matchRound + '/' + s.maxRounds;
+  document.getElementById('cnt-xanh').textContent = s.teams.xanh.total + ' người';
+  document.getElementById('cnt-do').textContent = s.teams.do.total + ' người';
+  document.getElementById('force-xanh').textContent = s.force.xanh + ' lực';
+  document.getElementById('force-do').textContent = s.force.do + ' lực';
+  const total = Math.max(1, s.force.xanh + s.force.do);
+  document.getElementById('bar-xanh').style.width = (s.force.xanh / total * 100) + '%';
+  document.getElementById('bar-do').style.width = (s.force.do / total * 100) + '%';
+
+  // Cờ: flagPct -100 (vạch Xanh) .. +100 (vạch Đỏ); dây dài 960px từ x=60.
+  const flag = document.getElementById('flag');
+  flag.style.left = (60 + (s.flagPct + 100) / 200 * 960) + 'px';
+
+  document.getElementById('pullers-xanh').innerHTML = s.teams.xanh.pullers.slice(0, 8).map((p) => pullerHtml(p, '#1e90ff')).join('') ||
+    '<div style="grid-column:1/5; font-size:22px; color:#cfe6ff;">Chưa có ai — bình luận "xanh" để vào đội!</div>';
+  document.getElementById('pullers-do').innerHTML = s.teams.do.pullers.slice(0, 8).map((p) => pullerHtml(p, '#e63946')).join('') ||
+    '<div style="grid-column:1/5; font-size:22px; color:#ffd3d6;">Chưa có ai — bình luận "đỏ" để vào đội!</div>';
+  const extraX = s.teams.xanh.total - s.teams.xanh.pullers.slice(0, 8).length;
+  document.getElementById('bench-xanh').textContent =
+    (s.teams.xanh.bench > 0 ? '🎪 Khán đài: ' + s.teams.xanh.bench + ' người chờ kéo' : '') +
+    (extraX > 0 && s.teams.xanh.bench === 0 ? 'và ' + extraX + ' người nữa cũng đang kéo' : '');
+  document.getElementById('bench-do').textContent =
+    (s.teams.do.bench > 0 ? '🎪 Khán đài: ' + s.teams.do.bench + ' người chờ kéo' : '') +
+    (s.teams.do.total - s.teams.do.pullers.slice(0, 8).length > 0 && s.teams.do.bench === 0 ? 'và ' + (s.teams.do.total - s.teams.do.pullers.slice(0, 8).length) + ' người nữa cũng đang kéo' : '');
+
+  const top = document.getElementById('top5');
+  top.innerHTML = '<h3>🏆 Top kéo mạnh nhất trận</h3>' + (s.top.length
+    ? s.top.map((t, i) => '<div>' + ['🥇','🥈','🥉','4.','5.'][i] + ' ' + escapeHtml(t.name) + ' (' + (t.team === 'xanh' ? '🔵 Xanh' : '🔴 Đỏ') + ') — ' + t.force + ' lực</div>').join('')
+    : '<div>Chưa có ai kéo…</div>');
+
+  document.getElementById('st-online').textContent = s.viewersOnline;
+  document.getElementById('st-taps').textContent = s.stats.taps;
+  document.getElementById('st-gifts').textContent = s.stats.gifts;
+  document.getElementById('ticker').innerHTML = s.logs.slice(-3).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
+
+  if (s.phase === 'matchEnd' && s.results) {
+    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
+    const w = s.results.winner;
+    showBanner(w ? '🎉 ĐỘI ' + TEAM_NAME[w].toUpperCase() + ' THẮNG TRẬN! 🎉' : '🤝 TRẬN HÒA!',
+      w ? 'Tỉ số hiệp ' + s.results.wins.xanh + '–' + s.results.wins.do + '. Trận mới sau ' + left + 's…' : 'Tỉ số hiệp ' + s.results.wins.xanh + '–' + s.results.wins.do + '. Trận mới sau ' + left + 's…');
+  } else if (s.phase === 'roundEnd' && s.lastRoundWinner) {
+    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
+    showBanner('🏆 ĐỘI ' + TEAM_NAME[s.lastRoundWinner].toUpperCase() + ' THẮNG HIỆP ' + s.matchRound + '!',
+      'Tỉ số ' + s.wins.xanh + '–' + s.wins.do + ' · ' + (s.lastRoundReason || '') + '. Hiệp sau sau ' + left + 's…');
+  } else if (s.phase === 'roundEnd') {
+    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
+    showBanner('🤝 HIỆP HÒA!', 'Hiệp sau sau ' + left + 's…');
+  } else {
+    document.getElementById('banner').classList.remove('on');
+  }
+  updateTimer();
+}
+function updateTimer() {
+  const s = lastState;
+  const el = document.getElementById('timer');
+  if (!s || !s.phaseEndsAt) { el.textContent = ''; return; }
+  const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
+  if (s.phase === 'playing') el.textContent = '⏱ ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+  else if (s.phase === 'roundEnd') el.textContent = '⏸ Nghỉ ' + left + 's';
+  else if (s.phase === 'matchEnd') el.textContent = '🎉 Vinh danh ' + left + 's';
+  else el.textContent = '';
+}
+
+socket.on('state-update', render);
+socket.on('round-win', (d) => { if (d && d.team) playTts('Đội ' + TEAM_NAME[d.team] + ' thắng hiệp ' + d.matchRound + '!'); });
+socket.on('match-win', (d) => { if (d && d.team) playTts('Đội ' + TEAM_NAME[d.team] + ' thắng trận! Chúc mừng cả đội!'); });
+socket.on('flag-warning', (d) => { if (d && d.team) playTts('Đội ' + TEAM_NAME[d.team] + ' sắp thắng! Kéo mạnh lên!'); });
+
+fetch('/api/state').then((r) => r.json()).then((s) => {
+  render(s);
+  // ?demo=1: tự chạy demo khi phòng chưa có event thật (theo demo-mode-contract).
+  const params = new URLSearchParams(location.search);
+  if (params.get('demo') === '1') {
+    if (s.webhookCount > 0) {
+      const n = document.getElementById('demo-note');
+      n.textContent = 'Phòng đã có sự kiện thật — không chạy demo được.';
+      n.classList.add('on');
+      return;
+    }
+    fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+      .then(() => fetch('/api/test/demo-start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }))
+      .catch(() => {});
+  }
+}).catch(() => {});
+setInterval(() => { if (lastState) { render(lastState); } }, 1000);
+</script>
+</body>
+</html>
