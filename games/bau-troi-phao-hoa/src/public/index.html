@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Bầu Trời Pháo Hoa</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #0a0a20; color: #fff; }
+  header { padding: 16px 20px; background: #1a0f3a; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  h1 { font-size: 22px; margin: 0; }
+  main { padding: 16px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; max-width: 1200px; margin: 0 auto; }
+  section { background: #171233; border: 1px solid #3d2b6e; border-radius: 12px; padding: 16px; }
+  h2 { font-size: 17px; margin: 0 0 10px; color: #ffd24d; }
+  .row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,.12); font-size: 14px; }
+  button { background: #ff9a3d; color: #222; border: 0; border-radius: 8px; padding: 9px 14px; font-size: 14px; cursor: pointer; margin: 3px; font-weight: 700; }
+  button.ghost { background: #3d2b6e; color: #fff; }
+  button.danger { background: #c0392b; color: #fff; }
+  input, select { background: #0a0a20; color: #fff; border: 1px solid #3d2b6e; border-radius: 6px; padding: 7px 9px; font-size: 14px; width: 100%; margin: 3px 0; }
+  label { font-size: 13px; color: #ffe9a0; display: block; margin-top: 6px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #logs { font-size: 13px; max-height: 320px; overflow: auto; }
+  #logs div { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .warn { color: #ffb3b3; } .grand { color: #ffd24d; } .finale { color: #9be7a0; } .gift { color: #ffd24d; }
+  .ok { color: #9be7a0; } .err { color: #ff9a9a; }
+  code { background: rgba(0,0,0,.4); padding: 2px 6px; border-radius: 4px; word-break: break-all; }
+  small { color: #cbb8ea; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎆 Bầu Trời Pháo Hoa — Dashboard</h1>
+  <div><a href="/huong-dan-tikfinity?game=bau-troi-phao-hoa" target="_blank" style="color:#ffd24d">📖 Hướng dẫn TikFinity</a> &nbsp; <span id="mode"></span></div>
+</header>
+<main>
+  <section>
+    <h2>🎆 Trạng thái bầu trời</h2>
+    <div class="row"><span>Tổng pháo đã nổ</span><b id="total">—</b></div>
+    <div class="row"><span>Còn tới màn lớn</span><b id="toGrand">—</b></div>
+    <div class="row"><span>Màn lớn đã bắn</span><b id="grandShows">—</b></div>
+    <div class="row"><span>Màn lớn đang chạy</span><b id="grandActive">—</b></div>
+    <div class="row"><span>⏰ Countdown</span><b id="countdown">—</b></div>
+    <div class="row"><span>Màn đại đã bắn</span><b id="finaleCount">—</b></div>
+    <div class="row"><span>Hàng đợi pháo nhỏ</span><b id="queue">—</b></div>
+    <div class="row"><span>Pháo đang bay/nổ</span><b id="active">—</b></div>
+    <div class="row"><span>📨 Webhook đã nhận</span><b id="wc">0</b></div>
+    <div class="row"><span>🖼️ Avatar thật</span><b id="av">—</b></div>
+    <div class="row"><span>👥 Đang xem</span><b id="viewers">0</b></div>
+    <p>
+      <button id="btnGrand">🎆 Bắn màn lớn ngay</button>
+      <button id="btnCdTest" class="ghost">⏰ Test countdown 10s</button>
+      <button id="btnCdCancel" class="ghost">⏰ Hủy countdown</button>
+      <button id="btnReset" class="danger">🔄 Làm mới phiên</button>
+    </p>
+    <p><small>⚠️ Quà lạ (không rõ số xu) chỉ được ghi log + pháo nhỏ visual only, KHÔNG cộng điểm. Điểm chỉ tăng, không giảm (trừ reset phiên).</small></p>
+  </section>
+  <section>
+    <h2>🏆 Top 10 (theo điểm)</h2>
+    <div id="top"></div>
+    <h2 style="margin-top:14px">📊 Thống kê</h2>
+    <div id="stats"></div>
+  </section>
+  <section>
+    <h2>⚙️ Cài đặt</h2>
+    <div class="grid2">
+      <div><label>Tap = +1đ (tapPerPoint)</label><input id="s_tapPerPoint" type="number" min="1"></div>
+      <div><label>Comment +điểm</label><input id="s_commentPoints" type="number" min="0"></div>
+      <div><label>Share +điểm</label><input id="s_sharePoints" type="number" min="0"></div>
+      <div><label>Follow +điểm</label><input id="s_followPoints" type="number" min="0"></div>
+      <div><label>Quà: 1 xu = điểm</label><input id="s_giftPointsPerCoin" type="number" min="1"></div>
+      <div><label>Chống spam bình luận (giây)</label><input id="s_commentCooldownS" type="number" min="1"></div>
+      <div><label>Chống spam share (giây)</label><input id="s_shareCooldownS" type="number" min="1"></div>
+      <div><label>Tối đa pháo mới/giây</label><input id="s_maxPerSec" type="number" min="1" max="20"></div>
+      <div><label>Hàng đợi pháo nhỏ tối đa</label><input id="s_smallQueueMax" type="number" min="1"></div>
+      <div><label>Pháo cùng lúc tối đa</label><input id="s_maxConcurrent" type="number" min="1"></div>
+      <div><label>Màn lớn mỗi (pháo)</label><input id="s_grandEvery" type="number" min="1"></div>
+      <div><label>Màn lớn kéo dài (giây)</label><input id="s_grandShowS" type="number" min="1"></div>
+      <div><label>Màn đại kéo dài (giây)</label><input id="s_finaleS" type="number" min="1"></div>
+      <div><label>Dọn người im (phút)</label><input id="s_inactivityCleanupMin" type="number" min="1"></div>
+    </div>
+    <label>Hình pháo lớn mặc định (quà ≥100 xu)</label>
+    <select id="s_bigShape"><option value="heart">❤️ Trái tim</option><option value="star">⭐ Ngôi sao</option><option value="text">🔤 Chữ tên người tặng</option></select>
+    <label>Màu theo quà (tên quà = mã màu — vd: hoa hong=#FF2D55)</label>
+    <input id="s_giftColors" type="text" placeholder="hoa hong=#FF2D55, kinh ram=#00BFFF, heo may man=#FF69B4">
+    <label>Giờ G countdown (để trống = TẮT)</label>
+    <input id="s_cdTarget" type="datetime-local">
+    <label>Dòng chúc mừng khi tới giờ G</label>
+    <input id="s_cdMessage" type="text" maxlength="80">
+    <label>Từ cấm trong tên (giọng đọc sẽ nói "một bạn" thay tên đó)</label>
+    <input id="s_banned" type="text" placeholder="phân tách bằng dấu phẩy">
+    <label><input id="s_demo" type="checkbox" style="width:auto"> Chế độ thử (demoMode — bật để test, tắt khi live thật)</label>
+    <label><input id="s_voice" type="checkbox" style="width:auto"> Giọng đọc (voiceEnabled)</label>
+    <p><button id="btnSave">💾 Lưu cài đặt</button> <button id="btnSaveCd" class="ghost">⏰ Đặt countdown</button> <span id="saveMsg"></span></p>
+    <p><small>⚠️ Sau khi live thật, tắt demoMode — webhook thật mới được tính điểm.</small></p>
+  </section>
+  <section>
+    <h2>🧪 Test (chỉ chạy khi demoMode bật)</h2>
+    <p>
+      <button data-t="join">👋 Join</button>
+      <button data-t="comment">💬 Comment</button>
+      <button data-t="tap">❤️ Tap x20</button>
+      <button data-t="tap45">❤️ Tap x45</button>
+      <button data-t="gift1">🎁 Quà 1 xu</button>
+      <button data-t="gift10">🎁 Quà 10 xu</button>
+      <button data-t="gift100">🎁 Quà 100 xu</button>
+      <button data-t="follow">➕ Follow</button>
+      <button data-t="share">🔁 Share</button>
+      <button data-t="bulk">👥 100 join</button>
+      <button data-t="demo">🎬 Demo 12 bước</button>
+    </p>
+    <p id="demoOnly" style="display:none">
+      <label>Đặt tổng pháo = X (CHỈ có trong chế độ thử — live thật không có nút này)</label>
+      <input id="setTotalInput" type="number" min="0" value="99" style="width:120px">
+      <button data-t="settotal" class="ghost">🧪 Đặt tổng pháo</button>
+    </p>
+    <p id="testMsg"></p>
+    <h2 style="margin-top:14px">🔗 Link</h2>
+    <p><small>Overlay (dán vào OBS):</small><br><code id="ovLink"></code></p>
+    <p><small>Webhook TikFinity (1 link riêng cho phòng này):</small><br><code id="whLink"></code></p>
+    <p><small>⚠️ KHÔNG dùng chung link webhook cho nhiều phòng/game.</small></p>
+  </section>
+  <section>
+    <h2>📜 Nhật ký</h2>
+    <div id="logs"></div>
+  </section>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const path = location.pathname.replace(/\/$/, '');
+  const base = path.replace(/\/dashboard$/, '').replace(/\/index\.html$/, '');
+  const api = (p, o) => fetch(base + p, o).then(r => r.json());
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let settings = null;
+  function render(s) {
+    settings = s.settings;
+    $('total').textContent = s.totalFireworks + ' pháo';
+    $('toGrand').textContent = s.fireworksToGrand + ' pháo nữa';
+    $('grandShows').textContent = s.grandShows;
+    $('grandActive').textContent = s.grandShow ? 'ĐANG CHẠY — mốc ' + s.grandShow.milestone : 'không';
+    $('countdown').textContent = s.countdown && s.countdown.active
+      ? 'Còn ' + Math.floor(s.countdown.secondsLeft / 3600) + ':' + String(Math.floor((s.countdown.secondsLeft % 3600) / 60)).padStart(2, '0') + ':' + String(s.countdown.secondsLeft % 60).padStart(2, '0') + ' — ' + s.countdown.message
+      : 'TẮT';
+    $('finaleCount').textContent = s.finaleCount;
+    $('queue').textContent = s.smallQueueLength + ' trái';
+    $('active').textContent = s.activeFireworks + ' trái';
+    $('wc').textContent = s.webhookCount;
+    $('av').textContent = s.avatarStats.withAvatar + '/' + s.avatarStats.total + (s.avatarWarning ? ' ⚠️ CHƯA CÓ AVATAR THẬT — kiểm tra TikFinity có gửi profilePictureUrl không' : '');
+    $('viewers').textContent = s.viewersOnline;
+    $('mode').textContent = s.settings.demoMode ? '🧪 Chế độ thử' : '🔴 LIVE thật';
+    $('demoOnly').style.display = s.settings.demoMode ? 'block' : 'none';
+    $('top').innerHTML = (s.top10 || []).map((p, i) => '<div class="row"><span>' + (i + 1) + '. ' + esc(p.name) + (p.online ? '' : ' (offline)') + '</span><b>' + p.points + 'đ • ' + p.fireworks + ' pháo</b></div>').join('') || 'Chưa có ai bắn pháo.';
+    const st = s.stats;
+    $('stats').innerHTML = '<div class="row"><span>Bình luận</span><b>' + st.comments + ' (chặn ' + st.commentsBlocked + ')</b></div>'
+      + '<div class="row"><span>Tim</span><b>' + st.taps + '</b></div>'
+      + '<div class="row"><span>Quà</span><b>' + st.gifts + ' (lạ ' + st.giftsUnknown + ')</b></div>'
+      + '<div class="row"><span>Follow / Share / Join</span><b>' + st.follows + ' (chặn ' + st.followsBlocked + ') / ' + st.shares + ' (chặn ' + st.sharesBlocked + ') / ' + st.joins + '</b></div>'
+      + '<div class="row"><span>Pháo gộp / rớt</span><b>' + st.merged + ' / ' + st.dropped + '</b></div>';
+    $('logs').innerHTML = (s.logs || []).slice().reverse().map(l =>
+      '<div class="' + (l.kind || '') + '">[' + new Date(l.t).toLocaleTimeString('vi-VN') + '] ' + esc(l.text) + '</div>').join('');
+    if (!document.activeElement || document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') fillSettings();
+  }
+  function fillSettings() {
+    if (!settings) return;
+    const set = (id, v) => { const el = $(id); if (el && document.activeElement !== el) el.value = v; };
+    set('s_tapPerPoint', settings.tapPerPoint); set('s_commentPoints', settings.commentPoints);
+    set('s_sharePoints', settings.sharePoints); set('s_followPoints', settings.followPoints);
+    set('s_giftPointsPerCoin', settings.giftPointsPerCoin); set('s_commentCooldownS', settings.commentCooldownS);
+    set('s_shareCooldownS', settings.shareCooldownS); set('s_maxPerSec', settings.maxPerSec);
+    set('s_smallQueueMax', settings.smallQueueMax); set('s_maxConcurrent', settings.maxConcurrent);
+    set('s_grandEvery', settings.grandEvery); set('s_grandShowS', settings.grandShowS);
+    set('s_finaleS', settings.finaleS); set('s_inactivityCleanupMin', settings.inactivityCleanupMin);
+    const bs = $('s_bigShape'); if (bs && document.activeElement !== bs) bs.value = settings.bigShape;
+    const gc = $('s_giftColors'); if (gc && document.activeElement !== gc) gc.value = Object.entries(settings.giftColors || {}).map(([k, v]) => k + '=' + v).join(', ');
+    const cm = $('s_cdMessage'); if (cm && document.activeElement !== cm) cm.value = settings.countdownMessage;
+    const b = $('s_banned'); if (b && document.activeElement !== b) b.value = (settings.bannedWords || []).join(', ');
+    $('s_demo').checked = !!settings.demoMode; $('s_voice').checked = !!settings.voiceEnabled;
+  }
+  function poll() { api('/api/state').then(render).catch(() => {}); }
+  poll(); setInterval(poll, 2500);
+  const socket = io(); socket.on('state-update', render);
+  $('btnSave').onclick = () => {
+    const gc = {};
+    $('s_giftColors').value.split(',').map(x => x.trim()).filter(Boolean).forEach(x => {
+      const i = x.indexOf('='); if (i > 0) gc[x.slice(0, i).trim()] = x.slice(i + 1).trim();
+    });
+    const body = { tapPerPoint: +$('s_tapPerPoint').value, commentPoints: +$('s_commentPoints').value,
+      sharePoints: +$('s_sharePoints').value, followPoints: +$('s_followPoints').value,
+      giftPointsPerCoin: +$('s_giftPointsPerCoin').value, commentCooldownS: +$('s_commentCooldownS').value,
+      shareCooldownS: +$('s_shareCooldownS').value, maxPerSec: +$('s_maxPerSec').value,
+      smallQueueMax: +$('s_smallQueueMax').value, maxConcurrent: +$('s_maxConcurrent').value,
+      grandEvery: +$('s_grandEvery').value, grandShowS: +$('s_grandShowS').value, finaleS: +$('s_finaleS').value,
+      inactivityCleanupMin: +$('s_inactivityCleanupMin').value, bigShape: $('s_bigShape').value,
+      giftColors: gc, countdownMessage: $('s_cdMessage').value, bannedWords: $('s_banned').value,
+      demoMode: $('s_demo').checked, voiceEnabled: $('s_voice').checked };
+    api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(r => { $('saveMsg').innerHTML = r.success ? '<span class="ok">Đã lưu ✅</span>' : '<span class="err">Lỗi</span>'; poll(); });
+  };
+  $('btnSaveCd').onclick = () => {
+    const v = $('s_cdTarget').value;
+    if (!v) { $('saveMsg').innerHTML = '<span class="err">Chọn giờ G trước.</span>'; return; }
+    api('/api/countdown', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ targetAt: new Date(v).getTime(), message: $('s_cdMessage').value }) })
+      .then(r => { $('saveMsg').innerHTML = r.success ? '<span class="ok">Countdown đã đặt ✅</span>' : '<span class="err">' + esc(r.message || 'Lỗi') + '</span>'; poll(); });
+  };
+  $('btnGrand').onclick = () => api('/api/grand-show/now', { method: 'POST' }).then(poll);
+  $('btnCdTest').onclick = () => api('/api/countdown/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seconds: 10 }) }).then(poll);
+  $('btnCdCancel').onclick = () => api('/api/countdown/cancel', { method: 'POST' }).then(poll);
+  $('btnReset').onclick = () => { if (confirm('Làm mới toàn bộ phiên (điểm + pháo + lịch sử)?')) api('/api/session/reset', { method: 'POST' }).then(poll); };
+  document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
+    const t = b.dataset.t;
+    const map = { join: ['/api/test/join', {}], comment: ['/api/test/comment', { text: 'Đẹp quá!' }],
+      tap: ['/api/test/tap', { count: 20 }], tap45: ['/api/test/tap', { count: 45 }],
+      gift1: ['/api/test/gift', { coins: 1, giftName: 'Hoa hồng' }], gift10: ['/api/test/gift', { coins: 10, giftName: 'Kính râm' }],
+      gift100: ['/api/test/gift', { coins: 100, giftName: 'Vương miện' }], follow: ['/api/test/follow', {}],
+      share: ['/api/test/share', {}], bulk: ['/api/test/bulk-join', { count: 100 }], demo: ['/api/test/demo', {}],
+      settotal: ['/api/test/set-total', { total: +$('setTotalInput').value }] };
+    const [p, body] = map[t];
+    api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(r => { $('testMsg').innerHTML = r.success ? '<span class="ok">OK: ' + esc(JSON.stringify(r).slice(0, 300)) + '</span>' : '<span class="err">Bật demoMode trước khi test.</span>'; poll(); });
+  });
+  $('ovLink').textContent = location.origin + base + '/overlay.html';
+  $('whLink').textContent = location.origin + base + '/api/webhook';
+})();
+</script>
+</body>
+</html>

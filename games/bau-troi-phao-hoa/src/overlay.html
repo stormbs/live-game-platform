@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bầu Trời Pháo Hoa</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #050514; color: #fff;
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { position: relative; width: 1080px; height: 1920px;
+    background: linear-gradient(180deg, #050514 0%, #0b0b2a 45%, #1a0f3a 70%, #2a1230 100%); }
+  .stars { position: absolute; inset: 0 0 500px 0; background-image:
+    radial-gradient(2px 2px at 80px 120px, #fff, transparent), radial-gradient(2px 2px at 300px 260px, #ffe9a0, transparent),
+    radial-gradient(1.5px 1.5px at 520px 90px, #fff, transparent), radial-gradient(2px 2px at 760px 320px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 950px 150px, #ffe9a0, transparent), radial-gradient(2px 2px at 180px 420px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 640px 480px, #fff, transparent), radial-gradient(2px 2px at 900px 560px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 420px 620px, #fff, transparent), radial-gradient(2px 2px at 60px 700px, #ffe9a0, transparent);
+    opacity: .9; }
+  .moon { position: absolute; top: 170px; right: 70px; font-size: 110px; opacity: .95; }
+  #sky { position: absolute; left: 0; top: 0; width: 1080px; height: 1420px; }
+  .city { position: absolute; left: 0; right: 0; bottom: 280px; height: 220px; display: flex; align-items: flex-end; gap: 0; opacity: .95; }
+  .bld { background: linear-gradient(180deg, #241a3a, #120a24); border-top: 2px solid rgba(255, 210, 77, .25); position: relative; }
+  .bld::after { content: "🟨🟨  🟨   🟨🟨 🟨  🟨"; position: absolute; top: 20px; left: 8px; font-size: 14px; letter-spacing: 6px; opacity: .8; }
+  .top3 { position: absolute; top: 0; left: 0; right: 0; display: flex; gap: 14px; padding: 18px 24px; z-index: 5; }
+  .topCard { flex: 1; background: rgba(0,0,0,.55); border: 2px solid rgba(255, 210, 77, .6); border-radius: 16px; padding: 10px 12px; text-align: center; min-height: 118px; }
+  .topCard img, .topCard .ava { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 30px; border: 2px solid #ffd24d; }
+  .topCard b { display: block; font-size: 24px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .topCard span { font-size: 22px; color: #ffe9a0; }
+  .totalBar { position: absolute; top: 150px; left: 24px; right: 24px; text-align: center; z-index: 5; }
+  .totalBar .line { font-size: 30px; font-weight: 800; text-shadow: 0 2px 6px rgba(0,0,0,.8); }
+  .totalBar .next { font-size: 25px; color: #ffe9a0; text-shadow: 0 2px 4px rgba(0,0,0,.8); }
+  .countdown { position: absolute; top: 150px; left: 24px; right: 24px; text-align: center; z-index: 6; display: none; }
+  .countdown.show { display: block; }
+  .countdown .cdClock { font-size: 64px; font-weight: 900; color: #ffd24d; text-shadow: 0 0 24px rgba(255, 210, 77, .8); }
+  .countdown .cdClock.flash { animation: flash 1s steps(2) infinite; }
+  @keyframes flash { 50% { opacity: .35; } }
+  .countdown .cdMsg { font-size: 28px; color: #ffe9c4; }
+  .bubbles { position: absolute; left: 24px; right: 24px; top: 1050px; z-index: 4; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .bubble { background: rgba(255,255,255,.92); color: #222; border-radius: 20px; padding: 12px 20px; font-size: 30px; max-width: 90%; box-shadow: 0 6px 16px rgba(0,0,0,.5); animation: bubbleIn .3s ease-out; }
+  @keyframes bubbleIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .banner { display: none; position: absolute; left: 36px; right: 36px; top: 560px; background: rgba(10, 5, 30, .94); border: 4px solid #ffd24d; border-radius: 26px; padding: 30px 28px; text-align: center; z-index: 10; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
+  .banner.show { display: block; }
+  .banner h2 { font-size: 50px; margin-bottom: 10px; }
+  .banner p { font-size: 30px; color: #ffe9c4; line-height: 1.5; }
+  .ticker { position: absolute; left: 0; right: 0; bottom: 140px; background: rgba(0,0,0,.6); padding: 16px 24px; font-size: 27px; min-height: 72px; color: #ffe9c4; z-index: 5; }
+  .info { position: absolute; left: 0; right: 0; bottom: 40px; text-align: center; font-size: 25px; color: rgba(255,255,255,.9); text-shadow: 0 2px 4px rgba(0,0,0,.7); z-index: 5; }
+  .status { position: absolute; bottom: 6px; left: 24px; right: 24px; display: flex; justify-content: space-between; font-size: 20px; color: rgba(255,233,196,.75); z-index: 5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="stars"></div>
+  <div class="moon">🌙</div>
+  <canvas id="sky" width="1080" height="1420"></canvas>
+  <div class="city" id="city"></div>
+
+  <div class="top3" id="top3"></div>
+  <div class="totalBar"><div class="line" id="totalLine">🎆 0 pháo đã nổ</div><div class="next" id="nextLine">Còn 100 pháo nữa tới màn lớn</div></div>
+  <div class="countdown" id="countdown"><div class="cdClock" id="cdClock">00:00:00</div><div class="cdMsg" id="cdMsg"></div></div>
+
+  <div class="bubbles" id="bubbles"></div>
+  <div class="banner" id="banner"><h2 id="bannerTitle"></h2><p id="bannerText"></p></div>
+  <div class="ticker" id="ticker">🎆 Bầu trời đêm đã sẵn sàng! Tap 20 = 1 pháo • Comment = 1 pháo • Follow = pháo tên bạn • Quà = pháo theo giá trị!</div>
+  <div class="info">Tap 20 = 1 pháo • Comment = 1 pháo • Follow = pháo tên bạn • Quà = pháo theo giá trị</div>
+  <div class="status"><span id="stMode">🎆 Bầu Trời Pháo Hoa</span><span id="stViewers">👥 0 người xem</span></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('sky'), ctx = canvas.getContext('2d');
+  // Thành phố phía dưới (nhà cao tầng).
+  (function buildCity() {
+    const widths = [90, 120, 70, 140, 100, 80, 130, 90, 110, 75, 95];
+    const heights = [150, 210, 120, 190, 160, 110, 200, 140, 175, 125, 165];
+    $('city').innerHTML = widths.map((w, i) => '<div class="bld" style="width:' + w + 'px;height:' + heights[i] + 'px"></div>').join('');
+  })();
+  let voiceOn = true, voiceQueue = [], speaking = false;
+  const seenFireworks = new Set();
+  const rockets = [];   // {x, y, targetY, speed, fw}
+  const bursts = [];    // {particles:[{x,y,vx,vy,life,maxLife,color,size}], text, textX, textY, mult}
+  function speak(text) {
+    if (!voiceOn || !text) return;
+    voiceQueue.push(text);
+    if (voiceQueue.length > 3) voiceQueue.shift();
+    pumpVoice();
+  }
+  function pumpVoice() {
+    if (speaking || !voiceQueue.length) return;
+    const text = voiceQueue.shift();
+    speaking = true;
+    fetch('/api/tts?text=' + encodeURIComponent(text)).then(r => r.ok ? r.blob() : null).then(b => {
+      if (!b) throw 0;
+      const a = new Audio(URL.createObjectURL(b));
+      a.onended = () => { speaking = false; pumpVoice(); };
+      a.onerror = () => { speaking = false; pumpVoice(); };
+      a.play().catch(() => { speaking = false; pumpVoice(); });
+    }).catch(() => {
+      try { const u = new SpeechSynthesisUtterance(text); u.lang = 'vi-VN'; u.onend = () => { speaking = false; pumpVoice(); }; speechSynthesis.speak(u); }
+      catch (e) { speaking = false; pumpVoice(); }
+    });
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function heartPoints(cx, cy, s, n) {
+    const pts = [];
+    for (let i = 0; i < n; i += 1) {
+      const t = (i / n) * Math.PI * 2;
+      const x = 16 * Math.pow(Math.sin(t), 3);
+      const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+      pts.push({ x: cx + x * s, y: cy - y * s });
+    }
+    return pts;
+  }
+  function starPoints(cx, cy, r1, r2, n) {
+    const pts = [];
+    for (let i = 0; i < n; i += 1) {
+      const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+      const r = i % 2 === 0 ? r1 : r2;
+      pts.push({ x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r });
+    }
+    // Nối các đỉnh sao 5 cánh: lấy điểm trên đường biên sao.
+    const out = [];
+    const spikes = 5;
+    for (let i = 0; i < n; i += 1) {
+      const t = i / n;
+      const seg = Math.floor(t * spikes * 2);
+      const f = (t * spikes * 2) % 1;
+      const a1 = (seg / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+      const a2 = ((seg + 1) / (spikes * 2)) * Math.PI * 2 - Math.PI / 2;
+      const rA = seg % 2 === 0 ? r1 : r2, rB = seg % 2 === 0 ? r2 : r1;
+      const x1 = cx + Math.cos(a1) * rA, y1 = cy + Math.sin(a1) * rA;
+      const x2 = cx + Math.cos(a2) * rB, y2 = cy + Math.sin(a2) * rB;
+      out.push({ x: x1 + (x2 - x1) * f, y: y1 + (y2 - y1) * f });
+    }
+    return out;
+  }
+  function spawnFirework(fw) {
+    if (seenFireworks.has(fw.id)) return;
+    seenFireworks.add(fw.id);
+    if (seenFireworks.size > 200) { const first = seenFireworks.values().next().value; seenFireworks.delete(first); }
+    rockets.push({ x: (fw.x / 100) * 1080, y: 1420, targetY: (fw.y / 100) * 1420, speed: 14 + Math.random() * 5, fw });
+  }
+  function burstAt(fw, x, y) {
+    const colors = fw.colors && fw.colors.length ? fw.colors : ['#FFD700'];
+    const parts = [];
+    const kind = fw.kind;
+    if (kind === 'shape' && fw.shape === 'heart') {
+      heartPoints(x, y, 9, 90).forEach((p, i) => parts.push({ x: p.x, y: p.y, vx: (Math.random() - .5) * 1.2, vy: (Math.random() - .5) * 1.2 + .4, life: 1, maxLife: 1, color: colors[i % colors.length], size: 5 }));
+    } else if (kind === 'shape' && fw.shape === 'star') {
+      starPoints(x, y, 150, 62, 110).forEach((p, i) => parts.push({ x: p.x, y: p.y, vx: (Math.random() - .5) * 1.2, vy: (Math.random() - .5) * 1.2 + .4, life: 1, maxLife: 1, color: colors[i % colors.length], size: 5 }));
+    } else {
+      const n = kind === 'cluster' ? 120 : kind === 'grand' || kind === 'finale' ? 100 : kind === 'merged' ? 70 : 40;
+      const rings = kind === 'cluster' ? 3 : 1;
+      for (let i = 0; i < n; i += 1) {
+        const a = Math.random() * Math.PI * 2;
+        const ring = 1 + (i % rings);
+        const sp = (1.5 + Math.random() * 3.5) * ring;
+        parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1, life: 1, maxLife: 1, color: colors[i % colors.length], size: 3 + Math.random() * 3 });
+      }
+    }
+    bursts.push({ particles: parts, text: (kind === 'name' || (kind === 'shape' && fw.shape === 'text')) ? (fw.text || fw.name || '') : '', textX: x, textY: y - 40, mult: fw.multiplier > 1 ? 'x' + fw.multiplier : '', life: 1 });
+  }
+  function frame() {
+    ctx.clearRect(0, 0, 1080, 1420);
+    // Tên lửa bay lên.
+    for (let i = rockets.length - 1; i >= 0; i -= 1) {
+      const r = rockets[i];
+      r.y -= r.speed;
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 18;
+      ctx.beginPath(); ctx.arc(r.x, r.y, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(255,210,77,.7)';
+      ctx.fillRect(r.x - 1.5, r.y, 3, 26);
+      if (r.y <= r.targetY) { rockets.splice(i, 1); burstAt(r.fw, r.x, r.targetY); }
+    }
+    // Hạt nổ + tàn rơi.
+    for (let i = bursts.length - 1; i >= 0; i -= 1) {
+      const b = bursts[i];
+      b.life -= 0.012;
+      for (const p of b.particles) {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.06; p.vx *= 0.985; p.vy *= 0.985;
+        p.life -= 0.008;
+        if (p.life > 0) {
+          ctx.globalAlpha = Math.max(0, p.life);
+          ctx.fillStyle = p.color;
+          ctx.shadowColor = p.color; ctx.shadowBlur = 10;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+          ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+        }
+      }
+      if (b.text) {
+        ctx.globalAlpha = Math.max(0, b.life);
+        ctx.font = '900 64px "Be Vietnam Pro", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 26;
+        ctx.fillStyle = '#fff';
+        ctx.fillText(b.text, b.textX, b.textY);
+        ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+      }
+      if (b.mult) {
+        ctx.globalAlpha = Math.max(0, b.life);
+        ctx.font = '900 52px "Be Vietnam Pro", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFD700';
+        ctx.fillText(b.mult, b.textX, b.textY + 70);
+        ctx.globalAlpha = 1;
+      }
+      if (b.life <= 0 || b.particles.every(p => p.life <= 0)) bursts.splice(i, 1);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  let bannerTimer = null;
+  function showBanner(title, text, ms) {
+    $('bannerTitle').textContent = title;
+    $('bannerText').textContent = text;
+    $('banner').className = 'banner show';
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => { $('banner').className = 'banner'; }, ms || 8000);
+  }
+  function fmtClock(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+  function avatarHtml(p) {
+    if (p.avatar) return '<img src="' + p.avatar + '" alt="">';
+    return '<span class="ava">⭐</span>';
+  }
+  function render(s) {
+    voiceOn = !!(s.settings && s.settings.voiceEnabled);
+    $('totalLine').textContent = '🎆 ' + s.totalFireworks + ' pháo đã nổ';
+    $('nextLine').textContent = s.grandShow ? '🎆 MÀN PHÁO LỚN ĐANG CHẠY!' : 'Còn ' + s.fireworksToGrand + ' pháo nữa tới màn lớn';
+    $('top3').innerHTML = (s.top || []).map((p, i) =>
+      '<div class="topCard">' + ['🥇', '🥈', '🥉'][i] + ' ' + avatarHtml(p) + '<b>' + esc(p.name) + '</b><span>' + p.points + 'đ • ' + p.fireworks + ' pháo</span></div>').join('')
+      || '<div class="topCard"><b>Chưa có ai bắn pháo</b><span>Tap/comment/quà để lên Top 3!</span></div>';
+    const cd = s.countdown;
+    if (cd && cd.active) {
+      $('countdown').className = 'countdown show';
+      $('cdClock').textContent = fmtClock(cd.secondsLeft);
+      $('cdClock').classList.toggle('flash', cd.secondsLeft <= 60);
+      $('cdMsg').textContent = 'tới giờ G — ' + cd.message;
+    } else $('countdown').className = 'countdown';
+    $('bubbles').innerHTML = (s.recentComments || []).map(c =>
+      '<div class="bubble"><b>' + esc(c.name) + ':</b> ' + esc(c.text) + '</div>').join('');
+    const last = (s.logs || []).slice(-1)[0];
+    if (last) $('ticker').textContent = last.text;
+    $('stViewers').textContent = '👥 ' + s.viewersOnline + ' người xem';
+    (s.recentFireworks || []).forEach(spawnFirework);
+  }
+  function poll() { fetch('/api/state').then(r => r.json()).then(render).catch(() => {}); }
+  poll(); setInterval(poll, 1500);
+  const socket = io();
+  socket.on('state-update', render);
+  socket.on('firework', spawnFirework);
+  socket.on('epic', d => {
+    showBanner('🎆 PHÁO HÌNH ' + (d.shape === 'heart' ? 'TRÁI TIM ❤️' : d.shape === 'star' ? 'NGÔI SAO ⭐' : 'CHỮ TÊN'), d.rawName + ' tặng ' + d.giftName + ' ' + d.coins + ' xu (+' + d.points + 'đ)!', 8000);
+    speak('Cảm ơn ' + d.name + ' đã tặng ' + d.giftName + '!');
+  });
+  socket.on('highlight', d => speak('Cảm ơn ' + d.name + ' đã tặng ' + d.giftName + '!'));
+  socket.on('follow-name', d => speak(d.name + ' vừa theo dõi, pháo tên bạn đang bay lên trời!'));
+  socket.on('grand-show', d => {
+    const top = (d.top || []).map((p, i) => (i + 1) + '. ' + p.name + ' ' + p.points + ' điểm').join(' — ');
+    showBanner('🎆 MÀN PHÁO LỚN — ' + d.milestone + ' PHÁO ĐÃ NỔ!', 'Top 3 đêm nay: ' + (top || 'chưa có ai'), 8000);
+    speak('Màn pháo lớn! Top 3 đêm nay: ' + (top || 'chưa có ai'));
+  });
+  socket.on('finale', d => {
+    showBanner('🎆 ' + d.message, 'Màn pháo đại 15 giây — chúc mừng!', 15000);
+    speak(d.message);
+  });
+  socket.on('countdown-voice', d => speak(d.text));
+})();
+</script>
+</body>
+</html>
