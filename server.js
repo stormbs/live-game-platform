@@ -20,6 +20,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { RoomManager } = require('./lib/rooms');
 const { transformText } = require('./lib/transform');
+const { mountBuffRoutes } = require('./lib/buff-routes');
 
 const ROOT = __dirname;
 const MAX_ROOMS = parseInt(process.env.MAX_ROOMS || '8', 10);
@@ -44,6 +45,9 @@ function createApp(opts = {}) {
     idleMs: (opts.idleMinutes || IDLE_MINUTES) * 60 * 1000,
     tiktokEnabled: opts.tiktokEnabled !== false,
   });
+
+  // ---- API buff tương tác (dịch vụ mạng xã hội, USDT) ----
+  mountBuffRoutes(app);
 
   // ---- Trang chính + API của platform ----
   app.get('/', (req, res) => {
