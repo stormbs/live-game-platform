@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đi Bar Online — Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; margin: 0; background: #0a0618; color: #eee; }
+  header { background: linear-gradient(90deg, #7c3aed, #db2777); padding: 18px 24px; }
+  header h1 { margin: 0; font-size: 26px; }
+  header p { margin: 4px 0 0; opacity: .9; }
+  main { max-width: 980px; margin: 0 auto; padding: 20px; }
+  .card { background: #1a1330; border: 1px solid #3b2d63; border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
+  .card h2 { margin: 0 0 10px; font-size: 19px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  button { background: #7c3aed; color: #fff; border: none; border-radius: 8px; padding: 9px 16px; font-size: 15px; cursor: pointer; }
+  button.secondary { background: #334155; }
+  button.warn { background: #b91c1c; }
+  button:disabled { opacity: .5; cursor: default; }
+  input, select { background: #0f0a1f; color: #fff; border: 1px solid #4c3a7d; border-radius: 8px; padding: 8px 10px; font-size: 15px; }
+  label { font-size: 14px; color: #c4b5fd; display: inline-block; margin: 4px 12px 4px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  td, th { padding: 7px 8px; border-bottom: 1px solid #2e2450; text-align: left; }
+  .badge { display: inline-block; background: #facc15; color: #111; font-weight: 800; border-radius: 6px; padding: 2px 8px; font-size: 13px; }
+  .mono { font-family: ui-monospace, monospace; font-size: 13px; word-break: break-all; background: #0f0a1f; padding: 8px; border-radius: 8px; }
+  #log { max-height: 260px; overflow: auto; font-size: 14px; line-height: 1.6; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+  .vip-box { border: 2px solid #facc15; border-radius: 10px; padding: 10px 14px; }
+  .vip-box.do { border-color: #ef4444; }
+  .vip-box .score { font-size: 34px; font-weight: 900; }
+</style>
+</head>
+<body>
+<header><h1>🍸 Đi Bar Online — Dashboard</h1><p>DJ + vũ công + camera lia khắp phòng. Link overlay: <span id="overlay-link"></span></p></header>
+<main>
+  <div class="card"><h2>📊 Trạng thái</h2>
+    <div class="row"><span id="status">Đang tải…</span><span id="demo-badge" class="badge" style="display:none">🧪 DEMO ĐANG BẬT</span></div>
+    <div class="row" style="margin-top:10px">
+      <button id="btn-end">🏁 Kết thúc vòng ngay</button>
+      <button id="btn-reset" class="secondary">🔄 Vòng mới</button>
+      <button id="btn-music" class="secondary">🔊 Tắt nhạc</button>
+    </div>
+  </div>
+  <div class="card"><h2>👑 Vua sàn nhảy</h2><div id="king">Chưa có Vua sàn vòng này.</div></div>
+  <div class="grid2">
+    <div class="card vip-box"><h2>🟡 Bàn Vàng</h2><div class="score" id="score-vang">0</div><div id="sub-vang">—</div><div id="streak-vang">Chuỗi thắng: 0</div><div id="cover-vang" style="color:#4ade80;font-weight:700"></div></div>
+    <div class="card vip-box do"><h2>🔴 Bàn Đỏ</h2><div class="score" id="score-do">0</div><div id="sub-do">—</div><div id="streak-do">Chuỗi thắng: 0</div><div id="cover-do" style="color:#4ade80;font-weight:700"></div></div>
+  </div>
+  <div class="card"><h2>💃 Top dancer</h2><table><thead><tr><th>#</th><th>Dancer</th><th>Nhân vật</th><th>Bàn</th><th>⚡ Năng lượng</th><th>🍹 Ly</th></tr></thead><tbody id="top-body"><tr><td colspan="6">Chưa có dancer nào.</td></tr></tbody></table></div>
+  <div class="card"><h2>🍹 Log đồ uống</h2><div id="log">—</div></div>
+  <div class="card"><h2>⚙️ Cài đặt</h2>
+    <label>Phút/vòng (giây) <input id="s-round" type="number" min="5" max="1800" style="width:90px"></label>
+    <label>Năng lượng/tim <input id="s-tap" type="number" min="1" max="10" style="width:70px"></label>
+    <label>Năng lượng/xu <input id="s-coin" type="number" min="1" max="100" style="width:70px"></label>
+    <label>Năng lượng/bình luận <input id="s-comment" type="number" min="1" max="50" style="width:70px"></label>
+    <label>Năng lượng/follow <input id="s-follow" type="number" min="0" max="100" style="width:70px"></label><br>
+    <label>Nhịp drop (giây) <input id="s-dropint" type="number" min="5" max="600" style="width:80px"></label>
+    <label>Báo trước drop (giây) <input id="s-dropwarn" type="number" min="1" max="60" style="width:70px"></label>
+    <label>Thời gian drop (giây) <input id="s-dropdur" type="number" min="2" max="120" style="width:70px"></label>
+    <label>Vinh danh Vua (giây) <input id="s-spot" type="number" min="1" max="120" style="width:70px"></label><br>
+    <label>Chế độ camera <select id="s-cam"><option value="auto">Tự động lia</option><option value="manual">Thủ công</option></select></label>
+    <label>Thời gian mỗi shot (giây) <input id="s-shot" type="number" min="3" max="30" style="width:70px"></label>
+    <label>Tempo (BPM) <input id="s-tempo" type="number" min="60" max="180" style="width:80px"></label>
+    <label>Âm lượng <input id="s-vol" type="number" min="0" max="100" style="width:70px"></label><br>
+    <label><input type="checkbox" id="s-music"> Nhạc remix (WebAudio)</label>
+    <label><input type="checkbox" id="s-voice"> Giọng đọc TTS</label>
+    <label><input type="checkbox" id="s-demo"> Chế độ thử (demoMode)</label>
+    <button id="btn-save">💾 Lưu cài đặt</button>
+  </div>
+  <div class="card"><h2>🧪 Mục Test (cần bật chế độ thử)</h2>
+    <div class="row">
+      <button id="btn-demo-start">▶ Chạy demo</button>
+      <button id="btn-demo-stop" class="secondary">■ Dừng demo</button>
+      <button id="btn-test-demo" class="secondary">Mô phỏng 1 lượt</button>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <input id="t-name" placeholder="Tên người thử" style="width:150px">
+      <button id="btn-t-join" class="secondary">Vào bar</button>
+      <button id="btn-t-tap" class="secondary">+20 tim</button>
+      <button id="btn-t-comment" class="secondary">Bình luận "quẩy"</button>
+      <button id="btn-t-gift" class="secondary">Tặng 50 xu</button>
+      <button id="btn-t-follow" class="secondary">Follow</button>
+      <button id="btn-t-bulk" class="secondary">100 người vào bar</button>
+    </div>
+    <p style="font-size:13px;color:#a78bfa">Demo mô phỏng liên tục qua đúng đường xử lý sự kiện thật. Demo tự dừng khi có sự kiện thật từ LIVE và từ chối chạy khi phòng đã có sự kiện thật.</p>
+  </div>
+  <div class="card"><h2>🎯 Cài đặt TikFinity</h2>
+    <p style="font-size:14px;line-height:1.6">Tạo <b>6 Action webhook</b>, mỗi action dán <b>1 URL riêng</b> theo sự kiện dưới đây (copy từ bảng). Rồi tạo <b>6 Event</b>, mỗi event chọn đúng trigger và chọn đúng action của nó ở mục <b>"Trigger all of these actions"</b>. Xem bài hướng dẫn đầy đủ: <a id="guide-link" href="#" style="color:#a5f3fc">Hướng dẫn TikFinity</a>. <b>Không có body</b> — TikFinity tự gửi body cố định, phân biệt sự kiện bằng URL.</p>
+    <div class="row"><span>Link webhook của phòng:</span><span class="mono" id="webhook-url">…</span><button id="btn-copy-webhook" class="secondary">📋 Sao chép</button></div>
+    <table style="margin-top:10px"><thead><tr><th>Action</th><th>Trigger (loại sự kiện)</th><th>URL riêng</th><th></th></tr></thead><tbody id="actions-body"><tr><td colspan="4">Đang tải…</td></tr></tbody></table>
+  </div>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const $ = (id) => document.getElementById(id);
+const pathParts = location.pathname.split('/').filter(Boolean);
+const username = pathParts[pathParts.length - 1] || 'live';
+$('overlay-link').innerHTML = '<a href="/o/di-bar-online/' + username + '" target="_blank" style="color:#fde047">/o/di-bar-online/' + username + '</a>';
+$('guide-link').href = '/huong-dan-tikfinity?game=di-bar-online&username=' + username;
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  return r.json().catch(() => ({}));
+}
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function render(s) {
+  const phaseVi = { lobby: 'Chờ người', dancing: 'Đang quẩy', spotlight: 'Vinh danh Vua' }[s.phase] || s.phase;
+  $('status').textContent = `Vòng ${s.roundNo} • ${phaseVi} • ${s.totalDancers} dancer (${s.floorCount} trên sàn, ${s.waitingCount} chờ ở quầy) • Drop: ${s.dropState} • Sự kiện thật: ${s.webhookCount}`;
+  $('demo-badge').style.display = s.demoActive ? 'inline-block' : 'none';
+  $('king').textContent = s.king ? `👑 ${s.king.name} — ${s.king.energy} năng lượng (vòng ${s.king.roundNo})` : 'Chưa có Vua sàn vòng này.';
+  $('score-vang').textContent = s.tables.vang.score;
+  $('sub-vang').textContent = `${s.tables.vang.energy} năng lượng • ${s.tables.vang.drinks} ly • ${s.tables.vang.count} người`;
+  $('score-do').textContent = s.tables.do.score;
+  $('sub-do').textContent = `${s.tables.do.energy} năng lượng • ${s.tables.do.drinks} ly • ${s.tables.do.count} người`;
+  $('streak-vang').textContent = 'Chuỗi thắng: ' + (s.tableStreak.vang || 0);
+  $('streak-do').textContent = 'Chuỗi thắng: ' + (s.tableStreak.do || 0);
+  $('cover-vang').textContent = s.barCover && s.barCover.table === 'vang' && s.barCover.until > Date.now() ? '🔥 ĐANG BAO CẢ BAR — ×2 năng lượng!' : '';
+  $('cover-do').textContent = s.barCover && s.barCover.table === 'do' && s.barCover.until > Date.now() ? '🔥 ĐANG BAO CẢ BAR — ×2 năng lượng!' : '';
+  $('top-body').innerHTML = s.top.length ? s.top.map((t, i) => `<tr><td>${i + 1}</td><td>${esc(t.name)}</td><td>${esc(t.character ? t.character.emoji + ' ' + t.character.name : '')}</td><td>${t.table === 'vang' ? '🟡 Vàng' : t.table === 'do' ? '🔴 Đỏ' : '—'}</td><td>⚡${t.energy}</td><td>🍹${t.drinks}</td></tr>`).join('') : '<tr><td colspan="6">Chưa có dancer nào.</td></tr>';
+  $('log').innerHTML = s.logs.length ? s.logs.slice().reverse().map((l) => `<div>${new Date(l.t).toLocaleTimeString('vi-VN')} — ${esc(l.text)}</div>`).join('') : '—';
+  $('btn-music').textContent = s.settings.musicEnabled ? '🔊 Tắt nhạc' : '🔇 Bật nhạc';
+  if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
+    $('s-round').value = s.settings.roundDurationS; $('s-tap').value = s.settings.tapEnergy;
+    $('s-coin').value = s.settings.coinToEnergy; $('s-comment').value = s.settings.commentEnergy;
+    $('s-follow').value = s.settings.followEnergy; $('s-dropint').value = s.settings.dropIntervalS;
+    $('s-dropwarn').value = s.settings.dropWarningS; $('s-dropdur').value = s.settings.dropDurationS;
+    $('s-spot').value = s.settings.spotlightS; $('s-cam').value = s.settings.cameraMode;
+    $('s-shot').value = s.settings.shotIntervalS; $('s-tempo').value = s.settings.tempo;
+    $('s-vol').value = s.settings.volume; $('s-music').checked = s.settings.musicEnabled;
+    $('s-voice').checked = s.voiceEnabled; $('s-demo').checked = s.demoMode;
+  }
+}
+$('btn-end').onclick = () => api('/api/round/end', { method: 'POST' }).then(refresh);
+$('btn-reset').onclick = () => api('/api/round/reset', { method: 'POST' }).then(refresh);
+$('btn-music').onclick = async () => { const s = await api('/api/state'); await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ musicEnabled: !s.settings.musicEnabled }) }); refresh(); };
+$('btn-save').onclick = () => api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+  roundDurationS: +$('s-round').value, tapEnergy: +$('s-tap').value, coinToEnergy: +$('s-coin').value,
+  commentEnergy: +$('s-comment').value, followEnergy: +$('s-follow').value, dropIntervalS: +$('s-dropint').value,
+  dropWarningS: +$('s-dropwarn').value, dropDurationS: +$('s-dropdur').value, spotlightS: +$('s-spot').value,
+  cameraMode: $('s-cam').value, shotIntervalS: +$('s-shot').value, tempo: +$('s-tempo').value,
+  volume: +$('s-vol').value, musicEnabled: $('s-music').checked, voiceEnabled: $('s-voice').checked, demoMode: $('s-demo').checked,
+}) }).then(refresh);
+$('btn-demo-start').onclick = () => api('/api/demo/start', { method: 'POST' }).then((r) => { if (r && r.success === false) alert(r.message || 'Không chạy demo được.'); refresh(); });
+$('btn-demo-stop').onclick = () => api('/api/demo/stop', { method: 'POST' }).then(refresh);
+$('btn-test-demo').onclick = () => api('/api/test/demo', { method: 'POST' }).then(refresh);
+$('btn-t-join').onclick = () => api('/api/test/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: $('t-name').value || 'Người thử' }) }).then(refresh);
+$('btn-t-tap').onclick = () => api('/api/test/tap', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: 20 }) }).then(refresh);
+$('btn-t-comment').onclick = () => api('/api/test/comment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: $('t-name').value || 'Người thử', text: 'quẩy' }) }).then(refresh);
+$('btn-t-gift').onclick = () => api('/api/test/gift', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: $('t-name').value || 'Người thử', coins: 50 }) }).then(refresh);
+$('btn-t-follow').onclick = () => api('/api/test/follow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: $('t-name').value || 'Người thử' }) }).then(refresh);
+$('btn-t-bulk').onclick = () => api('/api/test/bulk-join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: 100 }) }).then(refresh);
+$('btn-copy-webhook').onclick = () => navigator.clipboard.writeText($('webhook-url').textContent).then(() => alert('Đã sao chép link webhook.'));
+function refresh() { fetch('/api/state').then((r) => r.json()).then(render).catch(() => {}); }
+socket.on('state-update', render);
+refresh();
+fetch('/api/tikfinity-actions').then((r) => r.json()).then((d) => {
+  $('webhook-url').textContent = d.webhookUrl || '—';
+  $('actions-body').innerHTML = (d.actions || []).map((a) => `<tr><td>${esc(a.actionName)}</td><td>${esc(a.triggerLabel)}</td><td class="mono">${esc(a.url)}</td><td><button class="secondary" onclick="navigator.clipboard.writeText('${esc(a.url)}')">📋</button></td></tr>`).join('');
+}).catch(() => { $('actions-body').innerHTML = '<tr><td colspan="4">Không tải được danh sách action.</td></tr>'; });
+</script>
+</body>
+</html>

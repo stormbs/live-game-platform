@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đi Bar Online — Overlay LIVE</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #0a0618; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; color: #fff; }
+  #stage { position: relative; width: 1080px; height: 1920px; overflow: hidden; }
+  #room { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, #2a0a4a 0%, #12081f 55%, #0a0618 100%); }
+  #camera { position: absolute; inset: 0; transition: transform 1.2s ease; transform-origin: 0 0; }
+  /* Đèn neon đổi màu theo nhịp */
+  .neon { position: absolute; inset: 0; pointer-events: none; opacity: .35; background: radial-gradient(circle at 20% 20%, #ff2d95 0%, transparent 40%), radial-gradient(circle at 80% 30%, #22d3ee 0%, transparent 40%), radial-gradient(circle at 50% 80%, #a855f7 0%, transparent 45%); animation: hue 4s linear infinite; }
+  @keyframes hue { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
+  .laser { position: absolute; left: 50%; top: 240px; width: 6px; height: 900px; transform-origin: top center; background: linear-gradient(#ff2d95, transparent); opacity: .5; animation: laser 3s linear infinite; pointer-events: none; }
+  .laser.l2 { background: linear-gradient(#22d3ee, transparent); animation-duration: 4.2s; animation-delay: -.7s; }
+  .laser.l3 { background: linear-gradient(#facc15, transparent); animation-duration: 5.1s; animation-delay: -1.3s; }
+  @keyframes laser { 0% { transform: rotate(-38deg); } 50% { transform: rotate(38deg); } 100% { transform: rotate(-38deg); } }
+  #disco { position: absolute; left: 50%; top: 260px; transform: translateX(-50%); font-size: 90px; animation: spin 6s linear infinite; filter: drop-shadow(0 0 24px #fff); }
+  @keyframes spin { to { transform: translateX(-50%) rotate(360deg); } }
+  /* LED chính trên DJ */
+  #led-main { position: absolute; left: 40px; right: 40px; top: 20px; height: 72px; background: #000; border: 3px solid #facc15; border-radius: 12px; overflow: hidden; display: flex; align-items: center; }
+  #led-main span { display: inline-block; white-space: nowrap; font-size: 40px; font-weight: 800; color: #fde047; padding-left: 100%; animation: marquee 14s linear infinite; }
+  @keyframes marquee { to { transform: translateX(-100%); } }
+  /* DJ booth */
+  #dj { position: absolute; left: 50%; top: 120px; transform: translateX(-50%); text-align: center; }
+  #dj .fig { font-size: 120px; animation: nod .48s ease-in-out infinite alternate; display: inline-block; }
+  @keyframes nod { from { transform: rotate(-6deg) translateY(0); } to { transform: rotate(6deg) translateY(6px); } }
+  #dj .label { font-size: 34px; font-weight: 800; color: #c4b5fd; text-shadow: 0 0 18px #a855f7; }
+  #dj .drop { font-size: 30px; font-weight: 800; color: #ff2d95; display: none; margin-top: 6px; animation: blink .4s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: .2; } }
+  body.drop #dj .drop { display: block; }
+  /* Sàn nhảy */
+  #floor { position: absolute; left: 30px; right: 30px; top: 420px; height: 880px; background: linear-gradient(180deg, rgba(255,45,149,.12), rgba(34,211,238,.10)); border: 2px solid rgba(255,255,255,.18); border-radius: 24px; padding: 16px; }
+  #floor-title { font-size: 30px; font-weight: 800; color: #f9a8d4; margin-bottom: 10px; display: flex; justify-content: space-between; }
+  #dancers { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .dancer { position: relative; text-align: center; background: rgba(0,0,0,.35); border: 2px solid var(--c, #888); border-radius: 14px; padding: 8px 2px 6px; min-height: 128px; }
+  .dancer .em { font-size: 56px; display: block; animation: var(--mv, bounce) .9s ease-in-out infinite alternate; }
+  .dancer .nm { font-size: 20px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .dancer .en { font-size: 22px; font-weight: 800; color: #fde047; display: block; }
+  .dancer .dr { font-size: 18px; color: #fda4af; }
+  .dancer.king { border-color: #facc15; box-shadow: 0 0 24px #facc15; }
+  .dancer.king::before { content: '👑'; position: absolute; top: -26px; left: 50%; transform: translateX(-50%); font-size: 40px; }
+  .dancer .tbl { position: absolute; top: 4px; right: 6px; font-size: 20px; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-14px); } }
+  @keyframes pop { from { transform: scale(1) rotate(-4deg); } to { transform: scale(1.15) rotate(4deg); } }
+  @keyframes wave { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
+  @keyframes robot { from { transform: translateX(-6px); } to { transform: translateX(6px); } }
+  @keyframes shake { from { transform: translateX(-4px) rotate(-3deg); } to { transform: translateX(4px) rotate(3deg); } }
+  @keyframes line { from { transform: translateX(-10px); } to { transform: translateX(10px); } }
+  @keyframes wobble { from { transform: rotate(-12deg) scale(1); } to { transform: rotate(12deg) scale(1.1); } }
+  /* Quầy bar + chờ */
+  #bar { position: absolute; left: 30px; right: 30px; top: 1330px; height: 240px; background: rgba(0,0,0,.45); border: 2px solid #f59e0b; border-radius: 20px; padding: 14px 18px; display: flex; gap: 18px; }
+  #bar .menu { width: 330px; flex-shrink: 0; }
+  #bar .menu h3 { font-size: 26px; color: #fbbf24; margin-bottom: 6px; }
+  #bar .menu div { font-size: 22px; line-height: 1.5; color: #fde68a; }
+  #waiting-list { flex: 1; }
+  #waiting-list h3 { font-size: 26px; color: #fda4af; margin-bottom: 6px; }
+  #waiting-list .w { font-size: 22px; line-height: 1.45; }
+  /* 2 bàn VIP */
+  .vip { position: absolute; top: 1600px; width: 480px; background: rgba(0,0,0,.5); border-radius: 18px; padding: 14px 18px; border: 3px solid; }
+  #vip-vang { left: 30px; border-color: #facc15; }
+  #vip-do { right: 30px; border-color: #ef4444; }
+  .vip h3 { font-size: 30px; font-weight: 800; }
+  #vip-vang h3 { color: #fde047; } #vip-do h3 { color: #fca5a5; }
+  .vip .score { font-size: 52px; font-weight: 900; }
+  .vip .sub { font-size: 22px; color: #ddd; }
+  .vip .cover { font-size: 24px; font-weight: 800; color: #4ade80; display: none; }
+  .vip.cover .cover { display: block; }
+  /* LED bên: top 3 */
+  #led-side { position: absolute; left: 30px; right: 30px; top: 1790px; height: 100px; background: #000; border: 3px solid #22d3ee; border-radius: 12px; padding: 10px 18px; font-size: 26px; line-height: 1.4; color: #a5f3fc; overflow: hidden; }
+  #demo-badge { position: absolute; top: 100px; right: 40px; z-index: 50; background: #facc15; color: #111; font-weight: 900; font-size: 26px; padding: 6px 14px; border-radius: 10px; display: none; }
+  body.demo #demo-badge { display: block; }
+  #king-banner { position: absolute; left: 0; right: 0; top: 640px; text-align: center; z-index: 40; font-size: 72px; font-weight: 900; color: #fde047; text-shadow: 0 0 30px #f59e0b, 0 4px 0 #000; display: none; }
+  body.spotlight #king-banner { display: block; animation: kingpop .8s ease; }
+  @keyframes kingpop { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  #toast { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 45; background: rgba(0,0,0,.8); border: 2px solid #facc15; color: #fff; font-size: 30px; font-weight: 700; padding: 12px 24px; border-radius: 14px; display: none; max-width: 960px; text-align: center; }
+  #music-btn { position: absolute; top: 100px; left: 40px; z-index: 50; background: rgba(0,0,0,.6); color: #fff; border: 2px solid #fff; border-radius: 10px; font-size: 24px; padding: 8px 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="stage"><div id="room"><div id="camera">
+  <div class="neon"></div>
+  <div class="laser l1"></div><div class="laser l2"></div><div class="laser l3"></div>
+  <div id="disco">🪩</div>
+  <div id="led-main"><span id="led-text">🎧 ĐI BAR ONLINE — bình luận "vào bar" để lên sàn! 🎧</span></div>
+  <div id="dj"><div class="fig">🎧</div><div class="label">DJ STROM</div><div class="drop">🔥 DJ DROP — TIM ×2 🔥</div></div>
+  <div id="floor">
+    <div id="floor-title"><span>💃 SÀN NHẢY</span><span id="round-label">Vòng 1</span></div>
+    <div id="dancers"></div>
+  </div>
+  <div id="bar">
+    <div class="menu"><h3>🍹 MENU QUẦY BAR</h3><div>🍸 Cocktail — 10 xu<br>🍾 Bottle Service — 50 xu<br>🍾 Sâm panh — 100 xu</div></div>
+    <div id="waiting-list"><h3>🪑 ĐANG CHỜ Ở QUẦY</h3><div class="w" id="waiting-names">—</div></div>
+  </div>
+  <div class="vip" id="vip-vang"><h3>🟡 BÀN VÀNG</h3><div class="score" id="score-vang">0</div><div class="sub" id="sub-vang">0 năng lượng • 0 ly</div><div class="cover">🔥 BAO CẢ BAR — ×2 năng lượng!</div></div>
+  <div class="vip" id="vip-do"><h3>🔴 BÀN ĐỎ</h3><div class="score" id="score-do">0</div><div class="sub" id="sub-do">0 năng lượng • 0 ly</div><div class="cover">🔥 BAO CẢ BAR — ×2 năng lượng!</div></div>
+  <div id="led-side">🏆 TOP 3 — chưa có dancer nào.</div>
+</div></div>
+<div id="demo-badge">🧪 DEMO</div>
+<div id="king-banner"></div>
+<div id="toast"></div>
+<button id="music-btn">🔊 Nhạc: Bật</button>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const DEMO = params.get('demo') === '1';
+let state = null;
+let ttsQueue = [];
+let ttsBusy = false;
+let musicOn = true;
+let audioCtx = null, musicTimer = null, step16 = 0, nextNoteTime = 0;
+
+// ---- Camera director: toàn bộ cảnh trong #camera, camera = scale + translate, transition 1.2s ----
+const SHOTS = [
+  { name: 'full', point: [540, 960], scale: 1 },
+  { name: 'dj', point: [540, 200], scale: 2 },
+  { name: 'top', point: [540, 900], scale: 2.2 },
+  { name: 'bar', point: [880, 1450], scale: 1.8 },
+  { name: 'crowd', point: [540, 900], scale: 1.5 },
+  { name: 'led', point: [540, 56], scale: 2 },
+];
+let shotIdx = 0, shotTimer = null, eventShotUntil = 0;
+function applyShot(shot) {
+  const [px, py] = shot.point;
+  const s = shot.scale;
+  const x = 540 - px * s;
+  const y = 960 - py * s;
+  $('camera').style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+}
+function cycleShot() {
+  if (!state || state.settings.cameraMode !== 'auto') return;
+  if (Date.now() < eventShotUntil) return;
+  shotIdx = (shotIdx + 1) % SHOTS.length;
+  applyShot(SHOTS[shotIdx]);
+}
+function eventShot(name, ms) {
+  const shot = SHOTS.find((s) => s.name === name);
+  if (!shot) return;
+  eventShotUntil = Date.now() + (ms || 8000);
+  applyShot(shot);
+}
+function startShotTimer() {
+  if (shotTimer) clearInterval(shotTimer);
+  shotTimer = setInterval(cycleShot, (state && state.settings.shotIntervalS || 8) * 1000);
+}
+
+// ---- Nhạc: vòng lặp remix tự tổng hợp bằng WebAudio (kick 4-on-floor, hat, bass, stab) ----
+function initMusic() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  nextNoteTime = audioCtx.currentTime + 0.1;
+  musicTimer = setInterval(scheduleMusic, 25);
+}
+function scheduleMusic() {
+  if (!audioCtx || !musicOn || !state || !state.settings.musicEnabled) return;
+  const bpm = state.settings.tempo || 128;
+  const spb = 60 / bpm / 4; // 1 nốt 16
+  const vol = (state.settings.volume || 50) / 100;
+  while (nextNoteTime < audioCtx.currentTime + 0.12) {
+    const t = nextNoteTime;
+    const s16 = step16 % 16;
+    const dropping = state.dropState === 'drop';
+    if (s16 % 4 === 0 || (dropping && s16 % 2 === 0)) kick(t, vol);
+    if (s16 % 4 === 2) hat(t, vol * 0.5);
+    if (s16 % 8 === 0) bass(t, [55, 55, 65.41, 49][Math.floor(step16 / 16) % 4], spb * 4, vol * 0.8);
+    if (s16 === 4 || s16 === 12) stab(t, vol * 0.35, dropping);
+    nextNoteTime += spb;
+    step16++;
+  }
+}
+function kick(t, v) {
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.12);
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+  o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + 0.3);
+}
+function hat(t, v) {
+  const len = audioCtx.sampleRate * 0.05;
+  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const f = audioCtx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000;
+  const g = audioCtx.createGain(); g.gain.value = v;
+  src.connect(f).connect(g).connect(audioCtx.destination); src.start(t);
+}
+function bass(t, freq, dur, v) {
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = 'sawtooth'; o.frequency.value = freq;
+  const f = audioCtx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 400;
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  o.connect(f).connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + dur);
+}
+function stab(t, v, drop) {
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = 'square'; o.frequency.value = drop ? 880 : 660;
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+  o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + 0.2);
+}
+$('music-btn').addEventListener('click', () => {
+  musicOn = !musicOn;
+  $('music-btn').textContent = musicOn ? '🔊 Nhạc: Bật' : '🔇 Nhạc: Tắt';
+  if (musicOn) initMusic();
+});
+
+// ---- TTS qua proxy server + hàng đợi ----
+function playTts(text) {
+  if (!state || !state.voiceEnabled || !text) return;
+  ttsQueue.push(text);
+  if (ttsQueue.length > 5) ttsQueue.shift();
+  drainTts();
+}
+function drainTts() {
+  if (ttsBusy || !ttsQueue.length) return;
+  ttsBusy = true;
+  const text = ttsQueue.shift();
+  const a = new Audio('/api/tts?text=' + encodeURIComponent(text));
+  a.onended = a.onerror = () => { ttsBusy = false; drainTts(); };
+  a.play().catch(() => { ttsBusy = false; drainTts(); });
+}
+function toast(text, ms) {
+  const el = $('toast');
+  el.textContent = text;
+  el.style.display = 'block';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { el.style.display = 'none'; }, ms || 6000);
+}
+
+const MOVE_CSS = { nod: 'nod', pop: 'pop', wave: 'wave', robot: 'robot', shake: 'shake', bounce: 'bounce', line: 'line', wobble: 'wobble' };
+function render(s) {
+  state = s;
+  document.body.classList.toggle('demo', !!s.demoActive);
+  document.body.classList.toggle('spotlight', s.phase === 'spotlight');
+  document.body.classList.toggle('drop', s.dropState === 'drop');
+  $('round-label').textContent = 'Vòng ' + s.roundNo + (s.phase === 'dancing' ? ' • ' + Math.max(0, Math.ceil((s.roundEndsAt - Date.now()) / 1000)) + 's' : s.phase === 'spotlight' ? ' • Vinh danh' : ' • Chờ người');
+  // LED chính: sự kiện mới nhất, tên Vua sàn.
+  const last = s.logs.length ? s.logs[s.logs.length - 1].text : '';
+  const kingTxt = s.king ? ` 👑 VUA SÀN: ${s.king.name} ` : '';
+  $('led-text').textContent = '🎧 ' + (last || 'ĐI BAR ONLINE — bình luận "vào bar" để lên sàn!') + kingTxt + ' 🎧';
+  // Sàn nhảy.
+  const box = $('dancers');
+  box.innerHTML = s.dancers.map((d) => {
+    const c = d.character || { emoji: '🕺', color: '#888', move: 'bounce', name: '' };
+    const tbl = d.table === 'vang' ? '🟡' : d.table === 'do' ? '🔴' : '';
+    return `<div class="dancer${d.isKing ? ' king' : ''}" style="--c:${c.color};--mv:${MOVE_CSS[c.move] || 'bounce'}">
+      <span class="tbl">${tbl}</span><span class="em">${c.emoji}</span>
+      <span class="nm">${escapeHtml(d.name)}</span><span class="en">⚡${d.energy}</span>
+      <span class="dr">${d.drinks ? '🍹×' + d.drinks : ''}</span></div>`;
+  }).join('') || '<div style="font-size:26px;color:#ddd;padding:20px">Chưa có dancer nào — bình luận "vào bar" để lên sàn!</div>';
+  // Quầy chờ.
+  $('waiting-names').textContent = s.waiting.length ? s.waiting.map((w) => w.name).join(' • ') : '—';
+  // 2 bàn VIP.
+  $('score-vang').textContent = s.tables.vang.score;
+  $('sub-vang').textContent = `${s.tables.vang.energy} năng lượng • ${s.tables.vang.drinks} ly • ${s.tables.vang.count} người`;
+  $('score-do').textContent = s.tables.do.score;
+  $('sub-do').textContent = `${s.tables.do.energy} năng lượng • ${s.tables.do.drinks} ly • ${s.tables.do.count} người`;
+  $('vip-vang').classList.toggle('cover', !!(s.barCover && s.barCover.table === 'vang' && s.barCover.until > Date.now()));
+  $('vip-do').classList.toggle('cover', !!(s.barCover && s.barCover.table === 'do' && s.barCover.until > Date.now()));
+  // LED bên: top 3 + điểm 2 bàn.
+  const topTxt = s.top.slice(0, 3).map((t, i) => `${i + 1}. ${t.name} ⚡${t.energy}`).join('  •  ') || 'chưa có dancer';
+  $('led-side').textContent = `🏆 TOP 3: ${topTxt}   |   🟡 Bàn Vàng ${s.tables.vang.score} — 🔴 Bàn Đỏ ${s.tables.do.score}${s.tableWinner ? ' — Thắng vòng: ' + (s.tableWinner === 'vang' ? 'Bàn Vàng' : 'Bàn Đỏ') : ''}`;
+  // Banner Vua.
+  if (s.king && s.phase === 'spotlight') $('king-banner').textContent = `👑 VUA SÀN NHẢY: ${s.king.name} 👑`;
+  // Nhạc theo setting.
+  if (s.settings.musicEnabled && musicOn) initMusic();
+  startShotTimer();
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+socket.on('state-update', render);
+socket.on('king', (d) => { playTts(d.text || ''); eventShot('top', 10000); });
+socket.on('champagne', (d) => { playTts(d.text || ''); toast('🍾 ' + (d.name || '') + ' MỞ SÂM PANH!'); eventShot('bar', 10000); });
+socket.on('bottle', (d) => { playTts(d.text || ''); toast('🍾 ' + (d.name || '') + ' gọi BOTTLE SERVICE!'); eventShot('bar', 8000); });
+socket.on('drop', (d) => { playTts(d.text || ''); eventShot('dj', 15000); });
+socket.on('drop-warning', (d) => { playTts(d.text || ''); });
+socket.on('connect', () => fetch('/api/state').then((r) => r.json()).then(render).catch(() => {}));
+if (DEMO) fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+  .then(() => fetch('/api/demo/start', { method: 'POST' })).catch(() => {});
+fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
+</script>
+</body>
+</html>
