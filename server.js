@@ -2,7 +2,8 @@
 // Một service Node duy nhất:
 //  - GET /                       trang chính: nhập TikTok username + chọn game -> lấy link overlay
 //  - GET /o/<game>/<username>    overlay 1080x1920 của room (dán vào TikTok LIVE Studio)
-//  - GET /o/<game>/<username>/tikfinity.tfc   file TikFinity (.tfc) của room (webhook URL đã nhúng sẵn)
+//  - GET /huong-dan-tikfinity    bài hướng dẫn cài đặt TikFinity (tạo Action bằng tay;
+//                                ?game=<game>&username=<user> để hiện đúng link webhook của phòng)
 //  - GET /room/<game>/<username> dashboard của streamer (cài đặt, event thử, reset)
 //  - POST /api/rooms             tạo room, trả link overlay
 //  - GET /api/rooms/:game/:username/status   trạng thái LIVE của room
@@ -80,6 +81,24 @@ function createApp(opts = {}) {
     res.json(rooms.status(room));
   });
 
+  // ---- Bài hướng dẫn cài đặt TikFinity (tạo Action bằng tay) ----
+  // Trang độc lập, không cần tạo room. ?game=<game>&username=<user> để hiện
+  // đúng link webhook của phòng đó; không có query thì hiện trang chung
+  // (giải thích link riêng + chọn game + bảng body cả 3 game).
+  // Quyết định 2026-11-12: KHÔNG làm file .tfc nữa (định dạng export của
+  // TikFinity được mã hóa, mật khẩu không công khai) — chỉ hướng dẫn tay.
+  app.get('/huong-dan-tikfinity', (req, res) => {
+    const { buildGuideHtml } = require('./lib/guide');
+    const { publicBaseUrl } = require('./lib/webhook-bodies');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(buildGuideHtml({
+      game: req.query.game,
+      username: req.query.username,
+      baseUrl: publicBaseUrl(req),
+    }));
+  });
+
   // ---- Dispatcher cho room ----
   // Express đã cắt prefix /o/<game>/<username> (hoặc /room/...) khỏi req.url
   // trước khi gọi middleware này, nên engine của room thấy đúng đường dẫn
@@ -108,21 +127,6 @@ function createApp(opts = {}) {
       const f = path.join(room.dataDir, 'frames', decodeURIComponent(relPath.slice('/assets/frames/'.length)));
       if (fs.existsSync(f) && fs.statSync(f).isFile()) return res.sendFile(f);
       return res.status(404).send('not found');
-    }
-
-    // File TikFinity (.tfc) cho room này: sinh theo game + username, webhook
-    // URL của room đã nhúng sẵn (xem lib/tikfinity.js). TikFinity trên máy
-    // Windows import file này để gửi sự kiện live về POST /api/webhook.
-    // LƯU Ý: file sinh ra là JSON thô best-effort, chưa xác minh được việc
-    // import sẽ thành công (định dạng .tfc thật được mã hóa, mật khẩu không
-    // công khai) — dashboard ghi rõ điều này và có cách tạo tay làm fallback.
-    if (relPath === '/tikfinity.tfc') {
-      const { buildTikfinityFile } = require('./lib/tikfinity');
-      const content = buildTikfinityFile(game, username, req);
-      res.setHeader('Content-Type', 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${game}-${username}.tfc"`);
-      res.setHeader('Cache-Control', 'no-store');
-      return res.send(content);
     }
 
     // File text (html/js/css): đọc từ public của game, viết lại URL theo

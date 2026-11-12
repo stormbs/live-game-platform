@@ -247,22 +247,14 @@
   </table>
 </div>
 
-<div class="card guide" style="margin-top:14px;" id="tfc-card">
+<div class="card guide" style="margin-top:14px;" id="tikfinity-card">
   <h2>🎯 Cài đặt TikFinity (đường sự kiện chính)</h2>
   <div style="font-size:14px; line-height:1.8;">Game nhận sự kiện live (bình luận, quà, tim, follow, share, vào phòng) qua <b>TikFinity</b> chạy trên máy Windows của bạn. TikFinity gửi sự kiện về máy chủ qua webhook bên dưới. Thẻ “Kết nối trực tiếp” ở trên cũng đếm mọi sự kiện này — khi số sự kiện &gt; 0 là TikFinity đã nối đúng.</div>
+  <div style="font-size:14px; line-height:1.8;">📖 <b>Bài hướng dẫn đầy đủ từng bước</b> (lấy link webhook riêng, tạo Action, body từng sự kiện, thứ tự lên live, cách kiểm chứng): <a id="tf-guide-link" href="/huong-dan-tikfinity" target="_blank">Mở hướng dẫn cài đặt TikFinity ↗</a><br>Nhớ thứ tự lên live: <b>Go LIVE</b> trong TikTok LIVE Studio TRƯỚC, rồi mới bấm <b>Connect</b> trong TikFinity.</div>
+
   <h3 style="color:#ffd98a; font-size:15px; margin:12px 0 6px 0;">Webhook của phòng này</h3>
   <div style="font-size:14px;"><code id="tf-webhook-url" style="word-break:break-all;">…</code> <button onclick="copyTfWebhook()">📋 Sao chép</button> <span id="tf-copy-msg"></span></div>
-  <h3 style="color:#ffd98a; font-size:15px; margin:12px 0 6px 0;">1. Tải file TikFinity (.tfc)</h3>
-  <div style="font-size:14px; line-height:1.8;"><a href="tikfinity.tfc" download><button>⬇️ Tải file TikFinity (.tfc)</button></a> File đã có sẵn webhook URL của phòng này: 1 Action “Ve Avatar - Moi su kien”, 6 sự kiện (quà, bình luận, tim, follow, share, vào phòng).</div>
-  <div style="font-size:14px; line-height:1.8;">⚠️ <b>File .tfc là bản thử nghiệm, chưa xác minh được việc import sẽ thành công</b> (định dạng export của TikFinity được mã hóa, mật khẩu mã hóa không công khai, không có tài liệu chính thức). Nếu TikFinity báo lỗi khi import, dùng cách tạo tay ở mục 3 bên dưới — cách đó đã chạy thật trong các live trước.</div>
-  <h3 style="color:#ffd98a; font-size:15px; margin:12px 0 6px 0;">2. Import file vào TikFinity</h3>
-  <ol>
-    <li>Mở TikFinity trên máy Windows → bấm <b>Setup &amp; Options</b> → <b>Import and Export Settings</b> → <b>Select File</b> (hoặc kéo-thả file .tfc vào cửa sổ TikFinity) → chọn file vừa tải → đợi báo <b>“Settings successfully imported!”</b>.</li>
-    <li>Kiểm tra Action mới đã có và đang <b>bật</b>: tên Action “Ve Avatar - Moi su kien”, chứa 1 Webhook POST tới đúng URL webhook ở trên. Nếu Action chưa bật, bật nó lên.</li>
-    <li><b>Thứ tự lên live:</b> mở TikTok LIVE Studio → bấm <b>Go LIVE</b> TRƯỚC → rồi mới bấm <b>Connect</b> trong TikFinity.</li>
-    <li>Kiểm chứng: quay lại dashboard này — thẻ “Kết nối trực tiếp” phải hiện số sự kiện &gt; 0 sau comment/tim/quà đầu tiên.</li>
-  </ol>
-  <h3 style="color:#ffd98a; font-size:15px; margin:12px 0 6px 0;">3. Cách tạo tay (chắc chắn chạy — dùng khi file .tfc import lỗi)</h3>
+  <h3 style="color:#ffd98a; font-size:15px; margin:12px 0 6px 0;">2. Tạo Action bằng tay trong TikFinity</h3>
   <ol>
     <li>Trong TikFinity: tạo 1 Action mới, đặt tên “Ve Avatar - Moi su kien”.</li>
     <li>Thêm trigger <b>Webhook POST</b>: Method <b>POST</b>, Content-Type <b>application/json</b>, URL = webhook ở trên.</li>
@@ -330,6 +322,8 @@ Vào phòng (Join) — triggerTypeId 6:
   // webhook công khai của room, TikFinity POST sự kiện về đó).
   function tfWebhookUrl() { var d = directParts(); return location.origin + ['', 'o', d.game, d.username, 'api', 'webhook'].join('/'); }
   function fillTfWebhook() { var el = document.getElementById('tf-webhook-url'); if (el) el.textContent = tfWebhookUrl(); }
+  // Link tới bài hướng dẫn cài đặt TikFinity (điền sẵn game + username của phòng này).
+  (function () { var d = directParts(); var a = document.getElementById('tf-guide-link'); if (a && d.game && d.username) a.href = '/huong-dan-tikfinity?game=' + encodeURIComponent(d.game) + '&username=' + encodeURIComponent(d.username); })();
   function copyTfWebhook() {
     var url = tfWebhookUrl();
     var done = function () { var m = document.getElementById('tf-copy-msg'); if (m) m.textContent = '✅ Đã sao chép!'; };

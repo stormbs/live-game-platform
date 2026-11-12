@@ -43,7 +43,7 @@
 <body>
 <div class="wrap">
   <h1>🎮 Live Game TikTok</h1>
-  <p class="sub">Nhập TikTok ID của bạn, chọn game, copy link overlay và dán vào TikTok LIVE Studio. Game nhận sự kiện live (like, bình luận, quà tặng) qua <b>TikFinity</b> — sau khi tạo phòng, mở dashboard của phòng để tải file TikFinity (.tfc) và xem hướng dẫn import (chỉ làm 1 lần).</p>
+  <p class="sub">Nhập TikTok ID của bạn, chọn game, copy link overlay và dán vào TikTok LIVE Studio. Game nhận sự kiện live (like, bình luận, quà tặng) qua <b>TikFinity</b> — sau khi tạo phòng, mở <a href="/huong-dan-tikfinity" target="_blank">bài hướng dẫn cài đặt TikFinity</a> (tạo Action bằng tay, chỉ làm 1 lần).</p>
 
   <label for="username">TikTok ID của bạn (không cần @)</label>
   <input id="username" type="text" placeholder="vd. ten_tiktok_cua_ban" autocomplete="off" spellcheck="false">
@@ -68,7 +68,8 @@
       <button class="btn" id="copyRoom">Copy</button>
     </div>
     <p style="color:#aab3d6;font-size:14px;line-height:1.6;margin:10px 0 0">
-      Mở dashboard để cài TikFinity (tải file .tfc của phòng rồi import vào TikFinity — chỉ làm 1 lần), cài đặt game, gửi event thử và reset phiên.
+      📖 <a id="guideLink" href="/huong-dan-tikfinity" target="_blank" style="color:#7dd3fc">Bài hướng dẫn cài đặt TikFinity</a> — tạo Action bằng tay theo từng bước (link webhook riêng của bạn, body từng sự kiện, thứ tự Go LIVE trước rồi Connect).
+      Mở dashboard để cài đặt game, gửi event thử và reset phiên.
       Muốn đổi game: chọn game khác rồi bấm "Lấy link overlay" lại.
     </p>
   </div>
@@ -78,7 +79,7 @@
     <ol>
       <li>Nhập TikTok ID, chọn game, bấm <b>Lấy link overlay</b>.</li>
       <li>Trong TikTok LIVE Studio: thêm nguồn <b>Link</b> (Browser Source), dán link overlay, đặt kích thước <b>1080 × 1920</b>.</li>
-      <li>Mở dashboard của phòng (link “Dashboard của streamer” ở trên) → mục <b>🎯 Cài đặt TikFinity</b>: tải file TikFinity (.tfc) của phòng rồi import vào TikFinity — chỉ làm 1 lần, có cả cách tạo tay nếu file import lỗi.</li>
+      <li>Mở dashboard của phòng (link “Dashboard của streamer” ở trên) → mục <b>🎯 Cài đặt TikFinity</b>, hoặc mở thẳng <a href="/huong-dan-tikfinity" target="_blank">bài hướng dẫn cài đặt TikFinity</a> — tạo Action bằng tay theo từng bước, chỉ làm 1 lần.</li>
       <li>Bấm <b>Go LIVE</b> TRƯỚC, rồi mới bấm <b>Connect</b> trong TikFinity. Khán giả like / bình luận / tặng quà là game phản ứng ngay — số sự kiện trên dashboard phải &gt; 0.</li>
     </ol>
   </div>
@@ -155,6 +156,7 @@ document.getElementById('create').onclick = async () => {
     const base = location.origin;
     document.getElementById('overlayUrl').value = base + data.overlayUrl;
     document.getElementById('roomUrl').value = base + data.roomUrl;
+    document.getElementById('guideLink').href = '/huong-dan-tikfinity?game=' + encodeURIComponent(selected) + '&username=' + encodeURIComponent(username);
     document.getElementById('result').classList.add('show');
     document.getElementById('status').innerHTML = statusHtml(data.tiktok.state, data.tiktok.detail);
     if (pollTimer) clearInterval(pollTimer);
