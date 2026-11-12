@@ -21,6 +21,7 @@ const { Server } = require('socket.io');
 const { RoomManager } = require('./lib/rooms');
 const { transformText } = require('./lib/transform');
 const { mountBuffRoutes } = require('./lib/buff-routes');
+const { mountTikHubRoutes } = require('./lib/tikhub-routes');
 
 const ROOT = __dirname;
 const MAX_ROOMS = parseInt(process.env.MAX_ROOMS || '8', 10);
@@ -60,6 +61,9 @@ function createApp(opts = {}) {
 
   // ---- API buff tương tác (dịch vụ mạng xã hội, USDT) ----
   mountBuffRoutes(app);
+
+  // ---- API tải video TikTok/Douyin không logo (TikHub) ----
+  mountTikHubRoutes(app);
 
   // ---- Trang chính + API của platform ----
   app.get('/', (req, res) => {
