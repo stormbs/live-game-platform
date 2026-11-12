@@ -594,7 +594,18 @@ function createEngine(ctx) {
     if (!needDemo(req, res)) return;
     const b = req.body || {};
     const count = Math.max(1, Math.min(500, Number(b.count) || 20));
-    testTapTotals['test-tapper'] = (testTapTotals['test-tapper'] || 0) + count;
+    // Người thử tim chưa có đội thì cho vào đội Xanh để nút bấm thấy lực tăng.
+    const tp = session.players['test-tapper'];
+    if (!tp || !tp.team) {
+      handleIntake({ kind: 'comment', uid: 'test-tapper', name: 'Người thử tim', text: 'xanh' });
+    }
+    // Gieo baseline tap = 0 trước để lần bấm đầu tiên đã có delta thật
+    // (TapDelta lần đầu gặp uid luôn trả 0).
+    if (testTapTotals['test-tapper'] === undefined) {
+      testTapTotals['test-tapper'] = 0;
+      handleIntake({ kind: 'tap', uid: 'test-tapper', name: 'Người thử tim', totalLikeCount: 0 });
+    }
+    testTapTotals['test-tapper'] += count;
     handleIntake({ kind: 'tap', uid: 'test-tapper', name: 'Người thử tim', totalLikeCount: testTapTotals['test-tapper'] });
     res.json({ success: true, count });
   });
