@@ -98,6 +98,7 @@ function createEngine(ctx) {
       currentSpin: null, // {id, type, winnerUid, winnerName, winnerAvatar, segmentIndex, epic, startedAt, endsAt, resultEndsAt, resultShown}
       lastSpinAt: 0,
       lastSharedWinnerUid: null,
+      lastSharedMiss: false, // lần quay chung gần nhất có trượt không (luật: không trượt 2 lần liên tiếp)
       players: {}, // uid -> {name, avatar, online, lastActiveAt, tapWindowStart, tapsThisMinute, commentWindowStart, commentsThisMinute, spinsThisMinute, spinWindowStart}
       history: [], // {name, segment, prize, time, type, epic, miss}
       topLucky: {}, // uid -> {name, avatar, wins}
@@ -113,6 +114,7 @@ function createEngine(ctx) {
   if (!session.players || typeof session.players !== 'object') session.players = {};
   if (!session.stats) session.stats = defaultSession().stats;
   if (!Array.isArray(session.queue)) session.queue = [];
+  if (typeof session.lastSharedMiss !== 'boolean') session.lastSharedMiss = false;
   if (!Array.isArray(session.history)) session.history = [];
   if (!session.topLucky || typeof session.topLucky !== 'object') session.topLucky = {};
   if (!Array.isArray(session.giftLog)) session.giftLog = [];
@@ -189,7 +191,19 @@ function createEngine(ctx) {
   }
   function startSpin(type, winner, opts) {
     const o = opts || {};
-    const segmentIndex = o.forcedSegment !== undefined ? o.forcedSegment : pickSegment();
+    let segmentIndex = o.forcedSegment !== undefined ? o.forcedSegment : pickSegment();
+    // Luật thiết kế: quay chung KHÔNG được trượt 2 lần liên tiếp — lần quay chung
+    // trước trượt thì lần này quay lại tới khi trúng (chỉ quay chung, không áp
+    // cho quay riêng). Guard 50 lần đề phòng bảng ô toàn ô trượt (không xảy ra
+    // với bảng mặc định 75/25).
+    if (type === 'shared' && session.lastSharedMiss && o.forcedSegment === undefined) {
+      let guard = 0;
+      while (settings.segments[segmentIndex] && settings.segments[segmentIndex].miss && guard < 50) {
+        segmentIndex = pickSegment();
+        guard += 1;
+      }
+      if (guard > 0) addLog('🍀 Quay chung trước trượt — quay lại để không trượt 2 lần liên tiếp.', 'info');
+    }
     const now = Date.now();
     spinSeq += 1;
     session.currentSpin = {
@@ -217,6 +231,7 @@ function createEngine(ctx) {
     const sp = session.currentSpin;
     if (!sp) return;
     const seg = sp.segment;
+    if (sp.type === 'shared') session.lastSharedMiss = !!seg.miss;
     session.history.push({
       name: sp.winnerName, segment: seg.name, icon: seg.icon, prize: seg.prize,
       time: Date.now(), type: sp.type, epic: sp.epic, miss: !!seg.miss,
@@ -629,6 +644,14 @@ function createEngine(ctx) {
     session.queue.push({ type: 'private', uid, name: n, avatar: '', epic: false, forcedSegment: idx, notBefore: 0, extra: false });
     saveSession(); broadcast();
     res.json({ success: true, segmentId, segment: settings.segments[idx].name });
+  });
+  // Test-only: giả lập lần quay chung trước đã trượt, để kiểm tra luật
+  // "quay chung không trượt 2 lần liên tiếp" (chỉ demoMode).
+  app.post('/api/test/force-shared-miss', (req, res) => {
+    if (!needDemo(req, res)) return;
+    session.lastSharedMiss = true;
+    saveSession(); broadcast();
+    res.json({ success: true, lastSharedMiss: true });
   });
   app.post('/api/test/gift-tiers', (req, res) => {
     if (!needDemo(req, res)) return;

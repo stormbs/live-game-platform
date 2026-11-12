@@ -301,3 +301,21 @@ test('vong-quay: settings chặn giá trị vượt giới hạn', async () => {
     assert.equal(r.json.settings.spinS, 1, 'spinS tối thiểu 1');
   } finally { await stopTestServer(t); }
 });
+
+test('vong-quay: quay chung không trượt 2 lần liên tiếp (QA P0)', async () => {
+  const t = await startTestServer();
+  try {
+    const u = uniq();
+    await enableDemo(t, u, { spinS: 1, resultS: 1 });
+    // 2 người trong phòng để pool quay chung luôn có người đủ điều kiện.
+    await postJson(t, `/o/${GAME}/${u}/api/test/join`, { name: 'An' });
+    await postJson(t, `/o/${GAME}/${u}/api/test/join`, { name: 'Binh' });
+    // Giả lập lần quay chung trước đã trượt.
+    const fr = await postJson(t, `/o/${GAME}/${u}/api/test/force-shared-miss`, {});
+    assert.equal(fr.json.success, true);
+    await postJson(t, `/o/${GAME}/${u}/api/spin/shared-now`, {});
+    const st = await waitFor(t, u, (s) => s.totalSpins >= 1 && s.recentWins.length >= 1, 30, 'lượt quay chung sau lần trượt hoàn thành');
+    assert.equal(st.stats.sharedSpins, 1);
+    assert.equal(st.recentWins[0].miss, false, 'quay chung sau lần trượt phải trúng, không được trượt lần 2 liên tiếp');
+  } finally { await stopTestServer(t); }
+});
