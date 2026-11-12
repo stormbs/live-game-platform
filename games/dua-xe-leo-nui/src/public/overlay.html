@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đua Xe Leo Núi</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: #0e2a4a; color: #fff;
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { position: relative; width: 1080px; height: 1920px; padding: 30px 36px 0;
+    background: linear-gradient(180deg, #7ec8f7 0%, #aee3ff 30%, #8fd07a 62%, #5da24a 100%); }
+  header { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,.55); border-radius: 20px; padding: 18px 24px; }
+  header h1 { font-size: 46px; text-shadow: 0 3px 0 rgba(0,0,0,.4); }
+  .clock { font-size: 44px; font-weight: 900; background: #ffcf3d; color: #222; border-radius: 14px; padding: 6px 18px; }
+  .round { font-size: 26px; color: #ffe9a0; margin-top: 4px; text-align: right; }
+  .board { margin-top: 18px; background: rgba(0,0,0,.55); border-radius: 20px; padding: 16px 20px; }
+  .brow { display: flex; align-items: center; gap: 14px; font-size: 29px; padding: 9px 0; border-bottom: 1px dashed rgba(255,255,255,.2); }
+  .brow:last-child { border-bottom: 0; }
+  .brow.lead { background: rgba(255, 207, 61, .22); border-radius: 12px; padding: 9px 10px; }
+  .brow img, .ava { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; flex: none; }
+  .brow b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mountain { position: relative; margin-top: 18px; height: 1080px; border-radius: 24px; overflow: hidden;
+    background: linear-gradient(160deg, #bfe9ff 0%, #8fd07a 45%, #6aa84f 75%, #4e7d3a 100%); border: 4px solid rgba(255,255,255,.7); }
+  .sun { position: absolute; top: 24px; right: 40px; font-size: 90px; }
+  .cloud { position: absolute; font-size: 64px; opacity: .9; }
+  .flag { position: absolute; right: 18px; top: 26px; font-size: 84px; text-align: center; z-index: 3; }
+  .flag small { display: block; font-size: 22px; font-weight: 800; color: #333; background: rgba(255,255,255,.85); border-radius: 10px; padding: 2px 10px; }
+  .lane { position: absolute; left: 0; right: 0; height: 200px; border-bottom: 3px dashed rgba(255,255,255,.45); }
+  .lane .track { position: absolute; left: 30px; right: 60px; top: 118px; height: 14px; border-radius: 7px; background: rgba(0,0,0,.25); }
+  .car { position: absolute; top: 46px; transition: left 1s linear; z-index: 2; text-align: center; width: 170px; margin-left: -85px; }
+  .car .tag { background: rgba(0,0,0,.65); border-radius: 12px; padding: 4px 10px; font-size: 23px; font-weight: 800; white-space: nowrap; display: inline-block; max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
+  .car .body { font-size: 92px; line-height: 1.1; filter: drop-shadow(0 8px 6px rgba(0,0,0,.35)); }
+  .car .m { font-size: 24px; font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.6); }
+  .car .dot { font-size: 30px; }
+  .car.win { animation: winbounce .5s ease-in-out infinite alternate; }
+  @keyframes winbounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+  .ticker { margin-top: 18px; background: rgba(0,0,0,.6); border-radius: 16px; padding: 16px 20px; font-size: 27px; min-height: 76px; color: #ffe9c4; }
+  .info { margin-top: 14px; text-align: center; font-size: 25px; color: rgba(255,255,255,.95); text-shadow: 0 2px 4px rgba(0,0,0,.5); }
+  .banner { display: none; position: absolute; left: 36px; right: 36px; top: 420px; background: rgba(10, 20, 40, .94); border: 4px solid #ffcf3d; border-radius: 26px; padding: 36px 30px; text-align: center; z-index: 10; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
+  .banner.show { display: block; }
+  .banner h2 { font-size: 54px; margin-bottom: 12px; }
+  .banner p { font-size: 30px; color: #ffe9c4; line-height: 1.6; }
+  .status { position: absolute; bottom: 18px; left: 36px; right: 36px; display: flex; justify-content: space-between; font-size: 22px; color: rgba(255,255,255,.85); text-shadow: 0 2px 4px rgba(0,0,0,.5); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>🏁 ĐUA XE LEO NÚI</h1><div class="round" id="roundLabel">Ván #1</div></div>
+    <div class="clock" id="clock">10:00</div>
+  </header>
+
+  <div class="board" id="board"></div>
+
+  <div class="mountain" id="mountain">
+    <div class="sun">☀️</div>
+    <div class="cloud" style="top:60px;left:120px">☁️</div>
+    <div class="cloud" style="top:180px;left:420px">☁️</div>
+    <div class="flag">🏁<small id="flagLabel">ĐỈNH 1000m</small></div>
+    <div id="lanes"></div>
+  </div>
+
+  <div class="ticker" id="ticker">🏁 Đường đua đã sẵn sàng! Bình luận +10m, 1 tim +0,5m, 1 xu quà = 1m — ai lên đỉnh trước thắng!</div>
+  <div class="info">💬 Comment +10m · ❤️ 1 tim +0,5m · 🎁 1 xu = 1m · ➕ Follow +5m · ⏱️ Ván 10 phút — ai lên đỉnh trước thắng!</div>
+
+  <div class="banner" id="banner"><h2 id="bannerTitle"></h2><p id="bannerText"></p></div>
+
+  <div class="status"><span id="stPhase">Ván #1 — Đang đua</span><span id="stViewers">👥 0 tay đua</span></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const CAR_EMOJI = { streamer: '🏎️', racer: '🏎️' };
+  const CAR_DOT = ['🔵', '🔴', '🟣', '🟢', '🟠'];
+  let lastState = null;
+  let voiceOn = true, voiceQueue = [], speaking = false;
+  let lastCheerAt = 0;
+  function speak(text) {
+    if (!voiceOn || !text) return;
+    voiceQueue.push(text);
+    if (voiceQueue.length > 3) voiceQueue.shift();
+    pumpVoice();
+  }
+  function pumpVoice() {
+    if (speaking || !voiceQueue.length) return;
+    const text = voiceQueue.shift();
+    speaking = true;
+    fetch('/api/tts?text=' + encodeURIComponent(text)).then(r => r.ok ? r.blob() : null).then(b => {
+      if (!b) throw 0;
+      const a = new Audio(URL.createObjectURL(b));
+      a.onended = () => { speaking = false; pumpVoice(); };
+      a.onerror = () => { speaking = false; pumpVoice(); };
+      a.play().catch(() => { speaking = false; pumpVoice(); });
+    }).catch(() => {
+      try { const u = new SpeechSynthesisUtterance(text); u.lang = 'vi-VN'; u.onend = () => { speaking = false; pumpVoice(); }; speechSynthesis.speak(u); }
+      catch (e) { speaking = false; pumpVoice(); }
+    });
+  }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function fmtClock(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0');
+  }
+  function render(s) {
+    lastState = s;
+    voiceOn = !!(s.settings && s.settings.voiceEnabled);
+    $('roundLabel').textContent = 'Ván #' + s.roundNo;
+    $('clock').textContent = s.phase === 'racing' ? fmtClock(s.roundSecondsLeft) : '🏁 HẾT VÁN';
+    $('flagLabel').textContent = 'ĐỈNH ' + s.trackLength + 'm';
+    // Bảng xếp hạng (theo mét, cao → thấp).
+    const cars = s.cars || [];
+    const medal = ['🥇', '🥈', '🥉', '4.'];
+    $('board').innerHTML = cars.map((c, i) => {
+      const pct = Math.min(100, Math.round(100 * c.meters / s.trackLength));
+      const av = c.avatar ? '<img src="' + c.avatar + '" alt="">' : '<span class="ava">' + (c.type === 'streamer' ? '🚗' : (c.name ? c.name.charAt(0).toUpperCase() : '🏎️')) + '</span>';
+      return '<div class="brow' + (i === 0 && c.meters > 0 ? ' lead' : '') + '"><span>' + medal[i] + '</span>' + av + '<b>' + esc(c.name) + '</b><span>' + c.meters + 'm · ' + pct + '%</span></div>';
+    }).join('') || '<div style="font-size:26px;color:#ffd9a0">Chưa có xe nào trên đường đua.</div>';
+    // Dốc núi: 4 làn, xe trượt theo % quãng đường.
+    const lanes = $('lanes');
+    const laneH = 200, laneGap = 40, top0 = 120;
+    let html = '';
+    cars.forEach((c, i) => {
+      const top = top0 + i * (laneH + laneGap);
+      const pct = Math.min(100, Math.max(0, 100 * c.meters / s.trackLength));
+      const leftPct = 4 + pct * 0.88; // 4% → 92% (chừa chỗ cờ đích)
+      const dot = c.type === 'streamer' ? '🟡' : (CAR_DOT[(s.top || []).findIndex(t => t.uid === c.uid)] || '🔵');
+      const winCls = s.winner && s.winner.uid === c.uid ? ' win' : (s.winner && s.winner.type === 'streamer' && c.type === 'streamer' ? ' win' : '');
+      html += '<div class="lane" style="top:' + top + 'px"><div class="track"></div>'
+        + '<div class="car' + winCls + '" style="left:' + leftPct + '%"><div class="tag">' + dot + ' ' + esc(c.name) + '</div>'
+        + '<div class="body">' + CAR_EMOJI[c.type] + '</div><div class="m">' + c.meters + 'm</div></div></div>';
+    });
+    lanes.innerHTML = html;
+    const last = (s.logs || []).slice(-1)[0];
+    if (last) $('ticker').textContent = last.text;
+    $('stPhase').textContent = 'Ván #' + s.roundNo + ' — ' + (s.phase === 'racing' ? 'Đang đua' : 'Bảng vinh danh');
+    $('stViewers').textContent = '👥 ' + s.viewersOnline + ' tay đua';
+    const banner = $('banner');
+    if (s.phase === 'results' && s.results) {
+      banner.className = 'banner show';
+      const w = s.results.winner;
+      $('bannerTitle').textContent = '🏆 ' + w.name + ' VỀ ĐÍCH!';
+      $('bannerText').innerHTML = s.results.standings.map(st =>
+        ['🥇', '🥈', '🥉', '4.'][st.rank - 1] + ' ' + esc(st.name) + ' — ' + st.meters + 'm').join('<br>')
+        + '<br>🚗 Xe streamer: ' + s.results.streamer.meters + 'm (' + s.results.streamer.comments + ' comment + ' + s.results.streamer.taps + ' tim + ' + s.results.streamer.giftMeters + 'm quà ngoài top 3)'
+        + '<br>⏱️ Thời gian ván: ' + Math.floor(s.results.durationS / 60) + ':' + String(s.results.durationS % 60).padStart(2, '0') + ' / ' + fmtClock(s.settings.roundS)
+        + '<br>Ván mới bắt đầu sau ' + s.settings.resultsS + 's…';
+    } else banner.className = 'banner';
+    // Câu động viên streamer: tối đa 1 lần / 90s, chỉ khi đang đua.
+    if (s.phase === 'racing' && Date.now() - lastCheerAt > 90000 && !voiceQueue.length && !speaking) {
+      lastCheerAt = Date.now();
+      speak(Math.random() < 0.5 ? 'Đẩy xe giúp mình nào, comment và tim để xe streamer lên đỉnh!' : 'Tặng quà để có xe riêng leo núi cùng mình nào!');
+    }
+  }
+  function poll() { fetch('/api/state').then(r => r.json()).then(render).catch(() => {}); }
+  poll(); setInterval(poll, 2000);
+  const socket = io();
+  socket.on('state-update', render);
+  socket.on('win', d => { if (d.winner) speak('Chúc mừng ' + d.winner.name + ' đã về đích đầu tiên!'); });
+  socket.on('top3-enter', d => speak(d.name + ' vừa vào Top ' + d.rank + '!'));
+  socket.on('milestone', d => speak(d.text.replace('🚩 ', '')));
+  socket.on('last-minute', () => speak('Còn sáu mươi giây cuối ván!'));
+})();
+</script>
+</body>
+</html>
