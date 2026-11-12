@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chiếm Cờ — LIVE Overlay</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #fff; }
+  #stage { position: relative; width: 1080px; height: 1920px; background: linear-gradient(180deg, #0b3d2e 0%, #14532d 45%, #166534 100%); }
+  .grass { position: absolute; left: 0; right: 0; bottom: 0; height: 1150px; background:
+    radial-gradient(ellipse 60% 18% at 20% 90%, rgba(255,255,255,.06), transparent),
+    radial-gradient(ellipse 50% 14% at 80% 85%, rgba(255,255,255,.05), transparent); }
+  .stripes { position: absolute; inset: 0; opacity: .12; background: repeating-linear-gradient(90deg, rgba(255,255,255,.25) 0 60px, transparent 60px 120px); }
+  header { position: absolute; top: 24px; left: 0; right: 0; text-align: center; }
+  header h1 { font-size: 64px; letter-spacing: 6px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
+  header .sub { font-size: 26px; opacity: .9; margin-top: 6px; }
+  #score { position: absolute; top: 170px; left: 40px; right: 40px; display: flex; gap: 20px; }
+  .team-box { flex: 1; border-radius: 22px; padding: 18px 20px; background: rgba(0,0,0,.35); border: 4px solid; }
+  .team-box.xanh { border-color: #38bdf8; }
+  .team-box.do { border-color: #f87171; }
+  .team-box .tname { font-size: 30px; font-weight: 800; }
+  .team-box.xanh .tname { color: #7dd3fc; }
+  .team-box.do .tname { color: #fca5a5; }
+  .team-box .pts { font-size: 76px; font-weight: 900; line-height: 1; }
+  .team-box .flags-held { font-size: 24px; opacity: .9; }
+  #timer { position: absolute; top: 170px; left: 50%; transform: translateX(-50%); width: 190px; text-align: center; background: rgba(0,0,0,.55); border-radius: 20px; padding: 14px 6px; }
+  #timer .clock { font-size: 52px; font-weight: 900; }
+  #timer .win { font-size: 22px; opacity: .85; }
+  #field { position: absolute; top: 470px; left: 0; right: 0; bottom: 340px; display: flex; justify-content: space-around; align-items: flex-end; padding: 0 30px 30px; }
+  .flag { width: 300px; text-align: center; }
+  .flag .pole { position: relative; height: 560px; margin: 0 auto; width: 14px; background: #d6d3d1; border-radius: 7px; box-shadow: 2px 2px 0 rgba(0,0,0,.3); }
+  .flag .cloth { position: absolute; top: 0; left: 14px; width: 190px; height: 120px; border-radius: 0 14px 14px 0; display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.5); transition: background .4s; }
+  .flag .cloth.neutral { background: #78716c; }
+  .flag .cloth.xanh { background: #0284c7; }
+  .flag .cloth.do { background: #dc2626; }
+  .flag .fname { font-size: 34px; font-weight: 800; margin-top: 16px; }
+  .flag .owner { font-size: 26px; margin-top: 4px; min-height: 34px; }
+  .flag .rate { font-size: 22px; opacity: .85; }
+  .capbar { margin-top: 12px; height: 26px; border-radius: 13px; overflow: hidden; display: flex; background: rgba(0,0,0,.45); border: 2px solid rgba(255,255,255,.35); }
+  .capbar .bx { background: #0284c7; height: 100%; }
+  .capbar .bd { background: #dc2626; height: 100%; }
+  .capbar .lbl { position: absolute; font-size: 20px; font-weight: 700; }
+  .flag .capwrap { position: relative; }
+  .flag .capnum { font-size: 22px; margin-top: 6px; }
+  #mid-flag .pole { height: 640px; }
+  #mid-flag .cloth { width: 210px; height: 140px; font-size: 50px; }
+  #tops { position: absolute; left: 40px; right: 40px; bottom: 210px; display: flex; gap: 20px; }
+  .top-list { flex: 1; background: rgba(0,0,0,.35); border-radius: 18px; padding: 14px 18px; }
+  .top-list h3 { font-size: 26px; margin-bottom: 8px; }
+  .top-list.xanh h3 { color: #7dd3fc; }
+  .top-list.do h3 { color: #fca5a5; }
+  .top-list .row { font-size: 24px; padding: 3px 0; display: flex; justify-content: space-between; }
+  #ticker { position: absolute; left: 0; right: 0; bottom: 130px; height: 64px; background: rgba(0,0,0,.55); display: flex; align-items: center; padding: 0 24px; font-size: 28px; white-space: nowrap; overflow: hidden; }
+  #statusbar { position: absolute; left: 0; right: 0; bottom: 56px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 26px; background: rgba(0,0,0,.4); }
+  #banner { position: absolute; top: 760px; left: 90px; right: 90px; text-align: center; font-size: 72px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); display: none; }
+  #demo-badge { position: absolute; top: 24px; right: 24px; background: #f59e0b; color: #111; font-weight: 900; font-size: 26px; padding: 10px 18px; border-radius: 14px; display: none; }
+  #hint { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 22px; opacity: .75; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="grass"></div><div class="stripes"></div>
+  <header>
+    <h1>🚩 CHIẾM CỜ</h1>
+    <div class="sub" id="match-label">Trận 1 — chờ người chơi vào đội</div>
+  </header>
+  <div id="demo-badge">🧪 DEMO</div>
+  <div id="score">
+    <div class="team-box xanh"><div class="tname">🔵 ĐỘI XANH</div><div class="pts" id="pts-xanh">0</div><div class="flags-held" id="flags-xanh">0 cờ</div></div>
+    <div class="team-box do"><div class="tname">🔴 ĐỘI ĐỎ</div><div class="pts" id="pts-do">0</div><div class="flags-held" id="flags-do">0 cờ</div></div>
+  </div>
+  <div id="timer"><div class="clock" id="clock">10:00</div><div class="win" id="win-label">Cửa sổ: 30s</div></div>
+  <div id="field">
+    <div class="flag" id="flag-left">
+      <div class="pole"><div class="cloth neutral" id="cloth-left">🏳️</div></div>
+      <div class="fname">CỜ TRÁI</div>
+      <div class="owner" id="owner-left">— trống —</div>
+      <div class="rate">+1 điểm/giây</div>
+      <div class="capwrap"><div class="capbar"><div class="bx" id="capbx-left" style="width:50%"></div><div class="bd" id="capbd-left" style="width:50%"></div></div></div>
+      <div class="capnum" id="capnum-left">0 — 0</div>
+    </div>
+    <div class="flag" id="mid-flag">
+      <div class="pole"><div class="cloth neutral" id="cloth-mid">🏳️</div></div>
+      <div class="fname">⭐ CỜ GIỮA</div>
+      <div class="owner" id="owner-mid">— trống —</div>
+      <div class="rate">+2 điểm/giây (điểm nóng)</div>
+      <div class="capwrap"><div class="capbar"><div class="bx" id="capbx-mid" style="width:50%"></div><div class="bd" id="capbd-mid" style="width:50%"></div></div></div>
+      <div class="capnum" id="capnum-mid">0 — 0</div>
+    </div>
+    <div class="flag" id="flag-right">
+      <div class="pole"><div class="cloth neutral" id="cloth-right">🏳️</div></div>
+      <div class="fname">CỜ PHẢI</div>
+      <div class="owner" id="owner-right">— trống —</div>
+      <div class="rate">+1 điểm/giây</div>
+      <div class="capwrap"><div class="capbar"><div class="bx" id="capbx-right" style="width:50%"></div><div class="bd" id="capbd-right" style="width:50%"></div></div></div>
+      <div class="capnum" id="capnum-right">0 — 0</div>
+    </div>
+  </div>
+  <div id="tops">
+    <div class="top-list xanh"><h3>🔵 Top lực — Đội Xanh</h3><div id="top-xanh"></div></div>
+    <div class="top-list do"><h3>🔴 Top lực — Đội Đỏ</h3><div id="top-do"></div></div>
+  </div>
+  <div id="ticker"><span id="ticker-text">Bình luận "xanh" hoặc "đỏ" để vào đội • "cờ trái / cờ giữa / cờ phải" để chọn cờ cần đánh • 1 tim +1 lực, 1 xu quà +20 lực</span></div>
+  <div id="statusbar"><span id="phase-label">Chờ trận đấu</span><span id="counts"></span></div>
+  <div id="banner"></div>
+  <div id="hint">Chiếm cờ — bình luận để vào đội, tap/quà để chiếm cờ. Cờ Giữa tính đôi điểm.</div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  const path = location.pathname.split('/').filter(Boolean);
+  const username = path[2] || 'live';
+  const apiBase = `/o/chiem-co/${username}`;
+  const demoParam = params.get('demo') === '1';
+  let state = null;
+  let voiceOn = true;
+  const ttsQueue = [];
+  let ttsPlaying = false;
+
+  function fmtClock(ms) {
+    if (ms == null) return '--:--';
+    const s = Math.max(0, Math.ceil(ms / 1000));
+    return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+  }
+  function playTts(text) {
+    if (!voiceOn || !text) return;
+    ttsQueue.push(text);
+    nextTts();
+  }
+  function nextTts() {
+    if (ttsPlaying || !ttsQueue.length) return;
+    ttsPlaying = true;
+    const text = ttsQueue.shift();
+    const audio = new Audio('/api/tts?text=' + encodeURIComponent(text));
+    audio.onended = () => { ttsPlaying = false; nextTts(); };
+    audio.onerror = () => {
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'vi-VN';
+        u.onend = () => { ttsPlaying = false; nextTts(); };
+        speechSynthesis.speak(u);
+      } catch (e) { ttsPlaying = false; nextTts(); }
+    };
+    audio.play().catch(() => { ttsPlaying = false; nextTts(); });
+  }
+  function render(s) {
+    if (!s || s.game !== 'chiem-co') return;
+    state = s;
+    voiceOn = s.settings.voiceEnabled !== false;
+    document.getElementById('pts-xanh').textContent = s.points.xanh;
+    document.getElementById('pts-do').textContent = s.points.do;
+    const heldX = ['left', 'mid', 'right'].filter((id) => s.flags[id].owner === 'xanh').length;
+    const heldD = ['left', 'mid', 'right'].filter((id) => s.flags[id].owner === 'do').length;
+    document.getElementById('flags-xanh').textContent = heldX + ' cờ';
+    document.getElementById('flags-do').textContent = heldD + ' cờ';
+    const now = Date.now();
+    document.getElementById('clock').textContent = s.phase === 'playing' && s.matchEndsAt ? fmtClock(s.matchEndsAt - now) : (s.phase === 'spotlight' ? '⏳' : '--:--');
+    document.getElementById('win-label').textContent = s.phase === 'playing' && s.windowEndsAt ? ('Cửa sổ ' + s.windowNo + ': ' + Math.max(0, Math.ceil((s.windowEndsAt - now) / 1000)) + 's') : '—';
+    document.getElementById('match-label').textContent = 'Trận ' + s.matchNo + (s.phase === 'lobby' ? ' — chờ người chơi vào đội' : s.phase === 'playing' ? ' — đang diễn ra' : ' — vinh danh đội thắng');
+    for (const id of ['left', 'mid', 'right']) {
+      const fl = s.flags[id];
+      const cloth = document.getElementById('cloth-' + id);
+      cloth.className = 'cloth ' + (fl.owner || 'neutral');
+      cloth.textContent = fl.owner === 'xanh' ? '🔵' : fl.owner === 'do' ? '🔴' : '🏳️';
+      document.getElementById('owner-' + id).textContent = fl.owner === 'xanh' ? '🔵 Đội Xanh giữ' : fl.owner === 'do' ? '🔴 Đội Đỏ giữ' : '— trống —';
+      const fx = fl.force.xanh, fd = fl.force.do, tot = fx + fd;
+      const px = tot ? Math.round((fx / tot) * 100) : 50;
+      document.getElementById('capbx-' + id).style.width = px + '%';
+      document.getElementById('capbd-' + id).style.width = (100 - px) + '%';
+      document.getElementById('capnum-' + id).textContent = fx + ' — ' + fd;
+    }
+    const topX = s.top.xanh.map((p, i) => `<div class="row"><span>${i + 1}. ${escapeHtml(p.name)}</span><span>${p.force} lực</span></div>`).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
+    const topD = s.top.do.map((p, i) => `<div class="row"><span>${i + 1}. ${escapeHtml(p.name)}</span><span>${p.force} lực</span></div>`).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
+    document.getElementById('top-xanh').innerHTML = topX;
+    document.getElementById('top-do').innerHTML = topD;
+    document.getElementById('phase-label').textContent =
+      s.phase === 'lobby' ? '🕒 Chờ trận đấu' : s.phase === 'playing' ? '⚔️ Trận đang diễn ra' : '🏆 Vinh danh đội thắng';
+    document.getElementById('counts').textContent = `🔵 ${s.teamCounts.xanh} • 🔴 ${s.teamCounts.do} • 👥 ${s.teamCounts.none} chưa chọn đội`;
+    const banner = document.getElementById('banner');
+    if (s.phase === 'spotlight' && s.winner) {
+      banner.style.display = 'block';
+      banner.textContent = s.winner.team ? (s.winner.team === 'xanh' ? '🔵 ĐỘI XANH THẮNG!' : '🔴 ĐỘI ĐỎ THẮNG!') : '🤝 HÒA!';
+    } else banner.style.display = 'none';
+    document.getElementById('demo-badge').style.display = s.demoActive ? 'block' : 'none';
+    if (s.logs && s.logs.length) {
+      document.getElementById('ticker-text').textContent = s.logs[s.logs.length - 1].text;
+    }
+  }
+  function escapeHtml(x) { return String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  async function poll() {
+    try {
+      const r = await fetch(apiBase + '/api/state');
+      const s = await r.json();
+      render(s);
+    } catch (e) { /* keep last */ }
+    setTimeout(poll, 1500);
+  }
+  function boot() {
+    try {
+      const socket = io();
+      socket.on('state-update', (s) => render(s));
+      socket.on('flag-capture', (d) => { if (d && d.text) playTts(d.text); });
+      socket.on('match-win', (d) => { if (d && d.text) playTts(d.text); });
+    } catch (e) { /* polling fallback */ }
+    poll();
+    if (demoParam) {
+      fetch(apiBase + '/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+        .then(() => fetch(apiBase + '/api/demo/start', { method: 'POST' })).catch(() => {});
+    }
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
