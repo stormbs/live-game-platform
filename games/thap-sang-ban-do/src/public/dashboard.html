@@ -164,7 +164,7 @@ async function render(s) {
   if (!PROVS.length) {
     PROVS = await (await fetch('/api/provinces')).json();
     const g = document.getElementById('provGrid');
-    g.innerHTML = PROVS.map(p => `<button id="pb-${p.num}" onclick="lightProv(${p.num})">${p.num}. ${p.name}</button>`).join('');
+    g.innerHTML = PROVS.map(p => `<button id="pb-${p.num}" onclick="lightProv(${p.num})">${p.name}</button>`).join('');
     document.getElementById('cfgForm').innerHTML = `
       Comment tên tỉnh: +<input id="c-pointsPerComment" type="number" value="${CFG.pointsPerComment}" style="width:60px"> điểm/tỉnh
       Mỗi xu quà: +<input id="c-pointsPerCoin" type="number" value="${CFG.pointsPerCoin}" style="width:60px"> điểm cho tỉnh quê<br>

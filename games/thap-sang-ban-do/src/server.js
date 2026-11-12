@@ -6,11 +6,12 @@
 //   Webhook TikFinity:               POST http://localhost:3009/api/webhook
 // Bản đồ: 34 tỉnh/thành sau sáp nhập 1/7/2025 (28 tỉnh + 6 TP), ranh giới thật
 // từ GeoJSON nguồn Free-GIS-Data (Nguyễn Duy Liêm, public use), đã đơn giản hóa.
-// Số thứ tự 1-34 xếp theo tên tỉnh (A-Z, không dấu). Tên tỉnh CŨ (63 tỉnh)
-// vẫn nhận — tự map về tỉnh mới đã sáp nhập (vd. Bình Dương -> TP.HCM).
+// Số thứ tự 1-34 chỉ là mã nội bộ của tỉnh (không hiện lên bản đồ, không
+// nhận qua comment). Tên tỉnh CŨ (63 tỉnh) vẫn nhận — tự map về tỉnh mới
+// đã sáp nhập (vd. Bình Dương -> TP.HCM).
 // Luật chơi — BẢNG XẾP HẠNG TÍNH THEO TỈNH (mặc định, chỉnh trong dashboard
 // hoặc config.json):
-//   - Comment tên tỉnh / số 1-34 / viết tắt / tên thành phố -> thắp tỉnh đó
+//   - Comment tên tỉnh / viết tắt / tên thành phố -> thắp tỉnh đó
 //     (tối đa 3 tỉnh/comment, chống spam 1 comment tính điểm/5s/người).
 //     Mỗi tỉnh được nêu trong comment = +1 điểm (cả khi tỉnh đã sáng),
 //     tất cả cộng cho tỉnh quê hiện tại = tỉnh vừa comment xong (v7.3:
@@ -26,11 +27,11 @@
 //     thắp hơn, rồi thắp sớm hơn) + vinh danh người đóng góp nhiều nhất,
 //     tự chơi lại sau 60s. Sáng đủ 34/34 chỉ là 1 MỐC (pháo hoa + thông
 //     báo), ván vẫn chơi tiếp tới hết giờ.
-//   - Hoàng Sa / Trường Sa: khung riêng BÊN PHẢI, đúng vị trí gốc
-//     (v8.2: bố cục 3 cột — bảng điểm sang trái, cột phải chỉ giữ sự
-//     kiện + chú thích, GIỮA là khoảng trống trong suốt đúng chỗ 2 đảo
-//     nên đảo KHÔNG BỊ CHE chút nào), hình đảo THẬT từ GeoJSON; Hoàng Sa
-//     sáng cùng Đà Nẵng, Trường Sa sáng cùng Khánh Hòa + voice thông báo.
+//   - Hoàng Sa / Trường Sa: VẼ TRONG BẢN ĐỒ, đúng vị trí gốc ở Biển Đông
+//     (Hoàng Sa phía trên, Trường Sa phía dưới — như ảnh mẫu của Chủ tịch),
+//     hình đảo THẬT từ GeoJSON, gộp vào tỉnh chủ quản: Hoàng Sa sáng cùng
+//     Đà Nẵng, Trường Sa sáng cùng Khánh Hòa (cùng màu/cùng trạng thái) +
+//     voice thông báo. Đảo nằm trong SVG bản đồ nên không bị khung nào che.
 //   - Voice kiểu Buồng giam: file TTS tạo SẴN (public/voice/*.mp3, giọng nam
 //     trẻ) — overlay chỉ phát file, KHÔNG dùng giọng trình duyệt, KHÔNG tạo
 //     TTS trong lúc live. Ai thắp tỉnh nào (clip tỉnh + câu giới thiệu),
@@ -184,16 +185,10 @@ function parseProvinces(text, maxN = 3) {
   const found = []; // {num, alias, isOld, idx}
   const seen = new Set();
   const padded = ' ' + raw + ' ';
-  // 1) Số 1-34 (kèm # cũng được vì # đã bị norm thành khoảng trắng).
-  // Dùng \b (zero-width) để không ăn mất khoảng trắng phân cách — "5 12 30"
-  // phải ra đủ 3 số, không được bỏ sót số giữa.
-  const reNum = /\b([1-9]|[12][0-9]|3[0-4])\b/g;
-  let m;
-  while ((m = reNum.exec(padded)) !== null) {
-    const n = Number(m[1]);
-    if (!seen.has(n)) { seen.add(n); found.push({ num: n, alias: null, isOld: false, idx: m.index }); }
-  }
-  // 2) Tên / alias — khớp cụm từ nguyên vẹn. Alias dài ăn trước ("vinh long"
+  // (2026-11-12) BỎ cơ chế comment số: chỉ comment TÊN tỉnh mới tính.
+  // Trước đây bước này nhận số 1-34 trong comment (vd. "12", "#6") rồi
+  // thắp tỉnh đó — nay số trong comment không thắp gì cả.
+  // 1) Tên / alias — khớp cụm từ nguyên vẹn. Alias dài ăn trước ("vinh long"
   // chỉ ra Vĩnh Long, không ra thêm Nghệ An nhờ "vinh"). Vùng đã khớp tính
   // theo đúng chữ của alias (không tính khoảng trắng 2 đầu, vì khoảng trắng
   // sau alias này cũng là khoảng trắng trước alias kia).
@@ -207,14 +202,14 @@ function parseProvinces(text, maxN = 3) {
     seen.add(num);
     found.push({ num, alias, isOld: OLD_DISPLAY[alias] !== undefined, idx });
   }
-  // 3) Dạng viết liền không dấu, không cách: "hanoi", "saigon", "dalat",
+  // 2) Dạng viết liền không dấu, không cách: "hanoi", "saigon", "dalat",
   // "nhatrang" — người xem gõ nhanh hay viết liền. Chỉ khớp alias dài
   // (>= 4 ký tự khi bỏ cách) để không nhận nhầm alias ngắn ("hn", "sg"),
   // và alias dài hơn ăn trước ("vinhlong" chỉ ra Vĩnh Long, không ra thêm
   // Nghệ An nhờ "vinh").
   const nospace = raw.replace(/ /g, '');
-  // Vùng đã khớp ở bước 2 cũng tính vào đây (đổi sang tọa độ không cách),
-  // để "vinh" không chui vào trong "vinhlong" đã khớp ở bước 2.
+  // Vùng đã khớp ở bước 1 cũng tính vào đây (đổi sang tọa độ không cách),
+  // để "vinh" không chui vào trong "vinhlong" đã khớp ở bước 1.
   const used = []; // [start, end) đã khớp trong chuỗi không cách
   for (const f of found) {
     if (!f.alias) continue;
@@ -598,7 +593,7 @@ function getViewer(name, avatar, key) {
   }
   if (!v) {
     // Tên qua bộ lọc từ: tên chứa link/spam/chửi -> hiện/đọc là "Bạn".
-    v = { id, name: cleanName(name || 'Khách'), avatar: null, home: null, points: 0, lights: 0, taps: 0, coins: 0, gifts: 0, lastCommentAt: 0, followed: false, lastSeenAt: Date.now(), lastLikeTotal: 0, homeChanges: 0, homeChangeWarned: false, bankedPoints: 0 };
+    v = { id, name: cleanName(name || 'Khách'), avatar: null, home: null, points: 0, lights: 0, taps: 0, coins: 0, gifts: 0, lastCommentAt: 0, followed: false, lastSeenAt: Date.now(), lastLikeTotal: 0, homeChanges: 0, homeChangeWarned: false, bankedPoints: 0, left: false, leftAt: 0 };
     game.viewers.set(id, v);
   }
   // Cập nhật tên hiển thị: lần đầu chỉ gặp username (quà đến trước
@@ -739,9 +734,9 @@ function resetRound() {
   game.recent = [];
   game.spotlight = null;
   game.milestoneFlash = null;
-  for (const v of game.viewers.values()) { v.points = 0; v.lights = 0; v.home = null; v.taps = 0; v.coins = 0; v.gifts = 0; v.homeChanges = 0; v.homeChangeWarned = false; v.bankedPoints = 0; }
+  for (const v of game.viewers.values()) { v.points = 0; v.lights = 0; v.home = null; v.taps = 0; v.coins = 0; v.gifts = 0; v.homeChanges = 0; v.homeChangeWarned = false; v.bankedPoints = 0; v.left = false; v.leftAt = 0; }
   roundNo += 1;
-  pushFeed(`🗺️ Ván ${roundNo} bắt đầu! Comment tên quê hoặc số 1-34 để thắp sáng!`);
+  pushFeed(`🗺️ Ván ${roundNo} bắt đầu! Comment tên quê để thắp sáng!`);
   pushAnnounce('Ván mới bắt đầu! Comment tên quê để thắp sáng bản đồ Việt Nam!', ['new-round'], { priority: 3 });
   log('game', `ván ${roundNo} bắt đầu`);
 }
@@ -751,8 +746,18 @@ function resetRound() {
 // ---------------------------------------------------------------------------
 function onJoin(name, key) {
   const v = getViewer(name, null, key);
+  // Vào lại live: bỏ cờ "đã rời" (avatar vẫn neo ở quê từ trước).
+  v.left = false; v.leftAt = 0;
   game.stats.totalJoins += 1;
   pushFeed(`👋 ${v.name} vào xem live! Gõ tên quê để thắp sáng bản đồ!`);
+}
+// (2026-11-12) Rời live: avatar VẪN NEO ở tỉnh quê tới hết ván — chỉ ghi
+// cờ "đã rời", KHÔNG xóa viewer, KHÔNG xóa quê/điểm/avatar. Chỉ resetRound
+// (hết ván) mới dọn. Vào lại live (onJoin) thì bỏ cờ.
+function onLeave(name, key) {
+  const v = getViewer(name, null, key);
+  v.left = true; v.leftAt = Date.now();
+  log('leave', `${v.name} rời live — avatar vẫn neo ở ${v.home ? byNum.get(v.home).name : 'chưa chọn quê'} tới hết ván`);
 }
 function onChat(name, text, avatar, key) {
   if (game.phase !== 'playing') return;
@@ -935,8 +940,13 @@ function publicState() {
     announce: [...game.announce],
     voice: { enabled: !!config.voiceEnabled, volume: config.voiceVolume ?? 0.9 },
     // Avatar người xem đang đứng ở tỉnh quê của họ (để overlay vẽ avatar rơi vào tỉnh).
+    // (2026-11-12) Gửi HẾT người có quê (kể cả đã rời live — avatar neo
+    // tới hết ván). Trước đây cắt top 60 theo điểm nên người rời live
+    // (ngừng kiếm điểm) có thể rớt khỏi danh sách khi đông người, overlay
+    // tưởng họ biến mất nên gỡ avatar. Overlay đã gom >12 người/tỉnh vào
+    // badge "+N" nên gửi hết không làm nặng giao diện.
     avatars: [...game.viewers.values()].filter((v) => v.home)
-      .sort((a, b) => b.points - a.points).slice(0, 60)
+      .sort((a, b) => b.points - a.points)
       .map((v) => ({ id: v.id, name: v.name, avatar: v.avatar, home: v.home, points: v.points })),
     music: { playing: game_music.playing, trackIndex: game_music.trackIndex, volume: game_music.volume, tracks: MUSIC_TRACKS },
     suggestions,
@@ -976,7 +986,7 @@ setInterval(() => {
 let simOn = config.simulator;
 let simTimer = null;
 const SIM_NAMES = ['AnNhien', 'BaoTran', 'MinhKhang', 'ThuHa', 'DucAnh', 'LinhChi', 'QuocBao', 'PhuongAnh', 'HoangNam', 'KhanhLinh', 'TuanKiet', 'MyDuyen', 'GiaHuy', 'NgocTram'];
-const SIM_PROVINCES = ['Hà Nội', 'TP.HCM', 'Đà Nẵng', 'Nghệ An', 'Thanh Hóa', 'Hải Phòng', 'Cần Thơ', 'Đắk Lắk', 'Khánh Hòa', 'Quảng Ninh', '12', '15', '6', 'nam dinh', 'phu quoc', 'da lat', 'sai gon', 'hue', 'vinh long', 'ca mau'];
+const SIM_PROVINCES = ['Hà Nội', 'TP.HCM', 'Đà Nẵng', 'Nghệ An', 'Thanh Hóa', 'Hải Phòng', 'Cần Thơ', 'Đắk Lắk', 'Khánh Hòa', 'Quảng Ninh', 'thu do', 'tphcm', 'hoi an', 'nam dinh', 'phu quoc', 'da lat', 'sai gon', 'hue', 'vinh long', 'ca mau'];
 const SIM_GIFTS = [{ name: 'Hoa hồng', coins: 1 }, { name: 'Trái tim', coins: 5 }, { name: 'Bánh kem', coins: 20 }, { name: 'Vương miện', coins: 199 }, { name: 'Sư tử', coins: 500 }];
 function simStep() {
   if (!simOn) return;
@@ -1122,6 +1132,10 @@ function handleTikFinityEvent(body) {
   let isLike = rawType.includes('like') || rawType.includes('tap');
   let isFollow = rawType.includes('follow');
   let isJoin = rawType.includes('join') || rawType.includes('member');
+  // Rời live: "leave" / "member leave" / "member_left" — kiểm tra TRƯỚC
+  // isJoin vì chuỗi "member leave" cũng chứa "member" (không thì bị nhận
+  // nhầm thành vào phòng). Rời chỉ ghi cờ (xem onLeave), không xóa gì.
+  let isLeave = rawType.includes('leave') || rawType.includes('left');
   // Suy luận loại sự kiện từ HÌNH DẠNG dữ liệu (v7.2–v7.3): TikFinity có thể
   // gửi dữ liệu thô không kèm tên loại. Thứ tự: quà → tim → chat (quà kiểm
   // tra trước để tên quà trong value2 không bị nhầm thành comment).
@@ -1132,7 +1146,7 @@ function handleTikFinityEvent(body) {
   }
   // Loại cuối cùng sau khi suy luận — dashboard hiện loại này (không hiện
   // 'unknown' cho event đã nhận ra qua hình dạng dữ liệu).
-  game.webhook.lastType = isGift ? 'gift' : isChat ? 'chat' : isLike ? 'like' : isFollow ? 'follow' : isJoin ? 'join' : (rawType || 'unknown');
+  game.webhook.lastType = isGift ? 'gift' : isChat ? 'chat' : isLike ? 'like' : isFollow ? 'follow' : isLeave ? 'leave' : isJoin ? 'join' : (rawType || 'unknown');
   if (isGift) {
     const giftName = giftNameNorm || 'quà tặng';
     const coins = Number(coinsNorm ?? pick(data.gift || {}, ['diamondCount', 'coins']) ?? 1) || 1;
@@ -1151,6 +1165,7 @@ function handleTikFinityEvent(body) {
     return 'like';
   }
   if (isFollow) { onFollow(name, avatar, key); return 'follow'; }
+  if (isLeave) { onLeave(name, key); return 'leave'; }
   if (isJoin) { onJoin(name, key); return 'join'; }
   log('webhook', 'event lạ, bỏ qua. Raw: ' + ((game.webhook.lastRaw || '(rỗng)') + '').slice(0, 300));
   return 'unknown';

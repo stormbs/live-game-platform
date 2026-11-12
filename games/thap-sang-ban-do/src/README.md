@@ -6,16 +6,18 @@ trí tỉnh quê**, rồi mọi tương tác sau đó đều cộng điểm cho 
 Tỉnh nào đông người + nhiều quà thì leo lên **bảng xếp hạng tỉnh**.
 
 Bản đồ dùng **ranh giới thật của 34 tỉnh/thành sau sáp nhập 1/7/2025**
-(28 tỉnh + 6 thành phố trực thuộc trung ương). Số thứ tự 1–34 xếp theo tên
-tỉnh (A–Z, không dấu). Có khung riêng cho **quần đảo Hoàng Sa** (sáng cùng
-Đà Nẵng) và **quần đảo Trường Sa** (sáng cùng Khánh Hòa) — hình đảo thật từ
-GeoJSON, không phải chấm tròn vẽ tay.
+(28 tỉnh + 6 thành phố trực thuộc trung ương). Số thứ tự 1–34 chỉ là mã nội
+bộ của tỉnh (không hiện lên bản đồ, không nhận qua comment). **Quần đảo
+Hoàng Sa** (sáng cùng Đà Nẵng) và **quần đảo Trường Sa** (sáng cùng Khánh
+Hòa) vẽ TRONG bản đồ, đúng vị trí ở Biển Đông — hình đảo thật từ GeoJSON,
+không phải chấm tròn vẽ tay.
 
 **Comment nhận dạng rất thoáng:** có dấu hay không dấu đều tính ("hà nội",
 "ha noi"), **viết liền cũng tính** ("hanoi", "saigon", "dalat", "nhatrang",
 "tphcm"), viết tắt ("hn", "sg", "bmt"), tên tỉnh cũ ("bình dương" →
-TP.HCM, "nam định" → Ninh Bình), tên thành phố ("đà lạt" → Lâm Đồng) và
-số thứ tự ("12", "#12"). Tối đa 3 tỉnh/comment.
+TP.HCM, "nam định" → Ninh Bình), tên thành phố ("đà lạt" → Lâm Đồng).
+Chỉ comment TÊN tỉnh mới tính — gõ số (vd. "12", "#6") không thắp gì.
+Tối đa 3 tỉnh/comment.
 
 ## Chạy trên máy Windows
 
@@ -81,7 +83,7 @@ khóa audio.
 
 | Người xem làm gì | Kết quả |
 |---|---|
-| Comment tên tỉnh, số 1–34, viết tắt, tên thành phố | Thắp tỉnh đó + **+1 điểm cho tỉnh quê của mình**. Comment đầu tiên chọn quê — avatar rơi xuống vị trí tỉnh đó |
+| Comment tên tỉnh, viết tắt, tên thành phố | Thắp tỉnh đó + **+1 điểm cho tỉnh quê của mình**. Comment đầu tiên chọn quê — avatar rơi xuống vị trí tỉnh đó; rời live giữa ván thì avatar vẫn neo ở quê tới hết ván |
 | Comment tỉnh khác sau đó | **CHỐNG SPAM CỨNG (v7.4, thay luật v7.3 đổi quê không giới hạn):** mỗi người trong 1 ván chỉ được **đổi quê tối đa 1 lần** (mặc định, chỉnh được ở Dashboard → Luật chơi). Comment tỉnh khác dùng 1 lượt đổi → avatar bay sang tỉnh mới, điểm +1 và điểm tap/quà sau đó tính cho quê mới. Hết lượt rồi thì comment tỉnh khác **không thắp sáng cũng không cộng điểm** — chỉ comment đúng tỉnh quê hiện tại mới tính (vẫn +1đ, vẫn farm mốc). Ván mới reset lại lượt đổi |
 | Comment tên tỉnh **cũ** (63 tỉnh) | Vẫn sáng tỉnh mới đã sáp nhập (vd. `Bình Dương` → TP.HCM, `Nam Định` → Ninh Bình, `Phú Quốc` → An Giang) — voice giải thích luôn trên live |
 | Thả tim | **20 tim = +1 điểm** cho tỉnh quê của mình (chưa chọn quê thì tim chưa tính điểm) |
