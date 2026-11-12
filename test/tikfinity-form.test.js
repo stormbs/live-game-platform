@@ -98,6 +98,15 @@ test('form share + ?event=share -> share', () => {
   assert.equal(ev.kind, 'share');
 });
 
+test('form like + ?event=like, likeCount 0 giữ nguyên 0 (không ép lên 1)', () => {
+  const ev = parseTikFinityEvent(
+    { value1: 'lan123', value2: '', value3: '', content: '', avatar_url: '' },
+    { event: 'like', likeCount: 0 },
+  );
+  assert.equal(ev.kind, 'tap');
+  assert.equal(ev.likeCount, 0);
+});
+
 test('JSON gift dạng cũ vẫn chạy (event + data.giftName/diamondCount/user)', () => {
   const ev = parseTikFinityEvent(
     { event: 'gift', data: { giftName: 'Hoa hồng', diamondCount: 10, repeatCount: 1, repeatEnd: true, user: { nickname: 'Yen' } } },
