@@ -113,3 +113,42 @@ test('GET /o/game-khong-ton-tai/x trả 400; GET /api/rooms/:game/:username/stat
     await stopTestServer(t);
   }
 });
+
+test('CORS: GET /api/buff/services với Origin khác trả Access-Control-Allow-Origin; OPTIONS preflight trả 204', async () => {
+  const t = await startTestServer();
+  try {
+    const get = await fetchJson(t.base, '/api/buff/services', {
+      headers: { Origin: 'https://strom-company.pages.dev' },
+    });
+    assert.equal(get.status, 200);
+    assert.equal(get.res.headers.get('access-control-allow-origin'), '*');
+    const pre = await fetchJson(t.base, '/api/buff/services', {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'https://strom-company.pages.dev',
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'authorization,content-type',
+      },
+    });
+    assert.equal(pre.status, 204);
+    assert.equal(pre.res.headers.get('access-control-allow-origin'), '*');
+    assert.ok((pre.res.headers.get('access-control-allow-headers') || '').toLowerCase().includes('authorization'));
+  } finally {
+    await stopTestServer(t);
+  }
+});
+
+test('GET /api/buff/services trả price là giá bán USDT/1000 (không phải rate VND)', async () => {
+  const t = await startTestServer();
+  try {
+    const { status, json } = await fetchJson(t.base, '/api/buff/services');
+    assert.equal(status, 200);
+    assert.ok(Array.isArray(json.services) && json.services.length > 0);
+    const s513 = json.services.find((s) => s.service === 513);
+    assert.ok(s513, 'catalog phải có dịch vụ 513');
+    assert.equal(s513.rate, 59000);
+    assert.equal(s513.price, 2.95);
+  } finally {
+    await stopTestServer(t);
+  }
+});

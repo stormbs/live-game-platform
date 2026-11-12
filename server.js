@@ -46,6 +46,18 @@ function createApp(opts = {}) {
     tiktokEnabled: opts.tiktokEnabled !== false,
   });
 
+  // ---- CORS cho API buff: website Strom (Cloudflare Pages) gọi API này
+  // từ trình duyệt (cross-origin). Không có header này, trình duyệt chặn
+  // mọi phản hồi dù curl vẫn đọc được — chatbot từng chết vì vậy (2026-11-12).
+  // API công khai chỉ đọc/ghi qua JWT Supabase, không dùng cookie nên '*' đủ.
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    if (req.method === 'OPTIONS') return res.sendStatus(204);
+    next();
+  });
+
   // ---- API buff tương tác (dịch vụ mạng xã hội, USDT) ----
   mountBuffRoutes(app);
 
