@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đấu Trường Sinh Tồn - Bảng điều khiển</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Segoe UI", Verdana, sans-serif; background: #0d1b2e; color: #e8f1fb; padding: 18px; }
+  h1 { font-size: 26px; margin-bottom: 4px; }
+  .sub { color: #9fc4e8; margin-bottom: 14px; font-size: 14px; }
+  .grid { display: grid; gap: 14px; }
+  .row2 { grid-template-columns: 1fr 1fr; }
+  .row3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 1100px) { .row2, .row3 { grid-template-columns: 1fr; } }
+  .card { background: #16283d; border: 1px solid #33587a; border-radius: 12px; padding: 14px 16px; }
+  .card h2 { font-size: 17px; color: #bcd9f5; margin-bottom: 10px; }
+  .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 13px; font-weight: 800; }
+  .badge.live { background: #d61f26; color: #fff; }
+  .badge.demo { background: #b8860b; color: #1c1c1c; }
+  button { cursor: pointer; border: none; border-radius: 8px; font-weight: 800; }
+  .btn { padding: 9px 16px; font-size: 14px; background: #24455f; color: #d8ecff; border: 1px solid #4a7396; }
+  .btn:hover { background: #2e567a; }
+  .btn-gold { background: #ffb700; color: #1c1c1c; }
+  .btn-red { background: #a4161a; color: #fff; }
+  .btn-blue { background: #1e90ff; color: #fff; }
+  .btn-test { padding: 12px 10px; font-size: 14px; background: #0e5c46; color: #fff; width: 100%; }
+  .btn-test:hover { background: #117a5c; }
+  .btn-test:disabled { background: #444; color: #999; cursor: not-allowed; }
+  .test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .test-grid { grid-template-columns: 1fr 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 7px 9px; border-bottom: 1px solid #2c4a63; text-align: left; vertical-align: top; }
+  th { color: #9fc4e8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .log-box { height: 300px; overflow-y: auto; background: #0b1a28; border-radius: 8px; padding: 10px; font-size: 13px; }
+  .log-box div { padding: 2px 0; border-bottom: 1px dotted #24455f; }
+  .warn-banner { background: #4d1500; border: 2px solid #ff6b00; color: #ffd9c2; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; font-size: 15px; font-weight: 700; display: none; }
+  .form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .form-row label { display: block; font-size: 12px; color: #9fc4e8; margin-bottom: 4px; }
+  .form-row input { padding: 8px 10px; border-radius: 6px; border: 1px solid #4a7396; background: #0b1a28; color: #e8f1fb; font-size: 15px; font-weight: 700; width: 110px; }
+  .switch { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; }
+  .switch input { width: 22px; height: 22px; }
+  code { background: #0b1a28; padding: 2px 8px; border-radius: 6px; color: #bcd9f5; word-break: break-all; }
+  .stat { font-size: 30px; font-weight: 900; color: #fff; }
+  .stat-label { font-size: 12px; color: #9fc4e8; }
+  .guide li { margin: 6px 0 6px 18px; font-size: 14px; }
+  .score { font-size: 34px; font-weight: 900; }
+</style>
+</head>
+<body>
+<h1>⚔️ Đấu Trường Sinh Tồn — Bảng điều khiển</h1>
+<div class="sub">Màn hình live: <code id="overlay-url">/overlay.html</code> (nguồn Link 1080x1920) · Webhook TikFinity: <code id="webhook-url">/api/webhook</code> · <span id="direct-line">Đang kiểm tra kết nối LIVE…</span></div>
+<div id="avatar-warn" class="warn-banner">⚠️ Chưa nhận avatar thật nào từ LIVE — chiến binh hiện theo vũ khí vẽ sẵn, không bịa avatar.</div>
+
+<div class="grid row3">
+  <div class="card">
+    <h2>Trạng thái</h2>
+    <div><span id="mode-badge" class="badge live">TRỰC TIẾP</span> <span id="round-label" style="font-weight:800;">Trận 1 · Chờ người chơi</span></div>
+    <div style="margin-top:10px" class="score">⚔️ <span id="alive-count">0</span> <span class="stat-label">người còn sống</span> · ⭕ <span id="zone-label">Vòng bo chưa siết</span></div>
+    <div style="margin-top:8px; font-size:14px;">⏱ <span id="timer">—</span> · 💀 Đã gục: <span id="down-count">0</span> · ⏳ Hàng chờ: <span id="queue-count">0</span></div>
+    <div style="margin-top:6px; font-size:14px;">👀 <span id="st-online">0</span> đang xem · 💥 <span id="st-hits">0</span> đòn đánh · ❤️ <span id="st-taps">0</span> tim · 🎁 <span id="st-gifts">0</span> quà</div>
+    <div style="margin-top:6px; font-size:14px;">💬 <span id="st-comments">0</span> bình luận (chặn spam: <span id="st-blocked">0</span>) · Avatar: <span id="st-avatar">0/0</span> sự kiện có ảnh thật</div>
+    <div style="margin-top:6px; font-size:14px;" id="fighters-line">Chưa có chiến binh nào…</div>
+  </div>
+  <div class="card">
+    <h2>Chế độ + Trận</h2>
+    <label class="switch"><input type="checkbox" id="demo-toggle"> Chế độ thử (chỉ nhận lượt thử, bỏ qua sự kiện thật)</label>
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-blue" onclick="startMatch()">▶️ Bắt đầu trận</button>
+      <button class="btn btn-gold" onclick="resetMatch()">⚔️ Trận mới</button>
+      <button class="btn btn-red" onclick="resetSession()">🔄 Làm mới phiên</button>
+    </div>
+    <div style="margin-top:8px; font-size:12px; color:#9fc4e8;">Trận tự bắt đầu khi đủ 2 chiến binh. Lên live thật: tắt chế độ thử → Làm mới phiên → Go LIVE trong Studio là xong.</div>
+  </div>
+  <div class="card">
+    <h2>🏆 Top sát thương</h2>
+    <table><thead><tr><th>#</th><th>Chiến binh</th><th>Vũ khí</th><th>Sát thương</th><th>HP</th></tr></thead><tbody id="top-body"><tr><td colspan="5">Chưa có ai đánh…</td></tr></tbody></table>
+  </div>
+</div>
+
+<div class="grid row2" style="margin-top:14px;">
+  <div class="card">
+    <h2>Cài đặt (lưu là dùng ngay)</h2>
+    <div class="form-row">
+      <div><label>HP khởi đầu (1–500)</label><input type="number" id="set-hp" value="100" min="1" max="500"></div>
+      <div><label>Sát thương / tim (1–10)</label><input type="number" id="set-tapdmg" value="1" min="1" max="10"></div>
+      <div><label>Sát thương / tên (1–20)</label><input type="number" id="set-cmt" value="3" min="1" max="20"></div>
+      <div><label>Quà ≥ X xu thì hồi máu</label><input type="number" id="set-healcoins" value="100" min="10" max="1000"></div>
+      <div><label>Hồi máu (HP)</label><input type="number" id="set-healhp" value="20" min="1" max="100"></div>
+      <div><label>Follow hồi (HP)</label><input type="number" id="set-followhp" value="10" min="0" max="100"></div>
+    </div>
+    <div class="form-row" style="margin-top:10px;">
+      <div><label>Sát thương dồn tối đa</label><input type="number" id="set-bonus" value="20" min="1" max="50"></div>
+      <div><label>Vòng bo sau (giây)</label><input type="number" id="set-zoneafter" value="180" min="2" max="600"></div>
+      <div><label>Vòng bo mỗi (giây)</label><input type="number" id="set-zoneint" value="10" min="1" max="60"></div>
+      <div><label>Tối đa 1 trận (giây)</label><input type="number" id="set-duration" value="600" min="10" max="1800"></div>
+      <div><label>Tối đa chiến binh</label><input type="number" id="set-maxf" value="24" min="2" max="50"></div>
+      <div><label>Người gục nằm (giây)</label><input type="number" id="set-downvis" value="10" min="5" max="60"></div>
+    </div>
+    <div class="form-row" style="margin-top:10px;">
+      <div><label>Vinh danh thắng (giây)</label><input type="number" id="set-spot" value="30" min="1" max="120"></div>
+      <div><label>Chống spam comment (giây)</label><input type="number" id="set-spam" value="5" min="1" max="60"></div>
+      <div><label class="switch"><input type="checkbox" id="set-voice" checked> Giọng đọc tiếng Việt</label></div>
+      <div><button class="btn btn-gold" onclick="saveSettings()">💾 Lưu cài đặt</button></div>
+    </div>
+    <div style="margin-top:6px; font-size:12px; color:#9fc4e8;">Quà lạ không rõ số xu → chỉ log cảnh báo, 0 sát thương, không hồi máu. Không bao giờ mặc định +5. Người gục không hồi sinh trong trận đang chạy.</div>
+  </div>
+  <div class="card">
+    <h2>🧪 Test (cần bật chế độ thử)</h2>
+    <div class="test-grid">
+      <button class="btn-test" onclick="testCall('join')">⚔️ Tham gia</button>
+      <button class="btn-test" onclick="testCall('comment')">🎯 Đánh tên ngẫu nhiên</button>
+      <button class="btn-test" onclick="testCall('tap', {count: 5})">❤️ Thả 5 tim</button>
+      <button class="btn-test" onclick="testCall('gift', {coins: 10, giftName: 'Hoa hồng'})">🎁 Quà 10 xu (+10 dmg dồn)</button>
+      <button class="btn-test" onclick="testCall('gift', {coins: 100, giftName: 'Heo may mắn'})">💚 Quà 100 xu (hồi 20 HP)</button>
+      <button class="btn-test" onclick="testCall('follow')">💙 Follow (+10 HP)</button>
+      <button class="btn-test" onclick="testCall('bulk-join', {count: 25})">👥 Test 25 người vào</button>
+      <button class="btn-test" onclick="testCall('demo')">▶️ Chạy demo 1 lượt</button>
+    </div>
+    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="demoStart()">▶️ Chạy demo tự động</button>
+      <button class="btn btn-red" onclick="demoStop()">■ Dừng demo</button>
+      <span id="demo-state" style="align-self:center; font-weight:800;">Demo: đang tắt</span>
+    </div>
+    <div id="test-result" style="margin-top:10px; font-size:14px; color:#bcd9f5;"></div>
+    <div class="card" style="margin-top:14px; background:#0b1a28;">
+      <h2>📖 Cách chơi (đọc nhanh)</h2>
+      <ul class="guide">
+        <li>Bình luận "tham gia" / "join" / "chiến" → chiến binh 100 HP + vũ khí ngẫu nhiên (kiếm/cung/búa, chỉ khác hình).</li>
+        <li>1 tim = đánh ngẫu nhiên 1 địch −1 HP · Bình luận tên 1 chiến binh = tập trung đánh người đó −3 HP (chống spam 1/5s).</li>
+        <li>Quà: 1 xu = +1 sát thương cho đòn tiếp theo (dồn tối đa +20); quà ≥100 xu hồi +20 HP (tối đa 100). Follow +10 HP 1 lần/trận.</li>
+        <li>HP về 0 → gục, 10s sau biến mất khỏi sân. Tối đa 24 người trên sân — người thứ 25 xếp hàng chờ, vào khi có người gục.</li>
+        <li>Vòng bo sau 3 phút: mỗi 10s mọi chiến binh −1 HP. Hết 10 phút còn &gt;1 người → người nhiều HP nhất thắng.</li>
+        <li>Còn đúng 1 người → spotlight 30s (vương miện + TTS xướng tên) → trận mới, mọi người phải "tham gia" lại.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px;">
+  <h2>🎯 Cài đặt TikFinity (6 Action riêng — mỗi Action 1 URL riêng theo sự kiện)</h2>
+  <div style="font-size:14px; margin-bottom:10px;">⚠️ TikFinity thật: Action "Trigger WebHook" <b>chỉ có ô URL, KHÔNG có ô body</b> — TikFinity tự gửi body dạng form cố định, mình không nhập body. Phân biệt sự kiện bằng <b>URL riêng</b>: tạo <b>6 Action webhook</b>, mỗi action dán 1 URL riêng dưới đây, rồi tạo <b>6 Event</b>, mỗi event chọn đúng Action của nó ở <b>"Trigger all of these actions"</b>. <b>Go LIVE trước rồi mới Connect TikFinity.</b> Xem chi tiết trong <a href="/huong-dan-tikfinity" id="guide-link" style="color:#ffd94d;">bài hướng dẫn TikFinity đầy đủ</a> (đã điền sẵn link phòng này).</div>
+  <h3 style="font-size:15px; color:#bcd9f5; margin:10px 0 6px;">Bước 1 — Tạo 6 Action webhook (mỗi action dán đúng URL riêng của nó)</h3>
+  <table><thead><tr><th>Tên Action</th><th>URL riêng (dán vào ô URL của Action)</th><th></th></tr></thead><tbody id="tikfinity-actions"><tr><td colspan="3">Đang tải…</td></tr></tbody></table>
+  <h3 style="font-size:15px; color:#bcd9f5; margin:14px 0 6px;">Bước 2 — Tạo 6 Event (mỗi event chọn đúng Action ở "Trigger all of these actions")</h3>
+  <table><thead><tr><th>Loại trigger trong TikFinity (Event)</th><th>Action chọn ở "Trigger all of these actions"</th></tr></thead><tbody id="tikfinity-events"><tr><td colspan="2">Đang tải…</td></tr></tbody></table>
+</div>
+
+<div class="card" style="margin-top:14px;">
+  <h2>📋 Nhật ký</h2>
+  <div class="log-box" id="logs"></div>
+</div>
+
+<script>
+const socket = io();
+let lastState = null;
+const $ = (id) => document.getElementById(id);
+function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+async function api(path, body) {
+  const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : '{}' });
+  return r.json();
+}
+function render(s) {
+  lastState = s;
+  $('mode-badge').textContent = s.settings.demoMode ? 'CHẾ ĐỘ THỬ' : 'TRỰC TIẾP';
+  $('mode-badge').className = 'badge ' + (s.settings.demoMode ? 'demo' : 'live');
+  $('demo-toggle').checked = !!s.settings.demoMode;
+  $('demo-state').textContent = 'Demo: ' + (s.demoActive ? '▶️ đang chạy' : 'đang tắt');
+  $('round-label').textContent = 'Trận ' + s.matchNo + ' · ' +
+    (s.phase === 'fighting' ? 'Đang đánh' : s.phase === 'spotlight' ? '👑 Vinh danh' : 'Chờ người chơi');
+  $('alive-count').textContent = s.fighters.filter((f) => f.alive).length;
+  $('zone-label').textContent = s.zoneActive ? 'ĐANG SIẾT (lần ' + s.zoneTicks + ')' : 'chưa siết';
+  if (s.phase === 'fighting' && s.matchEndsAt) {
+    const left = Math.max(0, Math.ceil((s.matchEndsAt - Date.now()) / 1000));
+    $('timer').textContent = 'còn ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+  } else if (s.phase === 'spotlight' && s.phaseEndsAt) {
+    $('timer').textContent = 'vinh danh ' + Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000)) + 's';
+  } else $('timer').textContent = '—';
+  $('down-count').textContent = s.downed.length;
+  $('queue-count').textContent = s.queueCount;
+  $('st-online').textContent = s.viewersOnline;
+  $('st-hits').textContent = s.stats.hits;
+  $('st-taps').textContent = s.stats.taps;
+  $('st-gifts').textContent = s.stats.gifts;
+  $('st-comments').textContent = s.stats.comments;
+  $('st-blocked').textContent = s.stats.commentsBlocked;
+  $('st-avatar').textContent = s.avatarStats.withAvatar + '/' + s.avatarStats.total;
+  $('direct-line').textContent = 'Đã nhận ' + s.webhookCount + ' sự kiện webhook · ' + s.viewersOnline + ' người đang xem';
+  $('avatar-warn').style.display = (s.avatarStats.total > 0 && s.avatarStats.withAvatar === 0) ? 'block' : 'none';
+  $('fighters-line').textContent = s.fighters.length
+    ? s.fighters.map((f) => f.weapon.icon + ' ' + f.name + ' ' + f.hp + ' HP' + (f.alive ? '' : ' 💀')).join(' · ')
+    : 'Chưa có chiến binh nào…';
+  $('top-body').innerHTML = s.top.length
+    ? s.top.map((t, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(t.name) + '</td><td>' + t.weapon.icon + ' ' + esc(t.weapon.name) + '</td><td>' + t.damage + '</td><td>' + t.hp + (t.alive ? '' : ' 💀') + '</td></tr>').join('')
+    : '<tr><td colspan="5">Chưa có ai đánh…</td></tr>';
+  $('logs').innerHTML = s.logs.slice(-80).reverse().map((l) => '<div>' + new Date(l.t).toLocaleTimeString('vi-VN') + ' ' + esc(l.text) + '</div>').join('');
+  if (!render.filled) {
+    render.filled = true;
+    $('set-hp').value = s.settings.startHp;
+    $('set-tapdmg').value = s.settings.tapDamage;
+    $('set-cmt').value = s.settings.commentDamage;
+    $('set-healcoins').value = s.settings.giftHealCoins;
+    $('set-healhp').value = s.settings.giftHealHp;
+    $('set-followhp').value = s.settings.followHealHp;
+    $('set-bonus').value = s.settings.maxBonus;
+    $('set-zoneafter').value = s.settings.zoneAfterS;
+    $('set-zoneint').value = s.settings.zoneIntervalS;
+    $('set-duration').value = s.settings.matchDurationS;
+    $('set-maxf').value = s.settings.maxFighters;
+    $('set-downvis').value = s.settings.downVisibleS;
+    $('set-spot').value = s.settings.spotlightS;
+    $('set-spam').value = s.settings.commentSpamS;
+    $('set-voice').checked = !!s.settings.voiceEnabled;
+  }
+}
+async function saveSettings() {
+  const r = await api('/api/settings', {
+    startHp: +$('set-hp').value, tapDamage: +$('set-tapdmg').value,
+    commentDamage: +$('set-cmt').value, giftHealCoins: +$('set-healcoins').value,
+    giftHealHp: +$('set-healhp').value, followHealHp: +$('set-followhp').value,
+    maxBonus: +$('set-bonus').value, zoneAfterS: +$('set-zoneafter').value,
+    zoneIntervalS: +$('set-zoneint').value, matchDurationS: +$('set-duration').value,
+    maxFighters: +$('set-maxf').value, downVisibleS: +$('set-downvis').value,
+    spotlightS: +$('set-spot').value, commentSpamS: +$('set-spam').value,
+    voiceEnabled: $('set-voice').checked,
+  });
+  $('test-result').textContent = r.success ? '✅ Đã lưu cài đặt.' : '❌ ' + (r.message || 'Lỗi.');
+}
+async function resetSession() { if (confirm('Làm mới toàn bộ phiên?')) { await api('/api/session/reset'); render.filled = false; } }
+async function resetMatch() { await api('/api/match/reset'); }
+async function startMatch() { const r = await api('/api/match/start'); if (!r.success) $('test-result').textContent = '❌ ' + (r.message || 'Lỗi.'); }
+async function testCall(kind, extra) {
+  const r = await api('/api/test/' + kind, extra || {});
+  $('test-result').textContent = r.success ? '✅ ' + kind + ' OK' + (r.count !== undefined ? ' (' + r.count + ')' : '') : '❌ ' + (r.message || 'Lỗi — bật chế độ thử trước.');
+}
+async function demoStart() {
+  const r = await api('/api/test/demo-start', {});
+  $('test-result').textContent = r.success ? '🧪 Demo đang chạy — xem overlay để thấy các chiến binh đánh nhau.' : '❌ ' + (r.message || 'Lỗi — bật chế độ thử trước.');
+}
+async function demoStop() {
+  const r = await api('/api/test/demo-stop', {});
+  $('test-result').textContent = r.success ? '🧪 Demo đã dừng.' : '❌ ' + (r.message || 'Lỗi.');
+}
+let tikUrls = {};
+function copyUrl(key) {
+  const t = tikUrls[key] || '';
+  if (!t) return;
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => { $('test-result').textContent = '✅ Đã sao chép URL của action "' + key + '". Dán vào ô URL trong TikFinity.'; });
+}
+async function loadTikfinity() {
+  try {
+    const r = await fetch('/api/tikfinity-actions');
+    const d = await r.json();
+    if (Array.isArray(d.actions)) {
+      tikUrls = {};
+      d.actions.forEach((a) => { tikUrls[a.key] = a.url; });
+      $('tikfinity-actions').innerHTML = d.actions.map((a) =>
+        '<tr><td><b>' + esc(a.actionName) + '</b></td>' +
+        '<td><code style="display:block; max-width:520px; overflow-x:auto; white-space:pre; font-size:12px;">' + esc(a.url) + '</code></td>' +
+        '<td><button class="btn btn-gold" onclick="copyUrl(\'' + a.key + '\')">📋 Sao chép URL</button></td></tr>').join('');
+      $('tikfinity-events').innerHTML = d.actions.map((a) =>
+        '<tr><td>' + esc(a.triggerLabel) + '</td><td><b>' + esc(a.actionName) + '</b></td></tr>').join('');
+    }
+  } catch (e) {
+    $('tikfinity-actions').innerHTML = '<tr><td colspan="3">Không tải được bảng URL — mở bài hướng dẫn TikFinity để xem.</td></tr>';
+  }
+}
+$('demo-toggle').addEventListener('change', async (e) => {
+  await api('/api/settings', { demoMode: e.target.checked });
+});
+const roomPath = location.pathname.replace(/\/index\.html$/, '');
+const overlayPath = roomPath.replace(/^\/room\//, '/o/');
+$('overlay-url').textContent = overlayPath;
+$('webhook-url').textContent = overlayPath + '/api/webhook';
+$('guide-link').href = '/huong-dan-tikfinity?game=dau-truong-sinh-ton&username=' + encodeURIComponent(location.pathname.split('/')[3] || '');
+socket.on('state-update', render);
+fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
+loadTikfinity();
+</script>
+</body>
+</html>

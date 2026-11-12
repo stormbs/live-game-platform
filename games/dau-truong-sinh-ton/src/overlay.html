@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đấu Trường Sinh Tồn — Overlay</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", Verdana, sans-serif; color: #fff;
+    background: linear-gradient(180deg, #0d1b2e 0%, #1b3a5c 40%, #2c2118 100%);
+  }
+  .demo-badge { position: absolute; top: 14px; left: 14px; z-index: 30; background: #b8860b; color: #1c1c1c; font-weight: 900; font-size: 24px; padding: 8px 16px; border-radius: 10px; display: none; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+  .demo-badge.on { display: block; }
+  .demo-note { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 30; background: rgba(0,0,0,.75); color: #ffd94d; font-weight: 800; font-size: 22px; padding: 10px 18px; border-radius: 10px; display: none; text-align: center; width: 900px; }
+  .demo-note.on { display: block; }
+  header { position: relative; z-index: 5; text-align: center; padding: 30px 30px 0; }
+  h1 { font-size: 60px; text-shadow: 0 3px 0 #000, 0 6px 18px rgba(0,0,0,.5); letter-spacing: 1px; }
+  .sub { font-size: 25px; text-shadow: 0 2px 6px rgba(0,0,0,.5); margin-top: 6px; }
+  .infobar { margin: 16px auto 0; width: 920px; background: rgba(0,0,0,.45); border-radius: 20px; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 28px; font-weight: 900; }
+  .infobar .zone { color: #ff8a94; }
+  .infobar .zone.safe { color: #7dff9e; }
+  .arena-wrap { position: absolute; top: 330px; left: 0; width: 1080px; height: 1000px; z-index: 4; }
+  .arena { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 960px; height: 900px; border-radius: 50%; background: radial-gradient(circle, #3d5a3a 0%, #2c4429 60%, #1e2f1c 100%); border: 6px solid #8a6d3b; box-shadow: inset 0 0 60px rgba(0,0,0,.5); }
+  .zone-ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 5px solid rgba(255, 60, 60, .9); border-radius: 50%; box-shadow: 0 0 30px rgba(255, 0, 0, .5), inset 0 0 40px rgba(255, 0, 0, .25); pointer-events: none; transition: width 1s linear, height 1s linear; }
+  .fighter { position: absolute; width: 130px; margin-left: -65px; margin-top: -55px; text-align: center; z-index: 6; }
+  .fighter .wp { font-size: 56px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+  .fighter .nm { font-size: 19px; font-weight: 800; text-shadow: 0 1px 3px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fighter .hpbar { height: 12px; background: rgba(0,0,0,.6); border-radius: 6px; overflow: hidden; margin-top: 3px; border: 1px solid rgba(255,255,255,.4); }
+  .fighter .hpbar i { display: block; height: 100%; background: linear-gradient(90deg, #37d67a, #7dff9e); transition: width .4s; }
+  .fighter .hpbar i.low { background: linear-gradient(90deg, #ff3b30, #ff8a80); }
+  .fighter .hpnum { font-size: 16px; font-weight: 800; color: #7dff9e; text-shadow: 0 1px 3px #000; }
+  .fighter.down { opacity: .45; filter: grayscale(1); }
+  .fighter.down .wp { font-size: 48px; }
+  .hit-float { position: absolute; z-index: 8; font-size: 34px; font-weight: 900; color: #ff5b4d; text-shadow: 0 2px 4px #000; animation: floatUp 1.4s ease-out forwards; pointer-events: none; }
+  @keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-70px); opacity: 0; } }
+  .heal-float { color: #7dff9e; }
+  .side { position: absolute; top: 1360px; left: 30px; width: 1020px; z-index: 6; display: flex; gap: 16px; }
+  .panel { flex: 1; background: rgba(0,0,0,.5); border-radius: 16px; padding: 14px 18px; }
+  .panel h3 { font-size: 25px; margin-bottom: 6px; }
+  .panel div { font-size: 22px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .queue-line { position: absolute; top: 1330px; left: 0; width: 1080px; text-align: center; font-size: 23px; font-weight: 800; color: #ffe9bd; text-shadow: 0 1px 3px #000; z-index: 6; }
+  .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
+  .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
+  .statusbar { position: absolute; left: 0; bottom: 0; width: 1080px; height: 140px; z-index: 5; background: #0d1b2e; color: #fff; display: flex; align-items: center; justify-content: space-around; font-size: 26px; font-weight: 800; padding: 0 30px; }
+  .statusbar .big { font-size: 34px; }
+  .banner { position: absolute; left: 50%; top: 700px; transform: translateX(-50%); z-index: 20; width: 980px; text-align: center; background: rgba(255,255,255,.96); border: 6px solid #ffd700; border-radius: 28px; padding: 34px 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4); display: none; }
+  .banner.on { display: block; animation: pop .4s ease; }
+  @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+  .banner h2 { font-size: 54px; color: #7a5c00; }
+  .banner p { font-size: 30px; margin-top: 10px; line-height: 1.4; color: #333; }
+</style>
+</head>
+<body>
+<div class="demo-badge" id="demo-badge">🧪 DEMO</div>
+<div class="demo-note" id="demo-note"></div>
+<header>
+  <h1>⚔️ ĐẤU TRƯỜNG SINH TỒN ⚔️</h1>
+  <div class="sub" id="round-line">Bình luận "tham gia" để vào trận — tim đánh ngẫu nhiên, bình luận tên địch để tập trung đánh</div>
+  <div class="infobar">
+    <span id="match-label">Trận 1 · Chờ người chơi</span>
+    <span id="timer"></span>
+    <span id="zone-label" class="zone safe">⭕ Vòng bo: chưa siết</span>
+  </div>
+</header>
+
+<div class="arena-wrap" id="arena-wrap">
+  <div class="arena"></div>
+  <div class="zone-ring" id="zone-ring" style="width:960px; height:900px;"></div>
+  <div id="fighters"></div>
+</div>
+<div class="queue-line" id="queue-line"></div>
+<div class="side">
+  <div class="panel" id="top5"><h3>🏆 Top sát thương</h3><div>Chưa có ai đánh…</div></div>
+  <div class="panel" id="downed"><h3>💀 Đã gục</h3><div>Chưa ai gục…</div></div>
+</div>
+<div class="ticker" id="ticker"></div>
+<div class="statusbar">
+  <span>⚔️ <span class="big" id="st-fighters">0</span> chiến binh</span>
+  <span>👀 <span class="big" id="st-online">0</span> đang xem</span>
+  <span>💥 <span class="big" id="st-hits">0</span> đòn đánh</span>
+</div>
+<div class="banner" id="banner"><h2 id="banner-title"></h2><p id="banner-text"></p></div>
+
+<script>
+const socket = io();
+let lastState = null;
+let voiceOn = true;
+const ttsQueue = [];
+let ttsPlaying = false;
+const fighterPos = {}; // uid -> {x, y} trong arena-wrap
+
+function playTts(text) {
+  if (!voiceOn || !text) return;
+  ttsQueue.push(text);
+  nextTts();
+}
+function nextTts() {
+  if (ttsPlaying || !ttsQueue.length) return;
+  ttsPlaying = true;
+  const text = ttsQueue.shift();
+  const audio = new Audio('/api/tts?text=' + encodeURIComponent(text));
+  audio.onended = () => { ttsPlaying = false; nextTts(); };
+  audio.onerror = () => {
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'vi-VN';
+      u.onend = () => { ttsPlaying = false; nextTts(); };
+      speechSynthesis.speak(u);
+    } catch (e) { ttsPlaying = false; nextTts(); }
+  };
+  audio.play().catch(() => { ttsPlaying = false; nextTts(); });
+}
+
+function showBanner(title, text, ms) {
+  const b = document.getElementById('banner');
+  document.getElementById('banner-title').textContent = title;
+  document.getElementById('banner-text').textContent = text || '';
+  b.classList.add('on');
+  if (ms) setTimeout(() => b.classList.remove('on'), ms);
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function render(s) {
+  lastState = s;
+  voiceOn = s.settings.voiceEnabled !== false;
+  document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
+  document.getElementById('match-label').textContent = 'Trận ' + s.matchNo + ' · ' +
+    (s.phase === 'fighting' ? s.fighters.filter((f) => f.alive).length + ' người còn sống' :
+     s.phase === 'spotlight' ? '👑 Vinh danh người thắng' : 'Chờ đủ 2 chiến binh');
+  const zl = document.getElementById('zone-label');
+  if (s.phase === 'fighting' && s.zoneActive) {
+    zl.textContent = '⭕ Vòng bo ĐANG SIẾT (lần ' + s.zoneTicks + ')';
+    zl.className = 'zone';
+  } else if (s.phase === 'fighting') {
+    zl.textContent = '⭕ Vòng bo: an toàn';
+    zl.className = 'zone safe';
+  } else {
+    zl.textContent = '⭕ Vòng bo: chưa siết';
+    zl.className = 'zone safe';
+  }
+  // Vòng bo thu hẹp: bán kính còn (1 - zonePct*0.7).
+  const ring = document.getElementById('zone-ring');
+  const shrink = 1 - s.zonePct * 0.7;
+  ring.style.width = Math.round(960 * shrink) + 'px';
+  ring.style.height = Math.round(900 * shrink) + 'px';
+  ring.style.display = s.phase === 'fighting' ? 'block' : 'none';
+
+  // Xếp chiến binh vòng tròn quanh đấu trường.
+  const n = s.fighters.length;
+  const cx = 540, cy = 500, rx = 400, ry = 340;
+  let html = '';
+  s.fighters.forEach((f, i) => {
+    const ang = -Math.PI / 2 + (n > 1 ? (i / n) * Math.PI * 2 : 0);
+    const x = Math.round(cx + rx * Math.cos(ang));
+    const y = Math.round(cy + ry * Math.sin(ang));
+    fighterPos[f.uid] = { x, y };
+    const pct = Math.max(0, Math.round(f.hp / f.maxHp * 100));
+    html += '<div class="fighter' + (f.alive ? '' : ' down') + '" style="left:' + x + 'px; top:' + y + 'px;">' +
+      '<div class="wp">' + (f.alive ? f.weapon.icon : '💀') + '</div>' +
+      '<div class="nm">' + escapeHtml(f.name) + '</div>' +
+      '<div class="hpbar"><i class="' + (pct <= 25 ? 'low' : '') + '" style="width:' + pct + '%"></i></div>' +
+      '<div class="hpnum">' + (f.alive ? f.hp + ' HP' : 'ĐÃ GỤC') + '</div></div>';
+  });
+  document.getElementById('fighters').innerHTML = html ||
+    '<div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:28px; font-weight:800; text-align:center; text-shadow:0 2px 6px #000;">Chưa có chiến binh nào<br>Bình luận "tham gia" để vào trận!</div>';
+
+  document.getElementById('queue-line').textContent = s.queueCount > 0
+    ? '⏳ Hàng chờ: ' + s.queueCount + ' người (' + s.queueNames.map(escapeHtml).join(', ') + (s.queueCount > 8 ? '…' : '') + ')'
+    : '';
+  document.getElementById('top5').innerHTML = '<h3>🏆 Top sát thương</h3>' + (s.top.length
+    ? s.top.map((t, i) => '<div>' + ['🥇','🥈','🥉','4.','5.'][i] + ' ' + escapeHtml(t.name) + ' ' + t.weapon.icon + ' — ' + t.damage + ' dmg' + (t.alive ? '' : ' 💀') + '</div>').join('')
+    : '<div>Chưa có ai đánh…</div>');
+  document.getElementById('downed').innerHTML = '<h3>💀 Đã gục</h3>' + (s.downed.length
+    ? s.downed.slice(-6).reverse().map((d) => '<div>💀 ' + escapeHtml(d.name) + '</div>').join('')
+    : '<div>Chưa ai gục…</div>');
+
+  document.getElementById('st-fighters').textContent = s.fighters.filter((f) => f.alive).length;
+  document.getElementById('st-online').textContent = s.viewersOnline;
+  document.getElementById('st-hits').textContent = s.stats.hits;
+  document.getElementById('ticker').innerHTML = s.logs.slice(-3).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
+
+  if (s.phase === 'spotlight' && s.winner) {
+    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
+    showBanner('👑 ' + s.winner.name.toUpperCase() + ' THẮNG TRẬN! 👑', s.winner.weapon.icon + ' ' + s.winner.weapon.name + ' · còn ' + s.winner.hp + ' HP · Trận mới sau ' + left + 's…');
+  } else if (s.phase === 'spotlight') {
+    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
+    showBanner('🤝 TRẬN HÒA!', 'Không còn ai sống sót. Trận mới sau ' + left + 's…');
+  } else {
+    document.getElementById('banner').classList.remove('on');
+  }
+  updateTimer();
+}
+function updateTimer() {
+  const s = lastState;
+  const el = document.getElementById('timer');
+  if (!s) { el.textContent = ''; return; }
+  if (s.phase === 'fighting' && s.matchEndsAt) {
+    const left = Math.max(0, Math.ceil((s.matchEndsAt - Date.now()) / 1000));
+    el.textContent = '⏱ ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+  } else if (s.phase === 'spotlight' && s.phaseEndsAt) {
+    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
+    el.textContent = '👑 ' + left + 's';
+  } else el.textContent = '';
+}
+function floatText(uid, text, heal) {
+  const pos = fighterPos[uid];
+  if (!pos) return;
+  const wrap = document.getElementById('arena-wrap');
+  const d = document.createElement('div');
+  d.className = 'hit-float' + (heal ? ' heal-float' : '');
+  d.textContent = text;
+  d.style.left = (pos.x - 20) + 'px';
+  d.style.top = (pos.y - 90) + 'px';
+  wrap.appendChild(d);
+  setTimeout(() => d.remove(), 1500);
+}
+
+socket.on('state-update', render);
+socket.on('hit', (d) => { if (d && d.targetUid) floatText(d.targetUid, '-' + d.dmg + ' HP', false); });
+socket.on('down', (d) => { if (d && d.name) playTts(d.name + ' đã gục!'); });
+socket.on('match-win', (d) => { if (d && d.name) playTts(d.name + ' thắng trận!'); });
+
+fetch('/api/state').then((r) => r.json()).then((s) => {
+  render(s);
+  const params = new URLSearchParams(location.search);
+  if (params.get('demo') === '1') {
+    if (s.webhookCount > 0) {
+      const n = document.getElementById('demo-note');
+      n.textContent = 'Phòng đã có sự kiện thật — không chạy demo được.';
+      n.classList.add('on');
+      return;
+    }
+    fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+      .then(() => fetch('/api/test/demo-start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }))
+      .catch(() => {});
+  }
+}).catch(() => {});
+setInterval(() => { if (lastState) render(lastState); }, 1000);
+</script>
+</body>
+</html>
