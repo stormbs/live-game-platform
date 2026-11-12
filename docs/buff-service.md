@@ -12,7 +12,7 @@ Tiêu chí phân loại **duy nhất**: đơn giá gốc của panel (`rate`, VN
 | Nhóm | Điều kiện | Hệ số bán |
 |---|---|---|
 | Dịch vụ **ĐẮT** | `rate >= 100.000 VND / 1000` | gốc × **1,20** (lãi 20%) |
-| Dịch vụ **RẺ** | `rate < 100.000 VND / 1000` | gốc × **1,40** (lãi 40%, mặc định trong khoảng 30–50%) |
+| Dịch vụ **RẺ** | `rate < 100.000 VND / 1000` | gốc × **1,30** (lãi 30%, Chủ tịch chốt 2026-11-12) |
 
 - Tỷ giá đổi VND -> USDT: `VND_PER_USDT = 26.000` (hằng số duy nhất).
 - Giá bán làm tròn **lên** 4 chữ số thập phân (không bao giờ bán dưới vốn).
@@ -24,10 +24,10 @@ Ví dụ (giá panel ngày 2026-11-12, tỷ giá 26.000):
 
 | Dịch vụ | Nhóm | Giá gốc /1000 | Giá bán /1000 |
 |---|---|---|---|
-| TikTok View (id 513) | Rẻ ×1,40 | 2,2692 USDT | **3,1770 USDT** |
-| Facebook Like (id 444) | Rẻ ×1,40 | 1,3077 USDT | **1,8308 USDT** |
-| Instagram Share (id 2793) | Rẻ ×1,40 | 0,0026 USDT | **0,0037 USDT** |
-| X View (id 5952) | Rẻ ×1,40 | 0,1654 USDT | **0,2316 USDT** |
+| TikTok View (id 513) | Rẻ ×1,30 | 2,2692 USDT | **2,9500 USDT** |
+| Facebook Like (id 444) | Rẻ ×1,30 | 1,3077 USDT | **1,7000 USDT** |
+| Instagram Share (id 2793) | Rẻ ×1,30 | 0,0026 USDT | **0,0034 USDT** |
+| X View (id 5952) | Rẻ ×1,30 | 0,1654 USDT | **0,2150 USDT** |
 | YouTube Like (id 732) | Đắt ×1,20 | 17,3077 USDT | **20,7693 USDT** |
 | Shopee (id 5446) | Đắt ×1,20 | 6,8846 USDT | **8,2616 USDT** |
 | LinkedIn Follow (id 41735) | Đắt ×1,20 | 24,1923 USDT | **29,0308 USDT** |

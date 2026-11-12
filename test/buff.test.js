@@ -33,15 +33,15 @@ test('pricing: ngưỡng đắt/rẻ theo rate panel (100.000 VND/1000)', () => 
   assert.equal(markupFor(450000), MARKUP_EXPENSIVE);
   assert.equal(markupFor(59000), MARKUP_CHEAP);
   assert.equal(MARKUP_EXPENSIVE, 1.20);
-  assert.equal(MARKUP_CHEAP, 1.40);
+  assert.equal(MARKUP_CHEAP, 1.30);
   assert.equal(VND_PER_USDT, 26000);
 });
 
-test('pricing: dịch vụ rẻ x1.40, làm tròn lên 4 chữ số', () => {
-  // FB Like id 444: rate 34.000 VND/1000 -> 34.000/26.000*1,4 = 1,830769.. -> 1,8308
-  assert.equal(sellPriceUsdt(34000, 1000), 1.8308);
-  // TikTok View id 513: rate 59.000, mua 20.000 -> panel 1.180.000 VND -> 63,5385 USDT
-  assert.equal(sellPriceUsdt(59000, 20000), 63.5385);
+test('pricing: dịch vụ rẻ x1.30, làm tròn lên 4 chữ số', () => {
+  // FB Like id 444: rate 34.000 VND/1000 -> 34.000/26.000*1,3 = 1,7
+  assert.equal(sellPriceUsdt(34000, 1000), 1.7);
+  // TikTok View id 513: rate 59.000, mua 20.000 -> panel 1.180.000 VND -> 59,0001 USDT
+  assert.equal(sellPriceUsdt(59000, 20000), 59.0001);
 });
 
 test('pricing: dịch vụ đắt x1.20', () => {
@@ -49,8 +49,8 @@ test('pricing: dịch vụ đắt x1.20', () => {
   assert.equal(sellPriceUsdt(450000, 100), 2.077);
   // Đúng ngưỡng 100.000 -> đắt: 100.000/26.000*1,2 = 4,615384.. -> 4,6154
   assert.equal(sellPriceUsdt(100000, 1000), 4.6154);
-  // Dưới ngưỡng 1 đơn vị -> rẻ: 99.999/26.000*1,4 = 5,384561.. -> 5,3846
-  assert.equal(sellPriceUsdt(99999, 1000), 5.3846);
+  // Dưới ngưỡng 1 đơn vị -> rẻ: 99.999/26.000*1,3 = 4,99995 -> 5
+  assert.equal(sellPriceUsdt(99999, 1000), 5);
 });
 
 test('pricing: quoteFor trả đủ trường + tier', () => {
@@ -59,9 +59,9 @@ test('pricing: quoteFor trả đủ trường + tier', () => {
     20000,
   );
   assert.equal(q.tier, 'cheap');
-  assert.equal(q.markup, 1.40);
+  assert.equal(q.markup, 1.30);
   assert.equal(q.panel_cost_vnd, 1180000);
-  assert.equal(q.sell_usdt, 63.5385);
+  assert.equal(q.sell_usdt, 59.0001);
   assert.equal(q.currency, 'USDT');
   const q2 = quoteFor(
     { service: 732, name: 'Like', category: 'Youtube | Like Youtube', rate: 450000, min: 10, max: 100000 },
@@ -167,7 +167,7 @@ test('GET /api/buff/platforms + /api/buff/config: tóm tắt + ví kế toán, k
   assert.equal(c.status, 200);
   assert.equal(c.json.finance_wallet, FINANCE_WALLET);
   assert.equal(c.json.finance_network, 'BEP20 (BSC)');
-  assert.equal(c.json.pricing.markup_cheap, 1.40);
+  assert.equal(c.json.pricing.markup_cheap, 1.30);
   assert.equal(c.json.pricing.markup_expensive, 1.20);
   assert.ok(!JSON.stringify(c.json).includes('463b')); // không lộ token
 });
@@ -180,7 +180,7 @@ test('POST /api/buff/quote: báo giá đúng + chặn số lượng ngoài min/m
     body: JSON.stringify({ service_id: 513, quantity: 20000 }),
   });
   assert.equal(ok.status, 200);
-  assert.equal(ok.json.quote.sell_usdt, 63.5385);
+  assert.equal(ok.json.quote.sell_usdt, 59.0001);
   assert.equal(ok.json.quote.tier, 'cheap');
   const bad = await fetchJson(srv.base, '/api/buff/quote', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -268,10 +268,10 @@ test('POST /api/buff/order: đủ tiền -> trừ ví + đặt panel + trả đ�
   assert.equal(r.json.ok, true);
   assert.equal(r.json.order.provider_order_id, '777001');
   assert.equal(r.json.order.status, 'in_progress');
-  assert.equal(r.json.quote.sell_usdt, 1.8308); // FB Like rẻ x1.40
+  assert.equal(r.json.quote.sell_usdt, 1.7); // FB Like rẻ x1.30
   assert.equal(deps.calls.deduct.length, 1);
   assert.equal(deps.calls.addOrder, 1);
-  assert.equal(deps.getBalance(), 100 - 1.8308);
+  assert.equal(deps.getBalance(), 100 - 1.7);
 });
 
 test('POST /api/buff/order: hết tiền ví -> 402, không gọi panel', async (t) => {
@@ -318,7 +318,7 @@ test('POST /api/buff/order: panel đặt lỗi sau khi trừ -> hoàn tiền + 5
   assert.equal(r.status, 502);
   assert.equal(r.json.error, 'PANEL_ORDER_FAILED');
   assert.equal(deps.calls.refund.length, 1);
-  assert.equal(deps.calls.refund[0].amount, 1.8308);
+  assert.equal(deps.calls.refund[0].amount, 1.7);
   assert.equal(deps.getBalance(), 100); // đã hoàn đủ
 });
 
