@@ -14,6 +14,8 @@
       linear-gradient(180deg, #3d1503 0%, #5c2204 34%, #7a2e06 68%, #3d1503 100%); }
   h1 { font-size: 58px; text-align: center; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
   .sub { text-align: center; font-size: 28px; color: #ffd9a0; margin-top: 6px; }
+  #demo-badge { position: absolute; top: 18px; left: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
+  #demo-badge.on { display: block; }
   .potzone { position: relative; height: 660px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
   .steam { font-size: 74px; animation: steam 2.4s ease-in-out infinite; opacity: .85; }
   @keyframes steam { 0%,100% { transform: translateY(14px) scale(1); opacity: .35; } 50% { transform: translateY(-16px) scale(1.12); opacity: .95; } }
@@ -53,6 +55,7 @@
 </style>
 </head>
 <body>
+<div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="wrap">
   <h1>🍲 BẾP ĂN TẬP THỂ 🍲</h1>
   <div class="sub">Bình luận thả nguyên liệu — 50 tim thổi lửa — Quà mở món đặc biệt</div>
@@ -125,6 +128,7 @@
   }
   function render(s) {
     lastState = s;
+    document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
     voiceOn = !!(s.settings && s.settings.voiceEnabled);
     const pct = Math.min(100, Math.round(100 * s.pot.points / s.potTarget));
     $('potLabel').textContent = '🍲 ' + (s.phase === 'cooking' ? 'Cỗ đang nấu' : s.phase === 'serving' ? '🎉 Cỗ đã chín — Dọn cỗ!' : '🎁 Kết quả bốc thăm') + ' — Nồi #' + s.potNo;
@@ -166,6 +170,14 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
   function poll() { fetch('/api/state').then(r => r.json()).then(render).catch(() => {}); }
   poll(); setInterval(poll, 2500);
+  // ?demo=1: tự bật chế độ thử + chạy demo (chỉ khi phòng chưa có event thật).
+  if (new URLSearchParams(location.search).get('demo') === '1') {
+    fetch('/api/state').then((r) => r.json()).then((st) => {
+      if ((st.webhookCount || 0) > 0) return;
+      return fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+        .then(() => fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) }));
+    }).catch(() => {});
+  }
   const socket = io();
   socket.on('state-update', render);
   socket.on('serving', d => speak('Cỗ đã chín! Mời cả nhà ăn cỗ, sắp bốc thăm mười người may mắn!'));

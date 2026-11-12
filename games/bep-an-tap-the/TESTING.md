@@ -32,3 +32,13 @@
 - **Quà**: không có bảng quà hardcode — số xu lấy thẳng từ payload webhook (`diamondCount`); payload không gửi xu → 0 điểm + log cảnh báo (đúng tinh thần "không bao giờ mặc định +5").
 - **Mốc món**: mở dần theo tổng xu quà tích lũy TRONG NỒI (reset theo nồi mới). Một quà lớn có thể mở nhiều món cùng lúc.
 - **Khớp nguyên liệu**: từ khóa dài nhất trước, ưu tiên thịt → rau → gia vị, khớp theo ranh giới từ (vd "cam ơn" không bị tính là "cá").
+
+## Chế độ demo (2026-11-13)
+- Mở overlay với `?demo=1` → tự bật chế độ thử + chạy demo: 3 người xem ảo vào
+  bếp, bình luận thả nguyên liệu / thả tim thổi lửa / tặng quà / follow / share
+  liên tục qua đúng đường event thật; huy hiệu `DEMO` ở góc trái overlay.
+  Nồi đủ 300 điểm tự dọn cỗ → bốc thăm → nồi mới, demo chạy tiếp tới khi dừng.
+- Dashboard → mục Test: `▶ Chạy demo` / `■ Dừng demo` (+ `🎬 Demo 6 bước` 1 lượt mẫu).
+  API: `POST /api/test/demo {action:"start"|"stop"|"once"}`.
+- An toàn: từ chối bật khi phòng đã có event thật; event thật đầu tiên tới thì
+  demo tự dừng. Người xem demo không tính vào thống kê avatar.

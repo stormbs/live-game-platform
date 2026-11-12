@@ -96,6 +96,8 @@
       <button data-t="giftbig">🎁 Quà 500 xu</button>
       <button data-t="bulk">👥 100 join</button>
       <button data-t="demo">🎬 Demo 6 bước</button>
+      <button data-t="demo-start">▶ Chạy demo</button>
+      <button data-t="demo-stop">■ Dừng demo</button>
     </p>
     <label>Bình luận thử (vd: thịt bò / rau muống / muối / hello)</label>
     <input id="cmtText" type="text" value="thịt bò">
@@ -186,9 +188,14 @@
       tap: ['/api/test/tap', { count: 50 }], gift: ['/api/test/gift', { coins: 10, giftName: 'Hoa hồng' }],
       gift100: ['/api/test/gift', { coins: 100, giftName: 'Heo may mắn' }], giftbig: ['/api/test/gift', { coins: 500, giftName: 'Du thuyền' }],
       bulk: ['/api/test/bulk-join', { count: 100 }], demo: ['/api/test/demo', {}],
+      demo-start: ['/api/test/demo', { action: 'start' }], demo-stop: ['/api/test/demo', { action: 'stop' }],
       comment: ['/api/test/comment', { text: $('cmtText').value }] };
     const [p, body] = map[t];
-    api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const call = () => api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const req = t === 'demo-start'
+      ? api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) }).then(() => { $('s_demo').checked = true; return call(); })
+      : call();
+    req
       .then(r => { $('testMsg').innerHTML = r.success ? '<span class="ok">OK: ' + esc(JSON.stringify(r).slice(0, 200)) + '</span>' : '<span class="err">Bật demoMode trước khi test.</span>'; poll(); });
   });
   $('ovLink').textContent = location.origin + base + '/overlay.html';
