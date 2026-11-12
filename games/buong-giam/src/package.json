@@ -1,0 +1,26 @@
+{
+  "name": "buong-giam-live",
+  "version": "1.0.0",
+  "description": "Buồng Giam 2D Game - Overlay TikTok LIVE 1080x1920 tương tác thời gian thực",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test_simulation.js"
+  },
+  "keywords": [
+    "tiktok-live",
+    "overlay",
+    "buong-giam",
+    "tikfinity",
+    "streamerbot"
+  ],
+  "author": "Antigravity Engineer",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "tiktok-live-connector": "^2.5.0",
+    "ws": "^8.22.1"
+  }
+}

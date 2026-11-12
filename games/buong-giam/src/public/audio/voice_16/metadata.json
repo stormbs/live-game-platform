@@ -1,0 +1,146 @@
+[
+  {
+    "id": "01",
+    "displayText": "Mâm cơm nhỏ, hạnh phúc to.",
+    "speechText": "Mâm cơm nhỏ, hạnh phúc to.",
+    "fileName": "01.mp3",
+    "filePath": "/audio/voice_16/01.mp3",
+    "sizeBytes": 22464,
+    "durationSec": 2.808
+  },
+  {
+    "id": "02",
+    "displayText": "Anh em đến với nhau bằng cái tình cảm. Ăn uống chỉ thêm bát thêm đũa, quan trọng là sống vui vẻ bên nhau.",
+    "speechText": "Anh em đến với nhau bằng cái tình cảm. Ăn uống chỉ thêm bát thêm đũa, quan trọng là sống vui vẻ bên nhau.",
+    "fileName": "02.mp3",
+    "filePath": "/audio/voice_16/02.mp3",
+    "sizeBytes": 68544,
+    "durationSec": 8.568
+  },
+  {
+    "id": "03",
+    "displayText": "Đã gọi là anh em thì lúc có tiền cũng như lúc không có tiền, hoạn nạn có nhau chứ không phải lúc ăn chơi thì có mặt, lúc hoạn nạn thì mất hút.",
+    "speechText": "Đã gọi là anh em thì lúc có tiền cũng như lúc không có tiền, hoạn nạn có nhau chứ không phải lúc ăn chơi thì có mặt, lúc hoạn nạn thì mất hút.",
+    "fileName": "03.mp3",
+    "filePath": "/audio/voice_16/03.mp3",
+    "sizeBytes": 87936,
+    "durationSec": 10.992
+  },
+  {
+    "id": "04",
+    "displayText": "Ngậm tăm không ai biết là mình đói.",
+    "speechText": "Ngậm tăm không ai biết là mình đói.",
+    "fileName": "04.mp3",
+    "filePath": "/audio/voice_16/04.mp3",
+    "sizeBytes": 22080,
+    "durationSec": 2.76
+  },
+  {
+    "id": "05",
+    "displayText": "Nghèo thì cho sạch, rách thì cho thơm. Mình có thể nghèo tiền nghèo bạc chứ không được nghèo nhân cách.",
+    "speechText": "Nghèo thì cho sạch, rách thì cho thơm. Mình có thể nghèo tiền nghèo bạc chứ không được nghèo nhân cách.",
+    "fileName": "05.mp3",
+    "filePath": "/audio/voice_16/05.mp3",
+    "sizeBytes": 59136,
+    "durationSec": 7.392
+  },
+  {
+    "id": "06",
+    "displayText": "Các em còn trẻ, lo mà học hành, làm ăn giúp đỡ bố mẹ. Đừng dính vào ba cái thứ chất kích thích rồi thân tàn ma dại.",
+    "speechText": "Các em còn trẻ, lo mà học hành, làm ăn giúp đỡ bố mẹ. Đừng dính vào ba cái thứ chất kích thích rồi thân tàn ma dại.",
+    "fileName": "06.mp3",
+    "filePath": "/audio/voice_16/06.mp3",
+    "sizeBytes": 83520,
+    "durationSec": 10.44
+  },
+  {
+    "id": "07",
+    "displayText": "47 là nhà.",
+    "speechText": "Bốn bảy là nhà.",
+    "fileName": "07.mp3",
+    "filePath": "/audio/voice_16/07.mp3",
+    "sizeBytes": 13056,
+    "durationSec": 1.632
+  },
+  {
+    "id": "08",
+    "displayText": "Hải Phòng thì anh cũng đã từng ra Hải Phòng, đi qua đường Thủ Dầu có một con sông và một cái cầu gọi nà cầu Nguyệt, dưới chân cầu có một quán chè rất nà ngon...",
+    "speechText": "Hải Phòng thì anh cũng đã từng ra Hải Phòng, đi qua đường Thủ Dầu có một con sông và một cái cầu gọi nà cầu Nguyệt, dưới chân cầu có một quán chè rất nà ngon...",
+    "fileName": "08.mp3",
+    "filePath": "/audio/voice_16/08.mp3",
+    "sizeBytes": 99264,
+    "durationSec": 12.408
+  },
+  {
+    "id": "09",
+    "displayText": "6789 anh em mình thế thôi, sống bằng cái tình cảm",
+    "speechText": "Sáu bảy tám chín anh em mình thế thôi, sống bằng cái tình cảm",
+    "fileName": "09.mp3",
+    "filePath": "/audio/voice_16/09.mp3",
+    "sizeBytes": 39744,
+    "durationSec": 4.968
+  },
+  {
+    "id": "10",
+    "displayText": "Các em cứ thử luộc đúng một con gà lên, không cần chặt. Các em để nó nguội xong các em ngồi xé, hai vợ chồng xé. Và những đứa con nhỏ mà các cháu nó không ăn được, thì các em xé nhỏ đút cho các cháu ăn. Xong hai vợ chồng em ăn bằng một con gà luộc lên, không chặt ra mà sẽ xé ở trên mâm. Các em ăn cảm thấy ngon và thú vị như thế nào...",
+    "speechText": "Các em cứ thử luộc đúng một con gà lên, không cần chặt. Các em để nó nguội xong các em ngồi xé, hai vợ chồng xé. Và những đứa con nhỏ mà các cháu nó không ăn được, thì các em xé nhỏ đút cho các cháu ăn. Xong hai vợ chồng em ăn bằng một con gà luộc lên, không chặt ra mà sẽ xé ở trên mâm. Các em ăn cảm thấy ngon và thú vị như thế nào...",
+    "fileName": "10.mp3",
+    "filePath": "/audio/voice_16/10.mp3",
+    "sizeBytes": 215616,
+    "durationSec": 26.952
+  },
+  {
+    "id": "11",
+    "displayText": "Thà rằng ăn tí bún tí rau, còn hơn thịt cá nói nhau nặng lời... Khi ăn, bát cơm chan nước mắt nó khổ lắm em ạ. Mình ăn bát bún bát rau mà vợ chồng con cái ríu rít, rôm rả cười nói, nó sướng!",
+    "speechText": "Thà rằng ăn tí bún tí rau, còn hơn thịt cá nói nhau nặng lời... Khi ăn, bát cơm chan nước mắt nó khổ lắm em ạ. Mình ăn bát bún bát rau mà vợ chồng con cái ríu rít, rôm rả cười nói, nó sướng!",
+    "fileName": "11.mp3",
+    "filePath": "/audio/voice_16/11.mp3",
+    "sizeBytes": 135744,
+    "durationSec": 16.968
+  },
+  {
+    "id": "12",
+    "displayText": "Nói ít thôi, đau đầu lắm!",
+    "speechText": "Nói ít thôi, đau đầu lắm!",
+    "fileName": "12.mp3",
+    "filePath": "/audio/voice_16/12.mp3",
+    "sizeBytes": 20544,
+    "durationSec": 2.568
+  },
+  {
+    "id": "13",
+    "displayText": "Con người mình hay cái đầu của em trông không khác gì một quả trứng em ạ, nó vỡ lúc nào thì biết lúc đấy thôi, mình không nói trước được cái gì cả.",
+    "speechText": "Con người mình hay cái đầu của em trông không khác gì một quả trứng em ạ, nó vỡ lúc nào thì biết lúc đấy thôi, mình không nói trước được cái gì cả.",
+    "fileName": "13.mp3",
+    "filePath": "/audio/voice_16/13.mp3",
+    "sizeBytes": 81792,
+    "durationSec": 10.224
+  },
+  {
+    "id": "14",
+    "displayText": "Những con người âm thầm đến làm cái rồi đi, anh rất sợ và rất nể.",
+    "speechText": "Những con người âm thầm đến làm cái rồi đi, anh rất sợ và rất nể.",
+    "fileName": "14.mp3",
+    "filePath": "/audio/voice_16/14.mp3",
+    "sizeBytes": 46464,
+    "durationSec": 5.808
+  },
+  {
+    "id": "15",
+    "displayText": "Sống ở trên đời phải biết trước biết sau, tôn trọng lẫn nhau thì đi đâu cũng được quý mến.",
+    "speechText": "Sống ở trên đời phải biết trước biết sau, tôn trọng lẫn nhau thì đi đâu cũng được quý mến.",
+    "fileName": "15.mp3",
+    "filePath": "/audio/voice_16/15.mp3",
+    "sizeBytes": 50304,
+    "durationSec": 6.6
+  },
+  {
+    "id": "16",
+    "displayText": "Ấn toa-lét trôi đi mất, chỉ còn lại tình cảm.",
+    "speechText": "Ấn toa-lét trôi đi mất, chỉ còn lại tình cảm.",
+    "fileName": "16.mp3",
+    "filePath": "/audio/voice_16/16.mp3",
+    "sizeBytes": 28992,
+    "durationSec": 3.624
+  }
+]

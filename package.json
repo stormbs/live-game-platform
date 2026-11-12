@@ -1,0 +1,24 @@
+{
+  "name": "live-game-platform",
+  "version": "1.0.0",
+  "description": "Nền tảng host tập trung cho 3 game TikTok LIVE (Vẽ Avatar, Buồng Giam, Thắp Sáng Bản Đồ Việt Nam) — multi-room, nhập TikTok ID là chạy.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "node scripts/build-engines.js",
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "tiktok-live-connector": "^2.5.0",
+    "ws": "^8.22.1"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  }
+}

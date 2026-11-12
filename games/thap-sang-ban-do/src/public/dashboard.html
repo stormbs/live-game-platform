@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Dashboard — Thắp Sáng Bản Đồ Việt Nam</title>
+<style>
+  body { font-family: Arial, sans-serif; max-width: 980px; margin: 0 auto; padding: 20px; background:#f4f6fb; color:#222; }
+  h1 { font-size: 24px; } h2 { font-size: 18px; margin-top: 28px; border-bottom: 2px solid #ffd700; padding-bottom: 4px; }
+  .card { background:#fff; border-radius: 12px; padding: 16px; margin: 12px 0; box-shadow: 0 1px 6px rgba(0,0,0,.08); }
+  button { padding: 8px 14px; margin: 3px; border-radius: 8px; border: 1px solid #ccc; background:#fff; cursor: pointer; font-size: 14px; }
+  button:hover { background:#fff7d6; } button.primary { background:#ffd700; border-color:#d4a900; font-weight: bold; }
+  button.lit { background:#ffe98a; border-color:#d4a900; }
+  input, select { padding: 7px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; margin: 3px; }
+  .grid { display:grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .grid button { text-align:left; font-size: 13px; }
+  #log { font-size: 13px; line-height: 1.7; max-height: 260px; overflow-y: auto; background:#0b1226; color:#cfe0ff; padding: 12px; border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td, th { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: left; }
+  .ok { color: #0a7d2c; font-weight: bold; } .warn { color: #b3261e; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>🗺️ Dashboard — Thắp Sáng Bản Đồ Việt Nam <span id="status"></span></h1>
+<p>Overlay: <a href="/overlay.html" target="_blank">http://localhost:3009/overlay.html</a> &nbsp;•&nbsp; Dashboard: <a href="/dashboard" target="_blank">http://localhost:3009/dashboard</a> &nbsp;•&nbsp; Webhook TikFinity: <code>POST http://localhost:3009/api/webhook</code></p>
+
+<div class="card" style="border:2px solid #d4a900">
+  <h2>🔗 Link overlay cho TikTok LIVE Studio</h2>
+  <div style="font-size:16px">Link overlay: <code id="overlayLink" style="font-size:16px;background:#fff7d6;padding:4px 8px;border-radius:6px">http://localhost:3009/overlay.html</code>
+  <button class="primary" onclick="copyLink()">📋 Sao chép link</button>
+  <a href="/overlay.html" target="_blank"><button>Mở overlay ↗</button></a> <span id="copyMsg"></span></div>
+  <p style="font-size:14px;line-height:1.7"><b>Cách thêm vào TikTok LIVE Studio:</b><br>
+  1. Chạy <code>start.bat</code> trước (server phải đang chạy thì link mới hiện hình).<br>
+  2. Trong LIVE Studio: bấm <b>+ Thêm nguồn → Link</b> (nguồn trang web).<br>
+  3. Dán link trên vào ô URL. Đặt <b>độ phân giải tùy chỉnh 1080 x 1920</b> (không để mặc định 800x600).<br>
+  4. Kéo cho nguồn vừa đúng khung dọc 9:16 (chọn <b>Fit</b>, đừng chọn Stretch kẻo hình bị kéo dài).<br>
+  5. Bật âm thanh của nguồn (để nghe voice + nhạc nền), tích <b>giữ trạng thái hoạt động</b> nếu có.<br>
+  ⚠️ Nếu LIVE Studio báo "Enter correct URL" thì kiểm tra lại: phải gõ đủ <code>http://localhost:3009/overlay.html</code> (có <code>/overlay.html</code> ở cuối, không gõ thiếu).</p>
+</div>
+
+<div class="card">
+  <h2>📊 Trạng thái</h2>
+  <div id="state">Đang tải…</div>
+</div>
+
+<div class="card">
+  <h2>📡 Kết nối TikFinity <span style="font-size:13px;color:#666">(đèn báo v7.1 — chỉ tính sự kiện webhook thật)</span></h2>
+  <div id="webhookBox">Đang tải…</div>
+</div>
+
+<div class="card">
+  <h2>⚡ Điều khiển ván</h2>
+  <button class="primary" onclick="act('lightRandom')">🎲 Thắp ngẫu nhiên 1 tỉnh</button>
+  <button onclick="act('lightAll')">🌟 Sáng hết (xem màn ăn mừng)</button>
+  <button onclick="act('reset')">🔄 Chơi lại từ đầu</button>
+  <label style="margin-left:12px"><input type="checkbox" id="sim" onchange="act('simulator',{on:this.checked})"> Giả lập người xem</label>
+</div>
+
+<div class="card">
+  <h2>🖐️ Thắp tay 1 tỉnh</h2>
+  <div class="grid" id="provGrid"></div>
+</div>
+
+<div class="card">
+  <h2>💬 Gửi sự kiện tay (test)</h2>
+  <input id="evUser" placeholder="Tên người xem" value="Lan" style="width:130px">
+  <input id="evAvatar" placeholder="Link avatar (tùy chọn, để trống = chữ cái)" style="width:230px">
+  <input id="evText" placeholder="Comment: Hà Nội / 15 / sai gon…" style="width:260px">
+  <button onclick="sendEvent('chat')">Gửi comment</button>
+  <input id="evGift" placeholder="Tên quà" value="Hoa hồng" style="width:110px">
+  <input id="evCoins" type="number" value="10" style="width:70px"> xu
+  <button onclick="sendEvent('gift')">Gửi quà</button>
+  <button onclick="sendEvent('follow')">Follow</button>
+  <button onclick="sendEvent('like')">+100 tim</button>
+  <button onclick="sendEvent('join')">Vào xem</button>
+</div>
+
+<div class="card">
+  <h2>🔊 Hiệu ứng âm thanh (v4)</h2>
+  <label><input type="checkbox" id="sfxOn" onchange="saveSfx()"> Bật hiệu ứng âm thanh</label>
+  <p style="font-size:13px;color:#666">Âm thanh tổng hợp bằng WebAudio (không cần file): <b>pop</b> khi tỉnh vừa sáng, <b>chuông</b> khi tỉnh vượt mốc điểm, <b>kèn</b> khi sáng đủ cả nước. Phát qua Browser Source trong OBS (nhớ tick <b>Control audio via OBS</b>). Tắt ở đây nếu bạn chỉ muốn nhạc nền + voice.</p>
+</div>
+
+<div class="card">
+  <h2>🔊 Voice đọc (file TTS sẵn — kiểu Buồng giam)</h2>
+  <label><input type="checkbox" id="voiceOn" onchange="saveVoice()"> Bật voice đọc</label>
+  &nbsp; Âm lượng voice: <input id="c-voiceVolume" type="number" step="0.1" min="0" max="1" value="0.9" style="width:60px" onchange="saveVoice()">
+  &nbsp; <button onclick="testVoice()">🔊 Thử giọng (đọc Hà Nội)</button>
+  <div id="voiceInfo" style="font-size:13px;margin-top:6px">Đang tải danh sách file voice…</div>
+  <p style="font-size:13px;color:#666">Voice <b>đọc cả tên người xem</b> khi thắp tỉnh lần đầu ("Lan đã thắp sáng Hà Nội...") — câu có tên được server tổng hợp riêng bằng giọng tiếng Việt (Google TTS) rồi cache lại trong <code>public/voice/cache/</code>, câu giống nhau không tổng hợp lại. Câu cố định (cảm ơn, mốc điểm, ván mới...) dùng file TTS sẵn trong <code>public/voice/</code> — cùng 1 giọng, overlay chỉ phát file, không dùng giọng trình duyệt. Khi nhiều comment cùng lúc: thông báo trên màn hình vẫn đầy đủ, còn voice <b>đọc chọn lọc theo ưu tiên</b> — tỉnh lần đầu được thắp đọc trước, cảm ơn quà/follow đọc sau hoặc bỏ qua khi bận, không cắt ngang câu đang đọc nên không bị vấp. Khi voice đọc, nhạc nền tự nhỏ xuống 10% rồi to lại. Tổng hợp tên cần mạng; lỗi mạng thì voice đọc clip sẵn (không tên) để không kẹt.</p>
+</div>
+
+<div class="card">
+  <h2>🎵 Nhạc nền (playlist quê hương)</h2>
+  <div id="musicBox">Đang tải…</div>
+  <button onclick="musicCmd('play')">▶️ Phát</button>
+  <button onclick="musicCmd('pause')">⏸️ Tạm dừng</button>
+  <button onclick="musicCmd('prev')">⏮️ Bài trước</button>
+  <button onclick="musicCmd('next')">⏭️ Bài sau</button>
+  &nbsp; Âm lượng: <input id="musicVol" type="range" min="0" max="1" step="0.05" value="0.35" style="width:130px" onchange="musicVol(this.value)">
+  <p style="font-size:13px;color:#666">6 track nhạc nền nhẹ tự tạo (không bản quyền), phát vòng lặp trong overlay. Muốn dùng bài thật: thả file <b>.mp3</b> vào thư mục <code>public/music/</code> rồi khởi động lại server — bài mới tự vào playlist. Nhạc phát từ overlay trong OBS (nhớ tick <b>Control audio via OBS</b> ở Browser Source).</p>
+</div>
+
+<div class="card">
+  <h2>⚙️ Luật chơi (lưu vào config.json)</h2>
+  <div id="cfgForm"></div>
+  <button class="primary" onclick="saveCfg()">💾 Lưu luật chơi</button>
+  <span id="cfgMsg"></span>
+  <p style="font-size:13px;color:#666">Điểm/tỉnh khi thắp mới, điểm/xu quà, tim để thắp 1 tỉnh, chống spam comment, thời lượng ván, giây tự chơi lại sau khi hết giờ.</p>
+</div>
+
+<div class="card">
+  <h2>🏆 Top tỉnh + Top người thắp</h2>
+  <div id="tops"></div>
+</div>
+
+<div class="card">
+  <h2>📜 Nhật ký sự kiện</h2>
+  <div id="log"></div>
+</div>
+
+<script>
+let PROVS = [];
+let CFG = {};
+async function load() {
+  const s = await (await fetch('/api/state')).json();
+  CFG = await (await fetch('/api/config')).json();
+  render(s);
+}
+async function render(s) {
+  if (!PROVS.length) {
+    PROVS = await (await fetch('/api/provinces')).json();
+    const g = document.getElementById('provGrid');
+    g.innerHTML = PROVS.map(p => `<button id="pb-${p.num}" onclick="lightProv(${p.num})">${p.num}. ${p.name}</button>`).join('');
+    document.getElementById('cfgForm').innerHTML = `
+      Comment tên tỉnh: +<input id="c-pointsPerComment" type="number" value="${CFG.pointsPerComment}" style="width:60px"> điểm/tỉnh
+      Mỗi xu quà: +<input id="c-pointsPerCoin" type="number" value="${CFG.pointsPerCoin}" style="width:60px"> điểm cho tỉnh quê<br>
+      Tap: <input id="c-tapsPerPoint" type="number" value="${CFG.tapsPerPoint}" style="width:60px"> tap = +1 điểm cho tỉnh quê
+      Chống spam comment (giây): <input id="c-commentCooldownSec" type="number" value="${CFG.commentCooldownSec}" style="width:60px">
+      Đổi quê tối đa mỗi người/ván: <input id="c-maxHomeChangesPerRound" type="number" min="0" value="${CFG.maxHomeChangesPerRound ?? 1}" style="width:60px"> lần (0 = khóa hẳn sau lần chọn đầu)<br>
+      Mốc điểm tỉnh (cách nhau bằng dấu phẩy): <input id="c-milestonePoints" type="text" value="${(CFG.milestonePoints || [50, 100, 200]).join(', ')}" style="width:130px"><br>
+      ⏰ Thời lượng 1 ván (phút): <input id="c-gameDurationMin" type="number" min="1" value="${CFG.gameDurationMin ?? 60}" style="width:70px"> — hết giờ thì tỉnh điểm cao nhất thắng + vinh danh người đóng góp nhiều nhất (sáng đủ 34/34 chỉ là 1 mốc, không hết ván)<br>
+      Tự chơi lại sau khi hết giờ ván (giây): <input id="c-autoResetSeconds" type="number" value="${CFG.autoResetSeconds}" style="width:70px">`;
+  }
+  document.getElementById('status').innerHTML = s.phase === 'complete'
+    ? '<span class="ok">⏰ HẾT GIỜ — VINH DANH</span>' + (s.winner && s.winner.province ? ` 🏆 ${escapeHtml(s.winner.province.name)} (${s.winner.province.points}đ)` : '') + (s.winner && s.winner.contributor ? ` • 🌟 ${escapeHtml(s.winner.contributor.name)} (${s.winner.contributor.points}đ)` : '')
+    : `<span>${s.lit}/34 tỉnh</span> • ⏰ còn ${fmtTime(s.msRoundLeft)}`;
+  document.getElementById('state').innerHTML =
+    `<b>Ván ${s.roundNo}</b> — đã sáng <b>${s.lit}/34</b> tỉnh • ${s.viewers} người xem • ` +
+    `${s.stats.totalGifts} quà (${s.stats.totalCoins} xu) • ${s.stats.totalTaps} tim • ${s.stats.totalLights} lượt thắp` +
+    (s.phase === 'complete' ? ` • <span class="warn">Ván mới sau ${Math.ceil(s.msLeft / 1000)}s</span>` : ` • ⏰ còn ${fmtTime(s.msRoundLeft)}`);
+  // Đèn báo TikFinity (v7.1): chỉ tính sự kiện webhook THẬT, không tính
+  // sự kiện giả lập / gửi tay — để biết đường link live có đang chạy không.
+  const wh = s.webhook || { count: 0, secondsAgo: null };
+  let whHtml;
+  if (!wh.count) {
+    whHtml = '🔴 <b>CHƯA NHẬN SỰ KIỆN NÀO</b> — TikFinity chưa gửi gì tới server. Kiểm tra: <b>(1)</b> server đã chạy lại sau khi giải nén zip mới chưa (Ctrl+C cửa sổ đen cũ → chạy lại <code>start.bat</code>); <b>(2)</b> Action trong TikFinity đã bật chưa, URL đúng <code>http://localhost:3009/api/webhook</code>; <b>(3)</b> thứ tự: Go LIVE trước, rồi mới Connect trong TikFinity.';
+  } else if (wh.secondsAgo != null && wh.secondsAgo <= 60) {
+    whHtml = `🟢 <b>ĐÃ KẾT NỐI</b> — sự kiện cuối ${fmtAgo(wh.secondsAgo)} trước (loại: ${escapeHtml(wh.lastType || '?')}, tổng ${wh.count} sự kiện). Comment/quà/tim trên live đang chảy về server.`;
+  } else {
+    whHtml = `🟡 <b>TÍN HIỆU YẾU</b> — sự kiện cuối ${fmtAgo(wh.secondsAgo)} trước (tổng ${wh.count} sự kiện). Có thể live đã ngắt hoặc TikFinity mất kết nối — kiểm tra tab TikFinity còn Connected không, thử Connect lại.`;
+  }
+  if (s.simulator) whHtml += '<br>⚠️ <b>Đang bật "Giả lập người xem"</b> — sự kiện giả cũng làm sáng bản đồ, dễ nhầm với sự kiện thật. Tắt giả lập trước khi live thật (đèn báo trên chỉ tính sự kiện thật nên vẫn đúng).';
+  // Soi payload thô (v7.2): hiện đúng những gì TikFinity gửi sang lần cuối,
+  // để khỏi phải mò cửa sổ đen khi comment không sáng.
+  if (wh.lastRaw !== undefined) {
+    const rawShown = wh.count === 0 ? '(chưa có webhook nào)' : (wh.lastRaw || '(body rỗng — TikFinity gửi POST không kèm dữ liệu)');
+    whHtml += `<details style="margin-top:8px"><summary style="cursor:pointer">🔍 Xem payload thô gần nhất (để đối chiếu dạng TikFinity gửi)</summary><div style="font-size:12px;word-break:break-all;background:#111;color:#8f8;padding:8px;border-radius:6px;margin-top:4px">content-type: ${escapeHtml(wh.lastContentType || '(không có)')}<br>${escapeHtml(rawShown)}</div></details>`;
+  }
+  document.getElementById('webhookBox').innerHTML = whHtml;
+  document.getElementById('sfxOn').checked = CFG.sfxEnabled !== false;
+  document.getElementById('sim').checked = !!s.simulator;
+  document.getElementById('voiceOn').checked = s.voice ? !!s.voice.enabled : true;
+  if (s.voice) {
+    document.getElementById('c-voiceVolume').value = s.voice.volume;
+  }
+  for (const p of s.provinces) {
+    const b = document.getElementById('pb-' + p.num);
+    if (b) b.classList.toggle('lit', p.lit);
+  }
+  document.getElementById('tops').innerHTML =
+    '<b>Tỉnh sáng nhất:</b> ' + (s.topProvinces.map(p => `${p.name} (${p.points}đ)`).join(' • ') || '—') +
+    '<br><b>Top thắp sáng:</b> ' + (s.topLighters.map(u => `${u.name} (${u.points}đ)`).join(' • ') || '—') +
+    '<br><b>Top tặng quà:</b> ' + ((s.topGifters || []).map(u => `${u.name} (${u.coins} xu)`).join(' • ') || '—') +
+    '<br><b>Mới thắp:</b> ' + (s.recent.map(r => `${r.viewer} → ${r.provinceName} (${r.via})`).join(' • ') || '—');
+  document.getElementById('log').innerHTML = s.feed.map(f => `<div>[${new Date(f.t).toLocaleTimeString('vi-VN')}] ${escapeHtml(f.text)}</div>`).join('') || 'Chưa có sự kiện.';
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function fmtAgo(sec){ if(sec==null) return '—'; if(sec<60) return sec+' giây'; const m=Math.floor(sec/60); return m+' phút'+(sec%60?' '+(sec%60)+' giây':''); }
+function fmtTime(ms){ const s=Math.max(0,Math.ceil(ms/1000)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60; const p=n=>String(n).padStart(2,'0'); return h>0?`${h}:${p(m)}:${p(ss)}`:`${p(m)}:${p(ss)}`; }
+async function act(action, extra={}) {
+  await fetch('/api/action', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action, ...extra }) });
+  load();
+}
+async function lightProv(n) {
+  await fetch('/api/event', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ type:'light', user:'Chủ phòng', province:n }) });
+  load();
+}
+async function sendEvent(type) {
+  const user = document.getElementById('evUser').value || 'Khách';
+  const body = { type, user };
+  const av = document.getElementById('evAvatar').value.trim();
+  if (av) body.avatar = av;
+  if (type === 'chat') body.text = document.getElementById('evText').value;
+  if (type === 'gift') { body.giftName = document.getElementById('evGift').value; body.coins = Number(document.getElementById('evCoins').value) || 1; }
+  if (type === 'like') body.count = 100;
+  await fetch('/api/event', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  load();
+}
+async function saveCfg() {
+  const cfg = {};
+  for (const k of ['pointsPerComment','pointsPerCoin','tapsPerPoint','commentCooldownSec','autoResetSeconds','maxHomeChangesPerRound','gameDurationMin']) {
+    cfg[k] = Number(document.getElementById('c-' + k).value);
+  }
+  const ms = document.getElementById('c-milestonePoints').value.split(',').map(x => Number(x.trim())).filter(n => n > 0).sort((a, b) => a - b);
+  if (ms.length) cfg.milestonePoints = ms;
+  await fetch('/api/action', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'config', config: cfg }) });
+  document.getElementById('cfgMsg').textContent = 'Đã lưu ✓';
+  setTimeout(() => document.getElementById('cfgMsg').textContent = '', 2000);
+  load();
+}
+async function saveSfx() {
+  await fetch('/api/action', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'config', config: { sfxEnabled: document.getElementById('sfxOn').checked } }) });
+  load();
+}
+async function musicCmd(cmd, extra = {}) {
+  await fetch('/api/action', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'music', cmd, ...extra }) });
+  loadMusic();
+}
+async function musicVol(v) {
+  await fetch('/api/action', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'music', volume: Number(v) }) });
+}
+async function loadMusic() {
+  const m = await (await fetch('/api/music')).json();
+  document.getElementById('musicVol').value = m.volume;
+  document.getElementById('musicBox').innerHTML =
+    (m.playing ? '▶️ Đang phát: ' : '⏸️ Đang dừng: ') + '<b>' + (m.tracks[m.trackIndex] ? escapeHtml(m.tracks[m.trackIndex].name) : '—') + '</b><br>' +
+    m.tracks.map((t, i) => `<button onclick="musicCmd('track',{index:${i}})" style="${i === m.trackIndex ? 'background:#ffe98a' : ''}">${i + 1}. ${escapeHtml(t.name)}</button>`).join(' ');
+}
+loadMusic();
+function copyLink() {
+  const url = document.getElementById('overlayLink').textContent;
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => {
+    document.getElementById('copyMsg').textContent = 'Đã sao chép ✓';
+    setTimeout(() => document.getElementById('copyMsg').textContent = '', 2000);
+  });
+  else { const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); document.getElementById('copyMsg').textContent = 'Đã sao chép ✓'; }
+}
+async function saveVoice() {
+  const cfg = {
+    voiceEnabled: document.getElementById('voiceOn').checked,
+    voiceVolume: Number(document.getElementById('c-voiceVolume').value) || 0.9,
+  };
+  await fetch('/api/action', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'config', config: cfg }) });
+  load();
+}
+async function loadVoiceInfo() {
+  try {
+    const v = await (await fetch('/api/voice')).json();
+    document.getElementById('voiceInfo').innerHTML =
+      `<span class="ok">✓ Có ${v.count} file voice TTS sẵn</span> (34 tỉnh + tên tỉnh cũ + câu cảm ơn/mốc/ván mới) + ${v.cacheCount || 0} câu đọc tên đã cache. Thiếu file nào thì overlay bỏ qua clip đó, không lỗi.`;
+  } catch { document.getElementById('voiceInfo').textContent = 'Không tải được danh sách file voice.'; }
+}
+loadVoiceInfo();
+async function testVoice() {
+  await fetch('/api/action', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'speak', text:'Đã thắp sáng Hà Nội, thủ đô ngàn năm văn hiến!', clip:'prov-12' }) });
+}
+load();
+setInterval(load, 1000); // dashboard cập nhật mỗi 1s (v7.9: 2s -> 1s)
+// Link overlay hiển thị theo đúng địa chỉ đang mở dashboard (thường là localhost:3009).
+document.getElementById('overlayLink').textContent = location.origin + '/overlay.html';
+</script>
+</body>
+</html>

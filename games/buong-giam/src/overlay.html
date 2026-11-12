@@ -1,0 +1,2985 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Overlay Buồng Giam 2D Game - 1080x1920</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/audio-engine.js?v=20261102_09"></script>
+  <script src="/js/voice16-engine.js?v=20261105_sub"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    /* MỤC 9.1: VỪA KHÍT 1 MÀN HÌNH, KHÔNG CUỘN DỌC, KHÔNG CUỘN NGANG */
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+
+    #overlay-scaler {
+      width: 1080px;
+      height: 1920px;
+      position: relative;
+      transform-origin: center center;
+      background: #000;
+      flex-shrink: 0;
+    }
+
+    #game-stage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1080px;
+      height: 1920px;
+      background: url('/assets/nen-tu-anh-41.webp') no-repeat center center;
+      background-size: 100% 100%;
+    }
+
+    /* DEMO WATERMARK */
+    #demo-watermark {
+      display: none;
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255,82,82,0.9);
+      color: #fff;
+      font-weight: 900;
+      font-size: 16px;
+      padding: 4px 18px;
+      border-radius: 20px;
+      z-index: 999;
+      border: 2px solid #fff;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+      letter-spacing: 1px;
+    }
+
+    /* MỤC 9.1: BẢNG ĐIỂM & BẢNG TOP THU NHỎ Ở 2 GÓC TRÊN, KHÔNG CHE BÀN */
+    .hud-panel {
+      position: absolute;
+      width: 290px; /* < 28% của 1080px */
+      max-height: 400px; /* < 22% của 1920px */
+      background: rgba(14, 18, 25, 0.94);
+      border: 2px solid #b8860b;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.85);
+      border-radius: 12px;
+      color: #fff;
+      z-index: 850;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .hud-title {
+      background: linear-gradient(90deg, #d4af37, #aa7c11);
+      color: #111;
+      font-weight: 900;
+      font-size: 16px;
+      padding: 6px 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .hud-body {
+      padding: 8px 12px;
+    }
+
+    /* Bảng Quà - Góc Trên Bên Trái: CHỈ 2 CÂU */
+    #gift-rules-board {
+      top: 20px;
+      left: 20px;
+      min-width: 210px;
+    }
+    .rule-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .rule-line:not(:last-child) {
+      margin-bottom: 6px;
+    }
+    .rule-coin {
+      background: rgba(255, 215, 0, 0.16);
+      border: 1px solid rgba(255, 215, 0, 0.65);
+      color: #ffd700;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+    .rule-tap {
+      background: rgba(255, 64, 129, 0.16);
+      border: 1px solid rgba(255, 64, 129, 0.65);
+      color: #ff80ab;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    /* THANH TIẾN ĐỘ ĂN GÀ GẦN BÀN MÂM 1 (CƠ CHẾ 3 & 4 - 10 PHÚT ĂN HẾT GÀ, ĐẶT CẠNH BÀN MÂM 1) */
+    .chicken-progress-hud {
+      position: absolute;
+      top: 295px;
+      left: 715px;
+      width: 245px;
+      background: rgba(18, 18, 24, 0.94);
+      border: 2px solid #ffd700;
+      border-radius: 12px;
+      padding: 8px 12px;
+      z-index: 180;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.85);
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .chicken-hud-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffd700;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .chicken-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .chicken-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff9800, #ffd700);
+      border-radius: 5px;
+      transition: width 0.4s ease-out;
+    }
+    .chicken-hud-sub {
+      font-size: 11px;
+      color: #cbd5e1;
+      text-align: right;
+      font-weight: 700;
+    }
+
+    /* BẢNG TẤM GƯƠNG SÁNG (CƠ CHẾ 3.3 - ĐẶT DƯỚI BẢNG QUÀ BÊN TRÁI) */
+    #exemplary-board {
+      top: 155px;
+      left: 20px;
+      min-width: 220px;
+      border-color: #ffd700;
+    }
+    .exemplary-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px dashed rgba(255, 215, 0, 0.2);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .exemplary-item:last-child {
+      border-bottom: none;
+    }
+    .exemplary-name {
+      color: #ffd700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .exemplary-time {
+      color: #81c784;
+      font-size: 11px;
+    }
+
+    /* MỤC 2: HUY CHƯƠNG TOP 5 TRÊN BỨC TƯỜNG MÂM 1 */
+    .mam1-wall-medals-bar {
+      position: absolute;
+      top: 25px;
+      left: 535px;
+      transform: translateX(-50%);
+      width: auto;
+      max-width: 580px;
+      height: 135px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.94));
+      border: 2px solid rgba(255, 215, 0, 0.6);
+      border-radius: 12px;
+      padding: 6px 14px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.85), inset 0 0 15px rgba(255, 215, 0, 0.12);
+      z-index: 110;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+      box-sizing: border-box;
+    }
+    .mam1-medal-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 96px;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .mam1-medal-img-wrap {
+      position: relative;
+      width: 62px;
+      height: 62px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #0f172a;
+      border: 1.5px solid rgba(255, 215, 0, 0.4);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mam1-medal-card.rank-1 .mam1-medal-img-wrap {
+      border-color: #ffd700;
+      box-shadow: 0 0 16px rgba(255, 215, 0, 0.75);
+      transform: scale(1.06);
+    }
+    .mam1-medal-card.rank-1 .mam1-medal-name {
+      color: #ffd700;
+      font-weight: 800;
+    }
+    .mam1-medal-card.rank-2 .mam1-medal-img-wrap {
+      border-color: #cbd5e1;
+      box-shadow: 0 0 10px rgba(203, 213, 225, 0.5);
+    }
+    .mam1-medal-card.rank-3 .mam1-medal-img-wrap {
+      border-color: #cd7f32;
+      box-shadow: 0 0 10px rgba(205, 127, 50, 0.5);
+    }
+    .mam1-medal-card.rank-4 .mam1-medal-img-wrap {
+      border-color: #a855f7;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+    }
+    .mam1-medal-card.rank-5 .mam1-medal-img-wrap {
+      border-color: #64748b;
+      box-shadow: 0 0 10px rgba(100, 116, 139, 0.4);
+    }
+    .mam1-medal-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .mam1-medal-rank-badge {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      background: rgba(0, 0, 0, 0.85);
+      color: #ffd700;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 1px 4px;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+    }
+    .mam1-medal-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 5px;
+      width: 96px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
+    }
+    .mam1-medal-points {
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffd700;
+      margin-top: 1px;
+      width: 96px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
+    }
+
+    /* CẢNH XUẤT TRẠI - ĐỒNG CHÍ CÔNG AN */
+    .police-entity {
+      position: absolute;
+      width: 320px;
+      height: 360px;
+      z-index: 250;
+      pointer-events: none;
+      transform-origin: bottom center;
+    }
+    .police-sprite {
+      width: 100%;
+      height: 100%;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: bottom center;
+    }
+    .inmate-stand-up {
+      transform: translateY(-20px) scale(1.05) !important;
+      transition: transform 0.8s ease-out !important;
+    }
+
+    /* FLOATING BONUS BADGE */
+    .floating-bonus-badge {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4caf50;
+      color: #fff;
+      font-weight: 900;
+      font-size: 13px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      animation: floatUpFade 1.8s forwards ease-out;
+      pointer-events: none;
+      z-index: 300;
+    }
+    @keyframes floatUpFade {
+      0% { opacity: 1; transform: translate(-50%, 0); }
+      100% { opacity: 0; transform: translate(-50%, -45px); }
+    }
+
+    /* MỤC 1: HOẠT ẢNH MÂM 1: NGỒI VÀO BÀN, ĐANG ĂN, TRÊN BÀN CHỈ CÓ GÀ */
+    /* Vòng lặp khung hình pose ăn gà mâm 1 theo mốc: xé gà, đưa lên miệng, nhai, đầu cúi xuống bàn */
+    @keyframes eatMam1FramesLarge {
+      0%, 100% {
+        background-image: url('/assets/mam1_eat_frame1.png');
+        transform: translateY(0) scale(1);
+      }
+      22% {
+        background-image: url('/assets/mam1_eat_frame1.png');
+        transform: translateY(6px) rotate(1deg) scale(1.02, 0.98);
+      }
+      38% {
+        background-image: url('/assets/mam1_eat_frame2.png');
+        transform: translateY(8px) rotate(1.4deg) scale(1.03, 0.97);
+      }
+      54% {
+        background-image: url('/assets/mam1_eat_frame2.png');
+        transform: translateY(-4px) rotate(-0.8deg) scale(0.98, 1.02);
+      }
+      70% {
+        background-image: url('/assets/mam1_eat_frame3.png');
+        transform: translateY(3px) rotate(0.4deg) scale(1.01, 0.99);
+      }
+      85% {
+        background-image: url('/assets/mam1_eat_frame3.png');
+        transform: translateY(-3px) rotate(-0.3deg) scale(0.99, 1.01);
+      }
+    }
+    .anim-eat-mam1-large {
+      animation: eatMam1FramesLarge 2.2s infinite ease-in-out !important;
+      transform-origin: 50% 85% !important;
+    }
+
+    @keyframes eatMam1FramesChew {
+      0%, 100% {
+        background-image: url('/assets/mam1_eat_frame2.png');
+        transform: translateY(0) scale(1);
+      }
+      22% {
+        background-image: url('/assets/mam1_eat_frame1.png');
+        transform: translateY(4px) rotate(0.6deg) scale(1.01, 0.99);
+      }
+      40% {
+        background-image: url('/assets/mam1_eat_frame2.png');
+        transform: translateY(6px) rotate(1deg) scale(1.02, 0.98);
+      }
+      60% {
+        background-image: url('/assets/mam1_eat_frame3.png');
+        transform: translateY(-3px) rotate(-0.5deg) scale(0.99, 1.01);
+      }
+      80% {
+        background-image: url('/assets/mam1_eat_frame3.png');
+        transform: translateY(2px) rotate(0.3deg) scale(1.01, 0.99);
+      }
+    }
+    .anim-eat-mam1-chew {
+      animation: eatMam1FramesChew 2.0s infinite ease-in-out !important;
+      transform-origin: 50% 85% !important;
+    }
+
+    @keyframes eatMam1FramesBones {
+      0%, 100% {
+        background-image: url('/assets/mam1_eat_frame3.png');
+        transform: translateY(0) scale(1);
+      }
+      25% {
+        background-image: url('/assets/mam1_eat_frame1.png');
+        transform: translateY(3px) rotate(0.4deg) scale(1.01, 0.99);
+      }
+      48% {
+        background-image: url('/assets/mam1_eat_frame2.png');
+        transform: translateY(5px) rotate(0.6deg) scale(1.01, 0.99);
+      }
+      68% {
+        background-image: url('/assets/mam1_eat_frame3.png');
+        transform: translateY(-2px) rotate(-0.3deg) scale(0.99, 1.01);
+      }
+      85% {
+        background-image: url('/assets/mam1_eat_frame3.png');
+        transform: translateY(2px) rotate(0.2deg) scale(1, 1);
+      }
+    }
+    .anim-eat-mam1-bones {
+      animation: eatMam1FramesBones 1.8s infinite ease-in-out !important;
+      transform-origin: 50% 85% !important;
+    }
+
+    @keyframes eatMam1FramesDone {
+      0%, 100% {
+        background-image: url('/assets/mam_1_an_ga_clean.png');
+        transform: translateY(0) scale(1);
+      }
+      50% {
+        background-image: url('/assets/mam_1_an_ga_clean.png');
+        transform: translateY(-4px) scale(1.01);
+      }
+    }
+    .anim-eat-mam1-done {
+      animation: eatMam1FramesDone 3.0s infinite ease-in-out !important;
+      transform-origin: 50% 85% !important;
+    }
+
+    /* Huy hiệu trạng thái đang ăn thức ăn */
+    .eating-action-badge {
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.88);
+      border-radius: 12px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 250;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      animation: badge-pulse 1.2s infinite alternate ease-in-out;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.85);
+    }
+    .mam1-eating-badge {
+      border: 1.5px solid #f59e0b;
+      color: #fef08a;
+    }
+    .mam2-eating-badge {
+      border: 1.5px solid #10b981;
+      color: #a7f3d0;
+    }
+    @keyframes badge-pulse {
+      0% { transform: translateX(-50%) scale(0.94); opacity: 0.9; }
+      100% { transform: translateX(-50%) scale(1.06); opacity: 1; }
+    }
+
+    /* Rung đĩa thức ăn khi đang có người ăn */
+    .plate-eating-shake {
+      animation: plate-shake 1.8s infinite ease-in-out;
+    }
+    @keyframes plate-shake {
+      0%, 100% { transform: translateX(-50%) scale(1); }
+      28% { transform: translateX(-50%) translateY(3px) scale(0.96, 1.04) rotate(-1.5deg); }
+      35% { transform: translateX(-50%) translateY(-2px) scale(1.03, 0.97) rotate(1.5deg); }
+      45% { transform: translateX(-50%) scale(1); }
+    }
+    .noodle-eating-shake {
+      animation: noodle-shake 2.0s infinite ease-in-out;
+    }
+    @keyframes noodle-shake {
+      0%, 100% { transform: scale(1); }
+      32% { transform: translateY(3px) scale(0.95, 1.05) rotate(-1deg); }
+      42% { transform: translateY(-2px) scale(1.03, 0.97) rotate(1deg); }
+      50% { transform: scale(1); }
+    }
+
+    /* Bảng Top Tù Nhân - Góc Trên Bên Phải */
+    #leaderboard {
+      top: 20px;
+      right: 20px;
+    }
+    .rank-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .rank-badge {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      line-height: 22px;
+      text-align: center;
+      border-radius: 50%;
+      font-weight: 900;
+      font-size: 12px;
+      margin-right: 6px;
+    }
+    .rank-1 .rank-badge { background: #ffd700; color: #000; box-shadow: 0 0 8px #ffd700; }
+    .rank-2 .rank-badge { background: #c0c0c0; color: #000; }
+    .rank-3 .rank-badge { background: #cd7f32; color: #fff; }
+    .rank-other .rank-badge { background: #3a4454; color: #eee; }
+    .rank-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: 700;
+      max-width: 140px;
+    }
+    .rank-score {
+      font-weight: 800;
+      color: #ffd700;
+      font-size: 14px;
+    }
+
+    /* MỤC 9.4: KHUNG TRANH & DÒNG THƠ TRANG TRÍ TƯỜNG (4 TẦNG ĐẦY ĐỦ) */
+    .wall-decoration {
+      position: absolute;
+      z-index: 50; /* Sau nhân vật và thức ăn */
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: center;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.75));
+      pointer-events: none;
+    }
+
+    /* Tường Mâm 1: Ảnh trang trí tường mâm 1 */
+    #wall-decor-mam1 {
+      background-image: url('/assets/trang_tri_mam_1.png');
+      z-index: 45;
+    }
+
+    /* Tường Mâm 2: Ảnh trang trí tường mâm 2 */
+    #wall-decor-mam2 {
+      background-image: url('/assets/trang_tri_mam_2.png');
+      z-index: 45;
+    }
+
+    /* Tường Mâm 3: Dòng thơ "khi nào ăn cỗ bỏ xôi" treo tường phía trên, không che nhân vật (Mục 10.1) */
+    #wall-poem-mam3 {
+      position: absolute;
+      top: 985px;
+      left: 540px;
+      transform: translateX(-50%);
+      background: rgba(16, 20, 26, 0.9);
+      border: 2px solid #b8860b;
+      border-radius: 8px;
+      padding: 5px 22px;
+      color: #fef08a;
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.85);
+      z-index: 100;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* Tường Mâm 4: Dòng thơ "ăn gà xé luộc thì tôi lại về" */
+    #wall-poem-mam4 {
+      position: absolute;
+      top: 1475px;
+      left: 540px;
+      transform: translateX(-50%);
+      background: rgba(16, 20, 26, 0.9);
+      border: 2px solid #ff5252;
+      border-radius: 8px;
+      padding: 5px 22px;
+      color: #ffcdd2;
+      font-size: 19px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.85);
+      z-index: 100;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* Ghế gỗ buồng giam Mâm 1 (đặt phía sau phạm nhân bên trái bàn ăn) */
+    #chair-mam1 {
+      position: absolute;
+      top: 310px;
+      left: 410px;
+      transform: translateX(-50%);
+      width: 130px;
+      height: 170px;
+      background: url('/assets/prison_chair.png') no-repeat center bottom;
+      background-size: contain;
+      z-index: 120;
+      pointer-events: none;
+    }
+
+    .chair-mam2 {
+      position: absolute;
+      top: 790px;
+      width: 120px;
+      height: 170px;
+      transform: translateX(-50%);
+      background: url('/assets/prison_chair.png') no-repeat center bottom;
+      background-size: contain;
+      z-index: 120;
+      pointer-events: none;
+    }
+
+    /* Bàn ăn gỗ Mâm 1 (đặt giữa buồng Mâm 1, TRÊN BÀN CHỈ CÓ GÀ) */
+    #table-mam1 {
+      position: absolute;
+      top: 360px;
+      left: 560px;
+      transform: translateX(-50%);
+      width: 360px;
+      height: 120px;
+      background: url('/assets/table_mam1.png') no-repeat center bottom;
+      background-size: 100% 100%;
+      border-radius: 8px 8px 0 0;
+      filter: drop-shadow(0 10px 25px rgba(0,0,0,0.85));
+      z-index: 140;
+      pointer-events: none;
+    }
+
+    /* Bàn ăn dài Mâm 2 (bàn gỗ chân đất đồng bộ phong cách, đặt trước mặt Top 2-5) */
+    #table-mam2 {
+      position: absolute;
+      top: 845px;
+      left: 540px;
+      transform: translateX(-50%);
+      width: 860px;
+      height: 110px;
+      background: url('/assets/table_mam2.png') no-repeat center bottom;
+      background-size: 100% 100%;
+      border-radius: 8px 8px 0 0;
+      filter: drop-shadow(0 10px 25px rgba(0,0,0,0.85));
+      z-index: 140;
+      pointer-events: none;
+    }
+
+    /* Đĩa gà luộc Mâm 1 (đặt ngay ngắn trên mặt bàn bên cạnh nhân vật, HOÀN TOÀN TÁCH BIỆT KHÔNG CHE THÂN NHÂN VẬT) */
+    #chicken-plate {
+      position: absolute;
+      top: 290px;
+      left: 640px;
+      transform: translateX(-50%);
+      width: 175px;
+      height: 120px;
+      z-index: 155;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: center bottom;
+      transition: transform 0.3s;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.85));
+    }
+    .steam {
+      position: absolute;
+      top: -15px;
+      left: 45%;
+      width: 12px;
+      height: 20px;
+      background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 80%);
+      animation: steam-anim 2s infinite linear;
+    }
+    @keyframes steam-anim {
+      0% { transform: translateY(0) scale(0.8); opacity: 0; }
+      50% { opacity: 0.8; }
+      100% { transform: translateY(-25px) scale(1.5); opacity: 0; }
+    }
+
+    /* Bát bún rau Mâm 2 (ẩn đi vì nhân vật Mâm 2 đã cầm bát bún gắp đũa chân thực từ bản vẽ gốc) */
+    .noodle-dish {
+      display: none !important;
+    }
+
+    /* LỚP NHÂN VẬT & TỌA ĐỘ CHUẨN (KHÔNG ĐẶT Z-INDEX TẠI ĐÂY ĐỂ NHÂN VẬT MÂM 1 & 2 NGỒI PHÍA SAU BÀN ĂN Z-INDEX 140) */
+    #characters-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1080px;
+      height: 1920px;
+      pointer-events: none;
+    }
+    .prisoner-entity {
+      position: absolute;
+      transition: left 0.15s linear, top 0.15s linear;
+      transform-origin: bottom center;
+    }
+
+    /* MỤC 10.4: NHÃN TRÊN ĐẦU PHẠM NHÂN 2 DÒNG (DÒNG 1 TÊN, DÒNG 2 [SỐ] ĐIỂM BUỒNG) */
+    /* Đặt sát trên đỉnh đầu phạm nhân đồng đều như Mâm 3 */
+    .nametag-wrapper {
+      position: absolute;
+      top: -44px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 145px;
+      z-index: 210;
+      pointer-events: none;
+    }
+    .nametag-badge {
+      background: rgba(14, 18, 26, 0.94);
+      border: 2px solid #b8860b;
+      border-radius: 8px;
+      padding: 2px 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      box-sizing: border-box;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+    }
+    /* MỤC 10.4b: THẺ TÊN GỌN CHO MÂM ĐÔNG NGƯỜI (Mâm 3 rãnh 100px, Mâm 4 rãnh 108px) */
+    .nametag-wrapper.tag-compact {
+      width: 96px;
+      top: -40px;
+    }
+    .nametag-wrapper.tag-compact .user-display-name {
+      max-width: 86px;
+      font-size: 11px;
+    }
+    .nametag-wrapper.tag-compact .nametag-idrow {
+      gap: 4px;
+    }
+    .nametag-wrapper.tag-compact .user-avatar {
+      width: 20px;
+      height: 20px;
+    }
+    /* MỤC 10.4d: KHUNG RỒNG SẶC SỠ CHO THẺ TÊN MÂM 1 (TOP 1 ĐỘC TÔN) */
+    .nametag-badge.tag-mam1 {
+      border: 2px solid transparent;
+      background:
+        linear-gradient(rgba(14, 18, 26, 0.96), rgba(14, 18, 26, 0.96)) padding-box,
+        linear-gradient(135deg, #ffd700, #22d3ee, #7cfc00, #ffd700) border-box;
+      box-shadow: 0 0 16px rgba(255, 215, 0, 0.85), 0 0 34px rgba(34, 211, 238, 0.4);
+      animation: dragon-glow 2.2s ease-in-out infinite;
+    }
+    .nametag-badge.tag-mam1 .user-display-name::before {
+      content: '🐉';
+      margin-right: 3px;
+    }
+    .nametag-badge.tag-mam1 .user-avatar {
+      border-color: #ffd700;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.9);
+    }
+    @keyframes dragon-glow {
+      0%, 100% { box-shadow: 0 0 12px rgba(255, 215, 0, 0.7), 0 0 26px rgba(34, 211, 238, 0.35); }
+      50% { box-shadow: 0 0 22px rgba(255, 215, 0, 1), 0 0 46px rgba(34, 211, 238, 0.6); }
+    }
+    /* MỤC 10.4d: KHUNG VẰN HỔ CHO THẺ TÊN MÂM 2 (TOP 2-5) */
+    .nametag-badge.tag-mam2 {
+      border: 3px solid transparent;
+      background:
+        linear-gradient(rgba(14, 18, 26, 0.96), rgba(14, 18, 26, 0.96)) padding-box,
+        repeating-linear-gradient(135deg, #ff9800 0 8px, #1a1a1a 8px 15px) border-box;
+      box-shadow: 0 0 14px rgba(255, 152, 0, 0.8);
+    }
+    .nametag-badge.tag-mam2 .user-display-name::before {
+      content: '🐯';
+      margin-right: 3px;
+    }
+    .nametag-badge.tag-mam2 .user-avatar {
+      border-color: #ff9800;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .nametag-badge.tag-mam1 { animation: none; }
+    }
+    .nametag-wrapper.tag-compact .user-display-pts {
+      font-size: 11px;
+    }
+    /* MỤC 10.4c: HÀNG ĐỊNH DANH (AVATAR + TÊN) TRÊN THẺ TÊN PHẠM NHÂN */
+    .nametag-idrow {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      width: 100%;
+      min-width: 0;
+    }
+    .user-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid #b8860b;
+      background: #222;
+    }
+    .user-display-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 130px;
+      flex: 1;
+      min-width: 0;
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffffff;
+      text-align: center;
+      line-height: 1.2;
+    }
+    .user-display-pts {
+      font-size: 12px;
+      font-weight: 900;
+      color: #ffd700; /* Màu vàng nổi bật */
+      text-shadow: 0 0 4px rgba(255,215,0,0.6);
+      white-space: nowrap;
+      line-height: 1.2;
+      margin-top: 2px;
+    }
+    /* Hiệu ứng nháy sáng nhẹ 1.5s khi vừa nhận điểm */
+    .pts-flash {
+      animation: nametag-pulse 1.5s ease-out;
+    }
+    @keyframes nametag-pulse {
+      0% {
+        border-color: #ffffff;
+        box-shadow: 0 0 20px #ffd700, 0 0 30px #ffffff;
+        transform: scale(1.12);
+      }
+      40% {
+        border-color: #ffd700;
+        box-shadow: 0 0 15px #ffd700;
+        transform: scale(1.06);
+      }
+      100% {
+        border-color: #b8860b;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.9);
+        transform: scale(1);
+      }
+    }
+
+    /* Sprite nhân vật */
+    .char-sprite {
+      width: 100%;
+      height: 100%;
+      background-repeat: no-repeat;
+      background-size: contain;
+      background-position: bottom center;
+      transform-origin: 50% 70%;
+    }
+
+    /* ĐỘNG TÁC ĂN MÂM 1: Xé gà, đưa lên miệng, nhai liên tục */
+    .anim-eat-mam1 {
+      animation: eatMam1FramesLarge 2.2s infinite ease-in-out !important;
+      transform-origin: 50% 85% !important;
+    }
+
+    /* MỤC 2: ĐỘNG TÁC NGỒI ĂN BÚN RAU MÂM 2: Cúi gắp bún, đưa đũa lên miệng, nhai tự nhiên */
+    @keyframes eatMam2Frames {
+      0%, 100% {
+        background-image: url('/assets/mam2_eat_frame1.png');
+        transform: translateY(0) scale(1);
+      }
+      20% {
+        background-image: url('/assets/mam2_eat_frame1.png');
+        transform: translateY(5px) rotate(0.8deg) scale(1.02, 0.98);
+      }
+      38% {
+        background-image: url('/assets/mam2_eat_frame2.png');
+        transform: translateY(8px) rotate(1.2deg) scale(1.03, 0.97);
+      }
+      55% {
+        background-image: url('/assets/mam2_eat_frame2.png');
+        transform: translateY(-3px) rotate(-0.6deg) scale(0.98, 1.02);
+      }
+      70% {
+        background-image: url('/assets/mam2_eat_frame3.png');
+        transform: translateY(2px) rotate(0.4deg) scale(1.01, 0.99);
+      }
+      85% {
+        background-image: url('/assets/mam2_eat_frame3.png');
+        transform: translateY(-2px) rotate(-0.3deg) scale(0.99, 1.01);
+      }
+    }
+    .anim-eat-mam2 {
+      animation: eatMam2Frames 2.2s infinite ease-in-out !important;
+      transform-origin: 50% 85% !important;
+    }
+
+    /* ĐỘNG TÁC MÂM 3: Đứng ngước nhìn lên thèm thuồng */
+    .anim-look-mam3 {
+      animation: look-mam3-cycle 4s infinite ease-in-out;
+    }
+    @keyframes look-mam3-cycle {
+      0% { transform: scaleY(1) rotate(0deg); }
+      30% { transform: scaleY(1.03) rotate(-3deg); }
+      50% { transform: scaleY(1.03) rotate(3deg); }
+      80% { transform: scaleY(1) rotate(0deg); }
+      100% { transform: scaleY(1) rotate(0deg); }
+    }
+
+    /* ĐỘNG TÁC BÓ GỐI: Co ro ủ rũ dưới sàn */
+    .anim-sit-floor4 {
+      animation: sit-floor4-cycle 5s infinite ease-in-out;
+    }
+    @keyframes sit-floor4-cycle {
+      0% { transform: translateY(0) scale(1); }
+      40% { transform: translateY(-8px) scale(1.02); }
+      60% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    /* ĐỘNG TÁC ĐI BỘ TRÊN CẦU THANG (Walk Cycle) */
+    .anim-walking {
+      animation: walk-bob 0.35s infinite alternate ease-in-out;
+    }
+    @keyframes walk-bob {
+      0% { transform: translateY(0) rotate(-3deg); }
+      100% { transform: translateY(-8px) rotate(3deg); }
+    }
+
+    /* Bong bóng chat */
+    .chat-bubble {
+      position: absolute;
+      top: -75px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      color: #111;
+      padding: 5px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+      white-space: nowrap;
+      max-width: 200px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      z-index: 300;
+      animation: pop-bubble 3.5s forwards ease-out;
+    }
+    .chat-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -7px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 7px 7px 0;
+      border-style: solid;
+      border-color: #fff transparent;
+      display: block;
+      width: 0;
+    }
+    @keyframes pop-bubble {
+      0% { opacity: 0; transform: translateX(-50%) scale(0.6); }
+      15% { opacity: 1; transform: translateX(-50%) scale(1); }
+      85% { opacity: 1; transform: translateX(-50%) scale(1); }
+      100% { opacity: 0; transform: translateX(-50%) scale(0.8) translateY(-20px); }
+    }
+
+    /* MỤC 9.5: BANNER THÔNG BÁO VĂN BẢN SỰ KIỆN (ĐẶT Ở ĐỈNH TRÊN GIỮA 2 BẢNG HUD, TUYỆT ĐỐI KHÔNG CHE MẶT PHẠM NHÂN MÂM 1) */
+    #announcement-container {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 960;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .announcement-banner {
+      background: linear-gradient(90deg, rgba(20, 24, 32, 0.96), rgba(35, 42, 54, 0.96));
+      border: 2px solid #ffd700;
+      border-radius: 30px;
+      padding: 8px 18px;
+      max-width: 440px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.9);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+      text-align: center;
+      white-space: normal;
+      word-wrap: break-word;
+      line-height: 1.35;
+      animation: banner-fade 6s forwards cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    @keyframes banner-fade {
+      0% { opacity: 0; transform: translateY(-40px) scale(0.8); }
+      10% { opacity: 1; transform: translateY(0) scale(1); }
+      85% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-30px) scale(0.8); }
+    }
+
+    /* LỖI 1: BONG BÓNG PHỤ ĐỀ VOICE BUỒNG ĐỌC LUÂN PHIÊN (ĐẶT TẠI XÀ NGĂNG GIỮA TẦNG 1 VÀ TẦNG 2, DƯỚI CHÂN MÂM 1, KHÔNG CHE MẶT & THÂN MÂM 1) */
+    #voice-subtitle-banner {
+      position: absolute;
+      top: 485px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 860px;
+      max-width: 90%;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.96));
+      border: 2px solid #38bdf8;
+      border-radius: 20px;
+      padding: 10px 24px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.9), 0 0 15px rgba(56, 189, 248, 0.35);
+      color: #ffffff;
+      font-size: 19px;
+      font-weight: 800;
+      text-align: center;
+      white-space: normal;
+      word-wrap: break-word;
+      line-height: 1.4;
+      z-index: 950;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.35s ease-in-out;
+      display: none;
+    }
+    #voice-subtitle-banner.active {
+      display: block;
+      opacity: 1;
+    }
+    .voice-sub-prefix-buong {
+      color: #38bdf8;
+      font-weight: 900;
+      margin-right: 6px;
+      text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+    }
+    .voice-sub-prefix-quangiao {
+      color: #facc15;
+      font-weight: 900;
+      margin-right: 6px;
+      text-shadow: 0 0 10px rgba(250, 204, 21, 0.6);
+    }
+
+    /* BỘ ĐẾM CHỜ SÀN TẦNG 4 */
+    #waiting-area-badge {
+      position: absolute;
+      bottom: 20px;
+      right: 25px;
+      background: rgba(0,0,0,0.85);
+      border: 2px solid #ff5252;
+      color: #fff;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 800;
+      z-index: 100;
+      display: none;
+    }
+    /* TOAST CHÀO MỪNG NGƯỜI MỚI ÊM DỊU (KHÔNG LÀM NHẢY LOẠN VOICE) */
+    .join-toast {
+      position: absolute;
+      left: 36px;
+      bottom: 240px;
+      z-index: 800;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(255, 215, 0, 0.5);
+      border-left: 4px solid #ffd700;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #f1f5f9;
+      pointer-events: none;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      animation: toastFadeIn 0.3s ease-out;
+      transition: all 0.4s ease-in;
+    }
+    @keyframes toastFadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* CẢNH XUẤT TRẠI ĐIỆN ẢNH (FULLSCREEN 1080x1920 - DÙNG ẢNH USER) */
+    .release-cutscene-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1080px;
+      height: 1920px;
+      z-index: 9999;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.8s ease-in-out;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .release-cutscene-overlay.active {
+      display: block;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .cutscene-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('/assets/release_bg.webp');
+      background-size: cover;
+      background-position: center bottom;
+      z-index: 1;
+      filter: brightness(1.05) contrast(1.05);
+    }
+    .cutscene-vignette {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.65) 100%);
+      z-index: 2;
+    }
+    .cutscene-certificate {
+      position: absolute;
+      top: 130px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 920px;
+      background: linear-gradient(135deg, rgba(20, 24, 33, 0.94), rgba(10, 12, 18, 0.96));
+      border: 3px solid #ffd700;
+      box-shadow: 0 0 35px rgba(255, 215, 0, 0.45), inset 0 0 20px rgba(255, 215, 0, 0.15);
+      border-radius: 16px;
+      padding: 30px 40px;
+      text-align: center;
+      color: #fff;
+      z-index: 10;
+      animation: certDropIn 1.0s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    @keyframes certDropIn {
+      0% { opacity: 0; transform: translate(-50%, -80px) scale(0.9); }
+      100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+    }
+    .cert-emblem { font-size: 26px; color: #ffd700; letter-spacing: 6px; margin-bottom: 6px; }
+    .cert-country { font-size: 20px; font-weight: 900; letter-spacing: 2px; color: #ffe066; text-transform: uppercase; }
+    .cert-motto { font-size: 16px; color: #e2e8f0; font-style: italic; margin-top: 4px; }
+    .cert-line { width: 260px; height: 2px; background: #ffd700; margin: 12px auto; opacity: 0.8; }
+    .cert-title { font-size: 28px; font-weight: 900; color: #ffd700; text-shadow: 0 2px 10px rgba(255,215,0,0.6); margin: 10px 0; }
+    .cert-content { font-size: 22px; margin: 10px 0; color: #f8fafc; }
+    .cert-highlight-name { font-weight: 900; color: #38bdf8; font-size: 26px; text-shadow: 0 0 10px rgba(56,189,248,0.7); }
+    .cert-badge {
+      display: inline-block;
+      margin: 12px auto;
+      background: linear-gradient(90deg, #ffd700, #ff8f00);
+      color: #000;
+      font-weight: 900;
+      font-size: 18px;
+      padding: 6px 22px;
+      border-radius: 30px;
+      box-shadow: 0 4px 15px rgba(255,215,0,0.5);
+    }
+    .cert-detail { font-size: 16px; color: #94a3b8; margin-top: 6px; }
+    .cert-foot { font-size: 18px; color: #4ade80; font-weight: 700; margin-top: 10px; }
+
+    /* DIỄN VIÊN XUẤT TRẠI */
+    .cutscene-actors-row {
+      position: absolute;
+      bottom: 50px;
+      left: 0;
+      width: 1080px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 40px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .cutscene-actor {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .cutscene-officer {
+      animation: officerSlideIn 1.2s cubic-bezier(0.18, 0.89, 0.32, 1.1) forwards;
+    }
+    @keyframes officerSlideIn {
+      0% { transform: translateX(-200px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+    .cutscene-inmate {
+      animation: inmateSlideIn 1.2s cubic-bezier(0.18, 0.89, 0.32, 1.1) forwards;
+    }
+    @keyframes inmateSlideIn {
+      0% { transform: translateX(200px); opacity: 0; }
+      100% { transform: translateX(0); opacity: 1; }
+    }
+    .officer-img {
+      height: 960px;
+      width: auto;
+      filter: drop-shadow(0 15px 30px rgba(0,0,0,0.85));
+    }
+    .inmate-img {
+      height: 680px;
+      width: auto;
+      filter: drop-shadow(0 15px 30px rgba(0,0,0,0.85));
+    }
+    .inmate-avatar-frame {
+      position: absolute;
+      top: -45px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 5px solid #ffd700;
+      box-shadow: 0 0 35px rgba(255, 215, 0, 0.95), inset 0 0 15px rgba(0,0,0,0.6);
+      overflow: hidden;
+      background: #1e293b;
+      z-index: 12;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .inmate-avatar-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .avatar-points-pill {
+      position: absolute;
+      top: 80px;
+      background: linear-gradient(135deg, #ffd700, #ff9800);
+      color: #1a1a1a;
+      font-size: 16px;
+      font-weight: 900;
+      padding: 3px 14px;
+      border-radius: 16px;
+      border: 2px solid #fff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+      z-index: 14;
+      white-space: nowrap;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+    }
+    .actor-badge {
+      margin-top: -30px;
+      z-index: 15;
+      padding: 8px 24px;
+      border-radius: 20px;
+      font-size: 16px;
+      font-weight: 800;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.7);
+      text-align: center;
+    }
+    .officer-badge {
+      background: #1e3a8a;
+      color: #93c5fd;
+      border: 2px solid #3b82f6;
+    }
+    .police-tag {
+      background: #1e3a8a;
+      color: #93c5fd;
+      border: 2px solid #3b82f6;
+    }
+    .inmate-badge, .inmate-tag {
+      background: rgba(120, 53, 15, 0.95);
+      color: #fde047;
+      border: 2px solid #eab308;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .inmate-badge-name {
+      font-size: 20px;
+      font-weight: 900;
+      color: #ffd700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.85);
+      max-width: 320px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .inmate-badge-points {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      background: rgba(0,0,0,0.4);
+      padding: 2px 12px;
+      border-radius: 10px;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    /* CONFETTI LAYER */
+    .confetti-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 8;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .confetti-particle {
+      position: absolute;
+      width: 12px;
+      height: 16px;
+      opacity: 0.9;
+      animation: confettiFall linear infinite;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-40px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(1920px) rotate(720deg); opacity: 0; }
+    }
+
+    /* MỤC 10.6: ĂN MỪNG XUẤT TRẠI LONG TRỌNG (tia sáng + pháo hoa + tung hô + con dấu) */
+    .cutscene-rays {
+      position: absolute;
+      top: -25%;
+      left: 50%;
+      width: 1700px;
+      height: 1700px;
+      transform: translateX(-50%);
+      background: repeating-conic-gradient(from 0deg, rgba(255, 215, 0, 0.13) 0 6deg, transparent 6deg 13deg);
+      border-radius: 50%;
+      z-index: 3;
+      pointer-events: none;
+      animation: rays-spin 26s linear infinite;
+    }
+    @keyframes rays-spin {
+      to { transform: translateX(-50%) rotate(360deg); }
+    }
+    .cutscene-inmate.cheering .inmate-img {
+      animation: inmate-cheer 0.9s ease-in-out infinite;
+      transform-origin: bottom center;
+    }
+    @keyframes inmate-cheer {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      30% { transform: translateY(-26px) rotate(-2deg); }
+      60% { transform: translateY(0) rotate(2deg); }
+    }
+    .cutscene-officer.saluting .officer-img {
+      animation: officer-salute 2.4s ease-in-out infinite;
+      transform-origin: bottom center;
+    }
+    @keyframes officer-salute {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(-2.5deg) scale(1.012); }
+    }
+    .firework-flash {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 7;
+      background: radial-gradient(circle, #ffffff 0%, rgba(255, 215, 0, 0.9) 25%, rgba(255, 82, 82, 0.55) 46%, transparent 70%);
+      opacity: 0;
+      animation: firework-pop 1.6s ease-out forwards;
+    }
+    @keyframes firework-pop {
+      0% { transform: scale(0.2); opacity: 1; }
+      100% { transform: scale(1); opacity: 0; }
+    }
+    .cert-seal {
+      position: absolute;
+      right: 34px;
+      bottom: 24px;
+      width: 122px;
+      height: 122px;
+      border: 4px solid #ff5252;
+      border-radius: 50%;
+      color: #ff5252;
+      font-weight: 900;
+      font-size: 21px;
+      line-height: 1.15;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: rgba(255, 82, 82, 0.08);
+      box-shadow: 0 0 18px rgba(255, 82, 82, 0.5), inset 0 0 12px rgba(255, 82, 82, 0.35);
+      opacity: 0;
+      transform: rotate(-8deg);
+      animation: seal-stamp 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) 1.1s forwards;
+      pointer-events: none;
+    }
+    @keyframes seal-stamp {
+      0% { transform: scale(2.4) rotate(-18deg); opacity: 0; }
+      60% { transform: scale(0.94) rotate(3deg); opacity: 1; }
+      100% { transform: scale(1) rotate(-8deg); opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .cutscene-rays,
+      .cutscene-inmate.cheering .inmate-img,
+      .cutscene-officer.saluting .officer-img,
+      .firework-flash { animation: none; }
+      .cert-seal { animation-duration: 0.01s; animation-delay: 0s; }
+    }
+  </style>
+</head>
+<body>
+  <!-- MỤC 9.1: BỘ PHÓNG TO / THU NHỎ TỰ ĐỘNG THEO KHUNG MÀN HÌNH -->
+  <div id="overlay-scaler">
+    <div id="game-stage">
+      
+      <!-- DEMO WATERMARK -->
+      <div id="demo-watermark">🧪 CHẾ ĐỘ DEMO ĐANG BẬT</div>
+
+      <!-- BẢNG QUY ĐỔI ĐIỂM (CHỈ 2 CÂU THEO YÊU CẦU: 1 XU = 5 ĐIỂM VÀ 50 TÁP TAY = 1 ĐIỂM) -->
+      <div id="gift-rules-board" class="hud-panel">
+        <div class="hud-title">
+          <span>📜 QUY ĐỔI ĐIỂM</span>
+        </div>
+        <div class="hud-body">
+          <div id="rule-coin-line" class="rule-line rule-coin">⭐ 1 xu = 5 điểm</div>
+          <div id="rule-tap-line" class="rule-line rule-tap">💖 50 táp tay = 1 điểm</div>
+          <div id="rule-comments-container">
+            <div class="rule-line rule-comment" style="color:#38bdf8; font-size:11.5px; font-weight:700; margin-top:3px; word-break:break-word; line-height:1.3;">
+              💬 Cmt: "<span>Cố gắng cải tạo, sớm ngày hoà nhập xã hội</span>" (+1đ)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MỤC 10.5: ĐỔI TÊN THÀNH ĐÚNG "TOP CẢI TẠO" -->
+      <div id="leaderboard" class="hud-panel">
+        <div class="hud-title">
+          <span>🏆 Top cải tạo</span>
+          <span style="font-size:11px; background:#ffd700; color:#000; padding:1px 5px; border-radius:4px;">LIVE</span>
+        </div>
+        <div id="leaderboard-body" class="hud-body">
+          <div style="color:#aaa; text-align:center; padding:10px; font-size:13px;">Chưa có tù nhân nào...</div>
+        </div>
+      </div>
+
+      <!-- CƠ CHẾ 3.3: BẢNG TẤM GƯƠNG SÁNG -->
+      <div id="exemplary-board" class="hud-panel" style="display: block;">
+        <div class="hud-title" style="background: linear-gradient(90deg, #ffd700, #ff8f00); color:#000;">
+          <span>🌟 Tấm gương sáng</span>
+          <span id="exemplary-badge-count" style="font-size:11px; background:#000; color:#ffd700; padding:1px 6px; border-radius:4px; font-weight:900;">0</span>
+        </div>
+        <div id="exemplary-body" class="hud-body">
+          <div style="color:#aaa; text-align:center; padding:8px 0; font-size:12px; font-style:italic;">Chưa có đồng chí nào xuất trại...</div>
+        </div>
+      </div>
+
+      <!-- MỤC 9.4: TRANH TƯỜNG MÂM 1 VÀ MÂM 2 (TÀI NGUYÊN TÁCH RIÊNG) -->
+      <div id="wall-decor-mam1" class="wall-decoration"></div>
+      <div id="wall-decor-mam2" class="wall-decoration"></div>
+
+      <!-- MỤC 9.4: DÒNG THƠ TREO TƯỜNG MÂM 3 VÀ MÂM 4 -->
+      <div id="wall-poem-mam3">khi nào ăn cỗ bỏ xôi</div>
+      <div id="wall-poem-mam4">ăn gà xé luộc thì tôi lại về</div>
+
+      <!-- CƠ CHẾ 3 & 4: TIẾN ĐỘ ĂN GÀ MÂM 1 VÀ ĐĨA GÀ 6 GIAI ĐOẠN -->
+      <div id="chicken-hud" class="chicken-progress-hud" style="display: none;">
+        <div class="chicken-hud-title">
+          <span>🍗 Ăn gà: <b id="chicken-pct-val">0%</b></span>
+          <span id="chicken-mins-val" style="color:#cbd5e1; font-size:12px; font-weight:normal;">0 phút</span>
+        </div>
+        <div class="chicken-bar-bg">
+          <div id="chicken-bar-fill" class="chicken-bar-fill" style="width: 0%;"></div>
+        </div>
+        <div id="chicken-hud-subtitle" class="chicken-hud-sub">Ăn gà: 0% - Đã giữ mâm 1 được 0 phút</div>
+      </div>
+
+      <!-- MỤC 2: HUY CHƯƠNG TOP 5 TRÊN BỨC TƯỜNG MÂM 1 -->
+      <div id="mam1-wall-medals" class="mam1-wall-medals-bar" style="display: none;"></div>
+
+      <!-- Ghế Mâm 1, Bàn Mâm 1 & Đĩa gà Mâm 1 đặt trên bàn -->
+      <div id="chair-mam1"></div>
+      <div id="table-mam1"></div>
+      <div id="chicken-plate" style="background-image: url('/assets/chicken_0.png'); display: block;">
+        <div class="steam"></div>
+      </div>
+
+      <!-- Ghế Mâm 2, Bàn Mâm 2 & 4 Bát bún rau Mâm 2 đặt trên bàn -->
+      <div id="chair-mam2-0" class="chair-mam2" style="left: 240px;"></div>
+      <div id="chair-mam2-1" class="chair-mam2" style="left: 440px;"></div>
+      <div id="chair-mam2-2" class="chair-mam2" style="left: 640px;"></div>
+      <div id="chair-mam2-3" class="chair-mam2" style="left: 840px;"></div>
+      <div id="table-mam2"></div>
+      <div id="noodle-seat-0" class="noodle-dish" style="left: 208px;"></div>
+      <div id="noodle-seat-1" class="noodle-dish" style="left: 408px;"></div>
+      <div id="noodle-seat-2" class="noodle-dish" style="left: 608px;"></div>
+      <div id="noodle-seat-3" class="noodle-dish" style="left: 808px;"></div>
+
+      <!-- Container Nhân Vật & Di Chuyển -->
+      <div id="characters-container"></div>
+
+      <!-- MỤC 9.5: BANNER THÔNG BÁO VĂN BẢN (5-8 GIÂY) -->
+      <div id="announcement-container"></div>
+
+      <!-- LỖI 1: BONG BÓNG PHỤ ĐỀ VOICE BUỒNG ĐỌC LUÂN PHIÊN (DUY NHẤT 1 BẢNG DƯỚI 2 HUD, TRÊN MÂM 1) -->
+      <div id="voice-subtitle-banner"></div>
+
+      <!-- Bộ đếm người chờ sàn tầng 4 (Ẩn hoàn toàn vì Mâm 4 xếp nhiều hàng không giới hạn) -->
+      <div id="waiting-area-badge" style="display: none !important;">
+        ⏳ <span id="wait-count">0</span> tù nhân đang chờ xếp chỗ...
+      </div>
+
+      <!-- CƠ CHẾ 3 & 4: MÀN HÌNH CHUYỂN CẢNH XUẤT TRẠI ĐIỆN ẢNH (DÙNG ẢNH GỐC TỪ USER) -->
+      <div id="release-cutscene-overlay" class="release-cutscene-overlay">
+        <!-- Nền cảnh xuất trại thật: nền cảnh xuất trại.webp -->
+        <div class="cutscene-bg"></div>
+        <div class="cutscene-rays"></div>
+        <div class="cutscene-vignette"></div>
+
+        <!-- Khung giấy khen / Quyết định tha tù mạ vàng -->
+        <div class="cutscene-certificate">
+          <div class="cert-emblem">⭐ ⭐ ⭐</div>
+          <div class="cert-country">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+          <div class="cert-motto">Độc lập - Tự do - Hạnh phúc</div>
+          <div class="cert-line"></div>
+          <div class="cert-title">📜 QUYẾT ĐỊNH XUẤT TRẠI THA TÙ</div>
+          <div class="cert-content">
+            Công nhận phạm nhân: <span id="cutscene-inmate-name" class="cert-highlight-name">Đại Ca</span>
+            <div id="cutscene-cert-points-line" style="font-size: 19px; color: #ffd700; font-weight: 800; margin-top: 5px;">
+              🏆 Thành tích cải tạo: <span id="cutscene-cert-points">0</span> điểm buồng
+            </div>
+          </div>
+          <div class="cert-badge">🏅 TẤM GƯƠNG SÁNG CẢI TẠO XUẤT SẮC 🏅</div>
+          <div id="cutscene-cert-detail" class="cert-detail">Đã giữ Mâm 1 suốt 10 phút liên tục & hoàn thành ăn sạch đĩa gà luộc!</div>
+          <div class="cert-foot">Chúc mừng đồng chí hoàn lương, làm lại cuộc đời rực rỡ! 🎉</div>
+          <div class="cert-seal">XUẤT<br>TRẠI</div>
+        </div>
+
+        <!-- Hai nhân vật: Chú Công An và Phạm Nhân Xuất Trại (LỖI 3: DÙNG ĐÚNG ẢNH MỚI, CÔNG AN UY PHONG) -->
+        <div class="cutscene-actors-row">
+          <!-- Chú Công An Nhân Dân (cong_an_uy_phong.png - Cắt sạch tay người bên cạnh, vóc dáng uy phong cao lớn) -->
+          <div class="cutscene-actor cutscene-officer">
+            <img src="/assets/cong_an_uy_phong.png" alt="Đồng chí Quản Giáo" class="officer-img">
+            <div class="actor-badge officer-badge">👮‍♂️ Đồng chí Công An</div>
+          </div>
+          <!-- Phạm Nhân Cải Tạo Xuất Sắc (pose3.png - Cúi đầu cảm tạ nghiêm túc, vóc dáng thấp hơn chú công an) -->
+          <div class="cutscene-actor cutscene-inmate">
+            <div class="inmate-avatar-frame">
+              <img id="cutscene-avatar-img" src="/assets/default_avatar.png" alt="Avatar">
+            </div>
+            <div id="cutscene-avatar-points-pill" class="avatar-points-pill">
+              🏆 <span id="cutscene-avatar-points">0</span>đ
+            </div>
+            <img src="/assets/pose3.png" alt="Phạm nhân xuất trại" class="inmate-img">
+            <div id="cutscene-inmate-badge" class="actor-badge inmate-badge">
+              <div id="cutscene-badge-name" class="inmate-badge-name">⭐ Phạm Nhân Xuất Trại</div>
+              <div id="cutscene-badge-points" class="inmate-badge-points">🏆 0 điểm buồng</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hiệu ứng Confetti / Pháo hoa chúc mừng -->
+        <div id="cutscene-confetti-layer" class="confetti-layer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return str || '';
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // MỤC 9.1: TỰ ĐỘNG FIT 1 MÀN HÌNH (MAX-HEIGHT: 100VH, KHÔNG CUỘN)
+    function fitOverlay() {
+      const scaler = document.getElementById('overlay-scaler');
+      const scale = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+      scaler.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', fitOverlay);
+    window.addEventListener('DOMContentLoaded', fitOverlay);
+
+    // MỤC 9.1: CHIA ĐỀU 4 TẦNG (MỖI TẦNG CAO ĐÚNG 480PX = 25%)
+    // Chiều cao nhân vật: 340px (67-75% của 480px)
+    const STAIRS_X = 90;
+    const CHAR_HEIGHT = 340;
+    const CHAR_WIDTH = 110;
+
+    const FLOOR_CONFIG = {
+      1: { floorY: 480, height: 340, width: 110, sitY: 480 },
+      2: { floorY: 960, height: 336, width: 130, sitY: 975 },
+      3: { floorY: 1440, height: 340, width: 105 },
+      4: { floorY: 1860, height: 160, width: 125 } // Mâm 4 ngồi bó gối sát sàn
+    };
+
+    // Tọa độ ghế ngồi chuẩn xác (Mâm 1 x=410 đặt bên trái bàn ăn x=560 để hoàn toàn tách biệt khỏi đĩa gà x=640; Mâm 2 chia 4 ghế cách nhau 200px)
+    const MAM1_SEAT_X = 410;
+    const MAM2_SEATS_X = [240, 440, 640, 840];
+    const MAM3_X_START = 220;
+    const MAM3_X_STEP = 100;
+    const FLOOR4_X_START = 180;
+    const FLOOR4_X_STEP = 100;
+
+    let localUsers = {};
+    let activeWalkers = {};
+    let chickenState = { stage: 0, currentTop1: null };
+    let userPointsHistory = {};
+    let isReleaseCeremonyActive = false;
+    window.isReleaseCeremonyActive = false;
+    let releasePendingAnnouncements = [];
+    let releasePendingSmallInteractions = 0;
+
+    function flashUserNametag(userId) {
+      const el = document.getElementById(`char-${userId}`);
+      if (!el) return;
+      const badge = el.querySelector('.nametag-badge');
+      if (badge) {
+        badge.classList.remove('pts-flash');
+        void badge.offsetWidth; // Trigger reflow
+        badge.classList.add('pts-flash');
+      }
+    }
+
+    // Cập nhật đĩa gà Mâm 1 & Thanh tiến độ ăn gà (Cơ chế 3 & 4)
+    const CHICKEN_STAGE_IMAGES = [
+      '/assets/chicken_0.png',
+      '/assets/chicken_20.png',
+      '/assets/chicken_40.png',
+      '/assets/chicken_60.png',
+      '/assets/chicken_80.png',
+      '/assets/chicken_100.png'
+    ];
+
+    function updateChickenDisplay(stage, progress, minutesHeld, hasTop1) {
+      const plate = document.getElementById('chicken-plate');
+      const hud = document.getElementById('chicken-hud');
+      if (!hasTop1) {
+        if (plate) plate.style.display = 'none';
+        if (hud) hud.style.display = 'none';
+        return;
+      }
+      const stg = Math.max(0, Math.min(5, stage !== undefined ? stage : Math.floor((progress || 0) / 20)));
+      if (plate) {
+        plate.style.display = 'block';
+        plate.style.backgroundImage = `url('${CHICKEN_STAGE_IMAGES[stg]}')`;
+      }
+      if (hud) {
+        hud.style.display = 'block';
+        const p = Math.max(0, Math.min(100, progress !== undefined ? progress : stg * 20));
+        const mins = minutesHeld !== undefined ? minutesHeld : Math.round((p / 100) * 10);
+        const pctEl = document.getElementById('chicken-pct-val');
+        const fillEl = document.getElementById('chicken-bar-fill');
+        const minsEl = document.getElementById('chicken-mins-val');
+        const subEl = document.getElementById('chicken-hud-subtitle');
+        if (pctEl) pctEl.innerText = `${p}%`;
+        if (fillEl) fillEl.style.width = `${p}%`;
+        if (minsEl) minsEl.innerText = `${mins} phút`;
+        if (subEl) subEl.innerText = `Ăn gà: ${p}% - Đã giữ mâm 1 được ${mins} phút`;
+      }
+    }
+
+    // Bảng Tấm gương sáng (Cơ chế 3.3 & Mục 4)
+    let lastExemplaryInmates = [];
+    function updateExemplaryBoard(inmates) {
+      if (inmates) lastExemplaryInmates = inmates;
+      const board = document.getElementById('exemplary-board');
+      const body = document.getElementById('exemplary-body');
+      const countBadge = document.getElementById('exemplary-badge-count');
+      if (board) board.style.display = 'block';
+
+      if (!inmates || inmates.length === 0) {
+        if (countBadge) countBadge.innerText = '0';
+        if (body) {
+          body.innerHTML = '<div style="color:#aaa; text-align:center; padding:8px 0; font-size:12px; font-style:italic;">Chưa có đồng chí nào xuất trại...</div>';
+        }
+        return;
+      }
+      if (countBadge) countBadge.innerText = Math.min(5, inmates.length);
+
+      let html = '';
+      inmates.slice(0, 5).forEach((item, idx) => {
+        const u = localUsers ? localUsers[item.id] : null;
+        const isWatching = Boolean(u && u.isActiveInRoom && !u.isLeaving);
+        const statusDot = isWatching ? '<span style="color:#00e676; font-size:10px;">🟢</span>' : '<span style="color:#94a3b8; font-size:10px;">⚪</span>';
+        const relCount = item.releaseCount || 1;
+        html += `
+          <div class="exemplary-item">
+            <span class="exemplary-name">${statusDot} #${idx + 1}. ${escapeHtml(item.name)}</span>
+            <span class="exemplary-time">${item.points}đ (${relCount} lần)</span>
+          </div>
+        `;
+      });
+      if (body) body.innerHTML = html;
+    }
+
+    // MỤC 1 & 2: HUY CHƯƠNG TOP 5 TRÊN BỨC TƯỜNG MÂM 1
+    const MEDAL_IMAGES = {
+      1: '/assets/huy-chuong-top1-vang.webp',
+      2: '/assets/huy-chuong-top2-bac.webp',
+      3: '/assets/huy-chuong-top3-dong.webp',
+      4: '/assets/huy-chuong-top4-thep.webp',
+      5: '/assets/huy-chuong-top5-sat.webp'
+    };
+
+    function renderMam1WallMedals(exemplaryInmates, users) {
+      const container = document.getElementById('mam1-wall-medals');
+      if (!container) return;
+
+      const list = exemplaryInmates || lastExemplaryInmates;
+      if (!list || !Array.isArray(list) || list.length === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+
+      // Lấy đúng Top 5
+      const top5 = list.slice(0, 5);
+
+      // CHỈ HIỂN THỊ những người ĐANG XEM LIVE (isActiveInRoom && !isLeaving)
+      const activeMedals = [];
+      top5.forEach((item, idx) => {
+        const rank = idx + 1;
+        const u = users ? users[item.id] : null;
+        const isWatching = Boolean(u && u.isActiveInRoom && !u.isLeaving);
+        if (isWatching) {
+          activeMedals.push({
+            rank: rank,
+            id: item.id,
+            name: (u && u.name) || item.name,
+            points: (u && u.points !== undefined) ? u.points : item.points,
+            img: MEDAL_IMAGES[rank] || `/assets/huychuong ${rank}.webp`
+          });
+        }
+      });
+
+      if (activeMedals.length === 0) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+
+      // SẮP XẾP ƯU TIÊN TOP 1 VÀO CHÍNH GIỮA (BỤC VINH QUANG: 4 - 2 - 1 - 3 - 5)
+      let displayMedals = [];
+      if (activeMedals.length <= 1) {
+        displayMedals = activeMedals;
+      } else if (activeMedals.length === 2) {
+        displayMedals = activeMedals;
+      } else {
+        const leftSide = [];
+        const rightSide = [];
+        const top1Item = activeMedals[0];
+        for (let i = 1; i < activeMedals.length; i++) {
+          if (i % 2 === 1) {
+            // Lẻ (Top 2, Top 4): xếp bên trái (đẩy dần ra ngoài mép)
+            leftSide.unshift(activeMedals[i]);
+          } else {
+            // Chẵn (Top 3, Top 5): xếp bên phải (đẩy dần ra ngoài mép)
+            rightSide.push(activeMedals[i]);
+          }
+        }
+        displayMedals = [...leftSide, top1Item, ...rightSide];
+      }
+
+      container.style.display = 'flex';
+      let html = '';
+      displayMedals.forEach(m => {
+        html += `
+          <div class="mam1-medal-card rank-${m.rank}">
+            <div class="mam1-medal-img-wrap">
+              <img src="${m.img}" class="mam1-medal-img" alt="Top ${m.rank}" />
+              <span class="mam1-medal-rank-badge">#${m.rank}</span>
+            </div>
+            <div class="mam1-medal-name" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</div>
+            <div class="mam1-medal-points">${m.points} điểm buồng</div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Toast chào đón người mới êm dịu, nhẹ nhàng
+    function showJoinToast(userName) {
+      const stage = document.getElementById('game-stage');
+      if (!stage) return;
+      const toast = document.createElement('div');
+      toast.className = 'join-toast';
+      toast.innerHTML = `🚪 <b>${escapeHtml(userName)}</b> vào buồng giam (Tầng 4)`;
+      stage.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(15px)';
+        setTimeout(() => toast.remove(), 400);
+      }, 3500);
+    }
+
+    // HÀM TẠO AVATAR TỪ NICK TIỆN LỢI & SẮC NÉT (DỰ PHÒNG HOÀN HẢO KHI NICK CHƯA CÓ AVATAR HOẶC LINK HỎNG)
+    function generateNickAvatar(userName) {
+      const name = (userName || 'Phạm Nhân').trim();
+      const words = name.replace(/[^a-zA-Z0-9À-ỹ\s]/g, '').trim().split(/\s+/).filter(Boolean);
+      let initials = '';
+      if (words.length >= 2) {
+        initials = (words[0][0] + words[words.length - 1][0]).toUpperCase();
+      } else if (words.length === 1 && words[0].length >= 2) {
+        initials = words[0].substring(0, 2).toUpperCase();
+      } else if (words.length === 1) {
+        initials = words[0][0].toUpperCase();
+      } else {
+        initials = '⭐';
+      }
+
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+
+      const palettes = [
+        { bg1: '#f59e0b', bg2: '#b45309', ring: '#fef08a' }, // Vàng cam hoàng kim
+        { bg1: '#ef4444', bg2: '#991b1b', ring: '#fecaca' }, // Đỏ ruby
+        { bg1: '#3b82f6', bg2: '#1e3a8a', ring: '#bfdbfe' }, // Xanh dương hoàng gia
+        { bg1: '#10b981', bg2: '#065f46', ring: '#a7f3d0' }, // Xanh ngọc
+        { bg1: '#8b5cf6', bg2: '#5b21b6', ring: '#ddd6fe' }, // Tím thạch anh
+        { bg1: '#ec4899', bg2: '#9d174d', ring: '#fbcfe8' }, // Hồng rực rỡ
+        { bg1: '#06b6d4', bg2: '#155e75', ring: '#cffafe' }  // Xanh sapphire
+      ];
+      const p = palettes[Math.abs(hash) % palettes.length];
+      const gradId = 'grad_avatar_' + Math.abs(hash);
+
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+        <defs>
+          <linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${p.bg1}"/>
+            <stop offset="100%" stop-color="${p.bg2}"/>
+          </linearGradient>
+        </defs>
+        <circle cx="100" cy="100" r="95" fill="url(#${gradId})" stroke="${p.ring}" stroke-width="7"/>
+        <circle cx="100" cy="100" r="84" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="6,4"/>
+        <text x="100" y="124" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="70" font-weight="900" fill="#ffffff" text-anchor="middle" style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6));">${escapeHtml(initials)}</text>
+      </svg>`;
+
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    // CẢNH XUẤT TRẠI ĐIỆN ẢNH (Cơ chế 3 & 4 - Kéo dài 12 giây, dùng đúng ảnh mới, đồng chí công an uy phong)
+    function startReleaseCeremony(data) {
+      const modal = document.getElementById('release-cutscene-overlay');
+      const inmateNameEl = document.getElementById('cutscene-inmate-name');
+      const certPointsEl = document.getElementById('cutscene-cert-points');
+      const avatarImg = document.getElementById('cutscene-avatar-img');
+      const avatarPointsEl = document.getElementById('cutscene-avatar-points');
+      const badgeNameEl = document.getElementById('cutscene-badge-name');
+      const badgePointsEl = document.getElementById('cutscene-badge-points');
+      const confettiLayer = document.getElementById('cutscene-confetti-layer');
+
+      const name = data.userName || (localUsers[data.userId] && localUsers[data.userId].name) || 'Đại Ca';
+      const points = (data.points !== undefined && data.points !== null) ? Number(data.points) : ((localUsers[data.userId] && localUsers[data.userId].points) || 0);
+      const ceremonyMins = (data.minutes !== undefined && data.minutes !== null) ? data.minutes : 10;
+
+      // Cập nhật tên và điểm vào giấy khen quyết định tha tù
+      if (inmateNameEl) inmateNameEl.innerText = name;
+      if (certPointsEl) certPointsEl.innerText = points.toLocaleString();
+      const certDetailEl = document.getElementById('cutscene-cert-detail');
+      if (certDetailEl) certDetailEl.innerText = `Đã giữ Mâm 1 suốt ${ceremonyMins} phút liên tục & hoàn thành ăn sạch đĩa gà luộc!`;
+
+      // Cập nhật tên và điểm vào khung huy hiệu phạm nhân
+      if (badgeNameEl) badgeNameEl.innerText = `⭐ ${name}`;
+      if (badgePointsEl) badgePointsEl.innerText = `🏆 ${points.toLocaleString()} điểm buồng`;
+      if (avatarPointsEl) avatarPointsEl.innerText = points.toLocaleString();
+
+      // CẬP NHẬT AVATAR TỪ NICK: Ưu tiên ảnh thật nếu có, nếu không tự động tạo avatar độc quyền từ nick sắc nét
+      if (avatarImg) {
+        avatarImg.onerror = () => {
+          avatarImg.onerror = null;
+          avatarImg.src = generateNickAvatar(name);
+        };
+        const rawAvatar = data.avatar || (localUsers[data.userId] && localUsers[data.userId].avatar);
+        if (rawAvatar && (rawAvatar.startsWith('http://') || rawAvatar.startsWith('https://') || rawAvatar.startsWith('data:'))) {
+          avatarImg.src = rawAvatar;
+        } else {
+          avatarImg.src = generateNickAvatar(name);
+        }
+      }
+
+      // Tạm ẩn toàn bộ HUD để không che khuất đồng chí công an và phạm nhân xuất trại
+      const lb = document.getElementById('leaderboard');
+      const grb = document.getElementById('gift-rules-board');
+      const eb = document.getElementById('exemplary-board');
+      const chud = document.getElementById('chicken-hud');
+      const mwm = document.getElementById('mam1-wall-medals');
+      if (lb) lb.style.display = 'none';
+      if (grb) grb.style.display = 'none';
+      if (eb) eb.style.display = 'none';
+      if (chud) chud.style.display = 'none';
+      if (mwm) mwm.style.display = 'none';
+      if (typeof window.hideVoiceSubtitle === 'function') window.hideVoiceSubtitle(0);
+
+      // Dừng Voice 16 luân phiên ngay lập tức
+      if (window.buongGiamVoice16) {
+        window.buongGiamVoice16.interruptForEvent();
+      }
+
+      // Tạo pháo hoa / confetti giấy rơi rực rỡ
+      if (confettiLayer) {
+        confettiLayer.innerHTML = '';
+        const colors = ['#ffd700', '#ff5252', '#00e676', '#38bdf8', '#ff77e9', '#ffffff'];
+        for (let i = 0; i < 80; i++) {
+          const p = document.createElement('div');
+          p.className = 'confetti-particle';
+          p.style.left = `${Math.random() * 1040}px`;
+          p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          p.style.width = `${8 + Math.random() * 12}px`;
+          p.style.height = `${10 + Math.random() * 14}px`;
+          p.style.animationDuration = `${3 + Math.random() * 3.5}s`;
+          p.style.animationDelay = `${Math.random() * 2}s`;
+          confettiLayer.appendChild(p);
+        }
+        // MỤC 10.6: Chùm pháo hoa nổ rải suốt cảnh (7 chùm)
+        for (let i = 0; i < 7; i++) {
+          const f = document.createElement('div');
+          f.className = 'firework-flash';
+          const size = 220 + Math.random() * 320;
+          f.style.width = `${size}px`;
+          f.style.height = `${size}px`;
+          f.style.left = `${Math.random() * Math.max(80, 1080 - size)}px`;
+          f.style.top = `${120 + Math.random() * 1100}px`;
+          f.style.animationDelay = `${0.4 + i * 1.4 + Math.random() * 0.5}s`;
+          confettiLayer.appendChild(f);
+        }
+      }
+
+      // MỤC 10.6: Hành động chúc mừng (phạm nhân nhảy tung hô, công an chào trang trọng)
+      const inmateActor = modal ? modal.querySelector('.cutscene-inmate') : null;
+      const officerActor = modal ? modal.querySelector('.cutscene-officer') : null;
+      if (inmateActor) inmateActor.classList.add('cheering');
+      if (officerActor) officerActor.classList.add('saluting');
+
+      // Kích hoạt hiển thị màn chuyển cảnh điện ảnh
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.display = 'block';
+        setTimeout(() => modal.style.opacity = '1', 30);
+      }
+
+      // Ẩn nhân vật Mâm 1 ở tầng dưới để chuẩn bị dọn đĩa mới
+      const inmateEl = document.getElementById(`char-${data.userId}`);
+      if (inmateEl) inmateEl.style.display = 'none';
+
+      // Dọn sạch mọi banner thông báo cũ để tập trung tuyệt đối vào cảnh Xuất Trại
+      const ac = document.getElementById('announcement-container');
+      if (ac) ac.innerHTML = '';
+      const vb = document.getElementById('voice-subtitle-banner');
+      if (vb) { vb.style.display = 'none'; vb.innerHTML = ''; }
+
+      // ƯU TIÊN SỐ 1 TUYỆT ĐỐI (LỖI 4): TẠM DỪNG HOÀN TOÀN TẤT CẢ ÂM THANH KHÁC TRONG CẢNH XUẤT TRẠI VÀ KHOẢNG NGHỈ
+      isReleaseCeremonyActive = true;
+      window.isReleaseCeremonyActive = true;
+      if (window.buongGiamVoice16) {
+        window.buongGiamVoice16.interruptForEvent();
+      }
+      if (window.buongGiamAudio) {
+        window.buongGiamAudio.clearSpeechQueue(true);
+        window.buongGiamAudio.playGiftChime(true);
+        window.buongGiamAudio.playCeremonyFanfare();
+        if (window.buongGiamAudio.audioCtx) {
+          window.buongGiamAudio.playApplause(window.buongGiamAudio.audioCtx.currentTime, 5.0);
+        }
+        window.buongGiamAudio.speakThanks(data.speechText || `Giấy chứng nhận hoàn thành cải tạo: Chúc mừng phạm nhân ${name} đã giữ Mâm 1 suốt ${ceremonyMins} phút liên tục, ăn sạch đĩa gà luộc và chính thức xuất trại!`, 100);
+      }
+
+      let ceremonyEnded = false;
+      const concludeCeremony = () => {
+        if (ceremonyEnded) return;
+        ceremonyEnded = true;
+
+        if (modal) {
+          modal.style.opacity = '0';
+          setTimeout(() => {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+            if (confettiLayer) confettiLayer.innerHTML = '';
+            if (inmateActor) inmateActor.classList.remove('cheering');
+            if (officerActor) officerActor.classList.remove('saluting');
+          }, 800);
+        }
+        if (inmateEl && inmateEl.parentNode) inmateEl.remove();
+        updateChickenDisplay(0, 0, 0, false);
+
+        // Khôi phục lại các bảng HUD sau khi kết thúc cảnh
+        if (lb) lb.style.display = 'block';
+        if (grb) grb.style.display = 'block';
+        if (eb) eb.style.display = 'block';
+        renderMam1WallMedals(lastExemplaryInmates, localUsers);
+
+        // KHOẢNG NGHỈ 7 GIÂY CHỈ PHÁT NHẠC NỀN NHẸ (LỖI 4)
+        setTimeout(() => {
+          isReleaseCeremonyActive = false;
+          window.isReleaseCeremonyActive = false;
+
+          // Nếu có tương tác nhỏ dồn lại trong lúc xuất trại: tóm tắt thành đúng 1 câu duy nhất
+          if (releasePendingSmallInteractions > 0) {
+            showAnnouncementBanner(
+              `Trong lúc xuất trại, buồng giam đã nhận thêm ${releasePendingSmallInteractions} lượt tương tác từ các phạm nhân!`,
+              false,
+              `Trong lúc xuất trại vừa qua, buồng giam nhận thêm nhiều sự ủng hộ từ anh em!`,
+              false,
+              false,
+              30
+            );
+            releasePendingSmallInteractions = 0;
+          }
+
+          // Xử lý các thông báo quan trọng dồn lại một cách thư thả (tối đa 2 tin, cách nhau 4.0s)
+          if (releasePendingAnnouncements.length > 0) {
+            const queue = releasePendingAnnouncements.slice(0, 2);
+            releasePendingAnnouncements = [];
+            queue.forEach((item, idx) => {
+              setTimeout(() => {
+                showAnnouncementBanner(item.text, item.isGift || false, item.speechText, item.isBig || false, false, item.priority || 50);
+                if (idx === queue.length - 1) {
+                  setTimeout(() => {
+                    if (!window.isReleaseCeremonyActive && window.buongGiamVoice16) {
+                      window.buongGiamVoice16.resumeAfterEvent();
+                    }
+                  }, 4000);
+                }
+              }, idx * 4000);
+            });
+          } else {
+            setTimeout(() => {
+              if (!window.isReleaseCeremonyActive && window.buongGiamVoice16) {
+                window.buongGiamVoice16.resumeAfterEvent();
+              }
+            }, 1200);
+          }
+        }, 7000);
+      };
+
+      // ĐẢM BẢO ĐỌC HẾT TOÀN BỘ NỘI DUNG THÔNG BÁO:
+      // Tối thiểu hiển thị 12 giây, đồng thời nếu audio đang đọc thì đợi onended xong mới khép màn
+      const minCutsceneMs = Math.max(12000, data.durationMs || 12000);
+      setTimeout(() => {
+        const audioObj = window.buongGiamAudio;
+        if (audioObj && audioObj.isSpeaking && audioObj.currentPriority >= 100 && audioObj.currentAudio) {
+          audioObj.currentAudio.addEventListener('ended', () => {
+            setTimeout(concludeCeremony, 500);
+          }, { once: true });
+          // Fallback an toàn tối đa nếu vì lý do nào đó trình duyệt không bắn event ended
+          setTimeout(concludeCeremony, 7000);
+        } else {
+          concludeCeremony();
+        }
+      }, minCutsceneMs);
+    }
+
+    // Hiển thị huy hiệu comment cải tạo nổi lên
+    function showFloatingBonus(userId, text) {
+      const el = document.getElementById(`char-${userId}`);
+      if (!el) return;
+      flashUserNametag(userId);
+      const b = document.createElement('div');
+      b.className = 'floating-bonus-badge';
+      b.innerText = text || '+1đ Cải tạo';
+      el.appendChild(b);
+      setTimeout(() => b.remove(), 1800);
+    }
+
+    // Bảng Top tù nhân
+    function updateLeaderboard(ranking, users) {
+      const container = document.getElementById('leaderboard-body');
+      if (!ranking || ranking.length === 0) {
+        container.innerHTML = '<div style="color:#aaa; text-align:center; padding:10px; font-size:13px;">Chưa có tù nhân nào...</div>';
+        return;
+      }
+      let html = '';
+      ranking.slice(0, 6).forEach((uid, idx) => {
+        const u = users[uid];
+        if (!u) return;
+        const rankClass = idx === 0 ? 'rank-1' : (idx === 1 ? 'rank-2' : (idx === 2 ? 'rank-3' : 'rank-other'));
+        html += `
+          <div class="rank-row ${rankClass}">
+            <div style="display:flex; align-items:center; overflow:hidden;">
+              <span class="rank-badge">${idx + 1}</span>
+              <span class="rank-name">${escapeHtml(u.name)}</span>
+            </div>
+            <span class="rank-score">${u.points}đ</span>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    // Tọa độ đứng / ngồi cân đối chuẩn xác
+    function getRestingCoordinates(user, rankIndex, floor4Index, mam3Index) {
+      const floor = user.currentFloor;
+      if (floor === 1) {
+        // MÂM 1: Ngồi vào ghế, thân áp sát bàn ăn và đĩa gà
+        return { x: MAM1_SEAT_X, y: FLOOR_CONFIG[1].sitY };
+      }
+      if (floor === 2) {
+        // MÂM 2: Ngồi vào ghế quanh bàn dài, ăn bún rau
+        const seat = Math.max(0, Math.min(3, user.seatIndex >= 0 ? user.seatIndex : 0));
+        return { x: MAM2_SEATS_X[seat], y: FLOOR_CONFIG[2].sitY };
+      }
+      if (floor === 3) {
+        const x = MAM3_X_START + (mam3Index % 8) * MAM3_X_STEP;
+        return { x, y: FLOOR_CONFIG[3].floorY };
+      }
+      // MÂM 4: Ngồi bó gối, sắp xếp nhiều hàng so le (staggered grid), không giới hạn, không chồng đè
+      const COLS = 8;
+      const col = floor4Index % COLS;
+      const row = Math.floor(floor4Index / COLS);
+      const rowStagger = (row % 2 === 1) ? 55 : 0;
+      const x = Math.min(960, Math.max(160, 160 + col * 108 + rowStagger));
+      const y = Math.max(1620, FLOOR_CONFIG[4].floorY - row * 75);
+      return { x, y, row };
+    }
+
+    // MỤC 10.4c: Gắn avatar cạnh tên (ưu tiên ảnh thật, hỏng ảnh thì dùng avatar chữ cái từ nick)
+    function setNametagAvatar(imgEl, user) {
+      const fallback = generateNickAvatar(user.name || '?');
+      const want = (user.avatar && user.avatar.length > 0) ? user.avatar : fallback;
+      if (imgEl.getAttribute('src') === want) return;
+      imgEl.onerror = () => {
+        imgEl.onerror = null;
+        if (imgEl.getAttribute('src') !== fallback) imgEl.src = fallback;
+      };
+      imgEl.src = want;
+    }
+
+    // Render nhân vật
+    const leavingTimeouts = {};
+    let lastRanking = [];
+
+    function renderCharacters(users, ranking) {
+      if (ranking) lastRanking = ranking;
+      const currentRanking = ranking || lastRanking || [];
+      const stage = document.getElementById('characters-container');
+
+      // Luôn bảo đảm tất cả user đang active đều có mặt trong danh sách render
+      const renderedSet = new Set(currentRanking);
+      Object.keys(users).forEach(uid => {
+        const u = users[uid];
+        if (u && u.isActiveInRoom && !u.isLeaving && !u.isExemplary && !renderedSet.has(uid)) {
+          currentRanking.push(uid);
+          renderedSet.add(uid);
+        }
+      });
+
+      // MỤC 0B: Xoá mọi sprite nhân vật của người đang là Tấm gương sáng
+      // (Mỗi người chỉ đúng 1 thực thể: họ là Huy Chương trên tường mâm 1, không đứng/ngồi ở sàn hay mâm)
+      Object.keys(users).forEach(uid => {
+        const u = users[uid];
+        if (u && u.isExemplary) {
+          const charEl = document.getElementById(`char-${u.id}`);
+          if (charEl) {
+            charEl.remove();
+          }
+        }
+      });
+
+      const waitBadge = document.getElementById('waiting-area-badge');
+      if (waitBadge) waitBadge.style.display = 'none';
+
+      let f4Idx = 0;
+      let m3Idx = 0;
+
+      currentRanking.forEach((uid, rankIdx) => {
+        const u = users[uid];
+        if (!u || u.isLeaving) return;
+
+        // Nếu user này từng có hẹn giờ rời phòng (do lag mạng hoặc rejoin nhanh): HỦY NGAY để không bị mất người!
+        if (leavingTimeouts[u.id]) {
+          clearTimeout(leavingTimeouts[u.id]);
+          delete leavingTimeouts[u.id];
+        }
+
+        let el = document.getElementById(`char-${u.id}`);
+        const oldPts = userPointsHistory[u.id];
+        const isPointIncreased = (oldPts !== undefined && u.points > oldPts);
+        userPointsHistory[u.id] = u.points;
+
+        if (!el) {
+          el = document.createElement('div');
+          el.id = `char-${u.id}`;
+          el.className = 'prisoner-entity';
+          el.innerHTML = `
+            <div class="nametag-wrapper">
+              <div class="nametag-badge">
+                <div class="nametag-idrow">
+                  <img class="user-avatar" src="/assets/default_avatar.png" alt="">
+                  <div class="user-display-name">${escapeHtml(u.name)}</div>
+                </div>
+                <div class="user-display-pts">${u.points} điểm buồng</div>
+              </div>
+            </div>
+            <div class="char-sprite"></div>
+          `;
+          stage.appendChild(el);
+        } else {
+          el.classList.remove('leaving-character');
+          el.style.opacity = '1';
+          el.style.transform = 'none';
+          el.querySelector('.user-display-name').innerText = u.name;
+          el.querySelector('.user-display-pts').innerText = `${u.points} điểm buồng`;
+          if (isPointIncreased) {
+            flashUserNametag(u.id);
+          }
+        }
+
+        if (activeWalkers[u.id]) return;
+
+        let myF4Idx = 0;
+        let myM3Idx = 0;
+        if (u.currentFloor === 4) myF4Idx = f4Idx++;
+        if (u.currentFloor === 3) myM3Idx = m3Idx++;
+
+        const coords = getRestingCoordinates(u, rankIdx, myF4Idx, myM3Idx);
+        const fCfg = FLOOR_CONFIG[u.currentFloor];
+
+        el.style.width = `${fCfg.width}px`;
+        el.style.height = `${fCfg.height}px`;
+        // Đặt chân chạm sàn hoặc vị trí ngồi
+        el.style.left = `${coords.x - fCfg.width / 2}px`;
+        el.style.top = `${coords.y - fCfg.height}px`;
+
+        // MỤC 10.4b: Mâm 3/4 đông người -> thẻ tên gọn + điểm rút gọn để không chồng nhau
+        const tagWrap = el.querySelector('.nametag-wrapper');
+        const tagPts = el.querySelector('.user-display-pts');
+        setNametagAvatar(el.querySelector('.user-avatar'), u);
+        // MỤC 10.4d: Khung rồng Mâm 1 / khung hổ Mâm 2, các mâm khác khung thường
+        const tagBadge = el.querySelector('.nametag-badge');
+        tagBadge.classList.toggle('tag-mam1', u.currentFloor === 1);
+        tagBadge.classList.toggle('tag-mam2', u.currentFloor === 2);
+        if (u.currentFloor === 3 || u.currentFloor === 4) {
+          tagWrap.classList.add('tag-compact');
+          tagPts.innerText = `${u.points}đ`;
+        } else {
+          tagWrap.classList.remove('tag-compact');
+          tagPts.innerText = `${u.points} điểm buồng`;
+        }
+
+        if (u.currentFloor === 1 || u.currentFloor === 2) {
+          el.style.zIndex = '130';
+        } else if (u.currentFloor === 3) {
+          el.style.zIndex = '200';
+        } else {
+          el.style.zIndex = `${280 - (coords.row || 0) * 10}`;
+        }
+
+        const sprite = el.querySelector('.char-sprite');
+        sprite.className = 'char-sprite';
+        sprite.style.animationDelay = '0s';
+
+        let eatingBadge = el.querySelector('.eating-action-badge');
+        if (eatingBadge) eatingBadge.remove();
+
+        if (u.currentFloor === 1) {
+          sprite.style.backgroundImage = "url('/assets/mam1_eat_frame1.png')";
+          const stg = chickenState.stage || 0;
+          if (stg <= 1) {
+            sprite.className = 'char-sprite anim-eat-mam1 anim-eat-mam1-large';
+          } else if (stg <= 3) {
+            sprite.className = 'char-sprite anim-eat-mam1 anim-eat-mam1-chew';
+          } else if (stg === 4) {
+            sprite.className = 'char-sprite anim-eat-mam1 anim-eat-mam1-bones';
+          } else {
+            sprite.className = 'char-sprite anim-eat-mam1 anim-eat-mam1-done';
+          }
+          const plate = document.getElementById('chicken-plate');
+          if (plate) plate.classList.add('plate-eating-shake');
+        } else if (u.currentFloor === 2) {
+          const seat = Math.max(0, Math.min(3, u.seatIndex >= 0 ? u.seatIndex : 0));
+          sprite.style.backgroundImage = "url('/assets/mam2_eat_frame1.png')";
+          sprite.className = 'char-sprite anim-eat-mam2';
+          sprite.style.animationDelay = `${seat * 0.55}s`;
+          const noodleDish = document.getElementById(`noodle-seat-${seat}`);
+          if (noodleDish) noodleDish.classList.add('noodle-eating-shake');
+        } else {
+          if (u.currentFloor === 3) {
+            sprite.style.backgroundImage = "url('/assets/mam_3_dung_nhin_floodfill.png')";
+            sprite.className = 'char-sprite anim-look-mam3';
+          } else {
+            sprite.style.backgroundImage = "url('/assets/mam_4_bo_goi_floodfill.png')";
+            sprite.className = 'char-sprite anim-sit-floor4';
+          }
+        }
+      });
+
+      // Dọn dẹp hiệu ứng rung nếu không có người ăn tại mâm
+      const hasTop1Eating = currentRanking.some(uid => users[uid] && users[uid].currentFloor === 1 && !users[uid].isLeaving);
+      if (!hasTop1Eating) {
+        const plate = document.getElementById('chicken-plate');
+        if (plate) plate.classList.remove('plate-eating-shake');
+      }
+      const occupiedSeats = new Set();
+      currentRanking.forEach(uid => {
+        const u = users[uid];
+        if (u && u.currentFloor === 2 && !u.isLeaving) {
+          occupiedSeats.add(Math.max(0, Math.min(3, u.seatIndex >= 0 ? u.seatIndex : 0)));
+        }
+      });
+      for (let s = 0; s < 4; s++) {
+        if (!occupiedSeats.has(s)) {
+          const nd = document.getElementById(`noodle-seat-${s}`);
+          if (nd) nd.classList.remove('noodle-eating-shake');
+        }
+      }
+
+      const activeIdSet = new Set(currentRanking);
+      Array.from(stage.children).forEach(child => {
+        const cid = child.id.replace('char-', '');
+        // Không xóa nếu đang chạy hoạt ảnh rời đi
+        if (!activeIdSet.has(cid) && !child.classList.contains('leaving-character')) {
+          const u = users[cid];
+          if (!u || !u.isActiveInRoom || u.isLeaving) {
+            stage.removeChild(child);
+          }
+        }
+      });
+    }
+
+    // ANIMATION ĐI CẦU THANG TỪNG BƯỚC QUA CÁC TẦNG TRUNG GIAN (ĐỨNG DẬY, ĐI CẦU THANG, RỒI MỚI NGỒI)
+    function animateStairTraversal(data) {
+      const { userId, fromFloor, toFloor, seatIndex, durationMs } = data;
+      const el = document.getElementById(`char-${userId}`);
+      if (!el) return;
+
+      activeWalkers[userId] = true;
+      el.style.width = '105px';
+      el.style.height = '340px';
+      el.style.zIndex = '200';
+
+      const sprite = el.querySelector('.char-sprite');
+      sprite.className = 'char-sprite anim-walking';
+      sprite.style.backgroundImage = "url('/assets/prisoner_walk1.png')";
+      sprite.style.animationDelay = '0s';
+
+      const startX = parseFloat(el.style.left) || 400;
+      const startY = FLOOR_CONFIG[fromFloor].floorY;
+      const endY = FLOOR_CONFIG[toFloor].floorY;
+      const fCfgTo = FLOOR_CONFIG[toFloor];
+      const endX = toFloor === 1 ? (MAM1_SEAT_X - fCfgTo.width/2) : (toFloor === 2 ? (MAM2_SEATS_X[seatIndex >= 0 ? seatIndex : 0] - fCfgTo.width/2) : (380 - fCfgTo.width/2));
+
+      const totalDur = Math.max(600, durationMs || 1000);
+      const tWalkToStairs = Math.round(totalDur * 0.28);
+      const tClimbStairs = Math.round(totalDur * 0.44);
+      const tWalkToSeat = totalDur - tWalkToStairs - tClimbStairs;
+      const startTime = performance.now();
+
+      function stepAnimation(now) {
+        const elapsed = now - startTime;
+
+        if (elapsed < tWalkToStairs) {
+          const p = elapsed / tWalkToStairs;
+          const currX = startX + (STAIRS_X - startX) * p;
+          el.style.left = `${currX}px`;
+          el.style.top = `${startY - CHAR_HEIGHT}px`;
+          sprite.style.transform = 'scaleX(1)';
+          requestAnimationFrame(stepAnimation);
+        } else if (elapsed < tWalkToStairs + tClimbStairs) {
+          const p = (elapsed - tWalkToStairs) / tClimbStairs;
+          const currY = startY + (endY - startY) * p;
+          el.style.left = `${STAIRS_X}px`;
+          el.style.top = `${currY - CHAR_HEIGHT}px`;
+          const frame = Math.floor(elapsed / 140) % 2;
+          sprite.style.backgroundImage = frame === 0 ? "url('/assets/prisoner_walk1.png')" : "url('/assets/prisoner_walk2.png')";
+          requestAnimationFrame(stepAnimation);
+        } else if (elapsed < tWalkToStairs + tClimbStairs + tWalkToSeat) {
+          const p = (elapsed - tWalkToStairs - tClimbStairs) / tWalkToSeat;
+          const currX = STAIRS_X + (endX - STAIRS_X) * p;
+          el.style.left = `${currX}px`;
+          el.style.top = `${endY - CHAR_HEIGHT}px`;
+          sprite.style.transform = 'scaleX(-1)';
+          requestAnimationFrame(stepAnimation);
+        } else {
+          delete activeWalkers[userId];
+          sprite.style.transform = 'scaleX(1)';
+          if (localUsers[userId]) {
+            localUsers[userId].currentFloor = toFloor;
+            localUsers[userId].seatIndex = seatIndex;
+          }
+          renderCharacters(localUsers, lastRanking);
+        }
+      }
+
+      requestAnimationFrame(stepAnimation);
+    }
+
+    // LỖI 1: BONG BÓNG PHỤ ĐỀ VOICE BUỒNG ĐỌC LUÂN PHIÊN (DUY NHẤT 1 BẢNG, KHÔNG CHỒNG ĐÈ)
+    let voiceSubFadeTimer = null;
+    window.showVoiceSubtitle = function(text, type = 'buong') {
+      if (voiceSubFadeTimer) {
+        clearTimeout(voiceSubFadeTimer);
+        voiceSubFadeTimer = null;
+      }
+      const el = document.getElementById('voice-subtitle-banner');
+      if (!el) return;
+      let prefix = '';
+      if (type === 'quan_giao') {
+        el.style.borderColor = '#facc15';
+        prefix = '<span class="voice-sub-prefix-quangiao">📢 [Quản Giáo]:</span>';
+      } else {
+        el.style.borderColor = '#38bdf8';
+        prefix = '<span class="voice-sub-prefix-buong">🎙️ [Voice Buồng]:</span>';
+      }
+      el.innerHTML = `${prefix} ${text}`;
+      el.classList.add('active');
+      el.style.opacity = '1';
+      el.style.display = 'block';
+    };
+
+    window.hideVoiceSubtitle = function(delayMs = 0) {
+      if (voiceSubFadeTimer) clearTimeout(voiceSubFadeTimer);
+      const el = document.getElementById('voice-subtitle-banner');
+      if (!el) return;
+      if (delayMs <= 0) {
+        el.classList.remove('active');
+        el.style.opacity = '0';
+        el.style.display = 'none';
+        el.innerHTML = '';
+      } else {
+        voiceSubFadeTimer = setTimeout(() => {
+          el.style.opacity = '0';
+          setTimeout(() => {
+            el.classList.remove('active');
+            el.style.display = 'none';
+            el.innerHTML = '';
+          }, 350);
+        }, delayMs);
+      }
+    };
+
+    // MỤC 9.5 & 10.3 & 11: BANNER THÔNG BÁO VĂN BẢN (CHỈ DUY TRÌ TỐI ĐA 1 BANNER, KHÔNG ĐỂ CHỒNG CHÉO)
+    const BANNED_PATTERNS = [
+      /đ[iị][t|ch](\s+m[ẹe](\s+ch[úu]ng\s+m[àa]y)?)?/gi,
+      /đ[ụu](\s+m[áa]|m[ẹe](\s+m[àa]y)?)?/gi,
+      /\b(đm|đcm|dcm|dkm|đkm|vcl|vkl|vcc|vch|cl|vl|vcll)\b/gi,
+      /l[ồo0][n|l|z](\s+th[âa]m|\s+m[ẹe]|\s+b[àa])?/gi,
+      /[iI]ồn(\s+th[âa]m)?/gi,
+      /c[ặa]c|c[a|ặ]k|cax|bu[ồo0]i/gi,
+      /\b(đ[éee]o|đ[ếe]ch|đ[áa]ch)\b/gi,
+      /\b(đĩ|phò|cave|gái điếm|gái gọi|lăng loàn)\b/gi,
+      /\b(chó đẻ|thằng chó|con chó|đồ chó|mả mẹ|chó chết)\b/gi,
+      /\b(m[ẹe]\s+m[àa]y|b[ốo]\s+m[àa]y|cha\s+m[àa]y|cụ\s+m[àa]y|bố\s+m)\b/gi,
+      /\b(giết|tự tử|tự sát|chém chết|đâm chết|bắn chết)\b/gi,
+      /\b(ma t[úu]y|cần sa|hàng trắng|hàng đá|thuốc phiện|đập đá)\b/gi,
+      /\b(bắn tinh|thủ dâm|tự sướng|hiếp dâm|dâm ô|loạn luân|ấu dâm)\b/gi,
+      /đ[\s._*!@#-]*[iị][\s._*!@#-]*[t|ch]/gi,
+      /l[\s._*!@#-]*[ồo0][\s._*!@#-]*[n|l|z]/gi,
+      /c[\s._*!@#-]*[ặa][\s._*!@#-]*[c|k]/gi,
+      /đ[\s._*!@#-]*[m|c]/gi,
+      /d[\s._*!@#-]*k[\s._*!@#-]*m/gi
+    ];
+    function sanitizeForDisplay(txt) {
+      if (!txt || typeof txt !== 'string') return '';
+      let r = txt;
+      for (const p of BANNED_PATTERNS) {
+        r = r.replace(p, '***');
+      }
+      return r;
+    }
+
+    function showAnnouncementBanner(text, isGift = false, speechText = '', isBig = false, noTts = false, priority = 10) {
+      if (isReleaseCeremonyActive && priority < 100) return;
+      const container = document.getElementById('announcement-container');
+      if (!container) return;
+
+      const cleanText = sanitizeForDisplay(text);
+
+      // Xoá banner cũ ngay lập tức nếu có để không bị xếp chồng đè lên mâm và nhân vật
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+
+      const banner = document.createElement('div');
+      banner.className = 'announcement-banner';
+      if (priority >= 70 || cleanText.includes('TẤM GƯƠNG SÁNG') || cleanText.includes('tấm gương sáng')) {
+        banner.style.borderColor = '#ffd700';
+        banner.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.85)';
+        banner.innerHTML = `<span style="font-size:24px; margin-right:8px;">🌟</span>${cleanText}`;
+      } else if (priority >= 50) {
+        banner.style.borderColor = '#ff9800';
+        banner.style.boxShadow = '0 0 15px rgba(255, 152, 0, 0.75)';
+        banner.innerHTML = `<span style="font-size:24px; margin-right:8px;">🍗</span>${cleanText}`;
+      } else if (cleanText.includes('Follow') || cleanText.includes('theo dõi') || cleanText.includes('Theo dõi')) {
+        banner.style.borderColor = '#00e5ff';
+        banner.style.boxShadow = '0 0 20px rgba(0, 229, 255, 0.85)';
+        banner.innerHTML = `<span style="font-size:24px; margin-right:8px;">➕</span>${cleanText}`;
+      } else if (isGift) {
+        banner.style.borderColor = '#ffd700';
+        banner.innerHTML = `<span style="font-size:24px; margin-right:8px;">🎁</span>${cleanText}`;
+      } else {
+        banner.style.borderColor = '#00e676';
+        banner.innerHTML = `<span style="font-size:24px; margin-right:8px;">📢</span>${cleanText}`;
+      }
+      container.appendChild(banner);
+      setTimeout(() => {
+        if (banner.parentNode) banner.parentNode.removeChild(banner);
+      }, 5500);
+
+      // Nếu noTts = true hoặc speechText === null: chỉ hiện chữ trên màn hình, không đọc TTS đè lên
+      if (noTts || speechText === null) return;
+
+      // Đưa vào hàng đợi giọng đọc troll tiếng Việt kèm Ducking và Priority
+      if (window.buongGiamAudio) {
+        if (isGift) {
+          window.buongGiamAudio.playGiftChime(isBig);
+        }
+        window.buongGiamAudio.speakThanks(speechText || text, priority);
+      }
+    }
+
+    function showChatBubble(data) {
+      const el = document.getElementById(`char-${data.userId}`);
+      if (!el) return;
+      const oldBubble = el.querySelector('.chat-bubble');
+      if (oldBubble) oldBubble.remove();
+
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble';
+      bubble.innerText = data.text;
+      el.appendChild(bubble);
+      setTimeout(() => bubble.remove(), 3500);
+    }
+
+    // Tự động kích hoạt Audio khi click bất kỳ đâu trên Overlay hoặc khi kết nối Socket (cho OBS / LIVE Studio)
+    function tryStartBgm() {
+      if (window.buongGiamAudio) {
+        window.buongGiamAudio.ensureAudioContext();
+        if (!window.buongGiamAudio.isAmbientPlaying && window.buongGiamAudio.ambientEnabled) {
+          window.buongGiamAudio.startAmbient();
+        }
+      }
+      if (window.buongGiamVoice16) {
+        window.buongGiamVoice16.setSocket(socket);
+        if (!window.buongGiamVoice16.isPlaying && !window.buongGiamVoice16.isPausedBetween && !window.buongGiamVoice16.isBatchGreetingPlaying && window.buongGiamVoice16.enabled) {
+          window.buongGiamVoice16.start();
+        }
+      }
+    }
+
+    window.addEventListener('click', tryStartBgm, { once: true });
+    window.addEventListener('DOMContentLoaded', tryStartBgm);
+    socket.on('connect', tryStartBgm);
+
+    function handleStateUpdate(state) {
+      if (!state) return;
+      localUsers = state.users || {};
+      chickenState = state.chicken || { stage: 0, currentTop1: null };
+
+      const demoEl = document.getElementById('demo-watermark');
+      if (demoEl) demoEl.style.display = state.isDemoMode ? 'block' : 'none';
+
+      // Cập nhật vị trí ảnh trang trí tường Mâm 1 & Mâm 2
+      if (state.settings && state.settings.wallDecor) {
+        const d1 = state.settings.wallDecor.mam1;
+        const el1 = document.getElementById('wall-decor-mam1');
+        if (el1 && d1) {
+          el1.style.display = (d1.enabled !== false) ? 'block' : 'none';
+          el1.style.left = d1.x + 'px';
+          el1.style.top = d1.y + 'px';
+          el1.style.width = d1.width + 'px';
+          el1.style.height = (d1.height || Math.round(d1.width * (305 / 173))) + 'px';
+          if (d1.opacity !== undefined) el1.style.opacity = d1.opacity;
+        }
+        const d2 = state.settings.wallDecor.mam2;
+        const el2 = document.getElementById('wall-decor-mam2');
+        if (el2 && d2) {
+          el2.style.display = (d2.enabled !== false) ? 'block' : 'none';
+          el2.style.left = d2.x + 'px';
+          el2.style.top = d2.y + 'px';
+          el2.style.width = d2.width + 'px';
+          el2.style.height = (d2.height || d2.width) + 'px';
+          if (d2.opacity !== undefined) el2.style.opacity = d2.opacity;
+        }
+      }
+
+      // Đồng bộ cấu hình âm thanh
+      if (state.settings && state.settings.audio && window.buongGiamAudio) {
+        const a = state.settings.audio;
+        if (a.masterEnabled !== undefined) window.buongGiamAudio.setMasterEnabled(a.masterEnabled);
+        if (a.masterVolume !== undefined) window.buongGiamAudio.setMasterVolume(a.masterVolume);
+        if (a.ambientVolume !== undefined) window.buongGiamAudio.setAmbientVolume(a.ambientVolume);
+        if (a.ambientTrack !== undefined) window.buongGiamAudio.setAmbientTrack(a.ambientTrack);
+        if (a.ttsVolume !== undefined) window.buongGiamAudio.setTtsVolume(a.ttsVolume);
+        if (a.sfxVolume !== undefined) window.buongGiamAudio.setSfxVolume(a.sfxVolume);
+      }
+
+      updateLeaderboard(state.ranking || [], localUsers);
+      if (state.exemplaryInmates) {
+        lastExemplaryInmates = state.exemplaryInmates;
+        updateExemplaryBoard(state.exemplaryInmates);
+      }
+      renderCharacters(localUsers, state.ranking || []);
+      renderMam1WallMedals(lastExemplaryInmates, localUsers);
+
+      if (state.chicken) {
+        chickenState = state.chicken;
+        const ranking = state.ranking || [];
+        const topUser = ranking.length > 0 ? localUsers[ranking[0]] : null;
+        const hasTop1 = Boolean(topUser && (topUser.currentFloor === 1 || topUser.points >= (state.settings?.mam1Threshold || 10)));
+        updateChickenDisplay(state.chicken.stage, state.chicken.progress, state.chicken.minutesHeld, hasTop1);
+      }
+
+      // CẬP NHẬT TỶ LỆ TÁP TAY VÀ XU TRÊN BẢNG QUY ĐỔI ĐIỂM
+      if (state.settings) {
+        if (state.settings.tapRate !== undefined) {
+          const tapEl = document.getElementById('rule-tap-line');
+          if (tapEl) tapEl.innerText = `💖 ${state.settings.tapRate} táp tay = 1 điểm`;
+        }
+        if (state.settings.pointsPerCoin !== undefined) {
+          const coinEl = document.getElementById('rule-coin-line');
+          if (coinEl) coinEl.innerText = `⭐ 1 xu = ${state.settings.pointsPerCoin} điểm`;
+        }
+        const cmtContainer = document.getElementById('rule-comments-container');
+        if (cmtContainer) {
+          const quotes = Array.isArray(state.settings.commentQuotes) && state.settings.commentQuotes.length > 0
+            ? state.settings.commentQuotes
+            : (state.settings.commentBonusQuote ? [{ quote: state.settings.commentBonusQuote, points: state.settings.commentBonusPoints || 1 }] : []);
+          cmtContainer.innerHTML = quotes.map(q => `
+            <div class="rule-line rule-comment" style="color:#38bdf8; font-size:11px; font-weight:700; margin-top:3px; word-break:break-word; line-height:1.25;">
+              💬 Cmt: "<span>${escapeHtml(q.quote)}</span>" (+${q.points}đ)
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    // Tự động kéo state khởi tạo ngay khi tải trang không cần chờ sự kiện webhook
+    fetch('/api/state').then(r => r.json()).then(handleStateUpdate).catch(e => console.warn(e));
+
+    // SOCKET LISTENERS
+    socket.on('state-update', handleStateUpdate);
+
+    // MỤC 11: Nhận Voice Đọc Luân Phiên kèm Auto-Ducking
+    socket.on('periodic-voice', (data) => {
+      if (isReleaseCeremonyActive) return;
+      showAnnouncementBanner(data.text, false, data.speechText, false, false, 15);
+    });
+
+    socket.on('stair-traversal-start', (data) => animateStairTraversal(data));
+
+    // MỤC 9.5 & 10.3 & 11: Nhận thông báo lên/xuống mâm kèm SFX và TTS troll hoàn chỉnh cho tất cả các mâm
+    socket.on('floor-announcement', (data) => {
+      // THỨ TỰ ƯU TIÊN HỆ THỐNG:
+      // 1. Tấm gương sáng (>= 90)
+      // 2. Mâm 1: Lên Mâm 1 = 85, Xuống Mâm 1 = 75 (BẢO VỆ 100%)
+      // 3. Mâm 2: Lên Mâm 2 = 60, Xuống Mâm 2 = 55 (NGHẼN)
+      // 4. Mâm 3: Lên Mâm 3 = 45, Xuống Mâm 3 = 40 (NGHẼN)
+      // 5. Mâm 4: Xuống Mâm 4 = 30 (NGHẼN)
+      // (Sự kiện lên mâm luôn ưu tiên đọc trước sự kiện xuống mâm)
+      let priority = 30;
+      if (data.toFloor === 1) {
+        priority = 85; // Lên Mâm 1
+      } else if (data.fromFloor === 1) {
+        priority = 75; // Xuống Mâm 1
+      } else if (data.toFloor === 2) {
+        priority = data.isUp ? 60 : 55; // Lên Mâm 2 (60) > Xuống Mâm 2 (55)
+      } else if (data.toFloor === 3) {
+        priority = data.isUp ? 45 : 40; // Lên Mâm 3 (45) > Xuống Mâm 3 (40)
+      } else if (data.toFloor === 4) {
+        priority = 30; // Xuống Mâm 4 bó gối
+      } else {
+        priority = data.isUp ? 45 : 35;
+      }
+
+      if (isReleaseCeremonyActive) {
+        if (data.toFloor === 1) {
+          releasePendingAnnouncements.push({
+            text: data.text,
+            speechText: data.speechText,
+            priority: 85
+          });
+        }
+        return;
+      }
+
+      showAnnouncementBanner(data.text, false, data.speechText, false, false, priority);
+      if (window.buongGiamAudio) {
+        if (data.isUp) window.buongGiamAudio.playClimbUp();
+        else window.buongGiamAudio.playClimbDown();
+      }
+    });
+
+    // Lệnh xoá sạch hàng đợi âm thanh từ xa (Flush Audio Queue)
+    socket.on('flush-audio', () => {
+      if (window.buongGiamAudio) window.buongGiamAudio.clearSpeechQueue();
+    });
+    socket.on('voice16-cmd', (cmd) => {
+      if (cmd && (cmd.action === 'flushAudio' || cmd.action === 'reset')) {
+        if (window.buongGiamAudio) window.buongGiamAudio.clearSpeechQueue();
+      }
+    });
+
+    // MỤC 9.5 & 10.2 & 10.3: Nhận thông báo đóng họ (tặng quà)
+    socket.on('gift-alert', (data) => {
+      flashUserNametag(data.userId);
+
+      // YÊU CẦU: KHÔNG ĐỌC NHỮNG THÔNG BÁO TẶNG 1 XU NỮA (QUÁ NHIỄU)
+      // Quà 1 xu (hoặc điểm <= 5) chỉ hiện hiệu ứng ting và chữ, KHÔNG đọc TTS!
+      const isOneCoin = (data.coins !== undefined && data.coins <= 1) || (data.points !== undefined && data.points <= 5);
+      const speechText = isOneCoin ? null : data.speechText;
+
+      // Ưu tiên đọc quà tặng trong cùng 1 chu kỳ theo lượng quà tặng cao nhất trước (20.00 - 68.99):
+      const coins = Number(data.coins) || 0;
+      let giftPriority = 20;
+      if (coins >= 1000) giftPriority = 68;
+      else if (coins >= 500) giftPriority = 65;
+      else if (coins >= 100) giftPriority = 58;
+      else if (coins >= 50) giftPriority = 52;
+      else if (coins >= 20) giftPriority = 46;
+      else if (coins >= 10) giftPriority = 38;
+      else if (coins >= 5) giftPriority = 32;
+      else giftPriority = 20;
+      // Cộng thêm phần lẻ coins để quà xu cao hơn luôn đứng trước quà ít xu hơn
+      giftPriority += Math.min(0.999, coins / 10000);
+
+      // NẾU ĐANG TRONG CẢNH XUẤT TRẠI: TẠM DỪNG HOÀN TOÀN GIỌNG ĐỌC, XẾP HÀNG ĐỢI HOẶC TÓM TẮT (LỖI 4)
+      if (isReleaseCeremonyActive) {
+        releasePendingSmallInteractions++;
+        if (!isOneCoin && data.speechText) {
+          releasePendingAnnouncements.push({
+            text: data.text,
+            speechText: data.speechText,
+            isGift: true,
+            isBig: data.isBig,
+            priority: giftPriority
+          });
+        }
+        return;
+      }
+
+      showAnnouncementBanner(data.text, true, speechText, data.isBig, isOneCoin, giftPriority);
+    });
+
+    // MỤC 10.3: Thông báo cán mốc 10, 50, 100 điểm buồng
+    socket.on('milestone-alert', (data) => {
+      flashUserNametag(data.userId);
+      if (isReleaseCeremonyActive) {
+        releasePendingAnnouncements.push({
+          text: data.text,
+          speechText: data.speechText,
+          priority: 36
+        });
+        return;
+      }
+      showAnnouncementBanner(data.text, false, data.speechText, false, false, 36);
+    });
+
+    // MỤC 10.3 & 11: Người mới vào LIVE hoặc quay lại LIVE (LOAD NGAY VÀO MÂM 4 NGỒI BÓ GỐI)
+    socket.on('user-joined', (data) => {
+      if (data.userId) {
+        if (!localUsers[data.userId]) {
+          localUsers[data.userId] = {
+            id: data.userId,
+            name: data.userName,
+            points: data.points || 0,
+            currentFloor: 4,
+            seatIndex: -1,
+            isActiveInRoom: true,
+            isLeaving: false
+          };
+        } else {
+          localUsers[data.userId].isActiveInRoom = true;
+          localUsers[data.userId].isLeaving = false;
+          if (localUsers[data.userId].currentFloor === undefined) {
+            localUsers[data.userId].currentFloor = 4;
+          }
+        }
+        if (!lastRanking.includes(data.userId)) {
+          lastRanking.push(data.userId);
+        }
+        renderCharacters(localUsers, lastRanking);
+        updateLeaderboard(lastRanking, localUsers);
+        renderMam1WallMedals(lastExemplaryInmates, localUsers);
+      }
+
+      if (leavingTimeouts[data.userId]) {
+        clearTimeout(leavingTimeouts[data.userId]);
+        delete leavingTimeouts[data.userId];
+        const el = document.getElementById(`char-${data.userId}`);
+        if (el) {
+          el.classList.remove('leaving-character');
+          el.style.opacity = '1';
+          el.style.transform = 'none';
+          el.style.zIndex = '200';
+        }
+      }
+      // LỖI 2: Thu thập người mới vào buồng để chào theo đợt (Batch greeting) sau khi kết thúc đoạn Voice 16
+      if (window.buongGiamVoice16) {
+        window.buongGiamVoice16.recordNewInmate();
+      }
+
+      // Hiệu ứng âm thanh mở cửa buồng giam nhẹ nhàng (SFX, không ngắt quãng Voice 16)
+      if (window.buongGiamAudio && data.playSound && !isReleaseCeremonyActive) {
+        window.buongGiamAudio.playDoorOpen();
+      }
+      // Toast chào đón người mới êm dịu góc dưới
+      showJoinToast(data.userName);
+
+      // CHỈ đọc TTS nếu server chủ động yêu cầu (mặc định server gửi null để không làm nhảy loạn Voice 16)
+      if (data.speechText && window.buongGiamAudio && !isReleaseCeremonyActive) {
+        window.buongGiamAudio.speakThanks(data.speechText, 25);
+      }
+    });
+
+    // MỤC 11: Đủ số Tap tay quy đổi (+1đ buồng)
+    socket.on('tap-points-earned', (data) => {
+      if (window.buongGiamAudio && !isReleaseCeremonyActive) window.buongGiamAudio.playTapPoint();
+      flashUserNametag(data.userId);
+      showFloatingBonus(data.userId, `+${data.earnedPoints || 1}đ Táp tay`);
+    });
+
+    // MỤC 11: Follow kênh (+10đ buồng)
+    socket.on('follow-alert', (data) => {
+      if (isReleaseCeremonyActive) {
+        releasePendingSmallInteractions++;
+        return;
+      }
+      if (window.buongGiamAudio) window.buongGiamAudio.playFollow();
+      const pts = data.points || 10;
+      const followSpeech = `Phạm nhân ${data.userName} đã Follow kênh, nhận được ${pts} điểm buồng. Đứng sau song sắt chuẩn bị lên mâm nhé em ơi!`;
+      showAnnouncementBanner(`➕ Phạm nhân ${data.userName} đã Follow kênh (+${pts}đ)!`, false, followSpeech, false, false, 35);
+      flashUserNametag(data.userId);
+    });
+
+    // CƠ CHẾ 3 & 4: TIẾN ĐỘ ĂN GÀ & CẢNH XUẤT TRẠI
+    socket.on('chicken-progress', (data) => {
+      chickenState.stage = data.stage;
+      chickenState.progress = data.progress;
+      chickenState.minutesHeld = data.minutesHeld;
+      const hasTop1 = true;
+      updateChickenDisplay(data.stage, data.progress, data.minutesHeld, hasTop1);
+    });
+
+    socket.on('release-ceremony-start', (data) => {
+      startReleaseCeremony(data);
+    });
+
+    socket.on('release-ceremony-complete', (data) => {
+      if (data.exemplaryInmates) {
+        lastExemplaryInmates = data.exemplaryInmates;
+        updateExemplaryBoard(data.exemplaryInmates);
+        renderMam1WallMedals(lastExemplaryInmates, localUsers);
+      }
+    });
+
+    // MỤC 3 & 5: KHI CÓ NGƯỜI RỚT KHỎI TOP 5 TẤM GƯƠNG SÁNG (Ưu tiên cấp 1: 90)
+    socket.on('exemplary-dropped', (data) => {
+      if (isReleaseCeremonyActive) {
+        releasePendingAnnouncements.push({
+          text: data.bannerText,
+          speechText: data.speechText,
+          priority: 90
+        });
+        return;
+      }
+      showAnnouncementBanner(data.bannerText, true, data.speechText, true, false, 90);
+    });
+
+    // CƠ CHẾ 3.4: CHÀO MỪNG ĐỒNG CHÍ TẤM GƯƠNG SÁNG CHECK IN (Ưu tiên cấp 1: 95, giãn cách 30s/người)
+    const exemplaryWelcomeUserCooldowns = {};
+    socket.on('exemplary-welcome', (data) => {
+      if (isReleaseCeremonyActive) return;
+      const now = Date.now();
+      const uid = data.userId || data.userName;
+      if (uid && exemplaryWelcomeUserCooldowns[uid] && (now - exemplaryWelcomeUserCooldowns[uid] < 30000)) {
+        console.log('⏳ [THROTTLE] Bỏ qua thông báo Tấm gương sáng do chưa đủ 30 giây giãn cách cho user:', uid);
+        return;
+      }
+      if (uid) exemplaryWelcomeUserCooldowns[uid] = now;
+      if (localUsers[data.userId]) {
+        localUsers[data.userId].isActiveInRoom = true;
+        localUsers[data.userId].isLeaving = false;
+      }
+      renderMam1WallMedals(lastExemplaryInmates, localUsers);
+      const bannerText = data.bannerText || `🌟 ${data.text}`;
+      showAnnouncementBanner(bannerText, true, data.speechText, true, false, 95);
+    });
+
+    // CƠ CHẾ: BIỂU DƯƠNG DANH SÁCH TẤM GƯƠNG SÁNG (MỖI 3 PHÚT, Ưu tiên cấp 1: 90)
+    socket.on('exemplary-praise', (data) => {
+      if (data.inmates) {
+        lastExemplaryInmates = data.inmates;
+        updateExemplaryBoard(data.inmates);
+        renderMam1WallMedals(lastExemplaryInmates, localUsers);
+      }
+      if (isReleaseCeremonyActive) return;
+      showAnnouncementBanner(data.bannerText, false, data.speechText, false, false, 90);
+    });
+
+    // CƠ CHẾ 1: COMMENT CẢI TẠO (+1 ĐIỂM)
+    socket.on('comment-bonus', (data) => {
+      const pts = data.bonusPoints || 1;
+      showFloatingBonus(data.userId, `+${pts}đ Cải tạo`);
+    });
+
+    socket.on('new-chicken', (data) => {
+      chickenState.stage = 0;
+      chickenState.progress = 0;
+      chickenState.minutesHeld = 0;
+      updateChickenDisplay(0, 0, 0, true);
+    });
+
+    socket.on('chat-bubble', (data) => showChatBubble(data));
+
+    // XỬ LÝ RỜI LIVE: GIẢI PHÓNG GHẾ TRONG VÒNG 1 GIÂY, KHÔNG BỊ CHỒNG CHÉO, KHÔNG MẤT NGƯỜI
+    socket.on('user-left', (data) => {
+      delete activeWalkers[data.userId];
+      if (localUsers[data.userId]) {
+        localUsers[data.userId].isActiveInRoom = false;
+        localUsers[data.userId].isLeaving = true;
+      }
+      renderMam1WallMedals(lastExemplaryInmates, localUsers);
+      const el = document.getElementById(`char-${data.userId}`);
+      if (el) {
+        el.classList.add('leaving-character');
+        el.style.pointerEvents = 'none';
+        el.style.zIndex = '50';
+        el.style.transition = 'transform 0.8s ease-in, opacity 0.8s ease-in';
+        el.style.transform = 'translateX(-300px)';
+        el.style.opacity = '0';
+
+        if (leavingTimeouts[data.userId]) clearTimeout(leavingTimeouts[data.userId]);
+        leavingTimeouts[data.userId] = setTimeout(() => {
+          if (el.parentNode) el.parentNode.removeChild(el);
+          delete leavingTimeouts[data.userId];
+        }, 850);
+      }
+    });
+
+    // Lệnh tải lại overlay từ server (ép bỏ qua cache hoàn toàn bằng timestamp)
+    socket.on('reload-overlay', () => {
+      console.log('🔄 Đang tải lại overlay từ server...');
+      const cleanUrl = window.location.href.split('?')[0];
+      window.location.href = cleanUrl + '?_v=' + Date.now();
+    });
+
+    // LÀM MỚI PHIÊN LIVE: Dừng ngay toàn bộ âm thanh, voice cũ, và reset voice 16 về đoạn 01
+    socket.on('session-reset', () => {
+      console.log('🔄 Đã nhận tín hiệu làm mới phiên LIVE: Dừng ngay voice cũ và reset hoàn toàn!');
+      if (window.buongGiamAudio) {
+        window.buongGiamAudio.clearSpeechQueue();
+      }
+      if (window.buongGiamVoice16) {
+        window.buongGiamVoice16.reset(true);
+      }
+      const cutsceneModal = document.getElementById('release-cutscene-overlay');
+      if (cutsceneModal) {
+        cutsceneModal.classList.remove('active');
+        cutsceneModal.style.display = 'none';
+        cutsceneModal.style.opacity = '0';
+      }
+      const container = document.getElementById('announcement-container');
+      if (container) container.innerHTML = '';
+      document.querySelectorAll('.chat-bubble').forEach(b => b.remove());
+      if (window.buongGiamAudio) {
+        window.buongGiamAudio.unduckAmbient();
+      }
+    });
+  </script>
+</body>
+</html>

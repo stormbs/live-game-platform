@@ -1,0 +1,25 @@
+# Dependencies and local runtime data
+node_modules/
+data/*
+!data/.gitkeep
+public/avatars/*
+!public/avatars/.gitkeep
+public/audio/chao_theo_dat.mp3
+khoi-dong.log
+
+# Local credentials and editor files
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# Local test captures and OS download metadata
+*.Zone.Identifier
+public/assets/*inspect*
+public/assets/*proof*
+public/assets/*test*
+public/assets/current_*
+public/assets/user_*

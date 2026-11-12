@@ -1,0 +1,2175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảng Quản Trị • Buồng Giam 2D TikTok LIVE</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div class="dashboard-layout">
+    
+    <!-- THANH ĐIỀU HƯỚNG BÊN TRÁI (SIDEBAR) -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">⛓️</div>
+        <div class="brand-details">
+          <h2>Buồng Giam 2D</h2>
+          <span>Live Studio Dashboard</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <!-- 1. TỔNG QUAN -->
+        <button class="nav-item active" data-tab="tab-overview" onclick="switchTab('tab-overview')">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Tổng quan</span>
+        </button>
+
+        <!-- 2. KIỂM TRA & TEST (VỊ TRÍ THỨ 2 NỔI BẬT VỚI HUY HIỆU DỄ TEST) -->
+        <button class="nav-item nav-item-highlight" data-tab="tab-test" onclick="switchTab('tab-test')">
+          <span class="nav-icon">🧪</span>
+          <span class="nav-text">Kiểm tra & Test</span>
+          <span class="nav-badge-hot">Dễ test</span>
+        </button>
+
+        <!-- 3. BỐ CỤC 4 TẦNG & MÂM ĂN -->
+        <button class="nav-item" data-tab="tab-floors" onclick="switchTab('tab-floors')">
+          <span class="nav-icon">🍗</span>
+          <span class="nav-text">Bố cục 4 Tầng & Mâm ăn</span>
+        </button>
+
+        <!-- 4. QUÀ TẶNG & QUY ĐỔI ĐIỂM -->
+        <button class="nav-item" data-tab="tab-gifts" onclick="switchTab('tab-gifts')">
+          <span class="nav-icon">🎁</span>
+          <span class="nav-text">Quà tặng & Quy đổi</span>
+        </button>
+
+        <!-- 5. QUẢN LÝ TÙ NHÂN -->
+        <button class="nav-item" data-tab="tab-prisoners" onclick="switchTab('tab-prisoners')">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">Quản lý Tù nhân</span>
+        </button>
+
+        <!-- 6. ÂM THANH & GIỌNG ĐỌC -->
+        <button class="nav-item" data-tab="tab-audio" onclick="switchTab('tab-audio')">
+          <span class="nav-icon">🔊</span>
+          <span class="nav-text">Âm thanh & Ducking</span>
+        </button>
+
+        <!-- 7. CẤU HÌNH KẾT NỐI -->
+        <button class="nav-item" data-tab="tab-connection" onclick="switchTab('tab-connection')">
+          <span class="nav-icon">🔌</span>
+          <span class="nav-text">Cầu nối TikFinity</span>
+        </button>
+
+        <!-- 8. HƯỚNG DẪN SỬ DỤNG -->
+        <button class="nav-item" data-tab="tab-guide" onclick="switchTab('tab-guide')">
+          <span class="nav-icon">📖</span>
+          <span class="nav-text">Hướng dẫn LIVE Studio</span>
+        </button>
+
+        <!-- 9. SAO LƯU & KHÔI PHỤC -->
+        <button class="nav-item" data-tab="tab-backup" onclick="switchTab('tab-backup')">
+          <span class="nav-icon">💾</span>
+          <span class="nav-text">Sao lưu & Khôi phục</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="server-status-pill">
+          <span class="status-indicator"></span>
+          <span class="status-label">Máy chủ hoạt động (Cổng 3003)</span>
+        </div>
+        <a href="/overlay.html" target="_blank" class="btn btn-gold btn-block" style="width:100%;">
+          🖥️ Mở Overlay LIVE ↗
+        </a>
+      </div>
+    </aside>
+
+    <!-- KHU VỰC NỘI DUNG CHÍNH (MAIN WRAPPER) -->
+    <div class="main-wrapper">
+      
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="page-title">
+          <h1 id="topbar-title">Tổng Quan Buồng Giam</h1>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- Công tắc chế độ Demo -->
+          <div class="demo-toggle-wrapper">
+            <span style="font-size:13px; font-weight:700; color:#fff;">Chế độ DEMO:</span>
+            <label class="switch">
+              <input type="checkbox" id="toggle-demo" onchange="toggleDemoMode(this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Nút Làm Mới Nguồn OBS -->
+          <button onclick="reloadOBSOverlay()" class="btn btn-secondary" style="font-weight:700;" title="Gửi lệnh làm mới giao diện OBS để đồng bộ hình ảnh/tranh tường mới nhất">
+            🔄 Làm Mới OBS
+          </button>
+
+          <!-- Nút Làm Mới Phiên LIVE -->
+          <button onclick="confirmResetSession()" class="btn btn-danger">
+            ⚠️ Làm Mới Phiên
+          </button>
+        </div>
+      </header>
+
+      <!-- NỘI DUNG CÁC TAB (CONTENT AREA) -->
+      <main class="content-area">
+
+        <!-- THÔNG BÁO TRẠNG THÁI XUẤT TRẠI (LỖI 4) -->
+        <div id="release-status-banner" style="display:none; background:linear-gradient(90deg, #d97706, #b45309); color:#fff; font-weight:800; padding:12px 20px; border-radius:10px; margin-bottom:16px; border:2px solid #fbbf24; box-shadow:0 0 20px rgba(251,191,36,0.3); font-size:16px; align-items:center; gap:12px;">
+          <span style="font-size:24px;">⚠️</span>
+          <div>
+            <div style="font-size:16px; font-weight:800; letter-spacing:0.5px;">Đang xuất trại - tạm dừng giọng đọc</div>
+            <div style="font-size:12px; font-weight:500; opacity:0.9;">Hệ thống đang ưu tiên phát hoạt cảnh & giọng đọc xuất trại điện ảnh. Các sự kiện quà/tap khác vẫn tính điểm bình thường và sẽ tóm tắt sau khoảng nghỉ.</div>
+          </div>
+        </div>
+
+        <!-- TAB 1: TỔNG QUAN -->
+        <section id="tab-overview" class="tab-pane active">
+          <!-- HÀNG THỐNG KÊ (STATS GRID) -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon">👥</div>
+              <div class="stat-info">
+                <h3>Tổng Tù Nhân LIVE</h3>
+                <div class="stat-number" id="stat-total-users">0</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="color:#ffd700; background:rgba(255,215,0,0.15);">👑</div>
+              <div class="stat-info">
+                <h3>Mâm 1 (Đại Ca Ăn Gà)</h3>
+                <div class="stat-number" id="stat-mam1" style="color:#ffd700;">Trống</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="color:#00e676; background:rgba(0,230,118,0.15);">🥢</div>
+              <div class="stat-info">
+                <h3>Mâm 2 (Ăn Bún Rau)</h3>
+                <div class="stat-number" id="stat-mam2" style="color:#00e676;">0 / 4</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon" style="color:#ff5252; background:rgba(255,82,82,0.15);">🪑</div>
+              <div class="stat-info">
+                <h3>Tầng 4 (Bó Gối)</h3>
+                <div class="stat-number" id="stat-floor4" style="color:#ff5252;">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BANNER MỞ TEST NHANH -->
+          <div class="card" style="background: linear-gradient(90deg, #182030, #131722); border-color:#ffd700;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div>
+                <h3 style="color:#ffd700; font-size:18px; font-weight:900; margin-bottom:4px;">
+                  🧪 BẢNG TEST NHANH CHO NGƯỜI DÙNG KHÔNG CHUYÊN
+                </h3>
+                <p style="color:var(--text-muted); font-size:14px;">
+                  Chỉ mất 2 phút để tự thử nghiệm toàn bộ kịch bản leo mâm, rớt hạng, ăn gà, ăn bún và cầu thang.
+                </p>
+              </div>
+              <button onclick="switchTab('tab-test')" class="btn btn-gold" style="padding:12px 24px; font-size:15px;">
+                MỞ BẢNG TEST NGAY ➔
+              </button>
+            </div>
+          </div>
+
+          <!-- NHẬT KÝ THỜI GIAN THỰC -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📜 Nhật Ký Hoạt Động Thời Gian Thực</div>
+              <button onclick="clearLogs()" class="btn btn-secondary" style="font-size:12px;">Xóa Nhật Ký</button>
+            </div>
+            <div id="overview-log-box" style="height:320px; overflow-y:auto; font-family:monospace; font-size:13px; display:flex; flex-direction:column; gap:6px;">
+              <!-- Logs populated via socket -->
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: KIỂM TRA & TEST (VỊ TRÍ THỨ 2 NỔI BẬT) -->
+        <section id="tab-test" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🧪 Bảng Test Thao Tác Trực Tiếp (Phản hồi ngay trên Overlay)</div>
+            </div>
+
+            <div class="test-actions-grid">
+              <button class="btn-test" onclick="simulateEvent('join')">
+                <span class="icon">👤</span>
+                <span class="title">Thử Join LIVE</span>
+                <span class="desc">Vào Tầng 4 (Bó gối)</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('chat')">
+                <span class="icon">💬</span>
+                <span class="title">Thử Chat</span>
+                <span class="desc">Hiện bong bóng chat</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('tap')">
+                <span class="icon">💖</span>
+                <span class="title">Thử Tap 50x</span>
+                <span class="desc">+1 điểm (dồn dư)</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('follow')">
+                <span class="icon">➕</span>
+                <span class="title">Thử Follow</span>
+                <span class="desc">+10đ (Lên Mâm 3 ngay)</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('gift', { giftName: 'Hoa hồng', count: 1 })">
+                <span class="icon">🌹</span>
+                <span class="title">Đóng Họ Hoa Hồng</span>
+                <span class="desc">+5đ buồng, Ting & Troll TTS</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('gift', { giftName: 'Kính', count: 1 })">
+                <span class="icon">👓</span>
+                <span class="title">Đóng Họ Kính</span>
+                <span class="desc">+10đ buồng (Chuẩn Mục 9.3)</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('gift', { giftName: 'Cờ Việt Nam', count: 1 })">
+                <span class="icon">🚩</span>
+                <span class="title">Đóng Họ Cờ VN</span>
+                <span class="desc">+20đ buồng (Quà mốc 20)</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('gift', { giftName: 'Heo may mắn', count: 1 })">
+                <span class="icon">🐷</span>
+                <span class="title">Đóng Họ Heo May Mắn</span>
+                <span class="desc">+50đ buồng (Vỗ tay & Mâm 2)</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('test_ladder_up')">
+                <span class="icon">🍗</span>
+                <span class="title">Thử Leo Mâm 1</span>
+                <span class="desc">Đi cầu thang & Ăn gà</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('test_ladder_down')">
+                <span class="icon">⬇️</span>
+                <span class="title">Thử Rớt Hạng</span>
+                <span class="desc">Đi cầu thang xuống Tầng 4</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('simulate_100')">
+                <span class="icon">👥</span>
+                <span class="title">Mô Phỏng 100 Người</span>
+                <span class="desc">Không chồng lấn, có bộ đếm</span>
+              </button>
+
+              <button class="btn-test" onclick="simulateEvent('leave')">
+                <span class="icon">🚪</span>
+                <span class="title">Thử Rời LIVE</span>
+                <span class="desc">Đứng dậy bước ra, giải phóng ghế</span>
+              </button>
+
+              <!-- CÁC NÚT TEST CHO 4 CƠ CHẾ MỚI -->
+              <button class="btn-test" onclick="testCommentBonus()">
+                <span class="icon">💬</span>
+                <span class="title">Test Comment Cải Tạo</span>
+                <span class="desc">+1đ buồng ngay (Cơ chế 1)</span>
+              </button>
+
+              <button class="btn-test" onclick="testCommentSpam()">
+                <span class="icon">⏳</span>
+                <span class="title">Test Spam Comment</span>
+                <span class="desc">Trong 30s không cộng thêm</span>
+              </button>
+
+              <button class="btn-test" onclick="testIdleDeduct()">
+                <span class="icon">⏱️</span>
+                <span class="title">Test Trừ Điểm 1 Phút</span>
+                <span class="desc">-1đ không tương tác (Cơ chế 2.1)</span>
+              </button>
+
+              <button class="btn-test" onclick="testExitDeduct()">
+                <span class="icon">🚪</span>
+                <span class="title">Test Trừ Điểm Thoát 5m</span>
+                <span class="desc">-1đ mỗi 5 phút thoát (Cơ chế 2.3)</span>
+              </button>
+
+              <button class="btn-test" onclick="testSetChicken(20)">
+                <span class="icon">🍗</span>
+                <span class="title">Ăn Gà 20% (Mất 1 Đùi)</span>
+                <span class="desc">Cơ chế 4 - Giai đoạn 1</span>
+              </button>
+
+              <button class="btn-test" onclick="testSetChicken(60)">
+                <span class="icon">🍗</span>
+                <span class="title">Ăn Gà 60% (Chủ yếu Xương)</span>
+                <span class="desc">Cơ chế 4 - Giai đoạn 3</span>
+              </button>
+
+              <button class="btn-test" onclick="testSetChicken(100)">
+                <span class="icon">🦴</span>
+                <span class="title">Ăn Gà 100% (Bộ Xương)</span>
+                <span class="desc">Hết gà & Cảnh xuất trại</span>
+              </button>
+
+              <button class="btn-test" onclick="testReleaseCeremony()">
+                <span class="icon">🎓</span>
+                <span class="title">Lễ Xuất Trại (Công An)</span>
+                <span class="desc">Công an vỗ vai & Ra cửa (Cơ chế 3)</span>
+              </button>
+
+              <button class="btn-test" onclick="testExemplaryReturn()">
+                <span class="icon">🌟</span>
+                <span class="title">Tấm Gương Sáng Vào Lại</span>
+                <span class="desc">Chào mừng & Miễn trừ điểm (Cơ chế 3.4)</span>
+              </button>
+            </div>
+
+            <!-- HƯỚNG DẪN TEST 2 PHÚT -->
+            <div style="background:rgba(255,215,0,0.06); border-left:4px solid #ffd700; padding:18px; border-radius:0 10px 10px 0; margin-top:20px;">
+              <h4 style="color:#ffd700; font-size:15px; font-weight:900; margin-bottom:8px;">
+                📋 KỊCH BẢN KIỂM TRA 2 PHÚT CHUẨN TRƯỚC KHI BÀN GIAO:
+              </h4>
+              <ol style="margin-left:20px; font-size:14px; color:#e2e8f0; line-height:1.7;">
+                <li>Bấm <b>"Mở Overlay LIVE ↗"</b> ở góc dưới bên trái để mở màn hình dọc 1080x1920.</li>
+                <li>Gạt công tắc <b>"Chế độ DEMO"</b> ở góc trên cùng sang BẬT (màn hình sẽ có nhãn `🧪 CHẾ ĐỘ DEMO ĐANG BẬT`).</li>
+                <li>Bấm <b>"Thử Join LIVE"</b>: Nhân vật xuất hiện tại Tầng 4 (Ngồi bó gối ủ rũ dưới sàn).</li>
+                <li>Bấm <b>"Thử Follow"</b>: Được +10 điểm, đi bộ ra cầu thang trái leo lên Tầng 3 (Sau song sắt, ngước nhìn lên thèm thuồng).</li>
+                <li>Bấm <b>"Thử Leo Mâm 1"</b>: Đi bộ lên tiếp qua Tầng 2, dừng tại Mâm 1, dọn con gà luộc mới toanh, xé gà và nhai liên tục.</li>
+                <li>Bấm <b>"Thử Rớt Hạng"</b>: Đi cầu thang từng bước qua các tầng trung gian trở về lại Tầng 4 bó gối.</li>
+                <li>Bấm <b>"Làm Mới Phiên"</b> để dọn sạch dữ liệu thử nghiệm trước khi phát LIVE thật.</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: BỐ CỤC 4 TẦNG & MÂM ĂN -->
+        <section id="tab-floors" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🍗 Bố Cục 4 Tầng Buồng Giam (Cấm Tầng Trống)</div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:18px;">
+              <div style="background:#181f2c; padding:18px; border-radius:12px; border:1px solid #ffd700;">
+                <h4 style="color:#ffd700; font-size:16px; font-weight:800; margin-bottom:8px;">
+                  👑 TẦNG 1: MÂM 1 (TOP 1 & ĐIỂM > 50)
+                </h4>
+                <ul style="font-size:14px; color:#cbd5e1; margin-left:18px; line-height:1.6;">
+                  <li>Chỉ 1 người duy nhất: Top 1 bảng điểm VÀ phải có > 50 điểm.</li>
+                  <li>Nếu Top 1 chưa đủ 50đ thì <b>Mâm 1 để trống hoàn toàn</b>.</li>
+                  <li>Khí chất Đại ca: đội mũ đen, đeo dây chuyền vàng to, hình xăm, áo sọc.</li>
+                  <li>Đĩa gà luộc nguyên con vàng ươm, xé ăn liên tục, gà vơi dần theo thời gian. Khi đổi đại ca mới thì bưng con gà mới toanh ra.</li>
+                </ul>
+              </div>
+
+              <div style="background:#181f2c; padding:18px; border-radius:12px; border:1px solid #00e676;">
+                <h4 style="color:#00e676; font-size:16px; font-weight:800; margin-bottom:8px;">
+                  🥢 TẦNG 2: MÂM 2 (TOP 2-5 & ĐIỂM > 20)
+                </h4>
+                <ul style="font-size:14px; color:#cbd5e1; margin-left:18px; line-height:1.6;">
+                  <li>Tối đa 4 người ngồi ở bàn dài.</li>
+                  <li>Điều kiện: Đang trong Top 2-5 VÀ phải có > 20 điểm.</li>
+                  <li>Trên bàn chỉ có rau và bún, <b>tuyệt đối KHÔNG có gà</b>.</li>
+                  <li>Động tác ăn: cầm đũa gắp bún/rau, đưa lên miệng, nhai liên tục ở phần bát của mình.</li>
+                </ul>
+              </div>
+
+              <div style="background:#181f2c; padding:18px; border-radius:12px; border:1px solid #ff9100;">
+                <h4 style="color:#ff9100; font-size:16px; font-weight:800; margin-bottom:8px;">
+                  ⛓️ TẦNG 3: MÂM 3 (ĐIỂM TỪ 5 TRỞ LÊN)
+                </h4>
+                <ul style="font-size:14px; color:#cbd5e1; margin-left:18px; line-height:1.6;">
+                  <li>Khu vực sau song sắt dọc.</li>
+                  <li>Không yêu cầu thứ hạng, chỉ cần có từ 5 điểm trở lên.</li>
+                  <li><b>Không có thức ăn</b>: Chỉ đứng sau song sắt, ngước nhìn lên thèm thuồng, thỉnh thoảng liếc sang mâm 1 và 2.</li>
+                </ul>
+              </div>
+
+              <div style="background:#181f2c; padding:18px; border-radius:12px; border:1px solid #ff5252;">
+                <h4 style="color:#ff5252; font-size:16px; font-weight:800; margin-bottom:8px;">
+                  🪑 TẦNG 4: NGỒI BÓ GỐI (DƯỚI 10 ĐIỂM)
+                </h4>
+                <ul style="font-size:14px; color:#cbd5e1; margin-left:18px; line-height:1.6;">
+                  <li>Sàn trống gạch cũ dưới cùng, không có bàn, không có thức ăn.</li>
+                  <li>Những người dưới 10 điểm ngồi co ro ôm gối ủ rũ.</li>
+                  <li>Người xem mới vào LIVE tự động xuất hiện ở tầng này.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- KHU VỰC CẤU HÌNH ẢNH TRANG TRÍ TƯỜNG (MÂM 1 VÀ MÂM 2) -->
+            <div class="card" style="margin-top:20px; border-color:#ffd700;">
+              <div class="card-header">
+                <div class="card-title">🖼️ Ảnh Trang Trí Tường Mâm 1 & Mâm 2 (Tài Nguyên Cung Cấp)</div>
+                <button onclick="saveDecorSettings()" class="btn btn-gold" style="font-size:13px;">💾 Lưu Cấu Hình Vị Trí</button>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+                <!-- Mâm 1 Decor -->
+                <div style="background:#161c27; padding:18px; border-radius:10px; border:1px solid var(--border-color); display:flex; gap:16px;">
+                  <div style="width:100px; height:150px; background:#0b0e14; border:1px solid #ffd700; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                    <img src="/assets/trang_tri_mam_1.png" style="max-width:100%; max-height:100%; object-fit:contain;">
+                  </div>
+                  <div style="flex:1;">
+                    <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin-bottom:10px;">Trang Trí Tường Mâm 1</h4>
+                    <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+                      <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="decor-m1-enabled" checked onchange="previewDecor()"> Hiển thị trên tường Mâm 1
+                      </label>
+                      <div>Ngang (X): <input type="range" id="decor-m1-x" min="150" max="950" value="540" oninput="previewDecor()"> <span id="val-m1-x">540px</span></div>
+                      <div>Dọc (Y): <input type="range" id="decor-m1-y" min="80" max="380" value="190" oninput="previewDecor()"> <span id="val-m1-y">190px</span></div>
+                      <div>Chiều rộng: <input type="range" id="decor-m1-w" min="60" max="250" value="120" oninput="previewDecor()"> <span id="val-m1-w">120px</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Mâm 2 Decor -->
+                <div style="background:#161c27; padding:18px; border-radius:10px; border:1px solid var(--border-color); display:flex; gap:16px;">
+                  <div style="width:120px; height:150px; background:#0b0e14; border:1px solid #00e676; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                    <img src="/assets/trang_tri_mam_2.png" style="max-width:100%; max-height:100%; object-fit:contain;">
+                  </div>
+                  <div style="flex:1;">
+                    <h4 style="color:#00e676; font-size:15px; font-weight:800; margin-bottom:10px;">Trang Trí Tường Mâm 2</h4>
+                    <div style="display:flex; flex-direction:column; gap:8px; font-size:13px;">
+                      <label style="display:flex; align-items:center; gap:8px;">
+                        <input type="checkbox" id="decor-m2-enabled" checked onchange="previewDecor()"> Hiển thị trên tường Mâm 2
+                      </label>
+                      <div>Ngang (X): <input type="range" id="decor-m2-x" min="150" max="950" value="540" oninput="previewDecor()"> <span id="val-m2-x">540px</span></div>
+                      <div>Dọc (Y): <input type="range" id="decor-m2-y" min="450" max="750" value="530" oninput="previewDecor()"> <span id="val-m2-y">530px</span></div>
+                      <div>Chiều rộng: <input type="range" id="decor-m2-w" min="80" max="300" value="180" oninput="previewDecor()"> <span id="val-m2-w">180px</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: QUÀ TẶNG & QUY ĐỔI ĐIỂM -->
+        <section id="tab-gifts" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🎁 Bảng Quy Đổi Quà Tặng Sang Điểm Số (Theo Giá Trị Xu)</div>
+              <button onclick="openGiftModal()" class="btn btn-gold" style="font-size:13px;">+ Thêm / Sửa Quà</button>
+            </div>
+
+            <!-- BẢNG QUY ĐỔI ĐIỂM (CHỈ 2 CÂU) -->
+            <div style="background:rgba(255,215,0,0.14); border:2px solid #ffd700; border-radius:8px; padding:16px 20px; margin-bottom:16px; display:flex; flex-direction:column; gap:10px;">
+              <div id="dash-rule-coin-display" style="font-size:18px; font-weight:900; color:#ffd700; display:flex; align-items:center; gap:8px;">
+                ⭐ 1 xu = 5 điểm
+              </div>
+              <div id="dash-rule-tap-display" style="font-size:18px; font-weight:900; color:#ff80ab; display:flex; align-items:center; gap:8px;">
+                💖 50 táp tay = 1 điểm
+              </div>
+            </div>
+
+            <!-- CÀI ĐẶT TỶ GIÁ XU ĐỔI ĐIỂM BUỒNG -->
+            <div style="background:rgba(30, 41, 59, 0.85); border:1.5px solid #ffd700; border-radius:8px; padding:16px 20px; margin-bottom:16px;">
+              <div style="font-size:15px; font-weight:800; color:#ffd700; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                ⭐ CÀI ĐẶT TỶ GIÁ 1 XU = ĐIỂM BUỒNG
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;">
+                <div style="flex:1; min-width:240px;">
+                  <label style="display:block; font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:6px;">
+                    1 xu quy đổi thành mấy điểm (1 - 100):
+                  </label>
+                  <input type="number" id="coin-rate-input" value="5" min="1" max="100"
+                    style="width:100%; padding:8px 12px; background:#0f172a; border:2px solid #ffd700; color:#ffd700; border-radius:6px; font-size:16px; font-weight:800; box-sizing:border-box;">
+                </div>
+                <button onclick="saveCoinRate()" class="btn btn-gold" style="padding:10px 20px; font-weight:800; font-size:14px; cursor:pointer;">
+                  💾 Lưu Tỷ Giá Xu
+                </button>
+              </div>
+              <div style="font-size:12px; color:#94a3b8; margin-top:8px;">
+                * Bấm Lưu là đồng bộ ngay lên phiên live (bảng quy đổi trên Overlay + Dashboard). Quà tặng sau đó áp dụng tỷ giá mới, điểm cũ giữ nguyên.
+              </div>
+            </div>
+
+            <!-- CÀI ĐẶT TỶ LỆ TÁP TAY ĐỔI ĐIỂM BUỒNG -->
+            <div style="background:rgba(30, 41, 59, 0.85); border:1.5px solid #ff80ab; border-radius:8px; padding:16px 20px; margin-bottom:16px;">
+              <div style="font-size:15px; font-weight:800; color:#ff80ab; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                💖 CÀI ĐẶT SỐ LƯỢT TÁP TAY ĐỔI 1 ĐIỂM BUỒNG
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;">
+                <div style="flex:1; min-width:240px;">
+                  <label style="display:block; font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:6px;">
+                    Số lượt táp tay để được 1 điểm buồng:
+                  </label>
+                  <input type="number" id="tap-rate-input" value="50" min="1" max="1000"
+                    style="width:100%; padding:8px 12px; background:#0f172a; border:2px solid #ff80ab; color:#ff80ab; border-radius:6px; font-size:16px; font-weight:800; box-sizing:border-box;">
+                </div>
+                <button onclick="saveTapRate()" class="btn btn-gold" style="padding:10px 20px; font-weight:800; font-size:14px; cursor:pointer;">
+                  💾 Lưu Tỷ Lệ Táp Tay
+                </button>
+              </div>
+              <div style="font-size:12px; color:#94a3b8; margin-top:8px;">
+                * Thay đổi số này (ví dụ thành 10), bấm Lưu: Bảng trên Overlay OBS và trên Dashboard sẽ tự động đổi sang số mới ngay lập tức, đồng thời voice đọc thông báo cũng sẽ cập nhật theo số này mà không làm ảnh hưởng phiên LIVE.
+              </div>
+            </div>
+            <!-- CÀI ĐẶT THỜI GIAN ĂN HẾT GÀ MÂM 1 -->
+            <div style="background:rgba(30, 41, 59, 0.85); border:1.5px solid #ffd700; border-radius:8px; padding:16px 20px; margin-bottom:16px;">
+              <div style="font-size:15px; font-weight:800; color:#ffd700; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                🍗 CÀI ĐẶT THỜI GIAN ĂN HẾT GÀ MÂM 1 (PHÚT)
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;">
+                <div style="flex:1; min-width:240px;">
+                  <label style="display:block; font-size:13px; font-weight:700; color:#cbd5e1; margin-bottom:6px;">
+                    Số phút để ăn hết gà (1 - 120):
+                  </label>
+                  <input type="number" id="chicken-minutes-input" value="10" min="1" max="120"
+                    style="width:100%; padding:8px 12px; background:#0f172a; border:2px solid #ffd700; color:#ffd700; border-radius:6px; font-size:16px; font-weight:800; box-sizing:border-box;">
+                </div>
+                <button onclick="saveChickenMinutes()" class="btn btn-gold" style="padding:10px 20px; font-weight:800; font-size:14px; cursor:pointer;">
+                  💾 Lưu Thời Gian Ăn Gà
+                </button>
+              </div>
+              <div id="chicken-session-note" style="font-size:12px; color:#94a3b8; margin-top:8px; font-style:italic;">
+                Mâm 1 đang trống — mốc mới áp dụng ngay lượt tới.
+              </div>
+              <div style="font-size:12px; color:#94a3b8; margin-top:8px;">
+                * Bấm Lưu là đồng bộ ngay vào phiên live. Nếu đang có lượt ăn dở, mốc mới sẽ áp dụng từ lượt ăn sau.
+              </div>
+            </div>
+
+            <!-- CƠ CHẾ 1: DANH SÁCH CÂU COMMENT CẢI TẠO (+ĐIỂM RIÊNG TỪNG CÂU) -->
+            <div style="background:rgba(30, 41, 59, 0.85); border:1.5px solid #38bdf8; border-radius:10px; padding:18px 22px; margin-bottom:18px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                <div style="font-size:16px; font-weight:800; color:#38bdf8; display:flex; align-items:center; gap:8px;">
+                  💬 DANH SÁCH CÂU COMMENT CẢI TẠO (+MỐC ĐIỂM RIÊNG TỪNG CÂU)
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <label style="font-size:13px; font-weight:700; color:#cbd5e1;">Chống spam (giây):</label>
+                  <input type="number" id="comment-cooldown-input" value="30" min="5" max="300"
+                    style="width:80px; padding:6px 10px; background:#0f172a; border:1px solid #475569; color:#f8fafc; border-radius:6px; font-size:13px; font-weight:700; text-align:center;">
+                </div>
+              </div>
+
+              <!-- BẢNG DANH SÁCH CÁC CÂU COMMENT -->
+              <div style="background:#0f172a; border:1px solid #334155; border-radius:8px; overflow:hidden; margin-bottom:14px;">
+                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                  <thead>
+                    <tr style="background:#1e293b; color:#94a3b8; text-align:left; border-bottom:1px solid #334155;">
+                      <th style="padding:10px 14px; width:45px;">#</th>
+                      <th style="padding:10px 14px;">Nội dung câu comment được cộng điểm</th>
+                      <th style="padding:10px 14px; width:140px; text-align:center;">Mốc điểm buồng</th>
+                      <th style="padding:10px 14px; width:90px; text-align:center;">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="comment-quotes-table-body">
+                    <!-- Dynamic rendering -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- FORM THÊM CÂU COMMENT MỚI -->
+              <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; background:#161f30; padding:12px 16px; border-radius:8px; border:1px dashed #38bdf8;">
+                <div style="flex:4; min-width:240px;">
+                  <label style="display:block; font-size:12px; font-weight:700; color:#cbd5e1; margin-bottom:4px;">
+                    Thêm câu comment mới:
+                  </label>
+                  <input type="text" id="new-comment-quote" placeholder="Nhập câu comment..." onkeydown="if(event.key==='Enter') addCommentQuoteRow()"
+                    style="width:100%; padding:8px 12px; background:#0f172a; border:1px solid #475569; color:#f8fafc; border-radius:6px; font-size:13px; box-sizing:border-box;">
+                </div>
+                <div style="flex:1; min-width:90px;">
+                  <label style="display:block; font-size:12px; font-weight:700; color:#cbd5e1; margin-bottom:4px;">
+                    Mốc điểm (+đ):
+                  </label>
+                  <input type="number" id="new-comment-points" value="1" min="1" max="100" onkeydown="if(event.key==='Enter') addCommentQuoteRow()"
+                    style="width:100%; padding:8px 12px; background:#0f172a; border:1px solid #475569; color:#38bdf8; border-radius:6px; font-size:14px; font-weight:800; text-align:center; box-sizing:border-box;">
+                </div>
+                <button type="button" onclick="addCommentQuoteRow()" class="btn btn-primary" style="padding:9px 16px; font-size:13px; font-weight:800; cursor:pointer;">
+                  ➕ Thêm Vào Bảng
+                </button>
+                <button type="button" onclick="saveAllCommentQuotes()" class="btn btn-gold" style="padding:9px 20px; font-size:13px; font-weight:800; cursor:pointer;">
+                  💾 Lưu & Đồng Bộ Ngay
+                </button>
+              </div>
+
+              <div style="font-size:12px; color:#94a3b8; margin-top:10px;">
+                * <b>Đồng bộ thời gian thực:</b> Bấm "Lưu & Đồng Bộ Ngay" sẽ cập nhật toàn bộ danh sách câu và mốc điểm riêng lên Overlay OBS, cách tính điểm cho người xem và hệ thống voice đọc buồng giam ngay lập tức.
+              </div>
+            </div>
+
+            <!-- CÀI ĐẶT CHÀO NGƯỜI MỚI (CHỐNG NHẢY LOẠN VOICE) -->
+            <div style="background:rgba(30, 41, 59, 0.85); border:1px solid #334155; border-radius:8px; padding:16px 20px; margin-bottom:16px;">
+              <div style="font-size:15px; font-weight:800; color:#ffd700; margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                🚪 CÀI ĐẶT CHÀO NGƯỜI MỚI VÀO LIVE (CHỐNG NHẢY LOẠN VOICE 16)
+              </div>
+              <div style="display:flex; flex-wrap:wrap; gap:20px; align-items:center;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:#e2e8f0; cursor:pointer;">
+                  <input type="checkbox" id="toggle-announce-join-sound" checked onchange="saveJoinAnnouncementSettings()" style="width:18px; height:18px; accent-color:#ffd700;">
+                  <span>Phát âm thanh mở cửa buồng giam (SFX) khi người mới vào</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:#e2e8f0; cursor:pointer;">
+                  <input type="checkbox" id="toggle-announce-join-tts" onchange="saveJoinAnnouncementSettings()" style="width:18px; height:18px; accent-color:#ff5252;">
+                  <span>Đọc giọng TTS chào tên người mới (⚠️ <i>Khuyến nghị TẮT để không làm ngắt quãng Voice 16 & nhạc nền</i>)</span>
+                </label>
+              </div>
+            </div>
+
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tên Quà Tặng</th>
+                  <th>Giá Xu</th>
+                  <th>Điểm Quy Đổi</th>
+                  <th>Hành Động Khi Nhận</th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="gift-table-body">
+                <!-- Gift rows rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 5: QUẢN LÝ TÙ NHÂN -->
+        <section id="tab-prisoners" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">👥 Danh Sách Tù Nhân Đang Có Mặt Trong Buồng</div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:12px; color:var(--text-muted);">Timeout dọn:</span>
+                <input type="number" id="idle-minutes-input" value="1" min="1" max="60" style="width:55px; padding:4px 6px; background:#0f172a; border:1px solid #334155; color:#fff; border-radius:4px; font-size:12px;">
+                <span style="font-size:12px; color:var(--text-muted);">phút</span>
+                <button onclick="cleanIdleUsers()" class="btn btn-secondary" style="font-size:12px; padding:6px 12px;">
+                  🧹 Dọn Người Đã Rời / Không Hoạt Động
+                </button>
+              </div>
+            </div>
+
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Hạng</th>
+                  <th>Tên Tù Nhân</th>
+                  <th>Điểm Số</th>
+                  <th>Tầng Hiện Tại</th>
+                  <th>Trạng Thái</th>
+                  <th>Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="prisoner-table-body">
+                <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">Chưa có tù nhân nào...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- CƠ CHẾ 2.3: BẢNG NGƯỜI ĐÃ THOÁT LIVE & ĐẾM NGƯỢC TRỪ ĐIỂM -->
+          <div class="card" style="margin-top:20px;">
+            <div class="card-header">
+              <div class="card-title">🚪 Danh Sách Người Đã Thoát LIVE & Đếm Ngược Trừ Điểm (Mỗi 5 phút -1đ)</div>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Tên Người Chơi</th>
+                  <th>Điểm Hiện Tại</th>
+                  <th>Thời Gian Đã Thoát</th>
+                  <th>Đếm Ngược Lần Trừ Tiếp Theo</th>
+                  <th>Trạng Thái</th>
+                </tr>
+              </thead>
+              <tbody id="offline-deduct-table-body">
+                <tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">Không có ai đang thoát LIVE cần trừ điểm.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- CƠ CHẾ 3.3 & MỤC 5: MỤC TẤM GƯƠNG SÁNG -->
+          <div class="card" style="margin-top:20px; border-color:#ffd700;">
+            <div class="card-header">
+              <div class="card-title" style="color:#ffd700;">🌟 Top 5 Tấm Gương Sáng Hiện Tại (Treo Huy Chương Trên Tường Mâm 1)</div>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Hạng & Huy Chương</th>
+                  <th>Tên Người Chơi</th>
+                  <th>Điểm Buồng Hiện Tại</th>
+                  <th>Số Lần Xuất Trại</th>
+                  <th>Xuất Trại Gần Nhất</th>
+                  <th>Trạng Thái</th>
+                </tr>
+              </thead>
+              <tbody id="exemplary-table-body">
+                <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">Chưa có ai hoàn thành xuất trại...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- MỤC 5: DANH SÁCH XẾP HẠNG TỪ HẠNG 6 TRỞ XUỐNG (SẮP LÊN / XUỐNG TOP 5) -->
+          <div class="card" style="margin-top:20px; border-color:#38bdf8;">
+            <div class="card-header">
+              <div class="card-title" style="color:#38bdf8;">📋 Danh Sách Cải Tạo Kế Tiếp (Từ Hạng 6 Trở Xuống - Tranh Suất Lên Top 5)</div>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Hạng</th>
+                  <th>Tên Người Chơi</th>
+                  <th>Điểm Buồng Hiện Tại</th>
+                  <th>Số Lần Xuất Trại</th>
+                  <th>Khoảng Cách Với Top 5</th>
+                  <th>Trạng Thái</th>
+                </tr>
+              </thead>
+              <tbody id="below-top5-table-body">
+                <tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">Đang tải danh sách...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 6: ÂM THANH & GIỌNG ĐỌC (MỤC 11) -->
+        <section id="tab-audio" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🔊 Cài Đặt Âm Thanh & Nhạc Nền Hoàn Thiện (Mục 11)</div>
+              <button onclick="saveAudioSettings()" class="btn btn-gold" style="font-size:13px;">💾 Lưu Cài Đặt Âm Thanh</button>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:20px; max-width:850px;">
+              <!-- 1. CỤM ĐIỀU KHIỂN TỔNG (MASTER) -->
+              <div style="background:#161c27; padding:18px; border-radius:10px; border:2px solid #b8860b;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                  <div>
+                    <h4 style="color:#ffd700; font-size:16px; font-weight:800;">🎛️ Âm Lượng Tổng & Bật/Tắt Toàn Bộ</h4>
+                    <span style="font-size:12px; color:var(--text-muted);">Điều khiển toàn bộ nhạc nền, giọng đọc và hiệu ứng</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="audio-master-enabled" checked onchange="updateMasterToggle(this.checked)">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:13px; color:#fff; min-width:120px;">Âm lượng Master:</span>
+                  <input type="range" id="audio-master-vol" min="0" max="1" step="0.05" value="1.0" oninput="updateMasterVolume(this.value)" style="flex:1;">
+                  <span id="val-master-vol" style="color:#ffd700; font-weight:800; min-width:45px;">100%</span>
+                </div>
+              </div>
+
+              <!-- 2. NHẠC NỀN KHÔNG BẢN QUYỀN (BGM) -->
+              <div style="background:#161c27; padding:18px; border-radius:10px; border:1px solid var(--border-color);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                  <div>
+                    <h4 style="color:#fff; font-size:15px; font-weight:800;">🎵 Nhạc Nền (BGM) - Không Bản Quyền</h4>
+                    <span style="font-size:12px; color:var(--text-muted);">Âm hưởng nhẹ nhàng liên tục, vừa đủ nghe không át tiếng</span>
+                  </div>
+                  <button id="btn-toggle-ambient" onclick="toggleAmbientSound()" class="btn btn-outline-gold" style="font-size:12px;">
+                    ▶️ Bật Nhạc Nền
+                  </button>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:14px;">
+                  <div>
+                    <label style="font-size:13px; color:var(--text-muted); display:block; margin-bottom:6px;">Chọn bài nhạc nền (3 bài tùy chọn):</label>
+                    <select id="audio-bgm-track" class="form-control" onchange="changeBgmTrack(this.value)">
+                      <option value="track1">Bài 1: Lo-fi Buồng Giam Trầm Lắng (Thư giãn)</option>
+                      <option value="track2">Bài 2: Hồi Hộp Thiền Ngục (Huyền bí / Kịch tính)</option>
+                      <option value="track3">Bài 3: Nhịp Phố Retro Giang Hồ (Nhộn nhịp)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size:13px; color:var(--text-muted); display:block; margin-bottom:6px;">Âm lượng nhạc nền (Mặc định 30%):</label>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                      <input type="range" id="audio-bgm-vol" min="0" max="1" step="0.05" value="0.30" oninput="changeAmbientVolume(this.value)" style="flex:1;">
+                      <span id="val-bgm-vol" style="color:#00e676; font-weight:800; min-width:40px;">30%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Auto-Ducking Info -->
+                <div style="background:rgba(0,230,118,0.08); border-left:3px solid var(--color-success); padding:10px 14px; border-radius:4px; font-size:12px; color:#cbd5e1;">
+                  <b>🛡️ Cơ Chế Auto-Ducking:</b> Khi TTS đọc câu thông báo hoặc troll, nhạc nền tự động giảm xuống <b>10%</b>. Đọc xong sẽ tăng dần lại <b>30%</b> trong vòng <b>1 giây</b> rất mượt mà.
+                </div>
+              </div>
+
+              <!-- 3. GIỌNG ĐỌC TTS TROLL HUẤN HOA HỒNG / TRƯỜNG CON -->
+              <div style="background:#161c27; padding:18px; border-radius:10px; border:1px solid var(--border-color);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                  <div>
+                    <h4 style="color:#fff; font-size:15px; font-weight:800;">🗣️ Giọng Đọc TTS Troll Huấn Hoa Hồng / Trường Con</h4>
+                    <span style="font-size:12px; color:var(--text-muted);">Thông tin chuẩn xác + câu troll dạy đời hài hước xoay vòng</span>
+                  </div>
+                  <button onclick="testTtsVoice()" class="btn btn-secondary" style="font-size:12px;">
+                    🗣️ Đọc Thử Câu Troll
+                  </button>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:13px; color:var(--text-muted); min-width:140px;">Âm lượng giọng đọc:</span>
+                  <input type="range" id="audio-tts-vol" min="0" max="1" step="0.05" value="0.85" oninput="changeTtsVolume(this.value)" style="flex:1;">
+                  <span id="val-tts-vol" style="color:#ffd700; font-weight:800; min-width:40px;">85%</span>
+                </div>
+              </div>
+
+              <!-- 4. HIỆU ỨNG ÂM THANH (SFX) -->
+              <div style="background:#161c27; padding:18px; border-radius:10px; border:1px solid var(--border-color);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                  <div>
+                    <h4 style="color:#fff; font-size:15px; font-weight:800;">🔔 Hiệu Ứng Âm Thanh (SFX) Riêng Biệt</h4>
+                    <span style="font-size:12px; color:var(--text-muted);">Tiếng ting quà, vỗ tay, bước chân cầu thang, follow, tap</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <input type="range" id="audio-sfx-vol" min="0" max="1" step="0.05" value="0.80" oninput="changeSfxVolume(this.value)" style="width:120px;">
+                    <span id="val-sfx-vol" style="color:#29b6f6; font-weight:800; min-width:40px;">80%</span>
+                  </div>
+                </div>
+
+                <!-- CỤM TEST TỪNG LOẠI ÂM THANH 5S -->
+                <div style="margin-top:14px;">
+                  <div style="font-size:13px; font-weight:700; color:#fff; margin-bottom:8px;">🧪 Thử Nhanh Từng Loại Âm Thanh (5s):</div>
+                  <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                    <button onclick="testAudioItem('bgm')" class="btn btn-outline-gold" style="font-size:12px; padding:6px 12px;">🎵 Test BGM (5s)</button>
+                    <button onclick="testAudioItem('gift_normal')" class="btn btn-secondary" style="font-size:12px; padding:6px 12px;">🎁 Ting Quà Thường</button>
+                    <button onclick="testAudioItem('gift_big')" class="btn btn-secondary" style="font-size:12px; padding:6px 12px;">🐷 Quà Lớn 50đ + Vỗ Tay</button>
+                    <button onclick="testAudioItem('climb_up')" class="btn btn-secondary" style="font-size:12px; padding:6px 12px;">🍗 Lên Mâm (Yeah)</button>
+                    <button onclick="testAudioItem('climb_down')" class="btn btn-secondary" style="font-size:12px; padding:6px 12px;">⬇️ Tụt Mâm (Boing)</button>
+                    <button onclick="testAudioItem('tap')" class="btn btn-secondary" style="font-size:12px; padding:6px 12px;">💖 Đủ 50 Tap</button>
+                    <button onclick="testAudioItem('follow')" class="btn btn-secondary" style="font-size:12px; padding:6px 12px;">➕ Follow (+10đ)</button>
+                    <button onclick="testAudioItem('door')" class="btn btn-secondary" style="font-size:12px; padding:6px 12px;">🚪 Mở Cửa Buồng</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5. HỆ THỐNG VOICE ĐỌC LUÂN PHIÊN 16 ĐOẠN (LIÊN TỤC + AUTO-DUCKING) -->
+              <div style="background:#161c27; padding:18px; border-radius:10px; border:2px solid #00e676;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                  <div>
+                    <h4 style="color:#00e676; font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                      🎙️ Voice Đọc Luân Phiên 16 Đoạn
+                      <span id="voice16-status-badge" style="font-size:11px; padding:2px 8px; border-radius:12px; background:#00e676; color:#000; font-weight:800;">Đang Bật</span>
+                    </h4>
+                    <span style="font-size:12px; color:var(--text-muted);">Đọc liên tục từ 01 ➔ 16 lặp vô tận, nghỉ 3s giữa 2 đoạn nghe nhạc. Có tương tác dừng ngay rồi replay lại từ đầu!</span>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <label class="switch" title="Bật/tắt toàn bộ voice luân phiên">
+                      <input type="checkbox" id="voice16-master-toggle" checked onchange="toggleVoice16Master(this.checked)">
+                      <span class="slider"></span>
+                    </label>
+                    <label style="font-size:12px; color:var(--text-muted); display:flex; align-items:center; gap:6px; white-space:nowrap;" title="Bật/tắt bong bóng phụ đề trên overlay (voice vẫn đọc)">
+                      💬 Phụ đề:
+                      <span class="switch" style="transform:scale(0.85);">
+                        <input type="checkbox" id="voice16-subtitle-toggle" checked onchange="toggleVoice16Subtitle(this.checked)">
+                        <span class="slider"></span>
+                      </span>
+                    </label>
+                    <button onclick="skipVoice16()" class="btn btn-gold" style="font-size:12px; padding:6px 12px; font-weight:800;">
+                      ⏭️ Bỏ qua đoạn này (Next)
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Cụm điều khiển âm lượng và thời gian nghỉ -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; background:rgba(0,0,0,0.25); padding:12px; border-radius:8px; margin-bottom:14px;">
+                  <div>
+                    <label style="font-size:12px; color:var(--text-muted); display:flex; justify-content:space-between; margin-bottom:4px;">
+                      <span>🔊 Âm lượng Voice Luân Phiên:</span>
+                      <span id="val-voice16-vol" style="color:#00e676; font-weight:800;">85%</span>
+                    </label>
+                    <input type="range" id="voice16-vol" min="0" max="1" step="0.05" value="0.85" oninput="changeVoice16Volume(this.value)" style="width:100%;">
+                  </div>
+                  <div>
+                    <label style="font-size:12px; color:var(--text-muted); display:flex; justify-content:space-between; margin-bottom:4px;">
+                      <span>⏱️ Thời gian nghỉ giữa 2 đoạn (nghe BGM):</span>
+                      <span id="val-voice16-pause" style="color:#ffd700; font-weight:800;">3 giây</span>
+                    </label>
+                    <input type="range" id="voice16-pause" min="1" max="10" step="1" value="3" oninput="changeVoice16Pause(this.value)" style="width:100%;">
+                  </div>
+                </div>
+
+                <!-- Live Status Bar -->
+                <div id="voice16-live-indicator" style="background:#0f172a; border-left:4px solid #ffd700; padding:10px 14px; border-radius:6px; margin-bottom:14px; font-size:13px; color:#e2e8f0; display:flex; align-items:center; justify-content:space-between;">
+                  <div>
+                    <b>📡 Trạng thái hiện tại:</b> <span id="voice16-now-playing" style="color:#ffd700; font-weight:700;">Đang chuẩn bị...</span>
+                  </div>
+                  <div id="voice16-duck-tag" style="font-size:11px; color:#38bdf8; background:rgba(56,189,248,0.15); padding:2px 8px; border-radius:4px;">
+                    Auto-Ducking: 10%
+                  </div>
+                </div>
+
+                <!-- Bảng 16 đoạn voice -->
+                <div style="max-height:360px; overflow-y:auto; border:1px solid #334155; border-radius:8px;">
+                  <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                    <thead>
+                      <tr style="background:#0f172a; color:#94a3b8; border-bottom:1px solid #334155; position:sticky; top:0; z-index:2;">
+                        <th style="padding:8px 10px; width:45px;">STT</th>
+                        <th style="padding:8px 10px;">Nội dung câu nói (16 đoạn chuẩn Huấn Hoa Hồng & Buồng Giam)</th>
+                        <th style="padding:8px 10px; width:110px; text-align:center;">Trạng thái</th>
+                        <th style="padding:8px 10px; width:80px; text-align:center;">Kích hoạt</th>
+                        <th style="padding:8px 10px; width:70px; text-align:center;">Nghe thử</th>
+                      </tr>
+                    </thead>
+                    <tbody id="voice16-table-body">
+                      <!-- Render bằng JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 7: CẤU HÌNH KẾT NỐI -->
+        <section id="tab-connection" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">🔌 Cầu Nối TikFinity & Streamer.bot (1 Action Duy Nhất)</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              <div style="background:#161c27; padding:18px; border-radius:10px; border:1px solid var(--border-color);">
+                <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin-bottom:6px;">
+                  1. Địa Chỉ Webhook Nhận Sự Kiện TikFinity Desktop:
+                </h4>
+                <div style="display:flex; gap:10px; align-items:center; margin-top:8px;">
+                  <input type="text" id="webhook-url-input" class="form-control" value="http://localhost:3003/api/webhook" readonly>
+                  <button onclick="copyWebhookUrl()" class="btn btn-gold" style="white-space:nowrap;">
+                    📋 Copy Link
+                  </button>
+                </div>
+                <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">
+                  Trong TikFinity: Tạo đúng 1 Action duy nhất (Webhook POST) gửi toàn bộ sự kiện (Join, Chat, Gift 1+ Coins, Tap 1+ Likes, Follow) tới địa chỉ trên.
+                </p>
+              </div>
+
+              <div style="background:#161c27; padding:18px; border-radius:10px; border:1px solid var(--border-color);">
+                <h4 style="color:var(--color-info); font-size:15px; font-weight:800; margin-bottom:6px;">
+                  2. Cổng WebSocket Streamer.bot:
+                </h4>
+                <div style="font-family:monospace; color:#29b6f6; font-size:14px; margin-top:6px;">
+                  ws://127.0.0.1:8080/
+                </div>
+                <p style="font-size:13px; color:var(--text-muted); margin-top:6px;">
+                  Server Buồng Giam tự động lắng nghe và làm cầu nối trực tiếp với Streamer.bot khi mở ứng dụng.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 8: HƯỚNG DẪN SỬ DỤNG & STUDIO -->
+        <section id="tab-guide" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">📖 Tích Hợp TikTok LIVE Studio (8 Bước Chuẩn 1080x1920)</div>
+            </div>
+
+            <ol style="margin-left:24px; font-size:14px; color:#cbd5e1; line-height:1.9;">
+              <li>Mở phần mềm <b>TikTok LIVE Studio</b> trên máy tính của bạn.</li>
+              <li>Tại bảng điều khiển nguồn (Sources), nhấn <b>+ Thêm nguồn</b> ➔ Chọn loại <b>Liên kết (Link Source / Browser Source)</b>.</li>
+              <li>Dán địa chỉ Overlay Local: <code style="color:#ffd700; background:#000; padding:2px 8px; border-radius:4px;">http://localhost:3003/overlay.html</code>.</li>
+              <li>Tích chọn <b>Bật âm thanh (Capture Audio / Desktop Audio)</b>.</li>
+              <li>Đặt độ phân giải tùy chỉnh: <b>Rộng 1080 x Cao 1920</b> (tỉ lệ chuẩn dọc 9:16).</li>
+              <li>Chế độ hiển thị: Chọn <b>Fit to screen</b> (tuyệt đối không chọn Stretch).</li>
+              <li>Tích chọn <b>Luôn giữ trạng thái hoạt động (Keep active when not visible)</b>.</li>
+              <li>Kiểm tra khung xem trước: Đảm bảo toàn bộ buồng giam 4 tầng, cầu thang bên trái và 2 bảng bên hông hiển thị trọn vẹn, sau đó mới nhấn <b>Phát LIVE</b>.</li>
+            </ol>
+          </div>
+        </section>
+
+        <!-- TAB 9: SAO LƯU & KHÔI PHỤC -->
+        <section id="tab-backup" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">💾 Sao Lưu & Khôi Phục Cấu Hình Phiên LIVE</div>
+            </div>
+
+            <div style="display:flex; gap:18px;">
+              <div style="flex:1; background:#161c27; padding:20px; border-radius:12px; border:1px solid var(--border-color);">
+                <h4 style="color:#fff; font-size:15px; font-weight:800; margin-bottom:8px;">Sao Lưu Dữ Liệu</h4>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+                  Tải về toàn bộ cấu hình điểm quà, thiết lập tầng và danh sách người xem dưới dạng file JSON.
+                </p>
+                <a href="/api/backup" download class="btn btn-gold">
+                  📥 Tải Bản Sao Lưu JSON
+                </a>
+              </div>
+
+              <div style="flex:1; background:#161c27; padding:20px; border-radius:12px; border:1px solid var(--border-color);">
+                <h4 style="color:#fff; font-size:15px; font-weight:800; margin-bottom:8px;">Khôi Phục Dữ Liệu</h4>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+                  Chọn file JSON đã sao lưu trước đó để phục hồi lại toàn bộ trạng thái buồng giam.
+                </p>
+                <input type="file" id="restore-file-input" accept=".json" style="display:none;" onchange="handleRestoreFile(this)">
+                <button onclick="document.getElementById('restore-file-input').click()" class="btn btn-secondary">
+                  📤 Chọn File Khôi Phục
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL THÊM / SỬA QUÀ TẶNG -->
+  <div id="modal-gift" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-gift-title">Thêm / Sửa Quà Tặng</h3>
+        <button class="modal-close-btn" onclick="closeGiftModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Tên Quà Tặng (trùng với tên TikFinity / TikTok):</label>
+          <input type="text" id="modal-gift-name" class="form-control" placeholder="Ví dụ: Rose, Hoa hồng, Cap...">
+        </div>
+        <div class="form-group">
+          <label>Giá Trị Xu Của Quà (điểm buồng = xu × tỷ giá hiện hành):</label>
+          <input type="number" id="modal-gift-coins" class="form-control" min="1" max="100000" value="1">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button onclick="closeGiftModal()" class="btn btn-secondary">Hủy</button>
+        <button onclick="saveGiftFromModal()" class="btn btn-gold">Lưu Quà Tặng</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    // Tỷ giá xu + bảng quà mới nhất (điểm hiển thị = xu × tỷ giá, vẽ lại mỗi khi đổi)
+    let currentCoinRate = 5;
+    let lastGiftMap = null;
+    let currentSettings = {};
+    let currentUsers = {};
+    let isAmbientOn = false;
+
+    function escapeHtml(str) {
+      if (typeof str !== 'string') return str || '';
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+
+      const navBtn = document.querySelector(`.sidebar-nav .nav-item[data-tab="${tabId}"]`);
+      if (navBtn) navBtn.classList.add('active');
+
+      const targetPane = document.getElementById(tabId);
+      if (targetPane) targetPane.classList.add('active');
+
+      const titles = {
+        'tab-overview': 'Tổng Quan Buồng Giam',
+        'tab-test': 'Kiểm Tra & Test (2 Phút)',
+        'tab-floors': 'Bố Cục 4 Tầng & Mâm Ăn',
+        'tab-gifts': 'Quà Tặng & Quy Đổi Điểm',
+        'tab-prisoners': 'Quản Lý Danh Sách Tù Nhân',
+        'tab-audio': 'Cài Đặt Âm Thanh & Audio Ducking',
+        'tab-connection': 'Cầu Nối TikFinity & Streamer.bot',
+        'tab-guide': 'Hướng Dẫn Tích Hợp LIVE Studio',
+        'tab-backup': 'Sao Lưu & Khôi Phục Dữ Liệu'
+      };
+      document.getElementById('topbar-title').innerText = titles[tabId] || 'Buồng Giam Dashboard';
+    }
+
+    // Toggle Demo Mode
+    function toggleDemoMode(enabled) {
+      fetch('/api/demo-mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled })
+      });
+    }
+
+    // Lệnh làm mới OBS Overlay từ xa
+    function reloadOBSOverlay() {
+      fetch('/api/reload-overlay', { method: 'POST' })
+        .then(r => r.json())
+        .then(res => {
+          alert('✅ Đã gửi lệnh làm mới nguồn OBS! Giao diện trên livestream sẽ nạp lại và đồng bộ ngay lập tức.');
+        })
+        .catch(err => alert('Lỗi: ' + err.message));
+    }
+
+    // Confirm Session Reset
+    function confirmResetSession() {
+      if (confirm('⚠️ BẠN CÓ CHẮC CHẮN MUỐN LÀM MỚI PHIÊN LIVE?\nToàn bộ danh sách tù nhân, điểm số và gà mâm 1 sẽ được thiết lập lại từ đầu!')) {
+        fetch('/api/session/reset', { method: 'POST' });
+      }
+    }
+
+    // Simulate Event
+    function simulateEvent(type, payload = {}) {
+      fetch('/api/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, ...payload })
+      });
+    }
+
+    // Log Handlers
+    function addLogToUI(item) {
+      const box = document.getElementById('overview-log-box');
+      if (!box) return;
+      const div = document.createElement('div');
+      div.style.padding = '4px 0';
+      div.style.borderBottom = '1px solid rgba(255,255,255,0.04)';
+      const safeTime = escapeHtml(item.time);
+      const safeMsg = escapeHtml(item.msg);
+      div.innerHTML = `<span style="color:var(--text-muted);">[${safeTime}]</span> <span>${safeMsg}</span>`;
+      box.insertBefore(div, box.firstChild);
+    }
+
+    function clearLogs() {
+      document.getElementById('overview-log-box').innerHTML = '';
+    }
+
+    // Gift Modal
+    function openGiftModal(name = '', coins = 1) {
+      document.getElementById('modal-gift-name').value = name;
+      document.getElementById('modal-gift-coins').value = coins;
+      document.getElementById('modal-gift').classList.remove('hidden');
+    }
+    function closeGiftModal() {
+      document.getElementById('modal-gift').classList.add('hidden');
+    }
+    function saveGiftFromModal() {
+      const name = document.getElementById('modal-gift-name').value.trim();
+      const coins = parseInt(document.getElementById('modal-gift-coins').value);
+      if (!name || isNaN(coins) || coins < 1) return alert('Vui lòng nhập tên quà và giá xu hợp lệ!');
+      fetch('/api/gifts/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, coins })
+      }).then(() => closeGiftModal());
+    }
+    function deleteGift(name) {
+      if (confirm(`Bạn có chắc muốn xóa quà "${name}"?`)) {
+        fetch('/api/gifts/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+      }
+    }
+
+    // Audio Controls (Mục 11)
+    function updateMasterToggle(enabled) {
+      window.buongGiamAudio.setMasterEnabled(enabled);
+      saveAudioSettings(false);
+    }
+
+    function updateMasterVolume(vol) {
+      document.getElementById('val-master-vol').innerText = Math.round(vol * 100) + '%';
+      window.buongGiamAudio.setMasterVolume(parseFloat(vol));
+    }
+
+    function toggleAmbientSound() {
+      const btn = document.getElementById('btn-toggle-ambient');
+      if (!isAmbientOn) {
+        window.buongGiamAudio.startAmbient();
+        isAmbientOn = true;
+        btn.innerText = '⏹️ Dừng Nhạc Nền';
+        btn.classList.add('btn-gold');
+        btn.classList.remove('btn-outline-gold');
+      } else {
+        window.buongGiamAudio.stopAmbient();
+        isAmbientOn = false;
+        btn.innerText = '▶️ Bật Nhạc Nền';
+        btn.classList.remove('btn-gold');
+        btn.classList.add('btn-outline-gold');
+      }
+    }
+
+    function changeBgmTrack(track) {
+      window.buongGiamAudio.setAmbientTrack(track);
+    }
+
+    function changeAmbientVolume(vol) {
+      document.getElementById('val-bgm-vol').innerText = Math.round(vol * 100) + '%';
+      window.buongGiamAudio.setAmbientVolume(parseFloat(vol));
+    }
+
+    function changeTtsVolume(vol) {
+      document.getElementById('val-tts-vol').innerText = Math.round(vol * 100) + '%';
+      window.buongGiamAudio.ttsVolume = parseFloat(vol);
+    }
+
+    function changeSfxVolume(vol) {
+      document.getElementById('val-sfx-vol').innerText = Math.round(vol * 100) + '%';
+      window.buongGiamAudio.setSfxVolume(parseFloat(vol));
+    }
+
+    function testTtsVoice() {
+      window.buongGiamAudio.playGiftChime(false);
+      const rosePts = (typeof currentCoinRate === 'number' ? currentCoinRate : 5);
+      window.buongGiamAudio.speakThanks(`Phạm nhân Sơn Ca đã gửi tặng một bông hoa hồng, nhận được ${rosePts} điểm buồng. Cố gắng cải tạo đều tay vào em ơi! Chăm chỉ nỗ lực thì sớm muộn cũng thăng hạng!`);
+    }
+
+    function testAudioItem(type) {
+      window.buongGiamAudio.ensureAudioContext();
+      switch (type) {
+        case 'bgm':
+          window.buongGiamAudio.startAmbient();
+          setTimeout(() => {
+            if (!isAmbientOn) window.buongGiamAudio.stopAmbient();
+          }, 5000);
+          break;
+        case 'gift_normal':
+          window.buongGiamAudio.playGiftChime(false);
+          break;
+        case 'gift_big':
+          window.buongGiamAudio.playGiftChime(true);
+          break;
+        case 'climb_up':
+          window.buongGiamAudio.playClimbUp();
+          break;
+        case 'climb_down':
+          window.buongGiamAudio.playClimbDown();
+          break;
+        case 'tap':
+          window.buongGiamAudio.playTapPoint();
+          break;
+        case 'follow':
+          window.buongGiamAudio.playFollow();
+          break;
+        case 'door':
+          window.buongGiamAudio.playDoorOpen();
+          break;
+      }
+    }
+
+    function triggerManualPeriodicVoice() {
+      fetch('/api/audio/periodic-voice/trigger', { method: 'POST' });
+    }
+
+    function saveAudioSettings(showAlert = true) {
+      const masterEnabled = document.getElementById('audio-master-enabled').checked;
+      const masterVolume = parseFloat(document.getElementById('audio-master-vol').value);
+      const ambientTrack = document.getElementById('audio-bgm-track').value;
+      const ambientVolume = parseFloat(document.getElementById('audio-bgm-vol').value);
+      const ttsVolume = parseFloat(document.getElementById('audio-tts-vol').value);
+      const sfxVolume = parseFloat(document.getElementById('audio-sfx-vol').value);
+      const periodicVoiceEnabled = document.getElementById('audio-periodic-enabled') ? document.getElementById('audio-periodic-enabled').checked : true;
+      const periodicVoiceInterval = document.getElementById('audio-periodic-interval') ? parseInt(document.getElementById('audio-periodic-interval').value) : 45;
+
+      const audioSettings = {
+        masterEnabled,
+        masterVolume,
+        ambientEnabled: masterEnabled,
+        ambientTrack,
+        ambientVolume,
+        ttsEnabled: masterEnabled,
+        ttsVolume,
+        sfxEnabled: masterEnabled,
+        sfxVolume,
+        periodicVoiceEnabled,
+        periodicVoiceInterval
+      };
+
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ audio: audioSettings })
+      }).then(() => {
+        if (showAlert) alert('Đã lưu cài đặt âm thanh thành công và đồng bộ tới Overlay!');
+      });
+    }
+
+    function copyWebhookUrl() {
+      const copyText = document.getElementById('webhook-url-input');
+      copyText.select();
+      navigator.clipboard.writeText(copyText.value);
+      alert('Đã sao chép Webhook URL vào bộ nhớ tạm!');
+    }
+
+    function cleanIdleUsers() {
+      const min = parseInt(document.getElementById('idle-minutes-input')?.value || 10);
+      fetch('/api/users/clean-idle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ minutes: min })
+      }).then(r => r.json()).then(res => {
+        alert(`Đã dọn dẹp ${res.cleanedCount || 0} tù nhân không hoạt động.`);
+      });
+    }
+
+    function removeUser(userId) {
+      fetch('/api/users/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+    }
+
+    function handleRestoreFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          fetch('/api/restore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          }).then(r => r.json()).then(res => {
+            if (res.success) alert('Khôi phục dữ liệu thành công!');
+            else alert('Lỗi khôi phục: ' + res.error);
+          });
+        } catch (err) {
+          alert('File JSON không hợp lệ!');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Socket Listener
+    socket.on('log-added', (item) => addLogToUI(item));
+
+    socket.on('session-reset', () => {
+      // Dọn sạch bảng nhật ký thời gian thực trên Dashboard
+      const box = document.getElementById('overview-log-box');
+      if (box) box.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:10px;">Đã làm mới phiên LIVE. Buồng giam đã được thiết lập lại từ đầu.</div>';
+    });
+
+    socket.on('state-update', (state) => {
+      currentUsers = state.users || {};
+      const ranking = state.ranking || [];
+      document.getElementById('stat-total-users').innerText = Object.keys(currentUsers).length;
+
+      // Cập nhật công tắc demo
+      document.getElementById('toggle-demo').checked = Boolean(state.isDemoMode);
+
+      // Cập nhật thông báo trạng thái xuất trại (LỖI 4)
+      const relBanner = document.getElementById('release-status-banner');
+      if (relBanner) {
+        const isRel = Boolean(state.isReleasing || state.isReleaseCoolingDown || state.chicken?.isExiting);
+        relBanner.style.display = isRel ? 'flex' : 'none';
+      }
+
+      // Đếm số người ở từng tầng
+      let m1User = null;
+      let m2Count = 0;
+      let f4Count = 0;
+      ranking.forEach(uid => {
+        const u = currentUsers[uid];
+        if (!u) return;
+        if (u.currentFloor === 1) m1User = u;
+        if (u.currentFloor === 2) m2Count++;
+        if (u.currentFloor === 4) f4Count++;
+      });
+
+      document.getElementById('stat-mam1').innerText = m1User ? m1User.name : 'Trống';
+      document.getElementById('stat-mam2').innerText = `${m2Count} / 4`;
+      document.getElementById('stat-floor4').innerText = f4Count;
+
+      // Cập nhật bảng tù nhân
+      const pBody = document.getElementById('prisoner-table-body');
+      if (ranking.length === 0) {
+        pBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">Chưa có tù nhân nào...</td></tr>';
+      } else {
+        let html = '';
+        const floorLabels = {
+          1: { text: '👑 MÂM 1 (Ăn gà)', cls: 'badge-f1' },
+          2: { text: '🥢 MÂM 2 (Ăn bún)', cls: 'badge-f2' },
+          3: { text: '⛓️ MÂM 3 (Đứng nhìn)', cls: 'badge-f3' },
+          4: { text: '🪑 TẦNG 4 (Bó gối)', cls: 'badge-f4' }
+        };
+        ranking.forEach((uid, idx) => {
+          const u = currentUsers[uid];
+          if (!u) return;
+          const fInfo = floorLabels[u.currentFloor] || floorLabels[4];
+          html += `
+            <tr>
+              <td><b>#${idx + 1}</b></td>
+              <td><b>${escapeHtml(u.name)}</b></td>
+              <td><span style="color:#ffd700; font-weight:800;">${u.points}đ</span></td>
+              <td><span class="badge-floor ${fInfo.cls}">${fInfo.text}</span></td>
+              <td>${u.isClimbing ? '<span style="color:#ce93d8;">Đang đi cầu thang</span>' : 'Đang ngồi/đứng'}</td>
+              <td>
+                <button onclick="removeUser('${u.id}')" class="btn btn-danger" style="padding:4px 8px; font-size:12px;">
+                  Cho Ra Khỏi Buồng
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+        pBody.innerHTML = html;
+      }
+
+      // CƠ CHẾ 2.3: BẢNG NGƯỜI ĐÃ THOÁT LIVE & ĐẾM NGƯỢC TRỪ ĐIỂM
+      const offBody = document.getElementById('offline-deduct-table-body');
+      if (offBody) {
+        const offlineUsers = Object.values(currentUsers).filter(u => !u.isActiveInRoom && u.leftAt && !u.isExemplary && u.points > 0);
+        if (offlineUsers.length === 0) {
+          offBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">Không có ai đang thoát LIVE cần trừ điểm.</td></tr>';
+        } else {
+          let offHtml = '';
+          const now = Date.now();
+          offlineUsers.forEach(u => {
+            const awaySec = Math.floor((now - u.leftAt) / 1000);
+            const awayMin = Math.floor(awaySec / 60);
+            const exitThresholdSec = (parseInt(state.settings?.exitDeductMinutes) || 5) * 60;
+            const timeSinceLastDeduct = Math.floor((now - (u.lastExitDeductTime || u.leftAt)) / 1000);
+            const remainingSec = Math.max(0, exitThresholdSec - timeSinceLastDeduct);
+            const rMin = Math.floor(remainingSec / 60);
+            const rSec = remainingSec % 60;
+            const countdownStr = `${String(rMin).padStart(2, '0')}:${String(rSec).padStart(2, '0')}`;
+            offHtml += `
+              <tr>
+                <td><b>${escapeHtml(u.name)}</b> <span style="font-size:11px; color:#94a3b8;">(${escapeHtml(u.id)})</span></td>
+                <td><span style="color:#ffd700; font-weight:800;">${u.points}đ</span></td>
+                <td><span style="color:#f87171;">${awayMin} phút trước (${awaySec}s)</span></td>
+                <td><span style="color:#38bdf8; font-weight:800; font-family:monospace;">⏳ Còn ${countdownStr}</span></td>
+                <td><span style="color:#fbbf24; font-size:12px;">Đang đếm ngược trừ 1đ</span></td>
+              </tr>
+            `;
+          });
+          offBody.innerHTML = offHtml;
+        }
+      }
+
+      // CƠ CHẾ 3.3 & MỤC 5: BẢNG TẤM GƯƠNG SÁNG (TOP 5) & DANH SÁCH TỪ HẠNG 6 TRỞ XUỐNG
+      const exBody = document.getElementById('exemplary-table-body');
+      const belowBody = document.getElementById('below-top5-table-body');
+      const users = state.users || {};
+      const exList = state.exemplaryInmates || [];
+      const medalSlug = ['vang', 'bac', 'dong', 'thep', 'sat'];
+
+      if (exBody) {
+        if (exList.length === 0) {
+          exBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">Chưa có ai hoàn thành xuất trại...</td></tr>';
+        } else {
+          let exHtml = '';
+          exList.slice(0, 5).forEach((item, idx) => {
+            const u = users[item.id];
+            const isWatching = Boolean(u && u.isActiveInRoom && !u.isLeaving);
+            const statusHtml = isWatching 
+              ? `<span style="background:rgba(0,230,118,0.15); color:#00e676; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:800;">🟢 Đang xem</span>`
+              : `<span style="background:rgba(255,255,255,0.08); color:#94a3b8; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:800;">⚪ Đã rời</span>`;
+            const relCount = item.releaseCount || 1;
+            const medalImg = `/assets/huy-chuong-top${idx + 1}-${medalSlug[idx]}.webp`;
+            const timeStr = new Date(item.lastReleasedAt || item.completedAt || Date.now()).toLocaleTimeString('vi-VN');
+
+            exHtml += `
+              <tr>
+                <td>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <img src="${medalImg}" style="width:36px; height:36px; border-radius:6px; border:1.5px solid rgba(255,215,0,0.5); object-fit:contain; background:#0f172a;" alt="Top ${idx + 1}" />
+                    <b>⭐ #${idx + 1}</b>
+                  </div>
+                </td>
+                <td><b style="color:#ffd700; font-size:14px;">${escapeHtml(item.name)}</b></td>
+                <td><span style="color:#00e676; font-weight:800; font-size:13px;">${item.points}đ buồng</span></td>
+                <td><span style="color:#38bdf8; font-weight:700;">${relCount} lần</span></td>
+                <td><span style="color:#cbd5e1; font-size:12px;">${timeStr}</span></td>
+                <td>${statusHtml}</td>
+              </tr>
+            `;
+          });
+          exBody.innerHTML = exHtml;
+        }
+      }
+
+      if (belowBody) {
+        // Lấy toàn bộ người chơi không nằm trong Top 5, sắp xếp giảm dần theo điểm buồng
+        const top5Ids = new Set(exList.slice(0, 5).map(x => x.id));
+        const allCandidates = Object.values(users).filter(u => !top5Ids.has(u.id));
+        allCandidates.sort((a, b) => (b.points || 0) - (a.points || 0));
+
+        const top5LowestPoints = exList.length >= 5 ? exList[4].points : (exList.length > 0 ? exList[exList.length - 1].points : 0);
+
+        if (allCandidates.length === 0) {
+          belowBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">Chưa có người chơi nào xếp sau Top 5...</td></tr>';
+        } else {
+          let bHtml = '';
+          allCandidates.slice(0, 20).forEach((u, idx) => {
+            const rankNum = idx + 6;
+            const isWatching = Boolean(u.isActiveInRoom && !u.isLeaving);
+            const statusHtml = isWatching 
+              ? `<span style="background:rgba(0,230,118,0.15); color:#00e676; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:800;">🟢 Đang xem</span>`
+              : `<span style="background:rgba(255,255,255,0.08); color:#94a3b8; padding:3px 8px; border-radius:4px; font-size:11px; font-weight:800;">⚪ Đã rời</span>`;
+            
+            const diff = Math.max(1, top5LowestPoints - u.points + 1);
+            const gapText = exList.length >= 5 
+              ? `<span style="color:#fbbf24; font-size:12px;">Cần thêm +${diff}đ để vào Top 5</span>`
+              : `<span style="color:#38bdf8; font-size:12px;">Chỉ cần xuất trại là vào Top 5</span>`;
+
+            bHtml += `
+              <tr>
+                <td><b>#${rankNum}</b></td>
+                <td><b>${escapeHtml(u.name)}</b></td>
+                <td><span style="color:#ffd700; font-weight:800;">${u.points}đ buồng</span></td>
+                <td><span style="color:#94a3b8;">${u.releaseCount || 0} lần</span></td>
+                <td>${gapText}</td>
+                <td>${statusHtml}</td>
+              </tr>
+            `;
+          });
+          belowBody.innerHTML = bHtml;
+        }
+      }
+
+      // ĐỒNG BỘ CÀI ĐẶT CƠ CHẾ 1 VÀO Ô NHẬP
+      if (state.settings) {
+        if (state.settings.tapRate !== undefined) {
+          const tapInput = document.getElementById('tap-rate-input');
+          if (tapInput && !tapInput.matches(':focus')) {
+            tapInput.value = state.settings.tapRate;
+          }
+          const tapDisp = document.getElementById('dash-rule-tap-display');
+          if (tapDisp) {
+            tapDisp.innerText = `💖 ${state.settings.tapRate} táp tay = 1 điểm`;
+          }
+        }
+        if (state.settings.pointsPerCoin !== undefined) {
+          const coinInput = document.getElementById('coin-rate-input');
+          if (coinInput && !coinInput.matches(':focus')) {
+            coinInput.value = state.settings.pointsPerCoin;
+          }
+          const coinDisp = document.getElementById('dash-rule-coin-display');
+          if (coinDisp) {
+            coinDisp.innerText = `⭐ 1 xu = ${state.settings.pointsPerCoin} điểm`;
+          }
+          currentCoinRate = state.settings.pointsPerCoin;
+          if (state.settings.gifts) {
+            renderGiftTable(state.settings.gifts, state.settings.pointsPerCoin);
+          } else if (lastGiftMap) {
+            renderGiftTable(lastGiftMap, state.settings.pointsPerCoin);
+          }
+        }
+        if (state.settings.chickenEatingMinutes !== undefined) {
+          const cmInput = document.getElementById('chicken-minutes-input');
+          if (cmInput && !cmInput.matches(':focus')) {
+            cmInput.value = state.settings.chickenEatingMinutes;
+          }
+        }
+        const cmNote = document.getElementById('chicken-session-note');
+        if (cmNote) {
+          if (state.chicken && state.chicken.currentTop1) {
+            const sm = state.chicken.sessionMins || state.settings.chickenEatingMinutes || 10;
+            cmNote.innerText = `⏳ Đang có lượt ăn dở theo mốc ${sm} phút — mốc mới áp dụng từ lượt sau.`;
+          } else {
+            cmNote.innerText = 'Mâm 1 đang trống — mốc mới áp dụng ngay lượt tới.';
+          }
+        }
+        if (state.settings.commentCooldownSeconds && document.getElementById('comment-cooldown-input')) {
+          if (!document.getElementById('comment-cooldown-input').matches(':focus')) {
+            document.getElementById('comment-cooldown-input').value = state.settings.commentCooldownSeconds;
+          }
+        }
+        if (state.settings.announceJoinSound !== undefined && document.getElementById('toggle-announce-join-sound')) {
+          document.getElementById('toggle-announce-join-sound').checked = Boolean(state.settings.announceJoinSound);
+        }
+        if (state.settings.announceJoinTts !== undefined && document.getElementById('toggle-announce-join-tts')) {
+          document.getElementById('toggle-announce-join-tts').checked = Boolean(state.settings.announceJoinTts);
+        }
+      }
+    });
+
+    // Xử lý Ảnh Trang Trí Tường Mâm 1 & Mâm 2
+    function previewDecor() {
+      const m1_enabled = document.getElementById('decor-m1-enabled').checked;
+      const m1_x = parseInt(document.getElementById('decor-m1-x').value);
+      const m1_y = parseInt(document.getElementById('decor-m1-y').value);
+      const m1_w = parseInt(document.getElementById('decor-m1-w').value);
+      const m1_h = Math.round(m1_w * (305 / 173));
+      document.getElementById('val-m1-x').innerText = m1_x + 'px';
+      document.getElementById('val-m1-y').innerText = m1_y + 'px';
+      document.getElementById('val-m1-w').innerText = m1_w + 'px';
+
+      const m2_enabled = document.getElementById('decor-m2-enabled').checked;
+      const m2_x = parseInt(document.getElementById('decor-m2-x').value);
+      const m2_y = parseInt(document.getElementById('decor-m2-y').value);
+      const m2_w = parseInt(document.getElementById('decor-m2-w').value);
+      const m2_h = m2_w;
+      document.getElementById('val-m2-x').innerText = m2_x + 'px';
+      document.getElementById('val-m2-y').innerText = m2_y + 'px';
+      document.getElementById('val-m2-w').innerText = m2_w + 'px';
+
+      fetch('/api/decor/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mam1: { enabled: m1_enabled, x: m1_x, y: m1_y, width: m1_w, height: m1_h },
+          mam2: { enabled: m2_enabled, x: m2_x, y: m2_y, width: m2_w, height: m2_h }
+        })
+      });
+    }
+
+    function saveDecorSettings() {
+      previewDecor();
+      alert('Đã lưu cấu hình vị trí ảnh trang trí tường Mâm 1 & Mâm 2!');
+    }
+
+    // Lấy State ban đầu & Render quà tặng
+    fetch('/api/state').then(r => r.json()).then(st => {
+      if (st.logs) st.logs.forEach(l => addLogToUI(l));
+      if (st.settings && st.settings.gifts) {
+        renderGiftTable(st.settings.gifts, st.settings.pointsPerCoin);
+      }
+      if (st.settings && st.settings.audio) {
+        const a = st.settings.audio;
+        if (a.masterEnabled !== undefined) document.getElementById('audio-master-enabled').checked = Boolean(a.masterEnabled);
+        if (a.masterVolume !== undefined) {
+          document.getElementById('audio-master-vol').value = a.masterVolume;
+          document.getElementById('val-master-vol').innerText = Math.round(a.masterVolume * 100) + '%';
+        }
+        if (a.ambientTrack !== undefined) document.getElementById('audio-bgm-track').value = a.ambientTrack;
+        if (a.ambientVolume !== undefined) {
+          document.getElementById('audio-bgm-vol').value = a.ambientVolume;
+          document.getElementById('val-bgm-vol').innerText = Math.round(a.ambientVolume * 100) + '%';
+        }
+        if (a.ttsVolume !== undefined) {
+          document.getElementById('audio-tts-vol').value = a.ttsVolume;
+          document.getElementById('val-tts-vol').innerText = Math.round(a.ttsVolume * 100) + '%';
+        }
+        if (a.sfxVolume !== undefined) {
+          document.getElementById('audio-sfx-vol').value = a.sfxVolume;
+          document.getElementById('val-sfx-vol').innerText = Math.round(a.sfxVolume * 100) + '%';
+        }
+        if (a.periodicVoiceEnabled !== undefined && document.getElementById('audio-periodic-enabled')) {
+          document.getElementById('audio-periodic-enabled').checked = Boolean(a.periodicVoiceEnabled);
+        }
+        if (a.periodicVoiceInterval !== undefined && document.getElementById('audio-periodic-interval')) {
+          document.getElementById('audio-periodic-interval').value = a.periodicVoiceInterval;
+        }
+      }
+      if (st.settings && st.settings.wallDecor) {
+        const d1 = st.settings.wallDecor.mam1;
+        if (d1) {
+          document.getElementById('decor-m1-enabled').checked = Boolean(d1.enabled);
+          document.getElementById('decor-m1-x').value = d1.x;
+          document.getElementById('decor-m1-y').value = d1.y;
+          document.getElementById('decor-m1-w').value = d1.width;
+          document.getElementById('val-m1-x').innerText = d1.x + 'px';
+          document.getElementById('val-m1-y').innerText = d1.y + 'px';
+          document.getElementById('val-m1-w').innerText = d1.width + 'px';
+        }
+        const d2 = st.settings.wallDecor.mam2;
+        if (d2) {
+          document.getElementById('decor-m2-enabled').checked = Boolean(d2.enabled);
+          document.getElementById('decor-m2-x').value = d2.x;
+          document.getElementById('decor-m2-y').value = d2.y;
+          document.getElementById('decor-m2-w').value = d2.width;
+          document.getElementById('val-m2-x').innerText = d2.x + 'px';
+          document.getElementById('val-m2-y').innerText = d2.y + 'px';
+          document.getElementById('val-m2-w').innerText = d2.width + 'px';
+        }
+      }
+      if (st.settings && st.settings.tapRate !== undefined) {
+        const tapInput = document.getElementById('tap-rate-input');
+        if (tapInput) tapInput.value = st.settings.tapRate;
+        const tapDisp = document.getElementById('dash-rule-tap-display');
+        if (tapDisp) tapDisp.innerText = `💖 ${st.settings.tapRate} táp tay = 1 điểm`;
+      }
+      if (st.settings && st.settings.pointsPerCoin !== undefined) {
+        const coinInput = document.getElementById('coin-rate-input');
+        if (coinInput) coinInput.value = st.settings.pointsPerCoin;
+        const coinDisp = document.getElementById('dash-rule-coin-display');
+        if (coinDisp) coinDisp.innerText = `⭐ 1 xu = ${st.settings.pointsPerCoin} điểm`;
+      }
+      if (st.settings && st.settings.chickenEatingMinutes !== undefined) {
+        const cmInput = document.getElementById('chicken-minutes-input');
+        if (cmInput) cmInput.value = st.settings.chickenEatingMinutes;
+      }
+      const cmNoteInit = document.getElementById('chicken-session-note');
+      if (cmNoteInit) {
+        if (st.chicken && st.chicken.currentTop1) {
+          const smInit = st.chicken.sessionMins || (st.settings && st.settings.chickenEatingMinutes) || 10;
+          cmNoteInit.innerText = `⏳ Đang có lượt ăn dở theo mốc ${smInit} phút — mốc mới áp dụng từ lượt sau.`;
+        } else {
+          cmNoteInit.innerText = 'Mâm 1 đang trống — mốc mới áp dụng ngay lượt tới.';
+        }
+      }
+      if (st.settings) {
+        if (st.settings.commentCooldownSeconds && document.getElementById('comment-cooldown-input')) {
+          document.getElementById('comment-cooldown-input').value = st.settings.commentCooldownSeconds;
+        }
+        if (st.settings.commentQuotes) {
+          renderCommentQuotesTable(st.settings.commentQuotes);
+        } else {
+          renderCommentQuotesTable();
+        }
+      }
+    });
+
+    function renderGiftTable(gifts, rate) {
+      const gBody = document.getElementById('gift-table-body');
+      if (!gBody || !gifts) return;
+      if (rate !== undefined && !isNaN(rate)) currentCoinRate = rate;
+      lastGiftMap = gifts;
+      let html = '';
+      Object.entries(gifts).forEach(([name, coins]) => {
+        const xu = Math.max(1, parseInt(coins) || 1);
+        const pts = xu * currentCoinRate;
+        html += `
+          <tr>
+            <td><b>${name}</b></td>
+            <td><span style="color:#ffd700; font-weight:800;">${xu} xu</span></td>
+            <td><span style="color:#00e676; font-weight:800;">+${pts} điểm</span></td>
+            <td>Cộng điểm ngay, Chimes & Đọc giọng cảm ơn</td>
+            <td>
+              <button onclick="openGiftModal('${name}', ${xu})" class="btn btn-secondary" style="padding:3px 8px; font-size:12px;">Sửa</button>
+              <button onclick="deleteGift('${name}')" class="btn btn-danger" style="padding:3px 8px; font-size:12px; margin-left:6px;">Xóa</button>
+            </td>
+          </tr>
+        `;
+      });
+      gBody.innerHTML = html;
+    }
+
+    // ================= KHỐI ĐIỀU KHIỂN VOICE 16 ĐOẠN LUÂN PHIÊN =================
+    let currentVoice16State = {
+      enabled: true,
+      volume: 0.85,
+      pauseSec: 3,
+      disabledIds: [],
+      currentIndex: 0,
+      currentId: null,
+      isPlaying: false,
+      isPausedBetween: false,
+      interrupted: false,
+      playedIds: []
+    };
+
+    let previewAudio = null;
+
+    function renderVoice16Table(state) {
+      if (!state) return;
+      currentVoice16State = { ...currentVoice16State, ...state };
+
+      // Cập nhật Master Toggle
+      const mToggle = document.getElementById('voice16-master-toggle');
+      if (mToggle && state.enabled !== undefined) {
+        mToggle.checked = Boolean(state.enabled);
+      }
+
+      // Cập nhật Toggle bong bóng phụ đề
+      const subToggle = document.getElementById('voice16-subtitle-toggle');
+      if (subToggle && state.showSubtitle !== undefined) {
+        subToggle.checked = state.showSubtitle !== false;
+      }
+
+      // Cập nhật Badge Trạng Thái
+      const badge = document.getElementById('voice16-status-badge');
+      if (badge) {
+        if (!state.enabled) {
+          badge.innerText = 'Đã Tắt';
+          badge.style.background = '#ef4444';
+          badge.style.color = '#fff';
+        } else if (state.isPlaying) {
+          badge.innerText = 'Đang Đọc';
+          badge.style.background = '#ffd700';
+          badge.style.color = '#000';
+        } else if (state.isPausedBetween) {
+          badge.innerText = `Nghỉ ${state.pauseSec || 3}s (Nghe BGM)`;
+          badge.style.background = '#38bdf8';
+          badge.style.color = '#000';
+        } else {
+          badge.innerText = 'Sẵn Sàng';
+          badge.style.background = '#00e676';
+          badge.style.color = '#000';
+        }
+      }
+
+      // Cập nhật Slider Volume & Pause
+      if (state.volume !== undefined) {
+        const vEl = document.getElementById('voice16-vol');
+        if (vEl) vEl.value = state.volume;
+        const valV = document.getElementById('val-voice16-vol');
+        if (valV) valV.innerText = Math.round(state.volume * 100) + '%';
+      }
+      if (state.pauseSec !== undefined) {
+        const pEl = document.getElementById('voice16-pause');
+        if (pEl) pEl.value = state.pauseSec;
+        const valP = document.getElementById('val-voice16-pause');
+        if (valP) valP.innerText = state.pauseSec + ' giây';
+      }
+
+      // Cập nhật Live Status Bar
+      const liveEl = document.getElementById('voice16-now-playing');
+      const duckEl = document.getElementById('voice16-duck-tag');
+      if (liveEl) {
+        if (!state.enabled) {
+          liveEl.innerHTML = '<span style="color:#ef4444;">Voice luân phiên đang tạm tắt. Bật lại để tiếp tục.</span>';
+          if (duckEl) duckEl.innerText = 'Auto-Ducking: Không';
+        } else if (state.isPlaying && state.currentId) {
+          const seg = typeof VOICE_16_SEGMENTS !== 'undefined' ? VOICE_16_SEGMENTS.find(s => s.id === state.currentId) : null;
+          liveEl.innerHTML = `<span style="color:#ffd700; font-weight:800;">Đang đọc đoạn [${state.currentId}]:</span> "${seg ? seg.displayText : ''}"`;
+          if (duckEl) duckEl.innerText = 'Auto-Ducking: 10% (BGM giảm)';
+        } else if (state.isPausedBetween) {
+          liveEl.innerHTML = `<span style="color:#38bdf8;">Đang nghe nhạc nền BGM (nghỉ ngắn ${state.pauseSec || 3}s)...</span>`;
+          if (duckEl) duckEl.innerText = 'Auto-Ducking: 30% (BGM bình thường)';
+        } else if (state.interrupted) {
+          liveEl.innerHTML = '<span style="color:#f97316;">Tạm dừng do có sự kiện tương tác. Chuẩn bị replay từ đầu đoạn...</span>';
+          if (duckEl) duckEl.innerText = 'Ưu tiên sự kiện';
+        } else {
+          liveEl.innerText = 'Đang chờ vòng lặp...';
+        }
+      }
+
+      // Render 16 hàng trong bảng
+      const tbody = document.getElementById('voice16-table-body');
+      if (!tbody || typeof VOICE_16_SEGMENTS === 'undefined') return;
+
+      const disabledIds = state.disabledIds || [];
+      const playedIds = state.playedIds || [];
+      const currentActiveId = state.isPlaying ? state.currentId : null;
+
+      let html = '';
+      VOICE_16_SEGMENTS.forEach((seg) => {
+        const isCurrent = (currentActiveId === seg.id);
+        const isPlayed = playedIds.includes(seg.id);
+        const isDisabled = disabledIds.includes(seg.id);
+
+        let rowBg = 'transparent';
+        let statusBadge = '';
+
+        if (isCurrent) {
+          rowBg = 'rgba(255, 215, 0, 0.15)';
+          statusBadge = '<span style="background:#ffd700; color:#000; font-weight:800; padding:2px 6px; border-radius:4px; font-size:11px; animation:pulse 1s infinite;">▶ ĐANG ĐỌC</span>';
+        } else if (isDisabled) {
+          rowBg = 'rgba(239, 68, 68, 0.06)';
+          statusBadge = '<span style="background:#ef4444; color:#fff; padding:2px 6px; border-radius:4px; font-size:11px;">Đã tắt</span>';
+        } else if (isPlayed) {
+          rowBg = 'rgba(0, 230, 118, 0.05)';
+          statusBadge = '<span style="background:#00e676; color:#000; font-weight:700; padding:2px 6px; border-radius:4px; font-size:11px;">✓ Đã đọc</span>';
+        } else {
+          statusBadge = '<span style="color:#64748b; font-size:11px;">Chờ đọc</span>';
+        }
+
+        const opacity = isDisabled ? '0.5' : '1.0';
+
+        html += `
+          <tr style="background:${rowBg}; border-bottom:1px solid #1e293b; opacity:${opacity};">
+            <td style="padding:8px 10px; font-weight:800; color:${isCurrent ? '#ffd700' : '#94a3b8'};">#${seg.id}</td>
+            <td style="padding:8px 10px;">
+              <div style="font-weight:700; color:#f1f5f9;">${seg.displayText}</div>
+              <div style="font-size:11px; color:#64748b; margin-top:2px;">Thời lượng: ~${seg.durationSec}s • File: ${seg.fileName}</div>
+            </td>
+            <td style="padding:8px 10px; text-align:center;">${statusBadge}</td>
+            <td style="padding:8px 10px; text-align:center;">
+              <input type="checkbox" ${isDisabled ? '' : 'checked'} onchange="toggleVoice16Segment('${seg.id}', this.checked)" style="transform:scale(1.2); cursor:pointer;">
+            </td>
+            <td style="padding:8px 10px; text-align:center;">
+              <button onclick="previewVoice16('${seg.filePath}')" class="btn btn-secondary" style="padding:3px 8px; font-size:11px;" title="Nghe thử">▶</button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function toggleVoice16Master(checked) {
+      socket.emit('voice16-cmd', { action: 'toggleMaster', enabled: checked });
+    }
+
+    function toggleVoice16Subtitle(checked) {
+      socket.emit('voice16-cmd', { action: 'toggleSubtitle', enabled: checked });
+    }
+
+    function skipVoice16() {
+      socket.emit('voice16-cmd', { action: 'skip' });
+    }
+
+    function toggleVoice16Segment(id, checked) {
+      socket.emit('voice16-cmd', { action: 'toggleSegment', segmentId: id, enabled: checked });
+    }
+
+    function changeVoice16Volume(val) {
+      document.getElementById('val-voice16-vol').innerText = Math.round(val * 100) + '%';
+      socket.emit('voice16-cmd', { action: 'setVolume', volume: parseFloat(val) });
+    }
+
+    function changeVoice16Pause(val) {
+      document.getElementById('val-voice16-pause').innerText = val + ' giây';
+      socket.emit('voice16-cmd', { action: 'setPause', pauseSec: parseFloat(val) });
+    }
+
+    function previewVoice16(filePath) {
+      if (previewAudio) {
+        previewAudio.pause();
+        previewAudio = null;
+      }
+      previewAudio = new Audio(filePath);
+      previewAudio.play().catch(e => console.log('Preview error:', e));
+    }
+
+    // Nhận cập nhật thời gian thực từ Socket
+    socket.on('voice16-status', (state) => {
+      renderVoice16Table(state);
+    });
+
+    // Lấy trạng thái ban đầu khi tải trang Dashboard
+    fetch('/api/voice16/state')
+      .then(res => res.json())
+      .then(res => {
+        if (res.success && res.state) {
+          renderVoice16Table(res.state);
+        }
+      }).catch(e => {
+        renderVoice16Table(currentVoice16State);
+      });
+    // ================= XỬ LÝ 4 CƠ CHẾ MỚI TRÊN DASHBOARD =================
+    function saveTapRate() {
+      const val = parseInt(document.getElementById('tap-rate-input').value);
+      if (isNaN(val) || val <= 0) return alert('Vui lòng nhập số hợp lệ lớn hơn 0!');
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tapRate: val })
+      }).then(r => r.json()).then(res => {
+        if (res.success) {
+          const disp = document.getElementById('dash-rule-tap-display');
+          if (disp) disp.innerText = `💖 ${val} táp tay = 1 điểm`;
+          alert(`✅ Đã lưu cài đặt: ${val} táp tay = 1 điểm buồng! Đã đồng bộ sang Overlay OBS và Voice đọc.`);
+        } else {
+          alert('Lỗi: ' + (res.message || 'Không thể lưu'));
+        }
+      }).catch(err => alert('Lỗi: ' + err.message));
+    }
+    function saveCoinRate() {
+      const val = parseInt(document.getElementById('coin-rate-input').value);
+      if (isNaN(val) || val < 1 || val > 100) return alert('Vui lòng nhập tỷ giá từ 1 đến 100!');
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pointsPerCoin: val })
+      }).then(r => r.json()).then(res => {
+        if (res.success) {
+          const disp = document.getElementById('dash-rule-coin-display');
+          if (disp) disp.innerText = `⭐ 1 xu = ${val} điểm`;
+          currentCoinRate = val;
+          if (lastGiftMap) renderGiftTable(lastGiftMap, val);
+          alert(`✅ Đã lưu tỷ giá: 1 xu = ${val} điểm buồng! Đã đồng bộ lên Overlay và phiên live. Quà tặng sau đó áp dụng tỷ giá mới.`);
+        } else {
+          alert('Lỗi: ' + (res.message || 'Không thể lưu'));
+        }
+      }).catch(err => alert('Lỗi: ' + err.message));
+    }
+    function saveChickenMinutes() {
+      const val = parseFloat(document.getElementById('chicken-minutes-input').value);
+      if (isNaN(val) || val < 1 || val > 120) return alert('Vui lòng nhập số phút từ 1 đến 120!');
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chickenEatingMinutes: val })
+      }).then(r => r.json()).then(res => {
+        if (res.success) {
+          alert(`✅ Đã lưu: ${val} phút ăn hết gà! Đã đồng bộ vào phiên live (lượt đang ăn dở vẫn giữ mốc cũ, mốc mới áp dụng từ lượt sau).`);
+        } else {
+          alert('Lỗi: ' + (res.message || 'Không thể lưu'));
+        }
+      }).catch(err => alert('Lỗi: ' + err.message));
+    }
+
+    // ================= QUẢN LÝ DANH SÁCH CÂU COMMENT CẢI TẠO =================
+    let currentCommentQuotes = [
+      { id: 'cq_1', quote: 'Cố gắng cải tạo, sớm ngày hoà nhập xã hội', points: 1 },
+      { id: 'cq_2', quote: 'Quyết tâm cải tạo tốt', points: 2 }
+    ];
+
+    function renderCommentQuotesTable(quotes) {
+      if (Array.isArray(quotes)) currentCommentQuotes = [...quotes];
+      const tbody = document.getElementById('comment-quotes-table-body');
+      if (!tbody) return;
+
+      if (currentCommentQuotes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8; padding:20px; font-style:italic;">Chưa có câu comment nào trong danh sách. Hãy thêm câu mới bên dưới!</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = currentCommentQuotes.map((q, idx) => `
+        <tr class="comment-row" data-id="${escapeHtml(q.id || ('cq_' + idx))}" style="border-bottom:1px solid #1e293b; background:${idx % 2 === 0 ? 'rgba(15,23,42,0.4)' : 'rgba(30,41,59,0.3)'};">
+          <td style="padding:10px 14px; color:#94a3b8; font-weight:700;">#${idx + 1}</td>
+          <td style="padding:10px 14px;">
+            <input type="text" class="quote-text-input" value="${escapeHtml(q.quote)}" oninput="if(currentCommentQuotes[${idx}]) currentCommentQuotes[${idx}].quote = this.value"
+              style="width:100%; padding:6px 10px; background:#0b1120; border:1px solid #334155; color:#f8fafc; border-radius:6px; font-size:13px; font-weight:600; box-sizing:border-box;">
+          </td>
+          <td style="padding:10px 14px; text-align:center;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+              <span style="color:#38bdf8; font-weight:800;">+</span>
+              <input type="number" min="1" max="100" class="quote-pts-input" value="${q.points || 1}" oninput="if(currentCommentQuotes[${idx}]) currentCommentQuotes[${idx}].points = Math.max(1, parseInt(this.value) || 1)"
+                style="width:65px; padding:6px 8px; background:#0b1120; border:1px solid #334155; color:#38bdf8; border-radius:6px; font-size:13px; font-weight:800; text-align:center; box-sizing:border-box;">
+              <span style="color:#cbd5e1; font-size:12px;">đ</span>
+            </div>
+          </td>
+          <td style="padding:10px 14px; text-align:center;">
+            <button type="button" onclick="removeCommentQuoteRow(${idx})" class="btn btn-danger" style="padding:5px 12px; font-size:12px; cursor:pointer;" title="Xóa câu này">
+              🗑️ Xóa
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function collectQuotesFromDOM() {
+      const rows = document.querySelectorAll('#comment-quotes-table-body tr.comment-row');
+      const list = [];
+      rows.forEach((tr, idx) => {
+        const qInput = tr.querySelector('.quote-text-input');
+        const pInput = tr.querySelector('.quote-pts-input');
+        const quote = qInput ? qInput.value.trim() : '';
+        const points = pInput ? Math.max(1, parseInt(pInput.value) || 1) : 1;
+        const id = tr.dataset.id || (currentCommentQuotes[idx] ? currentCommentQuotes[idx].id : `cq_${Date.now()}_${idx}`);
+        if (quote) {
+          list.push({ id, quote, points });
+        }
+      });
+      return list;
+    }
+
+    function addCommentQuoteRow() {
+      // Thu thập các thay đổi đang có trong bảng trước
+      currentCommentQuotes = collectQuotesFromDOM();
+
+      const qInput = document.getElementById('new-comment-quote');
+      const pInput = document.getElementById('new-comment-points');
+      const quote = qInput ? qInput.value.trim() : '';
+      const points = pInput ? Math.max(1, parseInt(pInput.value) || 1) : 1;
+
+      if (!quote) {
+        alert('Vui lòng nhập nội dung câu comment trước khi bấm Thêm!');
+        if (qInput) qInput.focus();
+        return;
+      }
+
+      currentCommentQuotes.push({
+        id: `cq_${Date.now()}`,
+        quote: quote,
+        points: points
+      });
+
+      if (qInput) {
+        qInput.value = '';
+        qInput.focus();
+      }
+      if (pInput) pInput.value = '1';
+
+      renderCommentQuotesTable();
+    }
+
+    function removeCommentQuoteRow(idx) {
+      currentCommentQuotes = collectQuotesFromDOM();
+      currentCommentQuotes.splice(idx, 1);
+      renderCommentQuotesTable();
+    }
+
+    function saveAllCommentQuotes() {
+      const validQuotes = collectQuotesFromDOM();
+      const cooldown = parseInt(document.getElementById('comment-cooldown-input')?.value) || 30;
+
+      if (validQuotes.length === 0) {
+        if (!confirm('Danh sách câu comment đang trống. Bạn có chắc muốn xóa hết danh sách câu comment?')) return;
+      }
+
+      fetch('/api/comment-quotes/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          commentQuotes: validQuotes,
+          commentCooldownSeconds: cooldown
+        })
+      }).then(r => r.json()).then(res => {
+        if (res.success) {
+          currentCommentQuotes = res.commentQuotes || validQuotes;
+          renderCommentQuotesTable(currentCommentQuotes);
+          alert(`✅ Đã lưu thành công ${currentCommentQuotes.length} câu comment cải tạo với mốc điểm riêng!\nĐã đồng bộ tức thì sang Overlay OBS và Voice đọc.`);
+        } else {
+          alert('Lỗi: ' + (res.message || 'Không thể lưu'));
+        }
+      }).catch(err => alert('Lỗi: ' + err.message));
+    }
+
+    function saveJoinAnnouncementSettings() {
+      const sound = document.getElementById('toggle-announce-join-sound') ? document.getElementById('toggle-announce-join-sound').checked : true;
+      const tts = document.getElementById('toggle-announce-join-tts') ? document.getElementById('toggle-announce-join-tts').checked : false;
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          announceJoinSound: sound,
+          announceJoinTts: tts
+        })
+      });
+    }
+
+    function testCommentBonus() {
+      const quote = document.getElementById('comment-bonus-quote') ? document.getElementById('comment-bonus-quote').value : 'Cố gắng cải tạo, sớm ngày hoà nhập xã hội';
+      fetch('/api/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'chat',
+          id: 'test_commenter',
+          name: 'Phạm Nhân Cải Tạo',
+          text: `Em xin hứa: ${quote}!`
+        })
+      });
+    }
+
+    function testCommentSpam() {
+      testCommentBonus();
+      setTimeout(() => testCommentBonus(), 400);
+    }
+
+    function testIdleDeduct() {
+      fetch('/api/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'gift',
+          user: { userId: 'idle_tester', nickname: 'Phạm Nhân Lười' },
+          coins: 12,
+          giftName: 'Heo may mắn'
+        })
+      });
+    }
+
+    function testExitDeduct() {
+      fetch('/api/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'leave',
+          userId: 'idle_tester'
+        })
+      });
+    }
+
+    function testSetChicken(pct) {
+      fetch('/api/demo/set-chicken-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ progress: pct })
+      });
+    }
+
+    function testReleaseCeremony() {
+      testSetChicken(100);
+    }
+
+    function testExemplaryReturn() {
+      fetch('/api/webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'join',
+          user: { userId: 'test_commenter', nickname: 'Phạm Nhân Cải Tạo' }
+        })
+      });
+    }
+  </script>
+</body>
+</html>

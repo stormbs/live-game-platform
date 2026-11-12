@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Game TikTok — Vẽ Avatar · Buồng Giam · Thắp Sáng Bản Đồ</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #0f1220; color: #eef1ff; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  .sub { color: #aab3d6; margin: 0 0 28px; line-height: 1.6; }
+  label { display: block; font-weight: 600; margin: 18px 0 6px; }
+  input[type=text] { width: 100%; padding: 12px 14px; font-size: 16px; border-radius: 10px; border: 1px solid #39406b; background: #171b31; color: #fff; }
+  input[type=text]:focus { outline: 2px solid #6c7bff; }
+  .games { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 10px; }
+  .game { border: 2px solid #39406b; border-radius: 14px; padding: 16px; cursor: pointer; background: #171b31; }
+  .game:hover { border-color: #6c7bff; }
+  .game.sel { border-color: #6c7bff; background: #1d2350; }
+  .game b { font-size: 17px; display: block; margin-bottom: 6px; }
+  .game span { color: #aab3d6; font-size: 14px; line-height: 1.5; display: block; }
+  button { cursor: pointer; }
+  .cta { margin-top: 22px; width: 100%; padding: 14px; font-size: 17px; font-weight: 700; border: 0; border-radius: 12px; background: #6c7bff; color: #fff; }
+  .cta:hover { background: #5a69f0; }
+  .result { display: none; margin-top: 24px; border: 1px solid #2c345f; border-radius: 14px; padding: 18px; background: #131733; }
+  .result.show { display: block; }
+  .result h2 { margin: 0 0 10px; font-size: 19px; }
+  .row { display: flex; gap: 8px; margin: 8px 0; }
+  .row input { flex: 1; }
+  .btn { padding: 10px 14px; border-radius: 10px; border: 1px solid #39406b; background: #232a4d; color: #fff; font-weight: 600; }
+  .btn:hover { background: #2c3560; }
+  .status { margin-top: 12px; font-size: 15px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #888; margin-right: 6px; vertical-align: middle; }
+  .dot.live { background: #22c55e; }
+  .dot.offline { background: #f59e0b; }
+  .dot.error { background: #ef4444; }
+  .steps { margin-top: 36px; line-height: 1.8; color: #c6cdea; }
+  .steps h2 { color: #fff; font-size: 19px; }
+  .note { margin-top: 24px; padding: 14px; border-radius: 12px; background: #1c2333; color: #aab3d6; font-size: 14px; line-height: 1.7; }
+  .err { color: #fca5a5; margin-top: 10px; display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🎮 Live Game TikTok</h1>
+  <p class="sub">Nhập TikTok ID của bạn, chọn game, copy link overlay và dán vào TikTok LIVE Studio là chạy — không cần cài đặt gì. Game tự kết nối vào LIVE của bạn và phản ứng theo like, bình luận, quà tặng của khán giả.</p>
+
+  <label for="username">TikTok ID của bạn (không cần @)</label>
+  <input id="username" type="text" placeholder="vd. duong_tank_taydu" autocomplete="off" spellcheck="false">
+
+  <label>Chọn game</label>
+  <div class="games" id="games"></div>
+
+  <button class="cta" id="create">Lấy link overlay</button>
+  <p class="err" id="err"></p>
+
+  <div class="result" id="result">
+    <h2>✅ Room của bạn đã sẵn sàng</h2>
+    <div class="status" id="status"><span class="dot"></span> Đang kiểm tra trạng thái LIVE…</div>
+    <label>Link overlay (dán vào TikTok LIVE Studio làm Browser Source, 1080 × 1920)</label>
+    <div class="row">
+      <input id="overlayUrl" type="text" readonly>
+      <button class="btn" id="copyOverlay">Copy</button>
+    </div>
+    <label>Dashboard của streamer</label>
+    <div class="row">
+      <input id="roomUrl" type="text" readonly>
+      <button class="btn" id="copyRoom">Copy</button>
+    </div>
+    <p style="color:#aab3d6;font-size:14px;line-height:1.6;margin:10px 0 0">
+      Mở dashboard để cài đặt game, gửi event thử và reset phiên.
+      Muốn đổi game: chọn game khác rồi bấm "Lấy link overlay" lại.
+    </p>
+  </div>
+
+  <div class="steps">
+    <h2>Cách chạy trong 3 bước</h2>
+    <ol>
+      <li>Nhập TikTok ID, chọn game, bấm <b>Lấy link overlay</b>.</li>
+      <li>Trong TikTok LIVE Studio: thêm nguồn <b>Link</b> (Browser Source), dán link overlay, đặt kích thước <b>1080 × 1920</b>.</li>
+      <li>Bấm <b>Go LIVE</b> — game tự kết nối vào LIVE của bạn. Khán giả like / bình luận / tặng quà là game phản ứng ngay.</li>
+    </ol>
+  </div>
+
+  <div class="note">
+    <b>Lưu ý:</b> Máy chủ miễn phí sẽ ngủ sau 15 phút không có ai dùng — hãy mở dashboard vài phút trước giờ live để máy tỉnh lại.
+    Nguồn Link trong TikTok LIVE Studio đôi khi hơi lag; nếu cần mượt hơn, dùng OBS Virtual Camera.
+    TikTok không có API LIVE chính thức nên kết nối có thể đổi theo thời gian; nếu game không nhận event, kiểm tra lại trạng thái LIVE và dùng webhook TikFinity làm đường dự phòng (POST tới <code>/o/&lt;game&gt;/&lt;username&gt;/api/webhook</code>).
+  </div>
+</div>
+
+<script>
+const GAMES = [
+  { id: 've-avatar', name: '🖌️ Vẽ Avatar', desc: 'Khán giả tặng quà, hoạ sĩ vẽ avatar của họ ngay trên live. Ai tặng nhiều lên khung đẹp hơn.' },
+  { id: 'buong-giam', name: '⛓️ Buồng Giam', desc: 'Khán giả vào "cải tạo": gõ mõ, leo hạng, ăn mâm theo điểm. Top 1 ăn gà luộc nguyên con.' },
+  { id: 'thap-sang-ban-do', name: '🗺️ Thắp Sáng Bản Đồ', desc: 'Cả phòng cùng thắp sáng 63 tỉnh thành Việt Nam bằng like, bình luận và quà tặng.' },
+];
+let selected = 've-avatar';
+let pollTimer = null;
+
+const gamesEl = document.getElementById('games');
+GAMES.forEach(g => {
+  const d = document.createElement('div');
+  d.className = 'game' + (g.id === selected ? ' sel' : '');
+  d.innerHTML = '<b></b><span></span>';
+  d.querySelector('b').textContent = g.name;
+  d.querySelector('span').textContent = g.desc;
+  d.onclick = () => {
+    selected = g.id;
+    document.querySelectorAll('.game').forEach(el => el.classList.remove('sel'));
+    d.classList.add('sel');
+  };
+  gamesEl.appendChild(d);
+});
+
+function showErr(msg) {
+  const e = document.getElementById('err');
+  e.textContent = msg;
+  e.style.display = msg ? 'block' : 'none';
+}
+
+function statusHtml(state, detail) {
+  if (state === 'live') return '<span class="dot live"></span> 🟢 Đang LIVE — game đã kết nối, sẵn sàng nhận event.';
+  if (state === 'offline') return '<span class="dot offline"></span> 🟡 Tài khoản chưa LIVE — link vẫn dùng được, game sẽ tự kết nối khi bạn bấm Go LIVE.';
+  if (state === 'connecting' || state === 'reconnecting') return '<span class="dot"></span> ⏳ Đang kết nối tới TikTok…';
+  if (state === 'error') return '<span class="dot error"></span> 🔴 Lỗi kết nối: ' + detail;
+  return '<span class="dot"></span> Chưa kết nối.';
+}
+
+async function pollStatus(game, username) {
+  try {
+    const r = await fetch('/api/rooms/' + encodeURIComponent(game) + '/' + encodeURIComponent(username) + '/status');
+    const s = await r.json();
+    document.getElementById('status').innerHTML = statusHtml(s.tiktok.state, s.tiktok.detail);
+  } catch {}
+}
+
+document.getElementById('create').onclick = async () => {
+  showErr('');
+  const username = document.getElementById('username').value.trim().replace(/^@/, '');
+  if (!username) { showErr('Nhập TikTok ID của bạn trước.'); return; }
+  const btn = document.getElementById('create');
+  btn.disabled = true; btn.textContent = 'Đang tạo room…';
+  try {
+    const r = await fetch('/api/rooms', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ game: selected, username }),
+    });
+    const data = await r.json();
+    if (!data.ok) { showErr(data.error || 'Không tạo được room.'); return; }
+    const base = location.origin;
+    document.getElementById('overlayUrl').value = base + data.overlayUrl;
+    document.getElementById('roomUrl').value = base + data.roomUrl;
+    document.getElementById('result').classList.add('show');
+    document.getElementById('status').innerHTML = statusHtml(data.tiktok.state, data.tiktok.detail);
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(() => pollStatus(selected, username), 10000);
+  } catch (e) {
+    showErr('Lỗi mạng, thử lại sau.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Lấy link overlay';
+  }
+};
+
+function copyInput(id) {
+  const el = document.getElementById(id);
+  el.select();
+  if (navigator.clipboard) navigator.clipboard.writeText(el.value);
+  else document.execCommand('copy');
+}
+document.getElementById('copyOverlay').onclick = () => copyInput('overlayUrl');
+document.getElementById('copyRoom').onclick = () => copyInput('roomUrl');
+</script>
+</body>
+</html>

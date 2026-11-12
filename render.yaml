@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: live-game-platform
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MAX_ROOMS
+        value: "8"
+      - key: ROOM_IDLE_MINUTES
+        value: "30"

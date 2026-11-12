@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Thắp Sáng Bản Đồ Việt Nam</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#050914;
+    font-family:"Be Vietnam Pro",Arial,Helvetica,sans-serif; color:#fff; }
+  body { display:flex; align-items:center; justify-content:center; }
+  #stage { position:relative; width:1080px; height:1920px; flex:none;
+    transform-origin:center center;
+    /* (v8) Nền trống đồng Đông Sơn: ảnh mặt trống phủ kín khung, phủ thêm
+       lớp tối để bản đồ 4 màu nổi lên. */
+    background:#050914 url(/trong-dong-bg.jpg) center center / cover no-repeat; }
+  #stage::before { content:""; position:absolute; inset:0; pointer-events:none; z-index:1;
+    background:radial-gradient(ellipse at 50% 42%, rgba(3,6,15,.18) 0%, rgba(3,6,15,.42) 62%, rgba(3,6,15,.66) 100%); }
+  /* Bố cục mới (v8): header trên cùng; dưới là hàng ngang — bản đồ bên
+     trái (to xuống dưới vì bảng đã dời sang phải), khung dọc trong suốt
+     bên phải chứa đồng hồ + BXH + bảng điểm. */
+  /* Lớp quần đảo riêng (v8.1): phủ kín stage, dưới khung chính (z-index 1
+     < mainRow 2) để đảo nằm sau khung bảng trong suốt, nhìn xuyên qua. */
+  #islandSvg { position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+  #mainRow { position:absolute; top:158px; left:0; right:0; bottom:0; display:flex; z-index:2; }
+  #mapArea { position:relative; flex:1; overflow:hidden; }
+  /* (v8.2) Bố cục 3 cột — user dặn KHÔNG ĐƯỢC che 2 quần đảo, cùng lắm
+     chia bảng thông báo sang 2 bên: bảng điểm sang TRÁI, cột phải chỉ
+     giữ sự kiện gần đây (trên) + diễn biến (dưới), GIỮA 2 MỤC ĐÓ LÀ
+     KHOẢNG TRỐNG TRONG SUỐT đúng chỗ 2 quần đảo (y 340–913) nên đảo
+     hiện rõ, không bị che chút nào. Vì đảo không còn nằm sau khung nên
+     khung được trở lại kính mờ đẹp như v8 (nền 45% + blur 8px). */
+  #leftPanel { flex:none; width:240px; margin:0 0 14px 14px; display:flex; flex-direction:column; gap:10px;
+    background:rgba(8,12,24,.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.22); border-radius:20px; padding:14px 12px 12px; overflow:hidden; }
+  #rightCol { flex:none; width:240px; margin:0 14px 14px 0; display:flex; flex-direction:column; gap:10px; }
+  #rightTop { flex:none; }
+  /* Khoảng trống trong suốt đúng vị trí 2 quần đảo — đảo ở lớp SVG riêng
+     (z-index 1, dưới mainRow) nên nhìn xuyên qua khoảng này. */
+  #rightSpacer { flex:1; }
+  #rightBottom { flex:none; }
+  .sideSec { background:rgba(10,18,40,.55); border:1px solid rgba(255,215,0,.28);
+    border-radius:14px; padding:10px 12px; }
+  .sideSec h2 { font-size:19px; color:#ffd700; margin-bottom:6px; white-space:nowrap; }
+  #timerBox { text-align:center; background:linear-gradient(135deg,rgba(30,20,0,.75),rgba(10,18,40,.75)); border:1px solid rgba(255,215,0,.5); }
+  #timerText { font-size:44px; font-weight:800; color:#ffd700; letter-spacing:2px;
+    text-shadow:0 0 18px rgba(255,215,0,.7); font-variant-numeric:tabular-nums; }
+  #timerLabel { font-size:17px; color:#e6efff; margin-top:2px; }
+  #timerBarWrap { height:10px; background:#16223f; border-radius:5px; margin-top:8px; overflow:hidden; }
+  #timerBar { height:100%; width:100%; background:linear-gradient(90deg,#ff9d00,#ffd700); border-radius:5px; transition:width 1s linear; }
+  #leftPanel .trow, #rightCol .trow { font-size:17px; }
+  #leftPanel .trow .pt, #rightCol .trow .pt { font-size:17px; }
+  #leftPanel .empty, #rightCol .empty { font-size:17px; }
+  #sideFeed { font-size:15px; color:#c3d2f0; line-height:1.45; }
+  #sideFeed div { padding:3px 0; border-bottom:1px solid rgba(255,255,255,.07); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #sideFeed div:last-child { border-bottom:none; }
+  #sideLegend { font-size:15px; color:#b9c8e8; line-height:1.5; }
+  #sideLegend .dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin:0 2px; vertical-align:-1px; }
+  #rightTop .big { font-size:19px; font-weight:700; line-height:1.35; }
+  #rightTop .big b { color:#ffd700; }
+  #rightBottom .sub { font-size:15px; color:#c3d2f0; margin-top:4px; line-height:1.35; }
+  #rightBottom .sub b { color:#fff; }
+  #voiceLine { font-size:15px; color:#ffe9a8; margin-top:4px; min-height:20px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #sideStats { display:flex; flex-direction:column; gap:4px; font-size:17px; color:#c3d2f0; }
+  #sideStats b { color:#fff; }
+  #sideStats .stTrack { font-size:15px; color:#ffe9a8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .panel { position:absolute; left:36px; right:36px; background:rgba(10,18,40,.92);
+    border:1px solid rgba(255,215,0,.45); border-radius:18px; padding:16px 20px;
+    box-shadow:0 4px 24px rgba(0,0,0,.45); }
+  /* Header */
+  #header { top:16px; text-align:center; background:transparent; border:none; box-shadow:none; padding:0; z-index:3; }
+  #headerRow { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+  #headerRow p { flex:1; }
+  #header h1 { font-size:52px; letter-spacing:1px;
+    background:linear-gradient(90deg,#ff9d00,#ffd700,#fff3a3,#ffd700,#ff9d00);
+    background-size:200% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:shimmer 4s linear infinite;
+    filter:drop-shadow(0 0 14px rgba(255,215,0,.55)) drop-shadow(0 2px 0 rgba(0,0,0,.6)); }
+  @keyframes shimmer { from { background-position:0% 0; } to { background-position:200% 0; } }
+  #header p { font-size:24px; color:#e6efff; margin-top:6px; }
+  #header p b { color:#ffd700; }
+  /* Tiến độ (v8: nằm trong khung phải, không còn là panel riêng ở trên) */
+  #progText { font-size:20px; font-weight:700; color:#fff; }
+  #progText span:last-child { color:#ffd700; }
+  #barWrap { height:12px; background:#16223f; border-radius:6px; margin-top:6px; overflow:hidden; }
+  #bar { height:100%; width:0%; background:linear-gradient(90deg,#ff9d00,#ffd700,#fff3a3);
+    border-radius:6px; transition:width .6s ease; box-shadow:0 0 14px rgba(255,215,0,.8); }
+  /* Avatar người xem rơi vào tỉnh quê — lớp này bám theo bản đồ khi zoom
+     (xem syncAvatarZoom: cùng phép biến đổi viewBox với SVG bản đồ). */
+  #avatarLayer { position:absolute; inset:0; pointer-events:none; z-index:5; transform-origin:0 0; }
+  .avatar { position:absolute; width:76px; margin-left:-13px; text-align:center;
+    transition:left .6s ease, top .6s ease; }
+  .avatar .pic { position:relative; width:46px; height:46px; border-radius:50%;
+    border:3px solid #ffd700; overflow:hidden; margin:0 auto;
+    background:linear-gradient(135deg,#ff9d00,#ff5d5d);
+    box-shadow:0 0 12px rgba(255,215,0,.7);
+    font-size:22px; font-weight:800; color:#fff; }
+  .avatar .pic span { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .avatar .pic img { position:relative; z-index:1; width:100%; height:100%; object-fit:cover; display:block; }
+  .avatar .nm { font-size:17px; font-weight:700; color:#fff;
+    text-shadow:0 1px 3px #000, 0 0 6px #000; margin-top:2px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .avatar.drop { animation:avatarDrop .7s ease-out; }
+  @keyframes avatarDrop { 0%{ transform:translateY(-260px); opacity:0; } 60%{ opacity:1; } 100%{ transform:translateY(0); opacity:1; } }
+  /* Bản đồ 4 MÀU (v8, định lý bốn màu): mỗi tỉnh thuộc 1 trong 4 nhóm
+     màu, tỉnh kề nhau luôn khác màu — màu nền khi chưa sáng (tối, mờ),
+     màu sáng + phát sáng khi đã thắp. Độ dày 3D theo điểm giữ nguyên.
+     Màu tô qua JS (inline style) theo nhóm màu của tỉnh, CSS chỉ giữ
+     khung + hiệu ứng phát sáng chung. */
+  #sideLayer { filter:drop-shadow(0 8px 10px rgba(0,0,0,.5)); }
+  .provSide { fill:#0e1626; stroke:#26344f; stroke-width:1.6; transition:fill .5s ease; }
+  #mapSvg { position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; }
+  .prov { fill:#1b2947; stroke:#42557f; stroke-width:1.6;
+    transition:transform .5s ease, fill .5s ease; }
+  .prov.lit { stroke-width:2.2;
+    animation:litPulse 2.2s ease-in-out infinite; }
+  @keyframes litPulse { 0%,100% { filter:drop-shadow(0 0 7px rgba(255,255,255,.55)); } 50% { filter:drop-shadow(0 0 18px rgba(255,255,255,.95)); } }
+  .prov.t5 { stroke:#fff3a3; animation:topPulse 1.8s ease-in-out infinite; }
+  @keyframes topPulse { 0%,100% { filter:drop-shadow(0 0 14px rgba(255,122,0,.8)); } 50% { filter:drop-shadow(0 0 26px rgba(255,122,0,1)); } }
+  .prov.flash { animation:flash 1.2s ease; }
+  @keyframes flash { 0%{ filter:drop-shadow(0 0 22px rgba(255,255,255,1)); } 100%{ filter:drop-shadow(0 0 10px rgba(255,255,255,.85)); } }
+  .provNum { font-size:17px; font-weight:800; fill:#8fa3c7; text-anchor:middle; pointer-events:none;
+    transition:transform .5s ease; }
+  .provNum.lit { fill:#1c1503; }
+  #crown { font-size:40px; text-anchor:middle; pointer-events:none;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)); animation:bob 1.6s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+  .ring { fill:none; stroke:#ffd700; stroke-width:4; animation:ringExp 1s ease-out forwards; }
+  .ring.purple { stroke:#c084fc; }
+  @keyframes ringExp { from { r:14; opacity:1; } to { r:120; opacity:0; } }
+  .islandBox { fill:rgba(10,18,40,.72); stroke:rgba(255,215,0,.45); stroke-width:1.5; }
+  .islandTitle { font-size:23px; font-weight:800; fill:#ffd700; text-anchor:middle; }
+  .islandSub { font-size:18px; fill:#c3d2f0; text-anchor:middle; }
+  .islandSide { fill:#0e1626; stroke:#26344f; stroke-width:2; }
+  .islandPath { fill:#7d90b5; stroke:#aebdd8; stroke-width:2;
+    transition:transform .5s ease, fill .5s ease; }
+  .islandPath.lit { stroke-width:2.2;
+    filter:drop-shadow(0 0 12px rgba(255,255,255,.9)); }
+  /* Bảng top + mới thắp (v8: dời sang khung dọc phải, bỏ vị trí tuyệt đối
+     cũ ở chân màn hình). Các id giữ nguyên để JS không đổi. */
+  #boards h2 { font-size:20px; color:#ffd700; margin-bottom:6px; white-space:nowrap; }
+  .trow { display:flex; align-items:center; gap:8px; font-size:19px; padding:3px 0; }
+  .trow .rank { width:28px; color:#ffd700; font-weight:800; }
+  .trow .mini { width:30px; height:30px; border-radius:50%; border:2px solid #ffd700; object-fit:cover; flex:none; background:#333; }
+  .trow .mini.letter { display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; color:#fff; background:linear-gradient(135deg,#ff9d00,#ff5d5d); }
+  .trow .nm { flex:1; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .trow .pt { color:#ffd700; font-weight:800; font-size:19px; }
+  .trow .bar { height:6px; background:#16223f; border-radius:3px; overflow:hidden; margin-top:2px; }
+  .trow .bar i { display:block; height:100%; background:linear-gradient(90deg,#ff9d00,#ffd700); }
+  .trow.dim { opacity:.55; }
+  .trow .medal { font-size:20px; }
+  .trowWrap { flex:1; }
+  .empty { color:#9fb4dd; font-size:20px; padding:6px 0; }
+  /* Thẻ Spotlight: ai vừa thắp tỉnh nào — hiện to giữa bản đồ vài giây
+     (v8: nằm trong #mapArea, bề rộng theo khu vực bản đồ). */
+  #spotlight { position:absolute; left:50%; top:480px; transform:translate(-50%,-16px); width:520px;
+    display:none; align-items:center; gap:14px; z-index:6; pointer-events:none;
+    background:linear-gradient(135deg,rgba(30,20,0,.94),rgba(10,18,40,.94));
+    border:2px solid #ffd700; border-radius:22px; padding:14px 18px;
+    box-shadow:0 0 40px rgba(255,215,0,.55); opacity:0; transition:opacity .35s ease, transform .35s ease; }
+  #spotlight.show { display:flex; opacity:1; transform:translate(-50%,0); }
+  #spotlight .spPic { width:64px; height:64px; border-radius:50%; border:3px solid #ffd700;
+    overflow:hidden; flex:none; background:linear-gradient(135deg,#ff9d00,#ff5d5d);
+    display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:800; color:#fff; }
+  #spotlight .spPic img { width:100%; height:100%; object-fit:cover; display:block; }
+  #spotlight .spTxt .big { font-size:28px; font-weight:800; }
+  #spotlight .spTxt .big b { color:#ffd700; }
+  #spotlight .spTxt .fact { font-size:20px; color:#e6efff; margin-top:4px; }
+  #confetti { position:absolute; inset:0; z-index:11; pointer-events:none; }
+  /* Màn ăn mừng */
+  /* Màn ăn mừng: nền trong suốt để KHOE bản đồ đã sáng hết (trước đây nền
+     tối 88% che gần hết bản đồ nên trông như còn tỉnh chưa sáng). Chỉ phần
+     chữ nằm trong thẻ tối. */
+  #celebrate { position:absolute; inset:0; display:none; flex-direction:column; align-items:center;
+    justify-content:center; background:transparent; z-index:10; text-align:center; pointer-events:none; }
+  #celebrate.show { display:flex; }
+  .celebCard { background:rgba(3,6,15,.82); border:2px solid rgba(255,215,0,.6); border-radius:24px;
+    padding:28px 36px; box-shadow:0 0 60px rgba(255,215,0,.35); }
+  /* (v8.2) Chữ vinh danh nhỏ lại cho vừa khu vực bản đồ hẹp hơn (572px):
+     h1 72->54px, p 34->28px — vẫn 2 dòng như bản v8, không tràn. */
+  #celebrate h1 { font-size:54px; color:#ffd700; text-shadow:0 0 30px rgba(255,215,0,.9); }
+  #celebrate p { font-size:28px; margin-top:14px; line-height:1.6; }
+  #celebrate p b { color:#ffd700; }
+  .fw { position:absolute; width:10px; height:10px; border-radius:50%; animation:fw 1.6s ease-out infinite; }
+  @keyframes fw { 0%{ transform:translateY(0) scale(1); opacity:1; } 100%{ transform:translateY(-260px) scale(.2); opacity:0; } }
+  /* Đèn báo kết nối TikFinity (v7.1) — nằm cuối dòng phụ đề của header,
+     bên phải (flex item, không absolute để khỏi đè lên tiêu đề). Xanh = vừa
+     nhận sự kiện webhook (<60s), vàng = im hơn 60s, xám = chưa từng nhận. */
+  #liveBadge { flex:none; font-size:18px; font-weight:800;
+    padding:6px 14px; border-radius:999px; background:rgba(10,18,40,.88);
+    border:1px solid rgba(148,163,184,.4); color:#94a3b8; white-space:nowrap; }
+  #liveBadge.live { color:#4ade80; border-color:rgba(74,222,128,.65); animation:livePulse 2s ease-in-out infinite; }
+  #liveBadge.stale { color:#facc15; border-color:rgba(250,204,21,.65); }
+  @keyframes livePulse { 0%,100% { box-shadow:0 0 0 0 rgba(74,222,128,.45); } 50% { box-shadow:0 0 0 7px rgba(74,222,128,0); } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="header" class="panel">
+    <h1>🗺️ THẮP SÁNG BẢN ĐỒ VIỆT NAM</h1>
+    <div id="headerRow">
+      <p>Comment <b>tên quê</b> hoặc <b>số 1–34</b> — tỉnh nhiều điểm nhất thắng!</p>
+      <div id="liveBadge" class="off">○ CHỜ KẾT NỐI</div>
+    </div>
+  </div>
+
+  <!-- (v8.1) Lớp quần đảo RIÊNG, hệ tọa độ 1080x1920 đầy đủ của stage —
+       Hoàng Sa / Trường Sa ở ĐÚNG vị trí cũ bên phải (x 855, y 340/620),
+       nằm DƯỚI khung bảng dọc trong suốt nên nhìn xuyên qua được. Không
+       nằm trong SVG bản đồ (viewBox đã crop) nên không bị cắt mất. -->
+  <svg id="islandSvg" viewBox="0 0 1080 1920" preserveAspectRatio="xMidYMid meet">
+    <g id="islandLayer"></g>
+  </svg>
+
+  <div id="mainRow">
+    <!-- (v8.2) Bố cục 3 cột: bảng điểm TRÁI + bản đồ GIỮA + cột phải.
+         Cột phải chỉ giữ sự kiện gần đây (trên) + gợi ý/chú thích (dưới),
+         giữa là khoảng trống trong suốt đúng chỗ 2 quần đảo — đảo không
+         bị che chút nào. -->
+    <div id="leftPanel">
+      <div id="timerBox" class="sideSec">
+        <div id="timerText">60:00</div>
+        <div id="timerLabel">⏰ Còn lại — tỉnh nhiều điểm nhất thắng</div>
+        <div id="timerBarWrap"><div id="timerBar"></div></div>
+      </div>
+      <div class="sideSec">
+        <div id="progText">🇻🇳 Đã thắp sáng <span id="progNum">0 / 34 tỉnh</span></div>
+        <div id="barWrap"><div id="bar"></div></div>
+      </div>
+      <div class="sideSec" id="boards">
+        <h2>🏆 TOP 5 TỈNH</h2><div id="topProv"></div>
+      </div>
+      <div class="sideSec">
+        <h2>🌟 TOP ĐÓNG GÓP</h2><div id="topUsers"></div>
+      </div>
+      <div class="sideSec" id="sideStats">
+        <span>👀 <b id="stViewers">0</b> người xem</span>
+        <span>🎁 <b id="stCoins">0</b> xu • ✨ <b id="stLights">0</b> lượt thắp</span>
+        <span class="stTrack">🎵 <b id="stTrack">…</b></span>
+      </div>
+      <div class="sideSec" id="sideFeedBox" style="flex:1; overflow:hidden;">
+        <h2>📜 DIỄN BIẾN</h2><div id="sideFeed"></div>
+      </div>
+    </div>
+
+    <div id="mapArea">
+      <svg id="mapSvg" viewBox="240 260 600 1300" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <!-- 4 màu tỉnh (v8, định lý bốn màu): mỗi gradient = 1 nhóm màu -->
+          <linearGradient id="c0Grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#5eead4"/><stop offset="50%" stop-color="#2dd4bf"/><stop offset="100%" stop-color="#0d9488"/>
+          </linearGradient>
+          <linearGradient id="c1Grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fdba74"/><stop offset="50%" stop-color="#fb923c"/><stop offset="100%" stop-color="#ea580c"/>
+          </linearGradient>
+          <linearGradient id="c2Grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#c4b5fd"/><stop offset="50%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#7c3aed"/>
+          </linearGradient>
+          <linearGradient id="c3Grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#bef264"/><stop offset="50%" stop-color="#a3e635"/><stop offset="100%" stop-color="#65a30d"/>
+          </linearGradient>
+        </defs>
+        <g id="sideLayer"></g>
+        <g id="provLayer"></g>
+        <g id="numLayer"></g>
+        <g id="burstLayer"></g>
+        <text id="crown" x="-100" y="-100" style="display:none">👑</text>
+      </svg>
+
+      <div id="avatarLayer"></div>
+
+      <div id="spotlight"><div class="spPic" id="spPic"></div><div class="spTxt"><div class="big" id="spBig"></div><div class="fact" id="spFact"></div></div></div>
+      <canvas id="confetti" width="572" height="1762"></canvas>
+
+      <div id="celebrate">
+        <div class="celebCard">
+          <h1>⏰ HẾT GIỜ — VINH DANH! 🏆</h1>
+          <p id="celebText"></p>
+          <p id="celebContrib"></p>
+          <p id="celebCount"></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="rightCol">
+      <div class="sideSec" id="rightTop">
+        <div class="big" id="recentText">✨ Chưa có ai thắp sáng — bạn sẽ là người đầu tiên?</div>
+        <div id="voiceLine"></div>
+      </div>
+      <div id="rightSpacer"></div>
+      <div class="sideSec" id="rightBottom">
+        <div class="sub" id="suggestText">Gợi ý tỉnh chưa sáng: …</div>
+        <div id="sideLegend">🎨 Mỗi tỉnh 1 trong 4 màu <span class="dot" style="background:#2dd4bf"></span><span class="dot" style="background:#fb923c"></span><span class="dot" style="background:#a78bfa"></span><span class="dot" style="background:#a3e635"></span> — tỉnh kề nhau luôn khác màu<br>💡 Tỉnh càng nhiều điểm càng DÀY • Comment +1đ • 20 tim = 1đ • 1 xu = 5đ</div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="bgm" preload="auto"></audio>
+  <audio id="voiceAudio" preload="auto"></audio>
+</div>
+
+<script>
+// Thu gọn toàn bộ khung game 1080x1920 vừa đúng 1 khung hình, dù mở bằng
+// cửa sổ trình duyệt nhỏ hay nguồn Link trong TikTok LIVE Studio.
+// Trong OBS / LIVE Studio đặt đúng 1080x1920 thì tỉ lệ = 1, không đổi gì.
+const stageEl = document.getElementById('stage');
+function fitStage() {
+  const s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+  stageEl.style.transform = 'scale(' + s + ')';
+}
+window.addEventListener('resize', fitStage);
+fitStage();
+const NS = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('mapSvg');
+let provMeta = []; // từ provinces.json (có bbox để zoom)
+const litSet = new Set(); // tỉnh đang sáng (để chỉ nổ hiệu ứng khi MỚI sáng)
+let lastZoomRecentT = 0, lastSpotT = 0, lastMilestoneT = 0, lastPhase = '', lastRoundNo = 0;
+let firstRender = true;
+
+// ---------- Vẽ bản đồ + 2 quần đảo (hình thật từ GeoJSON) ----------
+async function initMap() {
+  provMeta = await (await fetch('/provinces.json')).json();
+  const sideLayer = document.getElementById('sideLayer');
+  const layer = document.getElementById('provLayer');
+  const nums = document.getElementById('numLayer');
+  for (const p of provMeta) {
+    // Mặt hông 3D (lớp dưới, màu tối) + mặt trên (lớp trên, vàng khi sáng).
+    const side = document.createElementNS(NS, 'path');
+    side.setAttribute('d', p.path);
+    side.setAttribute('class', 'provSide');
+    side.setAttribute('id', 'provSide-' + p.num);
+    sideLayer.appendChild(side);
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', p.path);
+    path.setAttribute('class', 'prov');
+    path.setAttribute('id', 'prov-' + p.num);
+    layer.appendChild(path);
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', p.cx); t.setAttribute('y', p.cy + 5);
+    t.setAttribute('class', 'provNum');
+    t.setAttribute('id', 'num-' + p.num);
+    t.textContent = p.num;
+    nums.appendChild(t);
+  }
+  // Hoàng Sa + Trường Sa: khung riêng bên phải (vị trí gốc trong hệ tọa
+  // độ 1080x1920), hình đảo thật, sáng cùng tỉnh chủ quản. Lớp đảo là SVG
+  // riêng phủ kín stage (xem #islandSvg) nên không bị viewBox crop của
+  // bản đồ cắt mất — đảo nằm dưới khung bảng dọc trong suốt, nhìn xuyên qua.
+  const isl = await (await fetch('/islands.json')).json();
+  const il = document.getElementById('islandLayer');
+  for (const key of ['hoangSa', 'truongSa']) {
+    const d = isl[key];
+    const box = d.box;
+    const rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('x', box.x); rect.setAttribute('y', box.y);
+    rect.setAttribute('width', box.w); rect.setAttribute('height', box.h);
+    rect.setAttribute('rx', 14); rect.setAttribute('class', 'islandBox');
+    il.appendChild(rect);
+    const title = document.createElementNS(NS, 'text');
+    title.setAttribute('x', box.x + box.w / 2); title.setAttribute('y', box.y - 12);
+    title.setAttribute('class', 'islandTitle');
+    title.textContent = d.label;
+    il.appendChild(title);
+    const sub = document.createElementNS(NS, 'text');
+    sub.setAttribute('x', box.x + box.w / 2); sub.setAttribute('y', box.y + box.h + 24);
+    sub.setAttribute('class', 'islandSub');
+    sub.textContent = 'thuộc ' + d.provinceName;
+    il.appendChild(sub);
+    const side = document.createElementNS(NS, 'path');
+    side.setAttribute('d', d.path);
+    side.setAttribute('class', 'islandSide');
+    side.setAttribute('id', 'islandSide-' + d.provinceNum);
+    il.appendChild(side);
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', d.path);
+    path.setAttribute('class', 'islandPath');
+    path.setAttribute('id', 'island-' + d.provinceNum);
+    il.appendChild(path);
+  }
+}
+// 4 màu tỉnh (v8, định lý bốn màu): [màu nền khi chưa sáng, màu sáng khi
+// thắp (gradient), màu hông 3D khi sáng, màu viền khi sáng].
+const FOUR = [
+  { base: '#143c3a', lit: 'url(#c0Grad)', side: '#0f2e2c', stroke: '#2dd4bf' },
+  { base: '#3d2113', lit: 'url(#c1Grad)', side: '#2e1a0e', stroke: '#fb923c' },
+  { base: '#2c2140', lit: 'url(#c2Grad)', side: '#211832', stroke: '#a78bfa' },
+  { base: '#22331a', lit: 'url(#c3Grad)', side: '#1a2612', stroke: '#a3e635' },
+];
+function colorOf(num) {
+  const m = provMeta.find(x => x.num === num);
+  return (m && m.color !== undefined) ? m.color : 0;
+}
+function fmtTime(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60;
+  const p = n => String(n).padStart(2, '0');
+  return h > 0 ? `${h}:${p(m)}:${p(ss)}` : `${p(m)}:${p(ss)}`;
+}
+
+// ---------- Zoom phóng to / thu nhỏ: bay tới tỉnh vừa thắp rồi về toàn cảnh ----------
+// (v8.2) ViewBox gốc đã crop theo nội dung tỉnh (x 240–840, y 260–1560).
+// Khu vực bản đồ giữa 2 bảng: 572x1762 trong stage.
+const FULL_VB = { x: 240, y: 260, w: 600, h: 1300 };
+const MAP_W = 572, MAP_H = 1762;
+const MAP_ASPECT = MAP_W / MAP_H;
+let zoomBusy = false, zoomPending = null;
+function setVB(v) {
+  svg.setAttribute('viewBox', `${v.x} ${v.y} ${v.w} ${v.h}`);
+  syncAvatarZoom(v);
+}
+// Avatar bám theo bản đồ khi zoom: lớp avatar dùng cùng phép biến đổi với
+// viewBox của SVG (tọa độ SVG -> tọa độ màn hình). Không có hàm này thì zoom
+// chỉ kéo bản đồ, avatar đứng yên tại chỗ cũ (lỗi đã gặp ở live thật).
+// SVG vẽ viewBox vào khu vực bản đồ theo kiểu meet (căn giữa): tỉ lệ =
+// min(W/w, H/h), lệch trái/trên = phần thừa / 2.
+function syncAvatarZoom(v) {
+  const layer = document.getElementById('avatarLayer');
+  if (!layer) return;
+  const s = Math.min(MAP_W / v.w, MAP_H / v.h);
+  const ox = (MAP_W - v.w * s) / 2, oy = (MAP_H - v.h * s) / 2;
+  layer.style.transform = `translate(${ox - v.x * s}px, ${oy - v.y * s}px) scale(${s})`;
+}
+function tweenVB(from, to, dur, cb) {
+  const t0 = performance.now();
+  function step(t) {
+    const k = Math.min(1, (t - t0) / dur);
+    const e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+    const v = {};
+    for (const key of ['x', 'y', 'w', 'h']) v[key] = from[key] + (to[key] - from[key]) * e;
+    setVB(v);
+    if (k < 1) requestAnimationFrame(step); else if (cb) cb();
+  }
+  requestAnimationFrame(step);
+}
+function targetVB(bbox) {
+  const cx = bbox.x + bbox.w / 2, cy = bbox.y + bbox.h / 2;
+  let w = Math.max(420, Math.max(bbox.w, bbox.h) * 2.6);
+  let h = w / MAP_ASPECT;
+  if (h > FULL_VB.h) { h = FULL_VB.h; w = h * MAP_ASPECT; }
+  if (w > FULL_VB.w) { w = FULL_VB.w; h = w / MAP_ASPECT; }
+  const x = Math.min(Math.max(cx - w / 2, FULL_VB.x), FULL_VB.x + FULL_VB.w - w);
+  const y = Math.min(Math.max(cy - h / 2, FULL_VB.y), FULL_VB.y + FULL_VB.h - h);
+  return { x, y, w, h };
+}
+function flyTo(bbox) {
+  if (zoomBusy) { zoomPending = bbox; return; }
+  zoomBusy = true;
+  const to = targetVB(bbox);
+  tweenVB({ ...FULL_VB }, to, 700, () => {
+    setTimeout(() => {
+      tweenVB(to, { ...FULL_VB }, 700, () => {
+        zoomBusy = false;
+        if (zoomPending) { const b = zoomPending; zoomPending = null; flyTo(b); }
+      });
+    }, 1800);
+  });
+}
+
+// ---------- Voice kiểu Buồng giam: file TTS tạo SẴN, phát qua <audio> ----------
+// KHÔNG dùng giọng trình duyệt (speechSynthesis), KHÔNG tạo TTS trong lúc live.
+// Server gửi kèm mỗi câu announce danh sách clip (vd. thắp tỉnh cũ: clip giải
+// thích tên cũ + clip tỉnh mới) + câu đọc tên đã tổng hợp riêng (ttsUrl).
+// Đọc CHỌN LỌC theo ưu tiên (không vấp): hàng đợi tối đa 3 câu, câu ưu tiên
+// cao (tỉnh lần đầu được thắp, có tên) chen lên trước; câu ưu tiên thấp bị bỏ
+// khi hàng đợi đầy. Không cắt ngang câu đang đọc dở — đọc xong mới sang câu
+// tiếp theo, nghỉ 400ms giữa 2 câu. Thông báo trên MÀN HÌNH vẫn đầy đủ mọi
+// sự kiện, chỉ VOICE là đọc chọn lọc.
+let voiceQueue = [], voicePlaying = false, lastAnnounceId = 0;
+let voiceCfg = { enabled: true, volume: 0.9 };
+let voiceEntry = null, voiceClipIdx = 0, voiceUrls = [];
+const voiceAudio = document.getElementById('voiceAudio');
+function enqueueVoice(a) {
+  voiceQueue.push({ id: a.id, text: a.text, clips: a.clips || [], ttsText: a.ttsText || null, ttsUrl: a.ttsUrl || null, priority: a.priority || 4, enqueuedAt: Date.now() });
+  // Sắp theo ưu tiên (số nhỏ = quan trọng hơn), cùng ưu tiên thì vào trước đọc trước.
+  voiceQueue.sort((x, y) => (x.priority - y.priority) || (x.enqueuedAt - y.enqueuedAt));
+  // Tối đa 3 câu chờ: bỏ câu ưu tiên thấp nhất (cuối hàng).
+  while (voiceQueue.length > 3) voiceQueue.pop();
+}
+function refreshQueuedTts(s) {
+  const byId = {};
+  for (const a of (s.announce || [])) byId[a.id] = a;
+  for (const q of voiceQueue) {
+    const a = byId[q.id];
+    if (a && a.ttsUrl) q.ttsUrl = a.ttsUrl;
+  }
+}
+function playVoiceEntry() {
+  if (voicePlaying || voiceEntry || !voiceQueue.length || !voiceCfg.enabled) return;
+  const e = voiceQueue[0];
+  // Câu có tên đang chờ tổng hợp: chờ tối đa 1.5s cho file sẵn (v7.9:
+  // server tổng hợp song song 3 luồng nên tên thường về kịp), rồi đọc
+  // clip dự phòng. Kiểm tra lại mỗi 250ms để bắt kịp file vừa về.
+  if (e.ttsText && !e.ttsUrl && Date.now() - e.enqueuedAt < 1500) {
+    setTimeout(playVoiceEntry, 250);
+    return;
+  }
+  voiceEntry = voiceQueue.shift();
+  voiceClipIdx = 0;
+  voiceUrls = voiceEntry.ttsUrl ? [voiceEntry.ttsUrl]
+    : (voiceEntry.clips || []).map(c => '/voice/' + c + '.mp3');
+  document.getElementById('voiceLine').textContent = '🔊 ' + voiceEntry.text;
+  playVoiceClip();
+}
+function playVoiceClip() {
+  if (!voiceEntry) { playVoiceEntry(); return; }
+  if (voiceClipIdx >= voiceUrls.length) {
+    voiceEntry = null;
+    voicePlaying = false; refreshMusicVolume();
+    setTimeout(playVoiceEntry, 250);
+    return;
+  }
+  const url = voiceUrls[voiceClipIdx++];
+  voicePlaying = true; refreshMusicVolume();
+  voiceAudio.src = url;
+  voiceAudio.volume = (voiceCfg.volume === undefined ? 0.9 : voiceCfg.volume);
+  const pr = voiceAudio.play();
+  if (pr) pr.catch((err) => {
+    if (err && err.name === 'NotAllowedError') {
+      // Audio bị khóa (trình duyệt trong LIVE Studio khóa âm thanh tới khi
+      // host tương tác 1 lần): GIỮ nguyên clip, thử lại sau 2s — KHÔNG đốt
+      // hàng đợi như trước (v7.3: trước đây mỗi clip reject là nhảy sang
+      // clip sau, cả hàng đợi bị đốt sạch trong tích tắc mà không tiếng nào).
+      voiceClipIdx--;
+      voicePlaying = false; refreshMusicVolume();
+      audioBlocked = true;
+      document.getElementById('voiceLine').textContent = '🔇 Voice đang bị khóa — nhấn vào màn hình 1 lần để bật tiếng';
+      if (!audioRetryTimer) audioRetryTimer = setTimeout(() => { audioRetryTimer = null; if (audioBlocked && voiceEntry) playVoiceClip(); }, 2000);
+    } else { playVoiceClip(); } // file lỗi: bỏ qua clip đó
+  });
+}
+voiceAudio.addEventListener('ended', () => { playVoiceClip(); });
+voiceAudio.addEventListener('error', () => { playVoiceClip(); });
+voiceAudio.addEventListener('playing', () => {
+  audioBlocked = false;
+  if (voiceEntry) document.getElementById('voiceLine').textContent = '🔊 ' + voiceEntry.text;
+});
+// Trạng thái khóa audio (v7.3) — xem ghi chú trong playVoiceClip.
+// Mở khóa audio khi host tương tác với trang (click/chạm/phím). Trong LIVE
+// Studio: bấm Interact (Tương tác) trên nguồn Link rồi nhấn 1 lần vào overlay.
+let audioBlocked = false, audioRetryTimer = null;
+function unlockAudio() {
+  if (voicePlaying) return;
+  audioBlocked = false;
+  if (voiceEntry) playVoiceClip();
+  else if (voiceQueue.length) playVoiceEntry();
+  if (typeof musicWantedPlaying !== 'undefined' && musicWantedPlaying && bgm.paused) tryPlay();
+}
+['click', 'pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, unlockAudio));
+
+// ---------- Avatar: rơi vào vị trí tỉnh quê (đổi quê thì bay sang tỉnh mới) ----------
+const AVATAR_SLOTS = [[0,0],[54,0],[-54,0],[0,54],[0,-54],[54,54],[-54,-54],[54,-54],[-54,54],[108,0],[-108,0],[0,108]];
+const avatarEls = new Map(); // viewer id -> {el, home}
+function renderAvatars(list) {
+  const layer = document.getElementById('avatarLayer');
+  const seen = new Set();
+  const byHome = {};
+  for (const a of (list || [])) (byHome[a.home] = byHome[a.home] || []).push(a);
+  for (const home of Object.keys(byHome)) {
+    const p = provMeta.find(x => x.num === Number(home));
+    if (!p) continue;
+    // Avatar đứng trên MẶT TRÊN của khối 3D (tỉnh càng dày thì avatar càng cao).
+    const depth = provDepth.get(Number(home)) || 0;
+    const arr = byHome[home];
+    const shown = arr.slice(0, 12);
+    shown.forEach((a, i) => {
+      seen.add(a.id);
+      const off = AVATAR_SLOTS[i % AVATAR_SLOTS.length];
+      const left = p.cx + off[0] - 26, top = p.cy - depth + off[1] - 26;
+      let rec = avatarEls.get(a.id);
+      if (!rec) {
+        const el = document.createElement('div');
+        el.className = 'avatar drop';
+        const initial = (a.name || '?')[0].toUpperCase();
+        el.innerHTML = `<div class="pic">${a.avatar ? `<img src="${escapeHtml(a.avatar)}" alt="" onerror="this.remove()">` : ''}<span>${escapeHtml(initial)}</span></div><div class="nm">${escapeHtml(a.name)}</div>`;
+        const img = el.querySelector('img');
+        if (img) img.onload = () => { const s = el.querySelector('.pic span'); if (s) s.style.display = 'none'; };
+        layer.appendChild(el);
+        avatarEls.set(a.id, { el, home: a.home, avatar: a.avatar || null });
+        rec = avatarEls.get(a.id);
+      } else {
+        // Avatar URL đổi (TikTok ký URL mới theo event) hoặc ảnh cũ từng lỗi
+        // (onerror đã gỡ <img>): gắn lại <img> để ảnh thật luôn hiện — trước
+        // đây element đã tạo rồi thì không bao giờ cập nhật lại ảnh (v7.3).
+        if (a.avatar && rec.avatar !== a.avatar) {
+          rec.avatar = a.avatar;
+          const pic = rec.el.querySelector('.pic');
+          const oldImg = pic.querySelector('img');
+          if (oldImg) oldImg.remove();
+          const img = document.createElement('img');
+          img.src = a.avatar; img.alt = '';
+          img.onload = () => { const s = pic.querySelector('span'); if (s) s.style.display = 'none'; };
+          img.onerror = () => { img.remove(); const s = pic.querySelector('span'); if (s) s.style.display = ''; };
+          pic.prepend(img);
+        }
+        if (rec.home !== a.home) {
+          // Đổi quê: avatar rơi lại từ trên xuống ở tỉnh mới.
+          rec.home = a.home;
+          rec.el.classList.remove('drop'); void rec.el.offsetWidth; rec.el.classList.add('drop');
+        }
+      }
+      rec.el.style.left = left + 'px';
+      rec.el.style.top = top + 'px';
+    });
+    // Tỉnh đông quá 12 người: gom số còn lại vào 1 badge "+N".
+    const extra = arr.length - 12;
+    const moreId = 'more-' + home;
+    let moreEl = document.getElementById(moreId);
+    if (extra > 0) {
+      if (!moreEl) {
+        moreEl = document.createElement('div');
+        moreEl.className = 'avatar'; moreEl.id = moreId;
+        moreEl.innerHTML = `<div class="pic"><span></span></div><div class="nm">${arr.length} người</div>`;
+        layer.appendChild(moreEl);
+      }
+      moreEl.querySelector('.pic span').textContent = '+' + extra;
+      moreEl.querySelector('.nm').textContent = arr.length + ' người';
+      const off = AVATAR_SLOTS[12 % AVATAR_SLOTS.length];
+      moreEl.style.left = (p.cx + off[0] - 26) + 'px';
+      moreEl.style.top = (p.cy - depth + off[1] - 26) + 'px';
+      seen.add(moreId);
+    } else if (moreEl) { moreEl.remove(); }
+  }
+  for (const [id, rec] of [...avatarEls.entries()]) {
+    if (!seen.has(id)) { rec.el.remove(); avatarEls.delete(id); }
+  }
+}
+
+// ---------- Nhạc nền: playlist từ server, phát vòng lặp ----------
+// Nhạc tự nhỏ xuống 10% khi voice (file TTS) đang đọc — auto-duck kiểu Buồng giam.
+const bgm = document.getElementById('bgm');
+let musicTracks = [], musicIndex = -1, musicWantedPlaying = true, musicWantedVolume = 0.35;
+function refreshMusicVolume() { try { bgm.volume = voicePlaying ? musicWantedVolume * 0.1 : musicWantedVolume; } catch (_) {} }
+function tryPlay() { try { const pr = bgm.play(); if (pr) pr.catch(() => {}); } catch (_) {} }
+function applyMusic(m) {
+  if (!m) return;
+  musicTracks = m.tracks || [];
+  musicWantedPlaying = !!m.playing;
+  musicWantedVolume = (m.volume === undefined ? 0.35 : m.volume);
+  refreshMusicVolume();
+  if (!musicTracks.length) return;
+  const idx = m.trackIndex || 0;
+  if (idx !== musicIndex) {
+    musicIndex = idx;
+    bgm.src = musicTracks[idx].url;
+    bgm.load();
+    if (musicWantedPlaying) tryPlay();
+  }
+  if (musicWantedPlaying && bgm.paused) tryPlay();
+  else if (!musicWantedPlaying && !bgm.paused) bgm.pause();
+  const tn = document.getElementById('stTrack');
+  if (tn && musicTracks[musicIndex]) tn.textContent = musicTracks[musicIndex].name;
+}
+bgm.addEventListener('ended', () => {
+  fetch('/api/action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'music', cmd: 'next' }) }).catch(() => {});
+});
+document.addEventListener('click', () => { if (musicWantedPlaying && bgm.paused) tryPlay(); });
+
+// ---------- Hiệu ứng âm thanh tổng hợp (WebAudio, không cần file nhạc) ----------
+let sfxCtx = null, sfxEnabledNow = true;
+function sfxInit() {
+  if (!sfxCtx) { try { sfxCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} }
+  if (sfxCtx && sfxCtx.state === 'suspended') sfxCtx.resume();
+}
+document.addEventListener('click', sfxInit);
+function sfxTone(freq, t0, dur, type, vol) {
+  if (!sfxCtx || !sfxEnabledNow) return;
+  try {
+    const o = sfxCtx.createOscillator(), g = sfxCtx.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(freq, sfxCtx.currentTime + t0);
+    g.gain.setValueAtTime(vol || 0.12, sfxCtx.currentTime + t0);
+    g.gain.exponentialRampToValueAtTime(0.001, sfxCtx.currentTime + t0 + dur);
+    o.connect(g); g.connect(sfxCtx.destination);
+    o.start(sfxCtx.currentTime + t0); o.stop(sfxCtx.currentTime + t0 + dur);
+  } catch (_) {}
+}
+function sfxPop() { sfxTone(620, 0, .12); sfxTone(930, .07, .14); }
+function sfxChime() { sfxTone(880, 0, .18); sfxTone(1174, .12, .2); sfxTone(1568, .24, .3); }
+function sfxFanfare() { [523, 659, 784, 1046].forEach((f, i) => sfxTone(f, i * .13, .32, 'triangle', .16)); }
+
+// ---------- Vòng sáng lan ra khi 1 tỉnh vừa sáng / vượt mốc ----------
+function ringBurst(cx, cy, purple) {
+  const layer = document.getElementById('burstLayer');
+  if (!layer) return;
+  const c = document.createElementNS(NS, 'circle');
+  c.setAttribute('cx', cx); c.setAttribute('cy', cy); c.setAttribute('r', 14);
+  c.setAttribute('class', 'ring' + (purple ? ' purple' : ''));
+  layer.appendChild(c);
+  setTimeout(() => c.remove(), 1100);
+}
+
+// ---------- Confetti (canvas) lúc ăn mừng sáng đủ 34/34 ----------
+const confCanvas = document.getElementById('confetti');
+const confCtx = confCanvas.getContext('2d');
+let confRunning = false;
+function confettiStart() {
+  if (confRunning) return; confRunning = true;
+  const colors = ['#ffd700', '#ff5d5d', '#5da8ff', '#7dff9e', '#ff9de2', '#fff3a3'];
+  const parts = Array.from({ length: 160 }, () => ({
+    x: Math.random() * 780, y: -20 - Math.random() * 400,
+    w: 8 + Math.random() * 8, h: 6 + Math.random() * 8,
+    vy: 2 + Math.random() * 3, vx: -1 + Math.random() * 2,
+    rot: Math.random() * Math.PI, vr: -.05 + Math.random() * .1,
+    color: colors[Math.floor(Math.random() * colors.length)],
+  }));
+  (function tick() {
+    if (!confRunning) { confCtx.clearRect(0, 0, 780, 1762); return; }
+    confCtx.clearRect(0, 0, 780, 1762);
+    for (const p of parts) {
+      p.y += p.vy; p.x += p.vx; p.rot += p.vr;
+      if (p.y > 1780) { p.y = -20; p.x = Math.random() * 780; }
+      confCtx.save(); confCtx.translate(p.x, p.y); confCtx.rotate(p.rot);
+      confCtx.fillStyle = p.color; confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); confCtx.restore();
+    }
+    requestAnimationFrame(tick);
+  })();
+}
+function confettiStop() { confRunning = false; }
+
+// ---------- Spotlight: thẻ "ai vừa thắp tỉnh nào" hiện to vài giây ----------
+let spotTimer = null;
+function showSpotlight(sp) {
+  const el = document.getElementById('spotlight');
+  const pic = document.getElementById('spPic');
+  pic.innerHTML = '';
+  if (sp.avatar) {
+    const img = document.createElement('img');
+    img.src = sp.avatar; img.alt = '';
+    img.onerror = () => { pic.textContent = (sp.viewer || '?')[0].toUpperCase(); };
+    pic.appendChild(img);
+  } else {
+    pic.textContent = (sp.viewer || '?')[0].toUpperCase();
+  }
+  document.getElementById('spBig').innerHTML =
+    '🎉 <b>' + escapeHtml(sp.viewer) + '</b> vừa thắp sáng <b>' + escapeHtml(sp.provinceName) + '</b>!';
+  document.getElementById('spFact').textContent = sp.fact ? '📖 ' + sp.provinceName + ': ' + sp.fact : '';
+  el.classList.add('show');
+  clearTimeout(spotTimer);
+  spotTimer = setTimeout(() => el.classList.remove('show'), 4500);
+}
+
+function miniAvatar(u) {
+  const letter = escapeHtml((u.name || '?')[0].toUpperCase());
+  if (u.avatar) return `<img class="mini" src="${escapeHtml(u.avatar)}" alt="" onerror="this.outerHTML='<span class=&quot;mini letter&quot;>${letter}</span>'">`;
+  return `<span class="mini letter">${letter}</span>`;
+}
+
+// ---------- Độ dày 3D theo điểm tỉnh (5 nấc) ----------
+// Tỉnh càng nhiều điểm càng DÀY: mặt trên dâng cao hơn so với mặt đất.
+// Nấc: chưa sáng → 0, 1-5đ → 5, 6-10đ → 9, 11-19đ → 14, 20+đ → 19,
+// top 1-3 (đủ 20đ) → 25. Avatar, số tỉnh, vương miện, vòng nổ đều bám
+// theo mặt trên (cy - depth).
+const DEPTHS = [0, 5, 9, 14, 19, 25];
+const provDepth = new Map(); // num -> depth hiện tại
+function tierOf(p, top3Nums) {
+  if (!p.lit) return 0;
+  if (top3Nums.has(p.num) && p.points >= 20) return 5;
+  if (p.points >= 20) return 4;
+  if (p.points >= 11) return 3;
+  if (p.points >= 6) return 2;
+  return 1;
+}
+
+// ---------- Render state (SSE) ----------
+let lastAllLitAt = null;
+function render(s) {
+  // Đồng hồ ván (v8): đếm ngược tới hết giờ.
+  const tEl = document.getElementById('timerText');
+  if (tEl) tEl.textContent = s.phase === 'playing' ? fmtTime(s.msRoundLeft) : '00:00';
+  const tb = document.getElementById('timerBar');
+  if (tb) tb.style.width = (s.phase === 'playing' && s.durationMin ? (s.msRoundLeft / (s.durationMin * 60000) * 100) : 0) + '%';
+  const pn = document.getElementById('progNum');
+  if (pn) pn.textContent = s.lit + ' / ' + s.total + ' tỉnh';
+  document.getElementById('bar').style.width = (s.lit / s.total * 100) + '%';
+  document.getElementById('stViewers').textContent = s.viewers;
+  document.getElementById('stCoins').textContent = s.stats.totalCoins;
+  document.getElementById('stLights').textContent = s.stats.totalLights;
+  if (s.sfx) sfxEnabledNow = !!s.sfx.enabled;
+  // Đèn báo TikFinity (v7.1): xanh khi vừa nhận sự kiện webhook (<60s),
+  // vàng khi im >60s, xám khi chưa từng nhận sự kiện nào.
+  const wh = s.webhook || { count: 0, secondsAgo: null };
+  const badge = document.getElementById('liveBadge');
+  const bClass = !wh.count ? 'off' : (wh.secondsAgo != null && wh.secondsAgo <= 60 ? 'live' : 'stale');
+  const bText = bClass === 'live' ? '● LIVE' : bClass === 'stale' ? '● TÍN HIỆU YẾU' : '○ CHỜ KẾT NỐI';
+  if (badge && (badge.className !== bClass || badge.textContent !== bText)) { badge.className = bClass; badge.textContent = bText; }
+  applyMusic(s.music);
+  const top3Nums = new Set(s.topProvinces.slice(0, 3).map(tp => tp.num));
+  for (const p of s.provinces) {
+    const el = document.getElementById('prov-' + p.num);
+    const side = document.getElementById('provSide-' + p.num);
+    const num = document.getElementById('num-' + p.num);
+    if (!el) continue;
+    const tier = tierOf(p, top3Nums);
+    const depth = DEPTHS[tier];
+    provDepth.set(p.num, depth);
+    // Tô màu 4 màu (v8): chưa sáng = màu nền tối của nhóm, sáng = gradient
+    // của nhóm + viền sáng cùng nhóm; mặt hông 3D tối cùng nhóm.
+    const col = FOUR[colorOf(p.num)];
+    el.style.fill = p.lit ? col.lit : col.base;
+    el.style.stroke = p.lit ? col.stroke : '#42557f';
+    el.classList.toggle('lit', p.lit);
+    el.classList.toggle('t5', tier === 5);
+    el.setAttribute('transform', 'translate(0,' + (-depth) + ')');
+    if (side) {
+      side.style.fill = p.lit ? col.side : '#0e1626';
+      side.classList.toggle('lit', p.lit);
+    }
+    if (num) {
+      num.classList.toggle('lit', p.lit);
+      num.setAttribute('transform', 'translate(0,' + (-depth) + ')');
+    }
+    if (p.lit && !litSet.has(p.num)) {
+      litSet.add(p.num);
+      if (!firstRender) {
+        el.classList.remove('flash'); void el.getBBox; el.classList.add('flash');
+        const pm = provMeta.find(x => x.num === p.num);
+        if (pm) ringBurst(pm.cx, pm.cy - depth, false);
+        sfxPop();
+      }
+    }
+    if (!p.lit) litSet.delete(p.num);
+  }
+  renderAvatars(s.avatars);
+  // 👑 Vương miện cho tỉnh đang dẫn đầu bảng (đứng trên mặt trên của tỉnh).
+  const crown = document.getElementById('crown');
+  if (s.phase === 'playing' && s.topProvinces.length && s.topProvinces[0].points > 0) {
+    const tp = provMeta.find(x => x.num === s.topProvinces[0].num);
+    if (tp) {
+      crown.style.display = '';
+      crown.setAttribute('x', tp.cx);
+      crown.setAttribute('y', tp.cy - 36 - (provDepth.get(tp.num) || 0));
+    } else crown.style.display = 'none';
+  } else crown.style.display = 'none';
+  // 🏆 Tỉnh vừa vượt mốc điểm: nổ vòng tím + chuông.
+  if (s.milestoneFlash && s.milestoneFlash.t !== lastMilestoneT) {
+    lastMilestoneT = s.milestoneFlash.t;
+    const pm = provMeta.find(x => x.num === s.milestoneFlash.num);
+    if (pm) { ringBurst(pm.cx, pm.cy - (provDepth.get(pm.num) || 0), true); ringBurst(pm.cx, pm.cy - (provDepth.get(pm.num) || 0), false); }
+    sfxChime();
+  }
+  // Spotlight: thẻ to "ai vừa thắp tỉnh nào".
+  if (s.spotlight && s.spotlight.t !== lastSpotT) {
+    lastSpotT = s.spotlight.t;
+    showSpotlight(s.spotlight);
+  }
+  // Hoàng Sa sáng cùng Đà Nẵng (6), Trường Sa sáng cùng Khánh Hòa (18) —
+  // đảo cũng nổi 3D theo đúng độ dày của tỉnh chủ quản + cùng nhóm màu.
+  // (v8.1) Đảo ở lớp SVG riêng (hệ 1080x1920) nên chỉ cần nâng theo chiều
+  // dọc, không còn độ dịch chuyển vị trí như bản v8.
+  const dn = s.provinces.find(p => p.num === 6), kh = s.provinces.find(p => p.num === 18);
+  const hs = document.getElementById('island-6'), ts = document.getElementById('island-18');
+  const hsSide = document.getElementById('islandSide-6'), tsSide = document.getElementById('islandSide-18');
+  if (hs) {
+    hs.classList.toggle('lit', !!(dn && dn.lit));
+    hs.setAttribute('transform', 'translate(0,' + (-(provDepth.get(6) || 0)) + ')');
+    // (v8.1) Đảo nhỏ vài px nên tô MÀU ĐẶC của nhóm (stroke) thay vì
+    // gradient như tỉnh lớn — gradient trên chấm nhỏ không thấy mà còn
+    // nhạt; màu đặc tím/xanh lá nhìn rõ qua khung trong suốt.
+    hs.style.fill = (dn && dn.lit) ? FOUR[colorOf(6)].stroke : '#7d90b5';
+  }
+  if (ts) {
+    ts.classList.toggle('lit', !!(kh && kh.lit));
+    ts.setAttribute('transform', 'translate(0,' + (-(provDepth.get(18) || 0)) + ')');
+    ts.style.fill = (kh && kh.lit) ? FOUR[colorOf(18)].stroke : '#7d90b5';
+  }
+  if (hsSide) { hsSide.classList.toggle('lit', !!(dn && dn.lit)); hsSide.style.fill = (dn && dn.lit) ? FOUR[colorOf(6)].side : '#0e1626'; }
+  if (tsSide) { tsSide.classList.toggle('lit', !!(kh && kh.lit)); tsSide.style.fill = (kh && kh.lit) ? FOUR[colorOf(18)].side : '#0e1626'; }
+  // Top tỉnh — LUÔN đủ 5 hàng, tỉnh chưa sáng hiện mờ 0đ.
+  const maxP = Math.max(1, ...s.topProvinces.map(p => p.points));
+  const MEDALS = ['🥇', '🥈', '🥉'];
+  document.getElementById('topProv').innerHTML = s.topProvinces.length
+    ? s.topProvinces.map((p, i) =>
+        `<div class="trow${p.lit ? '' : ' dim'}"><span class="rank">${MEDALS[i] || (i + 1)}</span><div class="trowWrap"><div class="nm">${p.name}${p.lit ? '' : ' (chưa sáng)'}</div><div class="bar"><i style="width:${Math.round(p.points / maxP * 100)}%"></i></div></div><span class="pt">${p.points}đ</span></div>`).join('')
+    : '<div class="empty">Chưa tỉnh nào sáng…</div>';
+  document.getElementById('topUsers').innerHTML = s.topLighters.length
+    ? s.topLighters.map((u, i) =>
+        `<div class="trow"><span class="rank">${i + 1}</span>${miniAvatar(u)}<span class="nm">${escapeHtml(u.name)}${u.home ? ' • ' + escapeHtml(u.home) : ''}</span><span class="pt">${u.points}đ</span></div>`).join('')
+    : '<div class="empty">Chưa có ai thắp…</div>';
+  // Đổi ván (v7.6): server reset thì recent/spotlight/voice của ván cũ
+  // phải biến mất — trước đây render() chỉ GHI các dòng này khi có dữ
+  // liệu mới, không bao giờ XÓA khi dữ liệu hết, nên tab chạy lâu (nguồn
+  // Link trong Studio) giữ mãi dòng "X vừa thắp sáng Y" + câu voice cũ
+  // của ván trước trong khi bản đồ đã về 0/34 — trông như overlay và
+  // Studio không đồng bộ (tab Chrome mở lại sau thì hiện đúng placeholder).
+  if (s.roundNo !== lastRoundNo) {
+    lastRoundNo = s.roundNo;
+    voiceQueue = [];
+    if (voiceEntry) { voiceEntry = null; voicePlaying = false; try { voiceAudio.pause(); } catch (_) {} refreshMusicVolume(); }
+    document.getElementById('voiceLine').textContent = '';
+    clearTimeout(spotTimer);
+    document.getElementById('spotlight').classList.remove('show');
+  }
+  if (s.recent.length) {
+    const r = s.recent[0];
+    document.getElementById('recentText').innerHTML =
+      '✨ <b>' + escapeHtml(r.viewer) + '</b> vừa thắp sáng <b>' + escapeHtml(r.provinceName) + '</b>!';
+    // Zoom tới tỉnh vừa thắp (chỉ khi mới xảy ra < 4s, không zoom lúc ăn mừng).
+    if (r.t !== lastZoomRecentT && Date.now() - r.t < 4000 && s.phase === 'playing') {
+      lastZoomRecentT = r.t;
+      const p = provMeta.find(x => x.num === r.provinceNum);
+      if (p && p.bbox) flyTo(p.bbox);
+    }
+  } else {
+    // Hết sự kiện gần đây (reset ván / restart server): trả lại dòng mặc định.
+    document.getElementById('recentText').innerHTML = '✨ Chưa có ai thắp sáng — bạn sẽ là người đầu tiên?';
+  }
+  document.getElementById('suggestText').innerHTML = s.lit >= s.total
+    ? '🎉 Cả nước đã sáng!'
+    : 'Gợi ý tỉnh chưa sáng: <b>' + s.suggestions.map(escapeHtml).join(' • ') + '</b>';
+  // Diễn biến (v8): nhật ký sự kiện lấp đầy khung phải.
+  const fd = document.getElementById('sideFeed');
+  if (fd) fd.innerHTML = (s.feed || []).slice(0, 6).map(f => '<div>' + escapeHtml(f.text) + '</div>').join('');
+  // Voice (file TTS sẵn + câu đọc tên tổng hợp): các câu mới trong hàng đợi announce của server.
+  if (s.voice) voiceCfg = s.voice;
+  if (!voiceCfg.enabled) {
+    voiceQueue = [];
+    voiceEntry = null;
+    try { voiceAudio.pause(); } catch (_) {}
+    voicePlaying = false; refreshMusicVolume();
+    if (s.announce.length) lastAnnounceId = s.announce[s.announce.length - 1].id;
+  } else {
+    refreshQueuedTts(s);
+    // Đồng bộ id announce (v7.5): server khởi động lại thì bộ đếm id có
+    // thể quay về số nhỏ (server cũ đếm từ 0) — nếu id lớn nhất trong
+    // mảng nhỏ hơn id đã đọc thì bộ đếm đã reset, đồng bộ lại để các câu
+    // mới sau đó vẫn được đọc (chỉ mất tối đa 1 câu trong lúc restart).
+    // Lần render đầu cũng bỏ qua backlog cũ, không đọc bù các câu từ
+    // trước khi mở overlay.
+    const aIds = (s.announce || []).map(a => a.id);
+    if (aIds.length) {
+      const maxId = Math.max(...aIds);
+      if (firstRender || maxId < lastAnnounceId) lastAnnounceId = maxId;
+    }
+    for (const a of (s.announce || [])) {
+      if (a.id > lastAnnounceId) {
+        lastAnnounceId = a.id;
+        enqueueVoice(a);
+      }
+    }
+    playVoiceEntry();
+  }
+  // Mốc sáng đủ 34/34 (v8): chỉ là mốc trong ván — bắn pháo giấy 6s rồi
+  // chơi tiếp, KHÔNG hiện màn vinh danh (màn đó chỉ khi hết giờ).
+  if (s.allLitAt && s.allLitAt !== lastAllLitAt) {
+    lastAllLitAt = s.allLitAt;
+    confettiStart();
+    sfxFanfare();
+    setTimeout(() => { if (!document.getElementById('celebrate').classList.contains('show')) confettiStop(); }, 6000);
+  }
+  // Ăn mừng hết giờ (v8): vinh danh tỉnh thắng + người đóng góp nhiều nhất.
+  const cel = document.getElementById('celebrate');
+  if (s.phase === 'complete') {
+    cel.classList.add('show');
+    confettiStart();
+    if (lastPhase !== 'complete') sfxFanfare();
+    const w = s.winner;
+    document.getElementById('celebText').innerHTML = w && w.province
+      ? '🏆 Tỉnh chiến thắng: <b>' + escapeHtml(w.province.name) + '</b> — ' + w.province.points + ' điểm!'
+      : 'Chưa tỉnh nào có điểm trong ván này.';
+    document.getElementById('celebContrib').innerHTML = w && w.contributor
+      ? '🌟 Người đóng góp nhiều nhất: <b>' + escapeHtml(w.contributor.name) + '</b> — ' + w.contributor.points + ' điểm, thắp ' + w.contributor.lights + ' tỉnh!'
+      : '';
+    document.getElementById('celebCount').textContent = 'Ván mới bắt đầu sau ' + Math.ceil(s.msLeft / 1000) + 's…';
+  } else {
+    cel.classList.remove('show');
+    confettiStop();
+  }
+  lastPhase = s.phase;
+  firstRender = false;
+}
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+initMap().then(() => {
+  setVB({ ...FULL_VB }); // căn lớp avatar theo viewBox mới ngay từ đầu
+  const es = new EventSource('/api/stream');
+  es.onmessage = (e) => { try { render(JSON.parse(e.data)); } catch (_) {} };
+  es.onerror = () => { fetch('/api/state').then(r => r.json()).then(render).catch(() => {}); };
+});
+</script>
+</body>
+</html>
