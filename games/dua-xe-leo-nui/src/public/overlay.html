@@ -11,6 +11,8 @@
   .wrap { position: relative; width: 1080px; height: 1920px; padding: 30px 36px 0;
     background: linear-gradient(180deg, #7ec8f7 0%, #aee3ff 30%, #8fd07a 62%, #5da24a 100%); }
   header { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,.55); border-radius: 20px; padding: 18px 24px; }
+  #demo-badge { position: absolute; top: 18px; left: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
+  #demo-badge.on { display: block; }
   header h1 { font-size: 46px; text-shadow: 0 3px 0 rgba(0,0,0,.4); }
   .clock { font-size: 44px; font-weight: 900; background: #ffcf3d; color: #222; border-radius: 14px; padding: 6px 18px; }
   .round { font-size: 26px; color: #ffe9a0; margin-top: 4px; text-align: right; }
@@ -45,6 +47,7 @@
 </style>
 </head>
 <body>
+<div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="wrap">
   <header>
     <div><h1>🏁 ĐUA XE LEO NÚI</h1><div class="round" id="roundLabel">Ván #1</div></div>
@@ -105,6 +108,7 @@
   }
   function render(s) {
     lastState = s;
+    document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
     voiceOn = !!(s.settings && s.settings.voiceEnabled);
     $('roundLabel').textContent = 'Ván #' + s.roundNo;
     $('clock').textContent = s.phase === 'racing' ? fmtClock(s.roundSecondsLeft) : '🏁 HẾT VÁN';
@@ -155,6 +159,14 @@
   }
   function poll() { fetch('/api/state').then(r => r.json()).then(render).catch(() => {}); }
   poll(); setInterval(poll, 2000);
+  // ?demo=1: tự bật chế độ thử + chạy demo (chỉ khi phòng chưa có event thật).
+  if (new URLSearchParams(location.search).get('demo') === '1') {
+    fetch('/api/state').then((r) => r.json()).then((st) => {
+      if ((st.webhookCount || 0) > 0) return;
+      return fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+        .then(() => fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) }));
+    }).catch(() => {});
+  }
   const socket = io();
   socket.on('state-update', render);
   socket.on('win', d => { if (d.winner) speak('Chúc mừng ' + d.winner.name + ' đã về đích đầu tiên!'); });

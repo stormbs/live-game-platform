@@ -34,3 +34,13 @@
 - **Luật hòa**: mỗi xe ghi timestamp lần đầu đạt mức mét nguyên mới (`bestAt`); hết giờ mà bằng mét thì xe có `bestAt` sớm hơn thắng.
 - **Trong lúc bảng vinh danh (30s)**: bình luận/tap/quà/follow chỉ ghi log, không tính điểm ván đã kết thúc; join vẫn nhận.
 - **Số xe tay đua (topN) chỉnh được 1–5** (mặc định 3); màu theo hạng: 🔵🔴🟣🟢🟠.
+
+## Chế độ demo (2026-11-13)
+- Mở overlay với `?demo=1` → tự bật chế độ thử + chạy demo: 3 người xem ảo vào
+  đường đua, bình luận/tim đẩy xe streamer, tặng quà chạy xe Top 3, follow/share
+  liên tục qua đúng đường event thật; huy hiệu `DEMO` ở góc trái overlay.
+  Hết ván (về đích/hết giờ) tự sang ván mới, demo chạy tiếp tới khi dừng.
+- Dashboard → mục Test: `▶ Chạy demo` / `■ Dừng demo` (+ `🎬 Demo 10 bước` 1 lượt mẫu).
+  API: `POST /api/test/demo {action:"start"|"stop"|"once"}`.
+- An toàn: từ chối bật khi phòng đã có event thật; event thật đầu tiên tới thì
+  demo tự dừng. Người xem demo không tính vào thống kê avatar.
