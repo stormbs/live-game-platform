@@ -89,8 +89,9 @@ Adapter chuyển mỗi event về **đúng định dạng webhook mà game đã 
   Business plan") nên adapter trực tiếp KHÔNG vào được phòng live nào nếu
   không có key gói Business. **Key miễn phí đã thử ngày 2026-11-12 và vẫn bị
   chặn** — đừng trông chờ vào key miễn phí. Vì vậy đường sự kiện chính của
-  nền tảng là **TikFinity** (xem mục "Kết nối TikTok LIVE" và
-  `lib/tikfinity.js`): TikFinity trên máy streamer gửi event về intake
+  nền tảng là **TikFinity** (xem mục "Kết nối TikTok LIVE", bảng body chuẩn ở
+  `lib/webhook-bodies.js` và bài hướng dẫn `GET /huong-dan-tikfinity`):
+  TikFinity trên máy streamer gửi event về intake
   `POST /api/webhook`, adapter trực tiếp chỉ còn là phương án dự phòng
   (vẫn kiểm tra được live/offline và vẫn đếm event TikFinity qua
   `state.webhook.count`). Nếu có key Euler gói Business, đặt biến môi trường
@@ -108,9 +109,12 @@ là "rời phòng") + chuỗi `"event"` (bắt buộc cho game Bản đồ: pars
 không đọc `triggerTypeId`, follow/join không suy ra được từ hình dạng dữ liệu)
 + `userId`, `nickname`, `uniqueId`, `profilePictureUrl` và field riêng từng
 loại (`giftName`/`diamondCount`/`repeatCount`, `content`, `likeCount`).
-Bảng body chuẩn + file `.tfc` sinh sẵn cho từng room nằm ở
-`lib/tikfinity.js` (route `GET /o/<game>/<username>/tikfinity.tfc`); hướng
-dẫn import nằm trên dashboard của từng game. Mọi engine phải đếm event qua
+Bảng body chuẩn nằm ở `lib/webhook-bodies.js`; bài hướng dẫn đầy đủ từng
+bước ở `GET /huong-dan-tikfinity` (`lib/guide.js`) và tóm tắt trên dashboard
+của từng game. **Link webhook là link RIÊNG theo game + username, không dùng
+chung** — username trong link cho server biết event thuộc phòng nào; dùng
+chung 1 link sẽ trộn event của mọi người vào cùng 1 game. Body Action thì
+giống nhau cho mọi người — chỉ khác URL. Mọi engine phải đếm event qua
 intake này vào `state.webhook.count` để dashboard hiển thị "số sự kiện đã
 nhận" — con số này cũng là đèn kiểm chứng TikFinity đã nối đúng.
 
@@ -197,18 +201,21 @@ Luật cứng cho mọi game mới thêm vào nền tảng (và cho mọi sửa 
 
 1. **Đường sự kiện chính là TikFinity** (webhook `POST /api/webhook`, xem mục
    "Intake `/api/webhook`" ở trên). Game mới phải: (a) đăng ký game vào
-   `lib/tikfinity.js` (tên Action + `triggerTypeId` của share — kiểm tra
+   `lib/webhook-bodies.js` (tên Action + `triggerTypeId` của share — kiểm tra
    parser của engine: nếu parser đọc 8 là "rời phòng" như Buồng Giam thì
-   share phải dùng 4); (b) có mục "Cài đặt TikFinity" trên dashboard với
-   webhook URL của room + nút sao chép, nút tải file `.tfc`
-   (`GET /o/<game>/<username>/tikfinity.tfc`), hướng dẫn import tiếng Việt
-   (tải .tfc → TikFinity → import file → kiểm tra Action đã bật → Go LIVE
-   TRƯỚC rồi mới Connect → kiểm chứng bằng số sự kiện trên thẻ trạng thái)
-   và cách tạo Action bằng tay làm fallback. Adapter trực tiếp
-   (`tiktok-live-connector`) chỉ là phương án dự phòng và hiện KHÔNG nhận
-   được event (Euler chặn ký websocket, key miễn phí đã thử và không mở
-   được) — không được ghi trong dashboard/landing rằng "không cần cài gì
-   thêm" hay "máy chủ tự kết nối".
+   share phải dùng 4) và thêm bảng body của game vào bài hướng dẫn
+   (`lib/guide.js` render từ cùng bảng này); (b) có mục "Cài đặt TikFinity"
+   trên dashboard với webhook URL của room + nút sao chép, link tới bài
+   hướng dẫn đầy đủ (`/huong-dan-tikfinity?game=<game>&username=<user>`) và
+   cách tạo Action bằng tay + bảng body mẫu ngay trên dashboard (tạo Action
+   → Webhook POST → gắn 6 sự kiện → Go LIVE TRƯỚC rồi mới Connect → kiểm
+   chứng bằng số sự kiện trên thẻ trạng thái). **Không làm file `.tfc` nữa**
+   (quyết định 2026-11-12: định dạng export của TikFinity được mã hóa, mật
+   khẩu không công khai, file JSON thô không khẳng định import được). Adapter
+   trực tiếp (`tiktok-live-connector`) chỉ là phương án dự phòng và hiện
+   KHÔNG nhận được event (Euler chặn ký websocket, key miễn phí đã thử và
+   không mở được) — không được ghi trong dashboard/landing rằng "không cần
+   cài gì thêm" hay "máy chủ tự kết nối".
 2. **Trạng thái kết nối chỉ lấy từ** `GET /api/rooms/<game>/<username>/status`
    (trả `{ tiktok: { state, detail } }`, state: `connecting` / `live` /
    `offline` / `reconnecting` / `error`). Dashboard/overlay tự suy game +
@@ -242,18 +249,21 @@ npm test
 - `routes.test.js` — landing, healthz, tạo room, overlay 200 đúng game,
   dashboard, game không tồn tại.
 - `webhook.test.js` — intake `/api/webhook` (cả 3 game, qua HTTP).
-- `tikfinity.test.js` — sinh file `.tfc` (đúng cấu trúc, đúng webhook URL
-  của room, body template đủ field/biến bắt buộc, share đúng triggerTypeId
-  từng game), route `GET /o/<game>/<username>/tikfinity.tfc`, dashboard có
-  nút tải + hướng dẫn import, và không còn câu "không cần cài gì thêm".
+- `tikfinity.test.js` — bảng body webhook (đúng field/biến bắt buộc, share
+  đúng triggerTypeId từng game), trang hướng dẫn `GET /huong-dan-tikfinity`
+  (giải thích link webhook không dùng chung, bảng body từng game, thứ tự
+  Go LIVE, route `.tfc` đã gỡ phải 404), dashboard có link hướng dẫn +
+  webhook URL + bảng body tay và không còn nhắc `.tfc`, và POST body mẫu
+  trong hướng dẫn được engine từng game nhận.
 - `socket.test.js` — client Socket.io thật nối đúng path room, nhận
   state-update đúng room, không lọt chéo.
 - `smoke.test.js` — khởi động server thật, tải `/` và một URL overlay.
 
 Chưa kiểm chứng được bằng live thật (cần streamer live thật mới test được):
 kết nối `tiktok-live-connector` tới một tài khoản đang LIVE, độ trễ event
-thực tế, và hành vi khi TikTok đổi phía server. **Import file `.tfc` vào
-TikFinity thật trên Windows cũng chưa kiểm chứng được** (định dạng export
-của TikFinity được mã hóa, mật khẩu không công khai — file sinh ra là JSON
-thô best-effort; xem `lib/tikfinity.js`). Cách tạo Action bằng tay trên
-dashboard đã chạy thật trong các live trước nên là đường chắc chắn.
+thực tế, và hành vi khi TikTok đổi phía server. Việc bấm nút trong TikFinity
+thật trên Windows cũng chưa kiểm chứng được (chỉ user làm được trên máy
+Windows). Cách tạo Action bằng tay theo bài hướng dẫn đã chạy thật trong
+các live trước nên là đường chắc chắn. **Không làm file `.tfc` nữa** (quyết
+định 2026-11-12: định dạng export của TikFinity được mã hóa, mật khẩu không
+công khai, file JSON thô sinh ra không khẳng định import được).

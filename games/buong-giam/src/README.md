@@ -22,8 +22,9 @@ Giữ server chạy trong khi dùng LIVE Studio. Trong TikTok LIVE Studio, thêm
 
 Trên nền tảng tập trung, game nhận sự kiện live qua **TikFinity** chạy trên
 máy Windows của bạn: TikFinity gửi event (chat/gift/like/follow/share/join)
-về webhook của room (xem mục "🎯 Cài đặt TikFinity" trên dashboard — tải file
-.tfc của phòng rồi import, hoặc tạo Action bằng tay). Adapter trực tiếp
+về webhook của room (xem mục "🎯 Cài đặt TikFinity" trên dashboard — tạo
+Action bằng tay theo bài hướng dẫn, hoặc xem bảng body mẫu ngay trên
+dashboard). Adapter trực tiếp
 (`tiktok-live-connector`) hiện KHÔNG nhận được event (Euler chặn ký
 websocket, key miễn phí đã thử và không mở được) — chỉ còn để kiểm tra
 live/offline và đếm event TikFinity.

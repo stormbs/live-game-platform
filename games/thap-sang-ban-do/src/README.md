@@ -32,8 +32,8 @@ Yêu cầu: đã cài **Node.js** (bản LTS, tải tại nodejs.org).
 
 Trên nền tảng tập trung, game nhận sự kiện live qua **TikFinity** chạy trên
 máy Windows của bạn: TikFinity gửi event về webhook của room (xem mục
-"🎯 Cài đặt TikFinity" trên dashboard — tải file .tfc của phòng rồi import,
-hoặc tạo Action bằng tay). Các loại event nhận được:
+"🎯 Cài đặt TikFinity" trên dashboard — xem bài hướng dẫn, tạo Action bằng
+tay). Các loại event nhận được:
 
 | Event | Ghi chú |
 |---|---|
