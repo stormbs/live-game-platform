@@ -40,8 +40,8 @@ test('pricing: ngưỡng đắt/rẻ theo rate panel (100.000 VND/1000)', () => 
 test('pricing: dịch vụ rẻ x1.30, làm tròn lên 4 chữ số', () => {
   // FB Like id 444: rate 34.000 VND/1000 -> 34.000/26.000*1,3 = 1,7
   assert.equal(sellPriceUsdt(34000, 1000), 1.7);
-  // TikTok View id 513: rate 59.000, mua 20.000 -> panel 1.180.000 VND -> 59,0001 USDT
-  assert.equal(sellPriceUsdt(59000, 20000), 59.0001);
+  // TikTok View id 513: rate 59.000, mua 20.000 -> panel 1.180.000 VND -> 59 USDT (khong con 59,0001 do nhieu float)
+  assert.equal(sellPriceUsdt(59000, 20000), 59);
 });
 
 test('pricing: dịch vụ đắt x1.20', () => {
@@ -61,7 +61,7 @@ test('pricing: quoteFor trả đủ trường + tier', () => {
   assert.equal(q.tier, 'cheap');
   assert.equal(q.markup, 1.30);
   assert.equal(q.panel_cost_vnd, 1180000);
-  assert.equal(q.sell_usdt, 59.0001);
+  assert.equal(q.sell_usdt, 59);
   assert.equal(q.currency, 'USDT');
   const q2 = quoteFor(
     { service: 732, name: 'Like', category: 'Youtube | Like Youtube', rate: 450000, min: 10, max: 100000 },
@@ -180,7 +180,7 @@ test('POST /api/buff/quote: báo giá đúng + chặn số lượng ngoài min/m
     body: JSON.stringify({ service_id: 513, quantity: 20000 }),
   });
   assert.equal(ok.status, 200);
-  assert.equal(ok.json.quote.sell_usdt, 59.0001);
+  assert.equal(ok.json.quote.sell_usdt, 59);
   assert.equal(ok.json.quote.tier, 'cheap');
   const bad = await fetchJson(srv.base, '/api/buff/quote', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
