@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vườn Hoa Mùa Xuân - Bảng điều khiển</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Segoe UI", Verdana, sans-serif; background: #122b16; color: #eaf7e6; padding: 18px; }
+  h1 { font-size: 26px; margin-bottom: 4px; }
+  .sub { color: #a8dba0; margin-bottom: 14px; font-size: 14px; }
+  .grid { display: grid; gap: 14px; }
+  .row2 { grid-template-columns: 1fr 1fr; }
+  .row3 { grid-template-columns: 1fr 1fr 1fr; }
+  @media (max-width: 1100px) { .row2, .row3 { grid-template-columns: 1fr; } }
+  .card { background: #1c3a22; border: 1px solid #3a6b40; border-radius: 12px; padding: 14px 16px; }
+  .card h2 { font-size: 17px; color: #b8f0a8; margin-bottom: 10px; }
+  .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 13px; font-weight: 800; }
+  .badge.live { background: #d61f26; color: #fff; }
+  .badge.demo { background: #b8860b; color: #1c1c1c; }
+  button { cursor: pointer; border: none; border-radius: 8px; font-weight: 800; }
+  .btn { padding: 9px 16px; font-size: 14px; background: #2a4a30; color: #d8f5cc; border: 1px solid #5a8a5f; }
+  .btn:hover { background: #355c3c; }
+  .btn-gold { background: #ffb700; color: #1c1c1c; }
+  .btn-red { background: #a4161a; color: #fff; }
+  .btn-test { padding: 12px 10px; font-size: 14px; background: #0e5c46; color: #fff; width: 100%; }
+  .btn-test:hover { background: #117a5c; }
+  .btn-test:disabled { background: #444; color: #999; cursor: not-allowed; }
+  .test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 700px) { .test-grid { grid-template-columns: 1fr 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 7px 9px; border-bottom: 1px solid #33502f; text-align: left; vertical-align: top; }
+  th { color: #a8dba0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .log-box { height: 300px; overflow-y: auto; background: #0e1f11; border-radius: 8px; padding: 10px; font-size: 13px; }
+  .log-box div { padding: 2px 0; border-bottom: 1px dotted #2a4a30; }
+  .warn-banner { background: #4d1500; border: 2px solid #ff6b00; color: #ffd9c2; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; font-size: 15px; font-weight: 700; display: none; }
+  .form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .form-row label { display: block; font-size: 12px; color: #a8dba0; margin-bottom: 4px; }
+  .form-row input { padding: 8px 10px; border-radius: 6px; border: 1px solid #5a8a5f; background: #0e1f11; color: #eaf7e6; font-size: 15px; font-weight: 700; width: 110px; }
+  .switch { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; }
+  .switch input { width: 22px; height: 22px; }
+  code { background: #0e1f11; padding: 2px 8px; border-radius: 6px; color: #b8f0a8; }
+  .stat { font-size: 30px; font-weight: 900; color: #fff; }
+  .stat-label { font-size: 12px; color: #a8dba0; }
+  .bar { height: 10px; background: #0e1f11; border-radius: 6px; overflow: hidden; margin-top: 4px; border: 1px solid #33502f; }
+  .bar i { display: block; height: 100%; background: #ff5e8a; }
+  .guide li { margin: 6px 0 6px 18px; font-size: 14px; }
+</style>
+</head>
+<body>
+<h1>🌸 Vườn Hoa Mùa Xuân — Bảng điều khiển</h1>
+<div class="sub">Màn hình live: <code id="overlay-url">/overlay.html</code> (nguồn Link 1080x1920) · Webhook TikFinity: <code id="webhook-url">/api/webhook</code> · <span id="direct-line">Đang kiểm tra kết nối LIVE…</span></div>
+<div id="avatar-warn" class="warn-banner">⚠️ Chưa nhận avatar thật nào từ LIVE — hoa sẽ hiện tên không có ảnh. Avatar lấy thẳng từ LIVE của bạn; tuyệt đối không bịa avatar.</div>
+
+<div class="grid row3">
+  <div class="card">
+    <h2>Trạng thái</h2>
+    <div><span id="mode-badge" class="badge live">TRỰC TIẾP</span> <span id="round-label" style="font-weight:800;">Ván 1</span></div>
+    <div style="margin-top:10px"><span class="stat" id="st-blooms">0</span> / <span id="st-target">100</span> <span class="stat-label">hoa đã nở trong ván</span></div>
+    <div class="bar"><i id="st-bar" style="width:0%"></i></div>
+    <div style="margin-top:8px; font-size:14px;">🌱 <span id="st-flowers">0</span> hoa trên vườn · 🌱 Vườn ươm: <span id="st-nursery">0</span> hạt chờ</div>
+    <div style="margin-top:6px; font-size:14px;">👀 <span id="st-online">0</span> đang xem · 🎁 <span id="st-gifts">0</span> quà đã tưới · ⏳ Comment bị chặn spam: <span id="st-blocked">0</span></div>
+    <div style="margin-top:6px; font-size:14px;">Mốc đã mở: <span id="st-milestones">—</span></div>
+    <div style="margin-top:6px; font-size:14px;">Avatar: <span id="st-avatar">0/0</span> sự kiện có ảnh thật</div>
+  </div>
+  <div class="card">
+    <h2>Chế độ + Ván</h2>
+    <label class="switch"><input type="checkbox" id="demo-toggle"> Chế độ thử (chỉ nhận lượt thử, bỏ qua sự kiện thật)</label>
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-gold" onclick="resetRound()">🌸 Ván mới ngay</button>
+      <button class="btn btn-red" onclick="resetSession()">🔄 Làm mới phiên</button>
+    </div>
+    <div style="margin-top:8px; font-size:12px; color:#a8dba0;">Lên live thật: tắt chế độ thử → Làm mới phiên → Go LIVE trong Studio là xong.</div>
+  </div>
+  <div class="card">
+    <h2>🏆 Top người trồng</h2>
+    <table><thead><tr><th>#</th><th>Người trồng</th><th>Điểm</th></tr></thead><tbody id="top-body"><tr><td colspan="3">Chưa có ai trồng hoa…</td></tr></tbody></table>
+  </div>
+</div>
+
+<div class="grid row2" style="margin-top:14px;">
+  <div class="card">
+    <h2>Cài đặt (lưu là dùng ngay)</h2>
+    <div class="form-row">
+      <div><label>Số luống (1–100)</label><input type="number" id="set-plots" value="40" min="1" max="100"></div>
+      <div><label>Hoa tối đa / người (1–20)</label><input type="number" id="set-maxf" value="8" min="1" max="20"></div>
+      <div><label>Điểm / giai đoạn (1–10)</label><input type="number" id="set-growth" value="3" min="1" max="10"></div>
+      <div><label>Hạt tự nảy mầm (giây)</label><input type="number" id="set-sprout" value="10" min="1" max="120"></div>
+      <div><label>Sương xuân mỗi (giây)</label><input type="number" id="set-dew" value="60" min="10" max="600"></div>
+      <div><label>Hoa nở rộ bao lâu thì hái (giây)</label><input type="number" id="set-harvest" value="90" min="10" max="600"></div>
+    </div>
+    <div class="form-row" style="margin-top:10px;">
+      <div><label>Mốc vườn đầy (hoa nở)</label><input type="number" id="set-target" value="100" min="10" max="1000"></div>
+      <div><label>1 xu quà = mấy tăng trưởng</label><input type="number" id="set-c2g" value="1" min="1" max="100"></div>
+      <div><label>Quà ≥ X xu = cơn mưa</label><input type="number" id="set-rain" value="100" min="10" max="10000"></div>
+      <div><label>Quà ≥ X xu = cầu vồng</label><input type="number" id="set-rainbow" value="500" min="50" max="100000"></div>
+      <div><label>Follow = mấy điểm</label><input type="number" id="set-follow" value="5" min="0" max="100"></div>
+      <div><label>Chống spam comment (giây)</label><input type="number" id="set-spam" value="5" min="1" max="60"></div>
+    </div>
+    <div class="form-row" style="margin-top:10px;">
+      <div><label class="switch"><input type="checkbox" id="set-voice" checked> Giọng đọc tiếng Việt</label></div>
+      <div><button class="btn btn-gold" onclick="saveSettings()">💾 Lưu cài đặt</button></div>
+    </div>
+    <div style="margin-top:6px; font-size:12px; color:#a8dba0;">Quà lạ không rõ số xu → chỉ log cảnh báo, 0 điểm, không tưới. Không bao giờ mặc định +5.</div>
+  </div>
+  <div class="card">
+    <h2>🧪 Test (cần bật chế độ thử)</h2>
+    <div class="test-grid">
+      <button class="btn-test" onclick="testCall('join')">👋 Vào xem</button>
+      <button class="btn-test" onclick="testCall('comment')">💬 Bình luận (gieo hạt)</button>
+      <button class="btn-test" onclick="testCall('tap', {count: 20})">❤️ Thả 20 tim</button>
+      <button class="btn-test" onclick="testCall('gift', {coins: 10, giftName: 'Hoa hồng'})">🎁 Quà 10 xu</button>
+      <button class="btn-test" onclick="testCall('gift', {coins: 100, giftName: 'Heo may mắn'})">🌧️ Quà 100 xu (mưa)</button>
+      <button class="btn-test" onclick="testCall('gift', {coins: 500, giftName: 'Du thuyền'})">🌈 Quà 500 xu (cầu vồng)</button>
+      <button class="btn-test" onclick="testCall('follow')">🌹 Follow (hồng vàng)</button>
+      <button class="btn-test" onclick="testCall('share')">🔁 Chia sẻ</button>
+      <button class="btn-test" onclick="testCall('bulk-join', {count: 100})">👥 Test 100 người vào</button>
+      <button class="btn-test" onclick="testCall('demo')">▶️ Chạy demo tự động</button>
+    </div>
+    <div id="test-result" style="margin-top:10px; font-size:14px; color:#b8f0a8;"></div>
+    <div class="card" style="margin-top:14px; background:#0e1f11;">
+      <h2>📖 Cách chơi (đọc nhanh)</h2>
+      <ul class="guide">
+        <li>Bình luận / thả tim → gieo 1 hạt (tối đa 8 hoa/người; thừa chuyển thành tăng trưởng).</li>
+        <li>Hạt tự nảy mầm sau 10s; mỗi giai đoạn cần 3 tăng trưởng để lên nụ → nở.</li>
+        <li>Sương xuân mỗi 60s: mọi hoa +1. Hoa nở 90s thì được hái, trả luống.</li>
+        <li>Quà: 1 xu = 1 tăng trưởng tưới hoa non nhất của người tặng; ≥100 xu mưa (+5 mọi hoa); ≥500 xu cầu vồng (1 hoa nở ngay + mọi hoa +10).</li>
+        <li>Follow: 1 hoa hồng vàng bắt đầu ở nụ, tối đa 1/người/ván.</li>
+        <li>Mốc 25/50/75/100 hoa nở → 100 hoa = lễ hội 30s → kết quả 30s → ván mới.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px;">
+  <h2>📋 Nhật ký</h2>
+  <div class="log-box" id="logs"></div>
+</div>
+
+<script>
+const socket = io();
+let lastState = null;
+const $ = (id) => document.getElementById(id);
+function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+async function api(path, body) {
+  const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : '{}' });
+  return r.json();
+}
+function render(s) {
+  lastState = s;
+  $('mode-badge').textContent = s.settings.demoMode ? 'CHẾ ĐỘ THỬ' : 'TRỰC TIẾP';
+  $('mode-badge').className = 'badge ' + (s.settings.demoMode ? 'demo' : 'live');
+  $('demo-toggle').checked = !!s.settings.demoMode;
+  $('round-label').textContent = 'Ván ' + s.roundNo + (s.phase === 'festival' ? ' · 🎉 Lễ hội hoa!' : s.phase === 'results' ? ' · 🏆 Kết quả' : '');
+  $('st-blooms').textContent = s.gardenBlooms;
+  $('st-target').textContent = s.target;
+  $('st-bar').style.width = Math.min(100, s.gardenBlooms / s.target * 100) + '%';
+  $('st-flowers').textContent = s.flowers.length;
+  $('st-nursery').textContent = s.nursery.count;
+  $('st-online').textContent = s.viewersOnline;
+  $('st-gifts').textContent = s.stats.gifts;
+  $('st-blocked').textContent = s.stats.commentsBlocked;
+  $('st-milestones').textContent = s.milestonesHit.length ? s.milestonesHit.join(', ') + ' hoa' : '—';
+  $('st-avatar').textContent = s.avatarStats.withAvatar + '/' + s.avatarStats.total;
+  $('direct-line').textContent = 'Đã nhận ' + s.webhookCount + ' sự kiện webhook · ' + s.viewersOnline + ' người đang xem';
+  $('avatar-warn').style.display = (s.avatarStats.total > 0 && s.avatarStats.withAvatar === 0) ? 'block' : 'none';
+  $('top-body').innerHTML = s.top.length
+    ? s.top.map((t, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(t.name) + '</td><td>' + t.points + 'đ</td></tr>').join('')
+    : '<tr><td colspan="3">Chưa có ai trồng hoa…</td></tr>';
+  $('logs').innerHTML = s.logs.slice(-80).reverse().map((l) => '<div>' + new Date(l.t).toLocaleTimeString('vi-VN') + ' ' + esc(l.text) + '</div>').join('');
+  // Điền form cài đặt lần đầu (không ghi đè khi đang sửa).
+  if (!render.filled) {
+    render.filled = true;
+    $('set-plots').value = s.settings.plots;
+    $('set-maxf').value = s.settings.maxFlowersPerViewer;
+    $('set-growth').value = s.settings.growthPerStage;
+    $('set-sprout').value = s.settings.sproutAutoS;
+    $('set-dew').value = s.settings.dewIntervalS;
+    $('set-harvest').value = s.settings.harvestAfterBloomS;
+    $('set-target').value = s.settings.gardenTargetBlooms;
+    $('set-c2g').value = s.settings.giftCoinToGrowth;
+    $('set-rain').value = s.settings.giftRainCoins;
+    $('set-rainbow').value = s.settings.giftRainbowCoins;
+    $('set-follow').value = s.settings.followPoints;
+    $('set-spam').value = s.settings.commentSpamS;
+    $('set-voice').checked = !!s.settings.voiceEnabled;
+  }
+}
+async function saveSettings() {
+  const r = await api('/api/settings', {
+    plots: +$('set-plots').value, maxFlowersPerViewer: +$('set-maxf').value,
+    growthPerStage: +$('set-growth').value, sproutAutoS: +$('set-sprout').value,
+    dewIntervalS: +$('set-dew').value, harvestAfterBloomS: +$('set-harvest').value,
+    gardenTargetBlooms: +$('set-target').value, giftCoinToGrowth: +$('set-c2g').value,
+    giftRainCoins: +$('set-rain').value, giftRainbowCoins: +$('set-rainbow').value,
+    followPoints: +$('set-follow').value, commentSpamS: +$('set-spam').value,
+    voiceEnabled: $('set-voice').checked,
+  });
+  $('test-result').textContent = r.success ? '✅ Đã lưu cài đặt.' : '❌ ' + (r.message || 'Lỗi.');
+}
+async function resetSession() { if (confirm('Làm mới toàn bộ phiên?')) { await api('/api/session/reset'); render.filled = false; } }
+async function resetRound() { await api('/api/round/reset'); }
+async function testCall(kind, extra) {
+  const r = await api('/api/test/' + kind, extra || {});
+  $('test-result').textContent = r.success ? '✅ ' + kind + ' OK' + (r.count !== undefined ? ' (' + r.count + ')' : '') : '❌ ' + (r.message || 'Lỗi — bật chế độ thử trước.');
+}
+$('demo-toggle').addEventListener('change', async (e) => {
+  await api('/api/settings', { demoMode: e.target.checked });
+});
+$('overlay-url').textContent = location.pathname.replace(/\/index\.html$/, '/overlay.html');
+$('webhook-url').textContent = location.pathname.replace(/\/index\.html$/, '') + '/api/webhook';
+socket.on('state-update', render);
+fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
+</script>
+</body>
+</html>

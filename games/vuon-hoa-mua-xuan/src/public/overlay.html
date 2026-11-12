@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vườn Hoa Mùa Xuân — Overlay</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", Verdana, sans-serif; color: #2d1a0e;
+    background: linear-gradient(180deg, #7ec8f7 0%, #aee3ff 22%, #e8f7d9 45%, #8fce62 100%);
+  }
+  .sun { position: absolute; top: 40px; right: 60px; font-size: 90px; filter: drop-shadow(0 0 24px #ffd94d); }
+  .cloud { position: absolute; font-size: 64px; opacity: .85; animation: drift 26s linear infinite; }
+  @keyframes drift { from { transform: translateX(-140px); } to { transform: translateX(1180px); } }
+  .rainbow { position: absolute; top: 150px; left: 50%; transform: translateX(-50%); font-size: 120px; opacity: .9; display: none; }
+  .rainbow.on { display: block; }
+  header { position: relative; z-index: 5; text-align: center; padding: 26px 30px 0; }
+  h1 { font-size: 58px; color: #fff; text-shadow: 0 3px 0 #2e7d32, 0 6px 18px rgba(0,0,0,.35); letter-spacing: 1px; }
+  .sub { font-size: 26px; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.45); margin-top: 6px; }
+  .progress { margin: 16px auto 0; width: 880px; background: rgba(255,255,255,.85); border-radius: 999px; padding: 10px 18px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+  .progress .label { font-size: 26px; font-weight: 800; color: #2e7d32; display: flex; justify-content: space-between; }
+  .bar { height: 18px; background: #d7e8c8; border-radius: 999px; margin-top: 6px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, #ff8fb3, #ff5e8a); border-radius: 999px; transition: width .6s; }
+  .milestones { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+  .ms { font-size: 22px; font-weight: 800; background: rgba(255,255,255,.75); color: #6b4a12; padding: 6px 14px; border-radius: 999px; }
+  .ms.hit { background: #ffd94d; color: #4a2f00; }
+  .top5 { position: absolute; top: 330px; right: 24px; z-index: 6; width: 300px; background: rgba(255,255,255,.88); border-radius: 16px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+  .top5 h3 { font-size: 24px; color: #2e7d32; margin-bottom: 6px; }
+  .top5 div { font-size: 22px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .garden { position: absolute; top: 400px; left: 30px; width: 740px; height: 1180px; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(8, 1fr); gap: 10px; z-index: 4; }
+  .plot { background: rgba(101, 67, 33, .55); border: 3px solid rgba(255,255,255,.5); border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .plot .f { font-size: 62px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
+  .plot .nm { font-size: 15px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px #000; max-width: 96%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .plot .st { font-size: 13px; color: #ffe9bd; font-weight: 700; }
+  .plot.golden { border-color: #ffd700; box-shadow: 0 0 18px #ffd700; }
+  .plot.bloom { animation: sway 3s ease-in-out infinite; }
+  @keyframes sway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  .plot.empty::after { content: "· · ·"; color: rgba(255,255,255,.5); font-size: 26px; }
+  .nursery { position: absolute; left: 30px; bottom: 250px; width: 740px; z-index: 5; background: rgba(255,255,255,.85); border-radius: 14px; padding: 10px 16px; font-size: 22px; font-weight: 700; color: #6b4a12; }
+  .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
+  .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
+  .statusbar { position: absolute; left: 0; bottom: 0; width: 1080px; height: 140px; z-index: 5; background: #2e7d32; color: #fff; display: flex; align-items: center; justify-content: space-around; font-size: 26px; font-weight: 800; padding: 0 30px; }
+  .statusbar .big { font-size: 34px; }
+  .banner { position: absolute; left: 50%; top: 760px; transform: translateX(-50%); z-index: 20; width: 980px; text-align: center; background: rgba(255,255,255,.96); border: 6px solid #ff5e8a; border-radius: 28px; padding: 34px 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4); display: none; }
+  .banner.on { display: block; animation: pop .4s ease; }
+  @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+  .banner h2 { font-size: 52px; color: #d6336c; }
+  .banner p { font-size: 30px; margin-top: 10px; line-height: 1.4; }
+  .banner .names { font-size: 28px; font-weight: 800; color: #2e7d32; margin-top: 12px; line-height: 1.5; }
+  .bees { position: absolute; font-size: 40px; z-index: 3; display: none; }
+  .bees.on { display: block; animation: fly 9s linear infinite; }
+  @keyframes fly { 0% { left: 60px; top: 500px; } 25% { left: 700px; top: 420px; } 50% { left: 300px; top: 900px; } 75% { left: 800px; top: 1100px; } 100% { left: 60px; top: 500px; } }
+</style>
+</head>
+<body>
+<div class="sun">☀️</div>
+<div class="cloud" style="top:90px; animation-delay:-6s;">☁️</div>
+<div class="cloud" style="top:190px; animation-delay:-18s; font-size:48px;">☁️</div>
+<div class="rainbow" id="rainbow">🌈</div>
+<div class="bees" id="bees">🐝</div>
+<header>
+  <h1>🌸 VƯỜN HOA MÙA XUÂN 🌸</h1>
+  <div class="sub" id="round-line">Ván 1 · Bình luận / thả tim để gieo hạt — quà tưới nước, follow tặng hồng vàng</div>
+  <div class="progress">
+    <div class="label"><span>🌸 Hoa đã nở: <b id="blooms">0</b>/<span id="target">100</span></span><span id="phase-label">Đang trồng…</span></div>
+    <div class="bar"><i id="bar" style="width:0%"></i></div>
+  </div>
+  <div class="milestones" id="milestones"></div>
+</header>
+
+<div class="top5" id="top5"><h3>🏆 Top người trồng</h3><div>Chưa có ai trồng hoa…</div></div>
+<div class="garden" id="garden"></div>
+<div class="nursery" id="nursery">🌱 Vườn ươm: 0 hạt đang chờ</div>
+<div class="ticker" id="ticker"></div>
+<div class="statusbar">
+  <span>🌱 <span class="big" id="st-flowers">0</span> hoa trên vườn</span>
+  <span>👀 <span class="big" id="st-online">0</span> đang xem</span>
+  <span>🎁 <span class="big" id="st-gifts">0</span> quà đã tưới</span>
+</div>
+<div class="banner" id="banner"><h2 id="banner-title"></h2><p id="banner-text"></p><div class="names" id="banner-names"></div></div>
+
+<script>
+const socket = io();
+const FLOWER_ICON = { mai: '🌼', dao: '🌸', cuc: '🏵️', sen: '🪷', hong: '🌹', huongduong: '🌻', 'hong-vang': '🌹' };
+const STAGE_ICON = { seed: '🌱', sprout: '🌿', bud: '🌷' };
+const STAGE_NAME = { seed: 'Hạt', sprout: 'Mầm', bud: 'Nụ', bloom: 'Nở' };
+let lastState = null;
+let voiceOn = true;
+const ttsQueue = [];
+let ttsPlaying = false;
+
+function playTts(text) {
+  if (!voiceOn || !text) return;
+  ttsQueue.push(text);
+  nextTts();
+}
+function nextTts() {
+  if (ttsPlaying || !ttsQueue.length) return;
+  ttsPlaying = true;
+  const text = ttsQueue.shift();
+  const audio = new Audio('/api/tts?text=' + encodeURIComponent(text));
+  audio.onended = () => { ttsPlaying = false; nextTts(); };
+  audio.onerror = () => {
+    // Fallback: giọng trình duyệt.
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'vi-VN';
+      u.onend = () => { ttsPlaying = false; nextTts(); };
+      speechSynthesis.speak(u);
+    } catch (e) { ttsPlaying = false; nextTts(); }
+  };
+  audio.play().catch(() => { ttsPlaying = false; nextTts(); });
+}
+
+function showBanner(title, text, names, ms) {
+  const b = document.getElementById('banner');
+  document.getElementById('banner-title').textContent = title;
+  document.getElementById('banner-text').textContent = text || '';
+  document.getElementById('banner-names').textContent = names || '';
+  b.classList.add('on');
+  if (ms) setTimeout(() => b.classList.remove('on'), ms);
+}
+
+function render(s) {
+  lastState = s;
+  voiceOn = s.settings.voiceEnabled !== false;
+  document.getElementById('blooms').textContent = s.gardenBlooms;
+  document.getElementById('target').textContent = s.target;
+  document.getElementById('bar').style.width = Math.min(100, s.gardenBlooms / s.target * 100) + '%';
+  document.getElementById('round-line').textContent = 'Ván ' + s.roundNo + ' · Bình luận / thả tim để gieo hạt — quà tưới nước, follow tặng hồng vàng';
+  document.getElementById('phase-label').textContent =
+    s.phase === 'festival' ? '🎉 LỄ HỘI HOA!' : s.phase === 'results' ? '🏆 Kết quả ván' : 'Đang trồng…';
+  document.getElementById('milestones').innerHTML = s.milestones.map((m) =>
+    '<span class="ms' + (s.milestonesHit.includes(m) ? ' hit' : '') + '">' + (m >= s.target ? '🎉' : '🌸') + ' ' + m + ' hoa</span>').join('');
+  document.getElementById('rainbow').classList.toggle('on', s.milestonesHit.includes(75));
+  document.getElementById('bees').classList.toggle('on', s.milestonesHit.includes(50));
+
+  const top = document.getElementById('top5');
+  top.innerHTML = '<h3>🏆 Top người trồng</h3>' + (s.top.length
+    ? s.top.map((t, i) => '<div>' + ['🥇','🥈','🥉','4.','5.'][i] + ' ' + escapeHtml(t.name) + ' — ' + t.points + 'đ</div>').join('')
+    : '<div>Chưa có ai trồng hoa…</div>');
+
+  const g = document.getElementById('garden');
+  let html = '';
+  for (let i = 0; i < s.plots; i++) {
+    const f = s.flowers[i];
+    if (!f) { html += '<div class="plot empty"></div>'; continue; }
+    const icon = f.stage === 'bloom' ? FLOWER_ICON[f.type] : STAGE_ICON[f.stage];
+    html += '<div class="plot' + (f.golden ? ' golden' : '') + (f.stage === 'bloom' ? ' bloom' : '') + '">' +
+      '<div class="f">' + icon + '</div>' +
+      (f.stage === 'bloom' ? '<div class="nm">' + escapeHtml(f.name) + '</div>' : '<div class="st">' + STAGE_NAME[f.stage] + '</div>') +
+      '</div>';
+  }
+  g.innerHTML = html;
+
+  document.getElementById('nursery').textContent = '🌱 Vườn ươm: ' + s.nursery.count + ' hạt đang chờ' +
+    (s.nursery.waiting.length ? ' — ' + s.nursery.waiting.map(escapeHtml).join(', ') : '');
+  document.getElementById('st-flowers').textContent = s.flowers.length;
+  document.getElementById('st-online').textContent = s.viewersOnline;
+  document.getElementById('st-gifts').textContent = s.stats.gifts;
+
+  const tk = document.getElementById('ticker');
+  tk.innerHTML = s.logs.slice(-3).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
+
+  if (s.phase === 'festival') {
+    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
+    showBanner('🎉 LỄ HỘI HOA! 🎉', 'Vườn đã đầy ' + s.target + ' hoa nở — cảm ơn cả phòng! Ván mới sau ' + left + 's…', '');
+  } else if (s.phase === 'results' && s.results) {
+    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
+    const names = s.results.top.map((t, i) => (i + 1) + '. ' + t.name + ' ' + t.points + 'đ').join(' · ');
+    showBanner('🏆 KẾT QUẢ VÁN ' + s.results.roundNo, s.results.blooms + ' hoa đã nở trong ván này. Ván mới sau ' + left + 's…', names || 'Chưa có ai trồng hoa');
+  } else {
+    document.getElementById('banner').classList.remove('on');
+  }
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+socket.on('state-update', render);
+socket.on('bloom', (d) => { if (d && d.flower) playTts('Hoa của ' + d.flower.name + ' đã nở rồi!'); });
+socket.on('festival', () => playTts('Vườn hoa đã đầy! Lễ hội hoa bắt đầu!'));
+socket.on('milestone', (d) => { if (d) playTts('Mốc ' + d.milestone + ' hoa nở! ' + (d.effect || '')); });
+socket.on('rainbow', (d) => { if (d) playTts('Cầu vồng! Cảm ơn ' + d.name + ' đã tặng quà lớn!'); });
+
+fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
+setInterval(() => { if (lastState) render(lastState); }, 1000); // đếm ngược lễ hội/kết quả
+</script>
+</body>
+</html>

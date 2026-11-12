@@ -63,9 +63,13 @@ const EXPECTED_EVENTS = [
   { key: 'follow', triggerTypeId: 1, fields: {} },
   { key: 'join', triggerTypeId: 6, fields: {} },
 ];
-const SHARE_IDS = { 've-avatar': 8, 'buong-giam': 4, 'thap-sang-ban-do': 8 };
+const SHARE_IDS = {
+  've-avatar': 8, 'buong-giam': 4, 'thap-sang-ban-do': 8,
+  'vuon-hoa-mua-xuan': 8, 'bep-an-tap-the': 8, 'dua-xe-leo-nui': 8,
+  'vong-quay-may-man': 8, 'bau-troi-phao-hoa': 8,
+};
 
-test('eventBodies: 3 game đều có 6 sự kiện, body thay biến xong parse được JSON và đủ field', () => {
+test('eventBodies: mọi game đều có 6 sự kiện, body thay biến xong parse được JSON và đủ field', () => {
   for (const game of Object.keys(GAMES)) {
     const bodies = eventBodies(game);
     assert.equal(bodies.length, 6, `${game} phải có 6 sự kiện`);
