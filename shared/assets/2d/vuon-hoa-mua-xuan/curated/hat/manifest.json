@@ -1,0 +1,57 @@
+{
+  "sprite": "hat",
+  "game": "vuon-hoa-mua-xuan",
+  "cell": {
+    "w": 512,
+    "h": 512
+  },
+  "anchor": "bottom-centre",
+  "source": {
+    "kind": "AI tự tạo",
+    "file": "raw/media-generation-hat-raw-0-b4665eb4-3b6c-4471-9581-e9150424bbad.png",
+    "cut": "rembg u2net"
+  },
+  "shadow": {
+    "type": "ellipse",
+    "baked": true,
+    "color": "black",
+    "opacity": 0.4,
+    "width_px": 347,
+    "height_px": 18,
+    "center": {
+      "x": 256,
+      "y": 492
+    },
+    "blur_px": 3
+  },
+  "sprite_rect": {
+    "x": 8,
+    "y": 121,
+    "w": 496,
+    "h": 359
+  },
+  "frame_layout": {
+    "rows": {
+      "idle": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 512,
+          "h": 512
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "idle": {
+        "fps": 1,
+        "durations_ms": [
+          1000
+        ],
+        "loop": false,
+        "frames": 1
+      }
+    }
+  }
+}

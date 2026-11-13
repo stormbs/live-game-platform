@@ -1,0 +1,74 @@
+# Sprite request — Bếp Ăn Tập Thể (bep-an-tap-the)
+# SSoT số học cho Đợt B (theo docs/research-sprite-gen-2026-11-13.md §3, §5).
+# Viết TRƯỚC khi tạo thêm sprite; mọi frame/sheet/manifest phải khớp file này.
+# Phong cách: 2D game asset — flat vector, cel-shading, viền đậm, màu bão hòa rực rỡ.
+# KHÔNG photorealistic, KHÔNG 3D render thực, KHÔNG chữ trong ảnh.
+{
+  "game": "bep-an-tap-the",
+  "game_name_vi": "Bếp Ăn Tập Thể",
+  "cell_size": [512, 512],
+  "anchor": "bottom-centre",
+  "palette_max_colors": 16,
+  "palette_note": "Mục tiêu ≤16 màu chính (kể cả outline + highlight + shadow). Ảnh AI flat-vector thực tế vượt ngưỡng này — xem qa-notes.md (độ lệch đã ghi rõ, KHÔNG lặng lẽ bỏ qua). Không quantize cưỡng bức để giữ cel-shading.",
+  "background": "plain solid white (nền trắng trơn lúc tạo, cắt bằng rembg AI matting)",
+  "shadow": "ellipse mờ đen ~40% opacity dưới đáy nồi/bát/đĩa, vẽ trong cell sau khi cắt nền",
+  "sprites": [
+    {
+      "id": "noi",
+      "file": "curated/noi-sheet.png",
+      "manifest": "curated/noi-manifest.json",
+      "description_vi": "Nồi lớn màu đen/xám đang nấu, hơi nước bốc lên (một phần của sprite), nhìn nghiêng 3/4",
+      "states": { "idle": { "frames": 1, "fps": 4, "loop": true, "note": "Vật tĩnh: 1 frame + breathe ở Đợt C (CSS), không vẽ nhiều frame idle" } },
+      "source": "AI tự tạo (media.generate_image, prompt chuẩn §0.1 asset-plan)"
+    },
+    {
+      "id": "bep-lua",
+      "file": "curated/bep-lua-sheet.png",
+      "manifest": "curated/bep-lua-manifest.json",
+      "description_vi": "Bếp lửa: ngọn lửa cam đỏ kiểu game 2D + củi trên bếp than, nhìn thẳng",
+      "states": { "burn": { "frames": 4, "fps": 8, "loop": true, "note": "4 frame lửa nhấp nháy, loop khép kín (frame cuối khớp frame đầu). Frame 1 = ảnh gốc; frame 2-4 = biến thể chỉ đổi hình lửa, giữ nguyên bếp + củi" } },
+      "source": "AI tự tạo (media.generate_image, frame 1 gốc + 3 biến thể lửa từ cùng snapshot)"
+    },
+    {
+      "id": "thit",
+      "file": "curated/thit-sheet.png",
+      "manifest": "curated/thit-manifest.json",
+      "description_vi": "Đùi gà nướng/chiên vàng giòn trên đĩa trắng",
+      "states": { "idle": { "frames": 1, "fps": 4, "loop": true, "note": "Vật tĩnh: 1 frame + breathe ở Đợt C (CSS)" } },
+      "source": "AI tự tạo (media.generate_image, prompt chuẩn §0.1 asset-plan)"
+    },
+    {
+      "id": "rau",
+      "file": "curated/rau-sheet.png",
+      "manifest": "curated/rau-manifest.json",
+      "description_vi": "Đĩa rau xanh (rau cải/xà lách)",
+      "states": { "idle": { "frames": 1, "fps": 4, "loop": true, "note": "Vật tĩnh: 1 frame + breathe ở Đợt C (CSS)" } },
+      "source": "AI tự tạo (media.generate_image, prompt chuẩn §0.1 asset-plan)"
+    },
+    {
+      "id": "muoi",
+      "file": "curated/muoi-sheet.png",
+      "manifest": "curated/muoi-manifest.json",
+      "description_vi": "Bát muối trắng nhỏ, thìa gỗ bên cạnh",
+      "states": { "idle": { "frames": 1, "fps": 4, "loop": true, "note": "Vật tĩnh: 1 frame + breathe ở Đợt C (CSS)" } },
+      "source": "AI tự tạo (media.generate_image, prompt chuẩn §0.1 asset-plan)"
+    },
+    {
+      "id": "canh",
+      "file": "curated/canh-sheet.png",
+      "manifest": "curated/canh-manifest.json",
+      "description_vi": "Bát canh nóng có hơi nước, thìa kim loại bên cạnh",
+      "states": { "idle": { "frames": 1, "fps": 4, "loop": true, "note": "Vật tĩnh: 1 frame + breathe ở Đợt C (CSS)" } },
+      "source": "AI tự tạo (media.generate_image, prompt chuẩn §0.1 asset-plan)"
+    }
+  ],
+  "vendor_check": {
+    "checked": "Kenney food-kit (CC0, shared/assets-vendor/kenney_food-kit/Previews/) + furniture-kit",
+    "result": "KHÔNG dùng vendor: preview đồ ăn chỉ 64x64px, là low-poly 3D render (trái chuẩn flat-vector bắt buộc của asset-plan §0); furniture-kit chỉ có bếp điện isometric, không có nồi/bếp lửa. Tên file khớp (pot-stew, meat-cooked, salad, shaker-salt, bowl-soup) nhưng kích thước + phong cách không đạt -> tự tạo AI cho cả 6 sprite.",
+    "evidence": "Đã xem trực tiếp 5 preview phóng to (pot-stew, meat-cooked, salad, shaker-salt, bowl-soup) — xác nhận 3D low-poly 64px."
+  },
+  "pipeline": "raw/ (ảnh gốc, không ghi đè) -> frames/ (đã cắt nền rembg + fit cell 512x512 + bóng) -> curated/ (sheet + manifest.json bản chốt, overlay chỉ đọc từ đây)",
+  "qa": "GIF preview mỗi state bằng Pillow (xem như motion thật); loop seam khép kín; ghi qa-notes.md (pass/best-effort/experimental từng state). Frame lỗi -> dừng, không lặng lẽ dùng.",
+  "limits": { "max_frames_per_state": 6, "sprite_png_max_kb": 300 },
+  "qa_2026-11-13": "Chốt Đợt B: 6/6 pass (xem qa-notes.md). Bếp lửa composite f2-f4 lên nền f1 (blend y 280-320) -> vùng bếp khác 0.00% mọi chuyển đổi, seam khép kín. Canh fit lại theo content-bbox (472px). Toàn bộ sheet quantize pngquant 2.18.0 --quality=65-80 (27-112KB, <300KB). LƯU Ý HỢP NHẤT: 2 phiên chạy chồng nhau, phiên tiếp nối ghi đè curated/ của phiên trước lúc ~09:47 UTC; sheet đã dựng lại đúng pipeline + số đo đã ghi, đo lại toàn bộ. Palette >16 màu: độ lệch đã ghi trong qa-notes.md."
+}

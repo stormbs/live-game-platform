@@ -1,0 +1,39 @@
+{
+  "sprite": "co-dich",
+  "game": "dua-xe-leo-nui",
+  "cell": {
+    "w": 512,
+    "h": 1024
+  },
+  "anchor": "bottom-centre",
+  "sheet": "co-dich-sheet.png",
+  "sheet_size": {
+    "w": 512,
+    "h": 1024
+  },
+  "sheet_bytes": 189987,
+  "frame_layout": {
+    "rows": {
+      "static": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 512,
+          "h": 1024
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "static": {
+        "fps": 1,
+        "durations_ms": [
+          1000
+        ],
+        "loop": false,
+        "frames": 1
+      }
+    }
+  }
+}

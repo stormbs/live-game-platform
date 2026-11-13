@@ -1,0 +1,57 @@
+{
+  "sprite": "mam",
+  "game": "vuon-hoa-mua-xuan",
+  "cell": {
+    "w": 512,
+    "h": 512
+  },
+  "anchor": "bottom-centre",
+  "source": {
+    "kind": "AI tự tạo",
+    "file": "raw/media-generation-mam-raw-0-754b56ce-7e5f-41ee-8e70-30b1bd70f629.png",
+    "cut": "rembg u2net"
+  },
+  "shadow": {
+    "type": "ellipse",
+    "baked": true,
+    "color": "black",
+    "opacity": 0.4,
+    "width_px": 269,
+    "height_px": 18,
+    "center": {
+      "x": 256,
+      "y": 492
+    },
+    "blur_px": 3
+  },
+  "sprite_rect": {
+    "x": 63,
+    "y": 0,
+    "w": 385,
+    "h": 480
+  },
+  "frame_layout": {
+    "rows": {
+      "idle": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 512,
+          "h": 512
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "idle": {
+        "fps": 1,
+        "durations_ms": [
+          1000
+        ],
+        "loop": false,
+        "frames": 1
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "sprite": "mai-cheo",
+  "game": "dua-thuyen-rong",
+  "cell": {
+    "w": 512,
+    "h": 512
+  },
+  "anchor": "bottom-centre",
+  "sheet": "mai-cheo.png",
+  "sheet_size": {
+    "w": 512,
+    "h": 512
+  },
+  "frame_layout": {
+    "rows": {
+      "static": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 512,
+          "h": 512
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "static": {
+        "fps": 4,
+        "durations_ms": [
+          250
+        ],
+        "loop": false,
+        "frames": 1
+      }
+    }
+  }
+}

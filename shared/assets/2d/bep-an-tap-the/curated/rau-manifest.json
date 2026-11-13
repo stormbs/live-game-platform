@@ -1,0 +1,42 @@
+{
+  "sprite": "rau",
+  "game": "bep-an-tap-the",
+  "cell_size": [
+    512,
+    512
+  ],
+  "anchor": "bottom-centre",
+  "sheet": "rau-sheet.png",
+  "sheet_size": [
+    512,
+    512
+  ],
+  "frame_layout": {
+    "rows": {
+      "idle": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 512,
+          "h": 512
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "idle": {
+        "fps": 4,
+        "durations_ms": [
+          250
+        ],
+        "loop": true,
+        "frames": 1
+      }
+    }
+  },
+  "source": "AI tự tạo (media.generate_image, prompt chuẩn §0.1 asset-plan) + cắt nền rembg 2.0.87 (Python API)",
+  "shadow": "ellipse mờ đen, peak ~40% opacity, dưới đáy vật, vẽ trong cell",
+  "qa": "pass — xem qa-notes.md 2026-11-13",
+  "compression": "pngquant 2.18.0 --quality=65-80 --speed 1 (palette PNG, alpha giữ nguyên)"
+}

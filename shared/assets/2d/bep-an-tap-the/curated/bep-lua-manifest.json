@@ -1,0 +1,63 @@
+{
+  "sprite": "bep-lua",
+  "game": "bep-an-tap-the",
+  "cell_size": [
+    512,
+    512
+  ],
+  "anchor": "bottom-centre",
+  "sheet": "bep-lua-sheet.png",
+  "sheet_size": [
+    2048,
+    512
+  ],
+  "frame_layout": {
+    "rows": {
+      "burn": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 512,
+          "h": 512
+        },
+        {
+          "x": 512,
+          "y": 0,
+          "w": 512,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 0,
+          "w": 512,
+          "h": 512
+        },
+        {
+          "x": 1536,
+          "y": 0,
+          "w": 512,
+          "h": 512
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "burn": {
+        "fps": 8,
+        "durations_ms": [
+          125,
+          125,
+          125,
+          125
+        ],
+        "loop": true,
+        "frames": 4
+      }
+    }
+  },
+  "source": "AI tự tạo (media.generate_image: frame 1 gốc + 3 biến thể lửa) + cắt nền rembg 2.0.87 (Python API); 4 cell căn chung union-bbox 2026-11-13",
+  "shadow": "ellipse mờ đen, peak ~40% opacity, dưới đáy vật, vẽ trong cell",
+  "qa": "pass — xem qa-notes.md 2026-11-13",
+  "compression": "pngquant 2.18.0 --quality=65-80 --speed 1 (palette PNG, alpha giữ nguyên)"
+}

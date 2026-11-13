@@ -1,0 +1,39 @@
+{
+  "sprite": "co-do",
+  "game": "chiem-co",
+  "cell": {
+    "w": 512,
+    "h": 512
+  },
+  "anchor": "bottom-centre",
+  "sheet": "co-do-sheet.png",
+  "frame_layout": {
+    "rows": {
+      "idle": [
+        {
+          "x": 9,
+          "y": 223,
+          "w": 494,
+          "h": 280
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "idle": {
+        "fps": 4,
+        "durations_ms": [
+          250
+        ],
+        "loop": true,
+        "frames": 1
+      }
+    }
+  },
+  "source": {
+    "type": "AI tu tao + rembg (u2net)",
+    "raw": "raw/media-generation-co-do-raw-0-8dd4dacb-8a46-45f5-870d-76ffb71db9cf.png"
+  },
+  "notes": "1 frame tinh; hieu ung vay co bang CSS o overlay. Khong bong duoi chan trong sheet."
+}

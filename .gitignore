@@ -6,3 +6,8 @@ data/
 # Thư viện asset vendor 221MB — chỉ dùng local, không commit (trừ SOURCES.md)
 shared/assets-vendor/*
 !shared/assets-vendor/SOURCES.md
+
+# Asset 2D: chỉ commit bản curated dùng runtime + tài liệu; raw/frames/cut là cache gốc giữ local
+shared/assets/2d/*/raw/
+shared/assets/2d/*/frames/
+shared/assets/2d/*/cut/

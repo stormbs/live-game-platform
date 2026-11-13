@@ -1,0 +1,438 @@
+{
+  "sprite": "xe-dua",
+  "game": "dua-xe-leo-nui",
+  "cell": {
+    "w": 1024,
+    "h": 512
+  },
+  "anchor": "bottom-centre",
+  "sheet": "xe-dua-sheet.png",
+  "sheet_size": {
+    "w": 4096,
+    "h": 5120
+  },
+  "sheet_bytes": 278588,
+  "sheet_rgba_bytes": 2118707,
+  "sheet_rgba_master": "xe-dua-sheet-rgba.png",
+  "sheet_mode": "P (32-colour FASTOCTREE quantisation of the RGBA master, no dither; body hexes within 1-7 RGB steps of spec — see measured_body_hex_delivered)",
+  "palette16": [
+    "#FDCA14",
+    "#B2DFDB",
+    "#FA7759",
+    "#A4834B",
+    "#FD342D",
+    "#FD2C27",
+    "#A83C41",
+    "#2E354C",
+    "#FD2B26",
+    "#FD2A26",
+    "#B51A23",
+    "#3C1128",
+    "#120D3C",
+    "#10093C",
+    "#120532",
+    "#0B0530"
+  ],
+  "colorways": [
+    "do",
+    "xanh-duong",
+    "vang",
+    "xanh-la",
+    "tim"
+  ],
+  "colorway_hex_body": {
+    "do": "#E5322D",
+    "tim": "#A855F7",
+    "vang": "#FFCF3D",
+    "xanh-duong": "#1E90FF",
+    "xanh-la": "#22C55E"
+  },
+  "measured_body_hex_delivered": {
+    "do": "#E4322D",
+    "xanh-duong": "#1E8FFF",
+    "vang": "#FDCB20",
+    "xanh-la": "#22C45E",
+    "tim": "#AB5CF6"
+  },
+  "ground_y_in_cell": 478,
+  "shadow": "ellipse black ~40% alpha, blurred, baked into every frame under wheels",
+  "notes": "grid 4 cols x 10 rows, rows = <mau>_<state>. idle bob [0,-2,0,+2]px: frame 2 is identical to frame 0, so it shares frame 0's rect (idle col 2 in the sheet is intentionally blank). drive: hub discs rotate 0/90/180/270 deg clockwise, body static. Base car was flipped horizontally: raw art faces LEFT, sprite-request demands facing-right. Delivered sheet is a 32-colour FASTOCTREE quantisation of the RGBA master (2.0 MB -> 276 KB, under the 300 KB budget); RGBA master kept as xe-dua-sheet-rgba.png. Quantisation checked by eye on dark background 2026-11-13; alpha byte-identical across colourways.",
+  "frame_layout": {
+    "rows": {
+      "do_idle": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 0,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 3072,
+          "y": 0,
+          "w": 1024,
+          "h": 512
+        }
+      ],
+      "do_drive": [
+        {
+          "x": 0,
+          "y": 512,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 512,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 2048,
+          "y": 512,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 3072,
+          "y": 512,
+          "w": 1024,
+          "h": 512
+        }
+      ],
+      "xanh-duong_idle": [
+        {
+          "x": 0,
+          "y": 1024,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 1024,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 0,
+          "y": 1024,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 3072,
+          "y": 1024,
+          "w": 1024,
+          "h": 512
+        }
+      ],
+      "xanh-duong_drive": [
+        {
+          "x": 0,
+          "y": 1536,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 1536,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 2048,
+          "y": 1536,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 3072,
+          "y": 1536,
+          "w": 1024,
+          "h": 512
+        }
+      ],
+      "vang_idle": [
+        {
+          "x": 0,
+          "y": 2048,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 2048,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 0,
+          "y": 2048,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 3072,
+          "y": 2048,
+          "w": 1024,
+          "h": 512
+        }
+      ],
+      "vang_drive": [
+        {
+          "x": 0,
+          "y": 2560,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 2560,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 2048,
+          "y": 2560,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 3072,
+          "y": 2560,
+          "w": 1024,
+          "h": 512
+        }
+      ],
+      "xanh-la_idle": [
+        {
+          "x": 0,
+          "y": 3072,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 3072,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 0,
+          "y": 3072,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 3072,
+          "y": 3072,
+          "w": 1024,
+          "h": 512
+        }
+      ],
+      "xanh-la_drive": [
+        {
+          "x": 0,
+          "y": 3584,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 3584,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 2048,
+          "y": 3584,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 3072,
+          "y": 3584,
+          "w": 1024,
+          "h": 512
+        }
+      ],
+      "tim_idle": [
+        {
+          "x": 0,
+          "y": 4096,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 4096,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 0,
+          "y": 4096,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 3072,
+          "y": 4096,
+          "w": 1024,
+          "h": 512
+        }
+      ],
+      "tim_drive": [
+        {
+          "x": 0,
+          "y": 4608,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 1024,
+          "y": 4608,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 2048,
+          "y": 4608,
+          "w": 1024,
+          "h": 512
+        },
+        {
+          "x": 3072,
+          "y": 4608,
+          "w": 1024,
+          "h": 512
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "do_idle": {
+        "fps": 4,
+        "durations_ms": [
+          250,
+          250,
+          250,
+          250
+        ],
+        "loop": true,
+        "frames": 4
+      },
+      "do_drive": {
+        "fps": 8,
+        "durations_ms": [
+          125,
+          125,
+          125,
+          125
+        ],
+        "loop": true,
+        "frames": 4
+      },
+      "xanh-duong_idle": {
+        "fps": 4,
+        "durations_ms": [
+          250,
+          250,
+          250,
+          250
+        ],
+        "loop": true,
+        "frames": 4
+      },
+      "xanh-duong_drive": {
+        "fps": 8,
+        "durations_ms": [
+          125,
+          125,
+          125,
+          125
+        ],
+        "loop": true,
+        "frames": 4
+      },
+      "vang_idle": {
+        "fps": 4,
+        "durations_ms": [
+          250,
+          250,
+          250,
+          250
+        ],
+        "loop": true,
+        "frames": 4
+      },
+      "vang_drive": {
+        "fps": 8,
+        "durations_ms": [
+          125,
+          125,
+          125,
+          125
+        ],
+        "loop": true,
+        "frames": 4
+      },
+      "xanh-la_idle": {
+        "fps": 4,
+        "durations_ms": [
+          250,
+          250,
+          250,
+          250
+        ],
+        "loop": true,
+        "frames": 4
+      },
+      "xanh-la_drive": {
+        "fps": 8,
+        "durations_ms": [
+          125,
+          125,
+          125,
+          125
+        ],
+        "loop": true,
+        "frames": 4
+      },
+      "tim_idle": {
+        "fps": 4,
+        "durations_ms": [
+          250,
+          250,
+          250,
+          250
+        ],
+        "loop": true,
+        "frames": 4
+      },
+      "tim_drive": {
+        "fps": 8,
+        "durations_ms": [
+          125,
+          125,
+          125,
+          125
+        ],
+        "loop": true,
+        "frames": 4
+      }
+    }
+  }
+}

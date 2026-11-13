@@ -1,0 +1,39 @@
+{
+  "sprite": "co-xanh",
+  "game": "chiem-co",
+  "cell": {
+    "w": 512,
+    "h": 512
+  },
+  "anchor": "bottom-centre",
+  "sheet": "co-xanh-sheet.png",
+  "frame_layout": {
+    "rows": {
+      "idle": [
+        {
+          "x": 9,
+          "y": 277,
+          "w": 494,
+          "h": 226
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "idle": {
+        "fps": 4,
+        "durations_ms": [
+          250
+        ],
+        "loop": true,
+        "frames": 1
+      }
+    }
+  },
+  "source": {
+    "type": "AI tu tao + rembg (u2net)",
+    "raw": "raw/media-generation-co-xanh-raw-0-e75aed9a-427b-41f0-abd2-35eaafad5740.png"
+  },
+  "notes": "1 frame tinh; hieu ung vay co bang CSS o overlay. Khong bong duoi chan trong sheet."
+}

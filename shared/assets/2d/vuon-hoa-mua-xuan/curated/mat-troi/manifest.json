@@ -1,0 +1,48 @@
+{
+  "sprite": "mat-troi",
+  "game": "vuon-hoa-mua-xuan",
+  "cell": {
+    "w": 512,
+    "h": 512
+  },
+  "anchor": "bottom-centre",
+  "source": {
+    "kind": "AI tự tạo",
+    "file": "raw/media-generation-mat-troi-raw-0-6aa0104e-ab4f-485c-96b9-a8f30c713d58.png",
+    "cut": "white-cut — rembg u2net bị loại: quầng trắng quanh đĩa + 15/16 tia mờ gần như trong suốt"
+  },
+  "shadow": {
+    "type": "none",
+    "reason": "mặt trời trên trời, không chạm đất"
+  },
+  "sprite_rect": {
+    "x": 8,
+    "y": 13,
+    "w": 496,
+    "h": 491
+  },
+  "frame_layout": {
+    "rows": {
+      "idle": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 512,
+          "h": 512
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "idle": {
+        "fps": 1,
+        "durations_ms": [
+          1000
+        ],
+        "loop": false,
+        "frames": 1
+      }
+    }
+  }
+}

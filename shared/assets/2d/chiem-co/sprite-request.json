@@ -1,0 +1,66 @@
+# Sprite request — game Chiếm Cờ (chiem-co)
+# SSoT số học cho Đợt B, theo docs/research-sprite-gen-2026-11-13.md §3e/§5 (B1).
+# Cờ tĩnh 1 frame: hiệu ứng vẫy đã có bằng CSS ở overlay nên KHÔNG vẽ nhiều frame idle (§3c: breathe/không tham frame).
+
+{
+  "game": "chiem-co",
+  "game_name_vi": "Chiếm Cờ",
+  "cell": { "w": 512, "h": 512 },
+  "anchor": "bottom-centre",
+  "palette_max_colors": 16,
+  "chroma_key": null,
+  "notes": "Nguon anh: AI tu tao (nen trang tron) + rembg cat nen. Co khong can bong duoi chan (treo tren cot). Coi: them bong ellipse mo khi dat tren mat dat trong overlay (xem qa-notes.md).",
+  "sprites": [
+    {
+      "id": "co-xanh",
+      "file": "curated/co-xanh-sheet.png",
+      "manifest": "curated/co-xanh-manifest.json",
+      "raw": "raw/media-generation-co-xanh-raw-0-e75aed9a-427b-41f0-abd2-35eaafad5740.png",
+      "frames_source": "frames/co-xanh.png",
+      "description": "La co vai mau xanh duong, dang vay, chi phan vai (khong cot co)",
+      "states": {
+        "idle": { "frames": 1, "fps": 4, "loop": true, "durations_ms": [250] }
+      }
+    },
+    {
+      "id": "co-do",
+      "file": "curated/co-do-sheet.png",
+      "manifest": "curated/co-do-manifest.json",
+      "raw": "raw/media-generation-co-do-raw-0-8dd4dacb-8a46-45f5-870d-76ffb71db9cf.png",
+      "frames_source": "frames/co-do.png",
+      "description": "La co vai mau do, dang vay, chi phan vai (khong cot co)",
+      "states": {
+        "idle": { "frames": 1, "fps": 4, "loop": true, "durations_ms": [250] }
+      }
+    },
+    {
+      "id": "co-trung-lap",
+      "file": "curated/co-trung-lap-sheet.png",
+      "manifest": "curated/co-trung-lap-manifest.json",
+      "raw": "raw/co-trung-lap-derived.png",
+      "frames_source": "frames/co-trung-lap.png",
+      "description": "La co vai mau xam trung lap, dang vay, chi phan vai (khong cot co). Recolor bake tu co-xanh (desaturate luminance, giu nguyen hinh hoc) theo §3d",
+      "recolor": {
+        "basis": "co-xanh",
+        "method": "luminance desaturate (0.299R + 0.587G + 0.114B), alpha giu nguyen",
+        "substituted": "toan bo tone xanh -> xam cung do sang",
+        "unused_sources": [],
+        "passthrough_colors": "vien dam xanh duong -> xam dam tuong ung"
+      },
+      "states": {
+        "idle": { "frames": 1, "fps": 4, "loop": true, "durations_ms": [250] }
+      }
+    },
+    {
+      "id": "coi",
+      "file": "curated/coi-sheet.png",
+      "manifest": "curated/coi-manifest.json",
+      "raw": "raw/media-generation-coi-raw-0-e9306c7f-b12f-47ea-bcde-4c042b41a898.png",
+      "frames_source": "frames/coi.png",
+      "description": "Coi trong tai mau bac/vang, nhin nghieng",
+      "states": {
+        "idle": { "frames": 1, "fps": 4, "loop": true, "durations_ms": [250] }
+      }
+    }
+  ]
+}

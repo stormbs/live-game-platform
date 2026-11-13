@@ -1,0 +1,40 @@
+{
+  "sprite": "co-trung-lap",
+  "game": "chiem-co",
+  "cell": {
+    "w": 512,
+    "h": 512
+  },
+  "anchor": "bottom-centre",
+  "sheet": "co-trung-lap-sheet.png",
+  "frame_layout": {
+    "rows": {
+      "idle": [
+        {
+          "x": 9,
+          "y": 277,
+          "w": 494,
+          "h": 226
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "idle": {
+        "fps": 4,
+        "durations_ms": [
+          250
+        ],
+        "loop": true,
+        "frames": 1
+      }
+    }
+  },
+  "source": {
+    "type": "recolor bake tu co-xanh (luminance desaturate, alpha giu nguyen byte-identical)",
+    "basis": "frames/co-xanh.png",
+    "raw": "raw/co-trung-lap-derived.png (doi chieu, khong dung truc tiep)"
+  },
+  "notes": "1 frame tinh; hieu ung vay co bang CSS o overlay. Khong bong duoi chan trong sheet."
+}

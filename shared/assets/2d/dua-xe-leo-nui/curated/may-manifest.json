@@ -1,0 +1,40 @@
+{
+  "sprite": "may",
+  "game": "dua-xe-leo-nui",
+  "cell": {
+    "w": 512,
+    "h": 256
+  },
+  "anchor": "centre",
+  "sheet": "may-sheet.png",
+  "sheet_size": {
+    "w": 512,
+    "h": 256
+  },
+  "sheet_bytes": 30214,
+  "source": "Kenney background-elements cloud1.png, CC0",
+  "frame_layout": {
+    "rows": {
+      "static": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 512,
+          "h": 256
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "static": {
+        "fps": 1,
+        "durations_ms": [
+          1000
+        ],
+        "loop": false,
+        "frames": 1
+      }
+    }
+  }
+}

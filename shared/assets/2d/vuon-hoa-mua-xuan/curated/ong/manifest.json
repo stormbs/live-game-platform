@@ -1,0 +1,48 @@
+{
+  "sprite": "ong",
+  "game": "vuon-hoa-mua-xuan",
+  "cell": {
+    "w": 512,
+    "h": 512
+  },
+  "anchor": "bottom-centre",
+  "source": {
+    "kind": "vendor Kenney CC0",
+    "file": "shared/assets-vendor/kenney_platformer-art-deluxe/Extra animations and enemies/Enemy sprites/bee_fly.png",
+    "cut": "không cần — PNG gốc đã trong suốt (md5 trùng byte)"
+  },
+  "shadow": {
+    "type": "none",
+    "reason": "ong bay, không chạm đất"
+  },
+  "sprite_rect": {
+    "x": 225,
+    "y": 462,
+    "w": 61,
+    "h": 42
+  },
+  "frame_layout": {
+    "rows": {
+      "idle": [
+        {
+          "x": 0,
+          "y": 0,
+          "w": 512,
+          "h": 512
+        }
+      ]
+    }
+  },
+  "animation": {
+    "rows": {
+      "idle": {
+        "fps": 1,
+        "durations_ms": [
+          1000
+        ],
+        "loop": false,
+        "frames": 1
+      }
+    }
+  }
+}

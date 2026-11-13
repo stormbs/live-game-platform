@@ -132,7 +132,7 @@
   const $ = (id) => document.getElementById(id);
   const path = location.pathname.replace(/\/$/, '');
   const base = path.replace(/\/dashboard$/, '').replace(/\/index\.html$/, '');
-  const api = (p, o) => fetch(base + p, o).then(r => r.json());
+  const api = (p, o) => fetch(p, o).then(r => r.json());
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   let settings = null;
   function render(s) {
@@ -241,8 +241,8 @@
     req
       .then(r => { $('testMsg').innerHTML = r.success ? '<span class="ok">OK: ' + esc(JSON.stringify(r).slice(0, 300)) + '</span>' : '<span class="err">Bật demoMode trước khi test.</span>'; poll(); });
   });
-  $('ovLink').textContent = location.origin + base + '/overlay.html';
-  $('whLink').textContent = location.origin + base + '/api/webhook';
+  $('ovLink').textContent = location.origin + '/overlay.html';
+  $('whLink').textContent = location.origin + '/api/webhook';
 })();
 </script>
 </body>
