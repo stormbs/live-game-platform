@@ -51,8 +51,10 @@
   .lane { position: absolute; left: 0; right: 0; height: 200px; border-bottom: 3px dashed rgba(255,255,255,.45); }
   .lane .track { position: absolute; left: 30px; right: 60px; top: 118px; height: 14px; border-radius: 7px; background: #4a4a4a; box-shadow: inset 0 2px 4px rgba(0,0,0,.55); }
   .lane .track::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 3px; margin-top: -1px; background: repeating-linear-gradient(90deg, #fff 0 24px, transparent 24px 48px); opacity: .85; }
-  .car { position: absolute; top: 46px; transition: left 1s linear; z-index: 2; text-align: center; width: 170px; margin-left: -85px; }
-  .car .tag { background: rgba(0,0,0,.65); border-radius: 12px; padding: 4px 10px; font-size: 23px; font-weight: 800; white-space: nowrap; display: inline-block; max-width: 170px; overflow: hidden; text-overflow: ellipsis; }
+  .car { position: absolute; top: 46px; transition: left 1s linear; z-index: 2; text-align: center; width: 200px; margin-left: -100px; }
+  .car .tag { background: rgba(0,0,0,.65); border-radius: 12px; padding: 4px 10px 4px 4px; font-size: 23px; font-weight: 800; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0,0,0,.6); }
+  .car .tag .tag-ava, .car .tag .tag-ava-fb { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex: none; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: #222; border: 2px solid rgba(255,255,255,.85); }
+  .car .tag .tag-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   .car .body { position: relative; width: 132px; height: 66px; margin: 6px auto 0; filter: drop-shadow(0 8px 6px rgba(0,0,0,.35)); }
   .car .body .chassis { position: absolute; left: 0; right: 0; bottom: 14px; height: 40px; border-radius: 20px 28px 10px 14px; background: linear-gradient(180deg, var(--car-c, #FFCF3D), var(--car-c2, #D9A400)); box-shadow: 0 6px 10px rgba(0,0,0,.35); }
   .car .body .cabin { position: absolute; left: 40px; top: 0; width: 52px; height: 28px; border-radius: 14px 18px 4px 4px; background: linear-gradient(180deg, #BFE9FF, #5FA8D3); border: 2px solid rgba(0,0,0,.3); }
@@ -68,6 +70,22 @@
   .car.running .body .smoke i:nth-child(2) { animation-delay: .47s; }
   .car.running .body .smoke i:nth-child(3) { animation-delay: .93s; }
   @keyframes smoke { from { transform: translate(0, 0) scale(.8); opacity: .95; } to { transform: translate(-78px, -52px) scale(2.4); opacity: 0; } }
+  /* Sprite xe 2D (Đợt B): xe-dua-sheet.png 4096x5120, cell 1024x512, hiển thị 176x88 (tỉ lệ 2:1).
+     background-size = sheet thu nhỏ theo tỉ lệ 176/1024; background-position do JS tickSprite() cập nhật.
+     Xe CSS (.body) giữ nguyên làm fallback khi ảnh lỗi/thiếu (chỉ ẩn khi .sprite-on). */
+  .car .sprite { display: none; position: relative; width: 176px; height: 88px; margin: 6px auto 0;
+    background-image: url('/shared/assets/2d/dua-xe-leo-nui/curated/xe-dua-sheet.png');
+    background-size: 704px 880px; background-repeat: no-repeat; filter: drop-shadow(0 8px 6px rgba(0,0,0,.35)); }
+  .car.sprite-on .sprite { display: block; }
+  .car.sprite-on .body { display: none; }
+  .car .sprite.driving { animation: sprite-jitter .25s ease-in-out infinite alternate; }
+  @keyframes sprite-jitter { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+  .car .sprite .smoke { position: absolute; left: -12px; bottom: 2px; width: 0; height: 0; }
+  .car .sprite .smoke i { position: absolute; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.9); box-shadow: 0 0 12px rgba(255,255,255,.9), 0 0 3px rgba(0,0,0,.25); opacity: 0; }
+  .car.running .sprite .smoke i { animation: smoke 1.4s ease-out infinite; }
+  .car.running .sprite .smoke i:nth-child(2) { animation-delay: .47s; }
+  .car.running .sprite .smoke i:nth-child(3) { animation-delay: .93s; }
+  .car.boost .sprite .smoke i { width: 34px; height: 34px; background: rgba(255,255,255,.95); }
   .car.boost { animation: boost .6s ease; }
   @keyframes boost { 0% { transform: rotate(-5deg) scale(1.07); } 100% { transform: rotate(0deg) scale(1); } }
   .car.boost .body .smoke i { width: 34px; height: 34px; background: rgba(255,255,255,.95); }
@@ -135,8 +153,38 @@ window.addEventListener('resize', fit); fit();
   const $ = (id) => document.getElementById(id);
   const CAR_EMOJI = { streamer: '🏎️', racer: '🏎️' };
   const CAR_COLORS = [['#FFCF3D', '#D9A400'], ['#1E90FF', '#0B5FA5'], ['#A855F7', '#6D28D9'], ['#22C55E', '#15803D'], ['#F97316', '#C2410C']];
+  // Sprite xe 2D (Đợt B) — sheet 4096x5120, cell 1024x512, 5 colorway x (idle 4f + drive 4f).
+  // Map màu theo slot xe: slot 0 vàng, 1 xanh-duong, 2 tím, 3 xanh-lá khớp CAR_COLORS;
+  // slot 4 cam (#F97316) KHÔNG có sprite -> map sang colorway 'do' (#E5322D). Không bake thêm cam.
+  const SPRITE_SHEET = '/shared/assets/2d/dua-xe-leo-nui/curated/xe-dua-sheet.png';
+  const SPRITE = {
+    colorways: ['vang', 'xanh-duong', 'tim', 'xanh-la', 'do'],
+    rows: { 'do': { idle: 0, drive: 512 }, 'xanh-duong': { idle: 1024, drive: 1536 }, 'vang': { idle: 2048, drive: 2560 }, 'xanh-la': { idle: 3072, drive: 3584 }, 'tim': { idle: 4096, drive: 4608 } },
+    frames: { idle: [0, 1024, 0, 3072], drive: [0, 1024, 2048, 3072] }, // idle frame 2 dùng chung rect frame 0 (theo manifest)
+    dispW: 176, cellW: 1024
+  };
+  let spriteOk = false;
+  const spriteImg = new Image();
+  spriteImg.onload = () => { spriteOk = true; if (lastState) render(lastState); };
+  spriteImg.onerror = () => { spriteOk = false; };
+  spriteImg.src = SPRITE_SHEET;
+  // Đổi frame sprite theo thời gian thực (không giữ state riêng nên render lại cũng không lệch nhịp):
+  // drive 8fps (125ms/frame) khi đang đua, idle 4fps (250ms/frame) khi chờ.
+  function tickSprite() {
+    const now = Date.now();
+    const els = document.querySelectorAll('#lanes .car .sprite');
+    for (let k = 0; k < els.length; k++) {
+      const el = els[k];
+      const state = el.dataset.state === 'drive' ? 'drive' : 'idle';
+      const step = state === 'drive' ? 125 : 250;
+      const f = Math.floor(now / step) % 4;
+      const row = SPRITE.rows[el.dataset.colorway] || SPRITE.rows['vang'];
+      const scale = SPRITE.dispW / SPRITE.cellW;
+      el.style.backgroundPosition = (-SPRITE.frames[state][f] * scale) + 'px ' + (-row[state] * scale) + 'px';
+    }
+  }
+  setInterval(tickSprite, 125);
   let prevMeters = {};
-  const CAR_DOT = ['🔵', '🔴', '🟣', '🟢', '🟠'];
   let lastState = null;
   let voiceOn = true, voiceQueue = [], speaking = false;
   let lastCheerAt = 0;
@@ -192,17 +240,26 @@ window.addEventListener('resize', fit); fit();
       const top = top0 + i * (laneH + laneGap);
       const pct = Math.min(100, Math.max(0, 100 * c.meters / s.trackLength));
       const leftPct = 4 + pct * 0.88; // 4% → 92% (chừa chỗ cờ đích)
-      const dot = c.type === 'streamer' ? '🟡' : (CAR_DOT[(s.top || []).findIndex(t => t.uid === c.uid)] || '🔵');
       const winCls = s.winner && s.winner.uid === c.uid ? ' win' : (s.winner && s.winner.type === 'streamer' && c.type === 'streamer' ? ' win' : '');
       const cc = CAR_COLORS[i % CAR_COLORS.length];
       const gained = (prevMeters[c.uid] || 0) < c.meters;
       const boostCls = gained ? ' boost' : '';
       const runCls = s.phase === 'racing' ? ' running' : '';
+      const cw = SPRITE.colorways[i % SPRITE.colorways.length];
+      const sprState = s.phase === 'racing' ? 'drive' : 'idle';
+      const spriteCls = spriteOk ? ' sprite-on' : '';
+      // Avatar + tên ngay trên đầu xe: img thật 30px, lỗi/thiếu thì fallback chữ cái đầu (streamer: 🚗).
+      const fbLetter = c.type === 'streamer' ? '🚗' : (c.name ? esc(c.name.charAt(0).toUpperCase()) : '🏎️');
+      const tagAva = c.avatar
+        ? '<img class="tag-ava" src="' + c.avatar + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'inline-flex\'"><span class="tag-ava-fb" style="display:none">' + fbLetter + '</span>'
+        : '<span class="tag-ava-fb">' + fbLetter + '</span>';
       html += '<div class="lane" style="top:' + top + 'px"><div class="track"></div>'
-        + '<div class="car' + winCls + runCls + boostCls + '" style="left:' + leftPct + '%;--car-c:' + cc[0] + ';--car-c2:' + cc[1] + '"><div class="tag">' + dot + ' ' + esc(c.name) + '</div>'
+        + '<div class="car' + winCls + runCls + boostCls + spriteCls + '" style="left:' + leftPct + '%;--car-c:' + cc[0] + ';--car-c2:' + cc[1] + '"><div class="tag">' + tagAva + '<span class="tag-name">' + esc(c.name) + '</span></div>'
+        + '<div class="sprite' + (sprState === 'drive' ? ' driving' : '') + '" data-colorway="' + cw + '" data-state="' + sprState + '"><span class="smoke"><i></i><i></i><i></i></span></div>'
         + '<div class="body"><div class="cabin"></div><div class="chassis"></div><span class="wheel fl"></span><span class="wheel fr"></span><span class="smoke"><i></i><i></i><i></i></span></div><div class="m">' + c.meters + 'm</div></div></div>';
     });
     lanes.innerHTML = html;
+    tickSprite();
     prevMeters = {};
     cars.forEach((c) => { prevMeters[c.uid] = c.meters; });
     // Cọc mốc 25% / 50% / 75% quãng đường (tính theo trackLength hiện tại, mặc định 500m → 125/250/375m).
