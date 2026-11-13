@@ -1,6 +1,6 @@
 # Meme faces — nguồn + bản quyền
 
-Bộ 8 mặt meme dùng làm nhân vật người chơi trong các game LIVE (thay emoji/chữ cái).
+Bộ 12 mặt meme dùng làm nhân vật người chơi trong các game LIVE (thay emoji/chữ cái).
 Ảnh GỐC (không phải vẽ lại) — Chủ tịch chốt 2026-11-14 00:21: "Dùng đúng ảnh meme
 gốc (có rủi ro bản quyền)". CEO đã báo trước rủi ro, Chủ tịch chấp nhận.
 **Đa dạng (Chủ tịch 2026-11-14 00:23): mỗi người chơi 1 mặt khác nhau theo hash
@@ -19,6 +19,10 @@ tên/uid — KHÔNG phải mọi người chung 1 mặt.** 8 mặt dưới đây
 | me_gusta | https://toppng.com/uploads/preview/me-gusta-meme-render-11550201669b2zs2hittg.png | Me Gusta. Bản talkie-ai bị hở viền (flood lọt vào mặt dù dilate 15px) nên dùng bản toppng này — flood-fill v2 chạy đúng. |
 | yuno | https://www.pikpng.com/pngl/m/66-663732_bet-you-think-jarjar-binks-was-a-good.png | Mặt vàng "Y U NO" (mắt trợn, miệng há). File về là JPEG; nền checkerboard đã cắt bằng flood-fill v1 (viền đen dày bịt kín nên không lọt). |
 | cereal | https://w7.pngwing.com/pngs/459/136/png-transparent-breakfast-cereal-rage-comic-internet-meme-cereal-guy-miscellaneous-white-food.png | Cereal Guy (ăn ngũ cốc, mặt lạnh). Nền checkerboard đã cắt bằng flood-fill v1. |
+| poker | https://www.pngitem.com/pimgs/m/97-974536_rage-comic-poker-face-hd-png-download.png | Poker Face (mặt đơ, 2 mắt chấm + miệng thẳng + cuống cổ). Nền trắng đã cắt bằng flood-fill v2. |
+| crying | https://e7.pngegg.com/pngimages/612/296/png-clipart-rage-comic-internet-meme-humour-grumpy-cat-rage-love-white-thumbnail.png | Mặt khóc "crying rage" (nước mắt đỏ, tay che miệng, sticker viền trắng). Nền checkerboard đã cắt bằng flood-fill v2. |
+| okay | https://www.kindpng.com/picc/m/97-974772_okay-face-meme-png-transparent-png.png | Okay Guy (mặt cam chịu, shading xám). File gốc có chữ đỏ "Okay" ở góc phải — đã cắt bỏ bằng cách giữ lại component opaque lớn nhất (mặt). Nền đã cắt bằng flood-fill v2. |
+| angry | https://www.kindpng.com/picc/b/637-6374287_angry-face-meme-png-transparent-angry-meme-png.png | Mặt giận mắt đỏ, tay với về phía trước. File gốc đã có nền trong suốt thật, dùng nguyên. |
 
 ## Xử lý
 

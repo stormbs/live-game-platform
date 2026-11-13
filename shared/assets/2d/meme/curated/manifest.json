@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "size": 512,
   "faces": [
     {
@@ -41,6 +41,26 @@
       "id": "cereal",
       "file": "cereal.png",
       "source": "raw/cereal_clean.png"
+    },
+    {
+      "id": "poker",
+      "file": "poker.png",
+      "source": "raw/poker_clean.png"
+    },
+    {
+      "id": "crying",
+      "file": "crying.png",
+      "source": "raw/crying_clean.png"
+    },
+    {
+      "id": "okay",
+      "file": "okay.png",
+      "source": "raw/okay_clean2.png"
+    },
+    {
+      "id": "angry",
+      "file": "angry.png",
+      "source": "raw/angry.png"
     }
   ]
 }

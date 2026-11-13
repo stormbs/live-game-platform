@@ -65,8 +65,8 @@
      viền màu đội) — không cắt tròn để mặt meme hiện trọn vẹn. */
   .puller .av { width: 76px; height: 76px; border-radius: 16px; border: 3px solid #fff; margin: 0 auto; background: transparent; display: flex; align-items: center; justify-content: center; position: relative; }
   .puller .av img { width: 100%; height: 100%; object-fit: contain; }
-  /* Tên rộng hơn khung người kéo (margin âm 2 bên) để không bị cắt "Demo Ng…". */
-  .puller .nm { font-size: 15px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 -10px 2px; }
+  /* Tên vừa khung người kéo (13px + margin âm 6px): đủ chỗ, không chạm tên bên cạnh. */
+  .puller .nm { font-size: 13px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 -6px 2px; }
   /* Thân người kéo: khối áo màu đội (màu set inline), nghiêng theo animation tug. */
   .puller .body { width: 54px; height: 32px; margin: 4px auto 0; border-radius: 16px 16px 8px 8px; background: #888; box-shadow: inset 0 -7px 0 rgba(0,0,0,.28), 0 2px 3px rgba(0,0,0,.5); transform-origin: 50% 100%; }
   .puller .fc { font-size: 15px; font-weight: 700; color: #ffd94d; text-shadow: 0 1px 3px #000; }
@@ -74,13 +74,13 @@
   /* Nhân vật kéo dây: nghiêng người về phía đội mình (ra sau, bám dây), giật lùi theo nhịp. */
   .team-side.left .puller .av, .team-side.left .puller .body { animation: tug-left 1.4s ease-in-out infinite; }
   .team-side.right .puller .av, .team-side.right .puller .body { animation: tug-right 1.4s ease-in-out infinite; }
-  @keyframes tug-left { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(-8px) rotate(-9deg); } 60% { transform: translateX(-3px) rotate(-4deg); } }
-  @keyframes tug-right { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(8px) rotate(9deg); } 60% { transform: translateX(3px) rotate(4deg); } }
+  @keyframes tug-left { 0%, 100% { transform: translateX(-4px) rotate(-11deg); } 30% { transform: translateX(-11px) rotate(-19deg); } 60% { transform: translateX(-6px) rotate(-14deg); } }
+  @keyframes tug-right { 0%, 100% { transform: translateX(4px) rotate(11deg); } 30% { transform: translateX(11px) rotate(19deg); } 60% { transform: translateX(6px) rotate(14deg); } }
   /* Đội đang dẫn lực: kéo nhanh + mạnh hơn. */
   .lead-xanh .team-side.left .puller .av, .lead-xanh .team-side.left .puller .body { animation: tug-left-hard .7s ease-in-out infinite; }
   .lead-do .team-side.right .puller .av, .lead-do .team-side.right .puller .body { animation: tug-right-hard .7s ease-in-out infinite; }
-  @keyframes tug-left-hard { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(-15px) rotate(-14deg); } 60% { transform: translateX(-6px) rotate(-7deg); } }
-  @keyframes tug-right-hard { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(15px) rotate(14deg); } 60% { transform: translateX(6px) rotate(7deg); } }
+  @keyframes tug-left-hard { 0%, 100% { transform: translateX(-8px) rotate(-16deg); } 30% { transform: translateX(-18px) rotate(-24deg); } 60% { transform: translateX(-10px) rotate(-19deg); } }
+  @keyframes tug-right-hard { 0%, 100% { transform: translateX(8px) rotate(16deg); } 30% { transform: translateX(18px) rotate(24deg); } 60% { transform: translateX(10px) rotate(19deg); } }
   /* Giật mạnh 1 nhịp khi lực đội tăng (JS thêm .pull-burst vào .pullers). */
   .team-side.left .pullers.pull-burst .puller { animation: burst-left .45s ease; }
   .team-side.right .pullers.pull-burst .puller { animation: burst-right .45s ease; }
@@ -325,11 +325,11 @@ function showBanner(title, text, ms) {
   if (ms) setTimeout(() => b.classList.remove('on'), ms);
 }
 
-function pullerHtml(p, color, team) {
-  // Nhân vật MEME: mặt meme làm ĐẦU nhân vật (mỗi người 1 mặt khác nhau,
-  // hash theo uid/tên qua MemeFaces) + thân là khối áo màu đội.
+function pullerHtml(p, color, team, allPlayers) {
+  // Nhân vật MEME: mặt meme làm ĐẦU nhân vật (mỗi người 1 mặt khác nhau
+  // trong toàn game qua faceImgIn — tránh trùng mặt) + thân là khối áo màu đội.
   var av = (window.MemeFaces
-    ? window.MemeFaces.faceImg(p, 'meme-face')
+    ? window.MemeFaces.faceImgIn(p, allPlayers || [p], 'meme-face')
     : '<span>' + escapeHtml((p.name || '?')[0].toUpperCase()) + '</span>');
   return '<div class="puller"><div class="nm">' + escapeHtml(p.name) + '</div>' +
     '<div class="av" style="border-color:' + color + '">' + av + '</div>' +
@@ -398,9 +398,11 @@ function render(s) {
   if (Math.abs(s.flagPct) >= 95) cheerSound(); // cờ chạm vạch đích → hò reo
   flag.style.left = flagLeft + 'px';
 
-  document.getElementById('pullers-xanh').innerHTML = s.teams.xanh.pullers.slice(0, 8).map((p) => pullerHtml(p, cx, 'xanh')).join('') ||
+  // Mặt meme khác nhau toàn game: gán theo danh sách chung cả 2 đội.
+  const allPullers = (s.teams.xanh.pullers || []).concat(s.teams.do.pullers || []);
+  document.getElementById('pullers-xanh').innerHTML = s.teams.xanh.pullers.slice(0, 8).map((p) => pullerHtml(p, cx, 'xanh', allPullers)).join('') ||
     '<div class="empty" style="color:#cfe6ff;">Chưa có ai — bình luận "xanh" để vào đội!</div>';
-  document.getElementById('pullers-do').innerHTML = s.teams.do.pullers.slice(0, 8).map((p) => pullerHtml(p, cd, 'do')).join('') ||
+  document.getElementById('pullers-do').innerHTML = s.teams.do.pullers.slice(0, 8).map((p) => pullerHtml(p, cd, 'do', allPullers)).join('') ||
     '<div class="empty" style="color:#ffd3d6;">Chưa có ai — bình luận "đỏ" để vào đội!</div>';
   const extraX = s.teams.xanh.total - s.teams.xanh.pullers.slice(0, 8).length;
   document.getElementById('bench-xanh').textContent =
