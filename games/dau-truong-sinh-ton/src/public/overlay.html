@@ -26,6 +26,29 @@
   .arena { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 960px; height: 900px; border-radius: 50%; background: radial-gradient(circle, #3d5a3a 0%, #2c4429 60%, #1e2f1c 100%); border: 6px solid #8a6d3b; box-shadow: inset 0 0 60px rgba(0,0,0,.5); }
   .zone-ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 5px solid rgba(255, 60, 60, .9); border-radius: 50%; box-shadow: 0 0 30px rgba(255, 0, 0, .5), inset 0 0 40px rgba(255, 0, 0, .25); pointer-events: none; transition: width 1s linear, height 1s linear; }
   .fighter { position: absolute; width: 130px; margin-left: -65px; margin-top: -82px; text-align: center; z-index: 6; }
+  /* Đông người (>14): thu nhỏ fighter để tên/avatar không chồng nhau —
+     vòng tròn rx 400/ry 340 chỉ đủ chỗ ~97px/người khi đủ 24 chiến binh. */
+  .arena-wrap.crowded .fighter { width: 104px; margin-left: -52px; }
+  .arena-wrap.crowded .fighter .nm { font-size: 17px; max-width: 100px; }
+  .arena-wrap.crowded .fighter .av-wrap, .arena-wrap.crowded .fighter .av { width: 36px; height: 36px; }
+  .arena-wrap.crowded .fighter .av-fb { font-size: 18px; }
+  .arena-wrap.crowded .fighter .wp { font-size: 46px; }
+  .arena-wrap.crowded .fighter .hpnum { font-size: 14px; }
+  /* Trọng tài đứng góc dưới-phải đấu trường (ngoài vòng tròn fighter),
+     phất cờ + bình luận theo sự kiện thật (down / match-win / zone). */
+  .referee { position: absolute; right: 16px; bottom: 10px; z-index: 7; text-align: center; width: 190px; }
+  .ref-bubble { background: rgba(255,255,255,.95); color: #222; font-size: 20px; font-weight: 800; line-height: 1.3; border-radius: 14px; padding: 8px 12px; margin-bottom: 6px; box-shadow: 0 3px 10px rgba(0,0,0,.4); min-height: 56px; display: flex; align-items: center; justify-content: center; }
+  .ref-body { font-size: 72px; line-height: 1; position: relative; display: inline-block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+  .ref-flag { position: absolute; right: -28px; top: -6px; font-size: 44px; display: inline-block; }
+  .referee.waving .ref-flag { animation: flagWave .5s ease-in-out 4; }
+  @keyframes flagWave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-28deg); } }
+  .ref-name { font-size: 19px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 4px #000; margin-top: 2px; }
+  /* Bảng hướng dẫn chơi: dải gọn giữa infobar và đấu trường (vùng trống
+     trên miệng vòng tròn — không che fighter, không che bảng top). Số mặc
+     định = defaultSettings trong engine.js; render() đồng bộ lại theo
+     s.settings nên đổi setting ở dashboard vẫn hiển thị đúng. */
+  .howto { position: absolute; top: 238px; left: 30px; width: 1020px; z-index: 6; background: rgba(0,0,0,.5); border: 2px solid rgba(255,217,77,.55); border-radius: 14px; padding: 8px 16px; font-size: 19px; font-weight: 700; line-height: 1.4; text-align: center; text-shadow: 0 1px 3px #000; }
+  .howto b { color: #ffd94d; }
   /* Idle: bob nhẹ lên xuống (chỉ transform) — chạy trên lớp trong để không
      xung đột với lunge / giật lùi / ngã ở lớp ngoài .fighter. */
   .fighter:not(.down) .fbody { animation: bob 1.8s ease-in-out infinite; }
@@ -41,7 +64,7 @@
   @keyframes hurtShake { 0% { transform: translate(0, 0); opacity: 1; } 30% { transform: translate(calc(var(--lx, 0) * -12px), calc(var(--ly, 0) * -12px)); opacity: .55; } 100% { transform: translate(0, 0); opacity: 1; } }
   .fighter.hurt .av-fb, .fighter.hurt .av-img { border-color: #ff3b30; box-shadow: 0 0 14px rgba(255, 59, 48, .9); }
   .fighter .wp { font-size: 56px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
-  .fighter .nm { font-size: 19px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 6px rgba(0,0,0,.85), 0 2px 8px rgba(0,0,0,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fighter .nm { font-size: 19px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 6px rgba(0,0,0,.85), 0 2px 8px rgba(0,0,0,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 128px; background: rgba(0,0,0,.55); padding: 1px 8px; border-radius: 9px; }
   /* Avatar tròn 44px ngay dưới tên; chữ cái đầu tên làm fallback khi không
      có avatar thật (demo) hoặc ảnh lỗi — img lỗi tự gỡ để lộ chữ cái. */
   .fighter .av-wrap { position: relative; width: 44px; height: 44px; margin: 2px auto 0; }
@@ -87,7 +110,7 @@
 <div class="demo-note" id="demo-note"></div>
 <header>
   <h1>⚔️ ĐẤU TRƯỜNG SINH TỒN ⚔️</h1>
-  <div class="sub" id="round-line">Bình luận "tham gia" để vào trận — tim đánh ngẫu nhiên, bình luận tên địch để tập trung đánh</div>
+  <div class="sub" id="round-line">Bình luận “tham gia” để vào trận — người sống sót cuối cùng thắng</div>
   <div class="infobar">
     <span id="match-label">Trận 1 · Chờ người chơi</span>
     <span id="timer"></span>
@@ -95,10 +118,22 @@
   </div>
 </header>
 
+<div class="howto" id="howto">
+  <div>💬 Bình luận “tham gia” để vào trận · <b><span id="g-hp">100</span> HP</b> · tối đa <b><span id="g-max">24</span></b> chiến binh</div>
+  <div>❤️ 1 tim = <b>−<span id="g-tap">2</span> HP</b> ngẫu nhiên · 🎯 Bình luận tên địch = <b>−<span id="g-cmt">3</span> HP</b> · 💙 Follow <b>+<span id="g-fol">10</span> HP</b> (1 lần/trận)</div>
+  <div>🎁 1 xu = <b>+1 sát thương</b> đòn sau (tối đa <b>+<span id="g-bonus">20</span></b>) · quà ≥<b><span id="g-gcoins">100</span> xu</b> hồi <b>+<span id="g-ghp">20</span> HP</b></div>
+  <div>⭕ Vòng bo sau <b><span id="g-zone">3</span> phút</b>, mỗi <b><span id="g-zint">10</span>s −1 HP</b> · 👑 còn 1 người sống (hoặc nhiều HP nhất sau <b><span id="g-dur">10</span> phút</b>) thì thắng</div>
+</div>
+
 <div class="arena-wrap" id="arena-wrap">
   <div class="arena"></div>
   <div class="zone-ring" id="zone-ring" style="width:960px; height:900px;"></div>
   <div id="fighters"></div>
+  <div class="referee" id="referee">
+    <div class="ref-bubble" id="ref-bubble">⚔️ Ai sẽ sống sót cuối cùng?</div>
+    <div class="ref-body">🧑‍⚖️<span class="ref-flag" id="ref-flag">🏁</span></div>
+    <div class="ref-name">TRỌNG TÀI</div>
+  </div>
 </div>
 <div class="queue-line" id="queue-line"></div>
 <div class="side">
@@ -196,8 +231,40 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+function updateGuide(st) {
+  // Đồng bộ số trên bảng hướng dẫn theo settings thật (mặc định trong HTML
+  // đã = defaultSettings của engine.js; đổi setting ở dashboard vẫn đúng).
+  const g = (st && st.settings) || {};
+  const set = (id, v) => { const e = document.getElementById(id); if (e && Number.isFinite(Number(v))) e.textContent = v; };
+  set('g-hp', g.startHp);
+  set('g-max', g.maxFighters);
+  set('g-dur', Math.round(g.matchDurationS / 60));
+  set('g-tap', g.tapDamage);
+  set('g-cmt', g.commentDamage);
+  set('g-fol', g.followHealHp);
+  set('g-bonus', g.maxBonus);
+  set('g-gcoins', g.giftHealCoins);
+  set('g-ghp', g.giftHealHp);
+  set('g-zone', Math.round(g.zoneAfterS / 60));
+  set('g-zint', g.zoneIntervalS);
+}
+let refTimer = null;
+function refSay(text, ms) {
+  // Trọng tài phất cờ + nói 1 câu theo sự kiện thật, rồi về câu mặc định.
+  const b = document.getElementById('ref-bubble');
+  const r = document.getElementById('referee');
+  if (!b || !r) return;
+  b.textContent = text;
+  r.classList.remove('waving');
+  void r.offsetWidth; // chạy lại animation phất cờ khi sự kiện liên tiếp
+  r.classList.add('waving');
+  if (refTimer) clearTimeout(refTimer);
+  refTimer = setTimeout(() => { b.textContent = '⚔️ Ai sẽ sống sót cuối cùng?'; r.classList.remove('waving'); }, ms || 4000);
+}
+
 function render(s) {
   lastState = s;
+  updateGuide(s);
   // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
   if (window.StromMusic) window.StromMusic.sync({ mood: 'battle', enabled: true, volume: 50, energy: (s.phase === 'spotlight' || (s.phase === 'fighting' && s.zoneActive)) ? 2 : (s.phase === 'fighting' ? 1 : 0) });
   voiceOn = s.settings.voiceEnabled !== false;
@@ -230,11 +297,15 @@ function render(s) {
   const cx = 540, cy = 500, rx = 400, ry = 340;
   const wrap = document.getElementById('fighters');
   if (n === 0) {
+    wrap.classList.remove('crowded');
     Object.keys(fighterEls).forEach((uid) => { fighterEls[uid].remove(); delete fighterEls[uid]; delete fighterCache[uid]; delete animUntil[uid]; });
     wrap.innerHTML = '<div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:28px; font-weight:800; text-align:center; text-shadow:0 2px 6px #000;">Chưa có chiến binh nào<br>Bình luận "tham gia" để vào trận!</div>';
     fightersPlaceholderOn = true;
   } else {
     if (fightersPlaceholderOn) { wrap.innerHTML = ''; fightersPlaceholderOn = false; }
+    // Đông người: thu nhỏ fighter (CSS .crowded) + fighter ở hàng dưới
+    // (y lớn) vẽ trên fighter hàng trên để tên/avatar không bị che khuất.
+    wrap.classList.toggle('crowded', n > 14);
     const seen = {};
     s.fighters.forEach((f, i) => {
       const ang = -Math.PI / 2 + (n > 1 ? (i / n) * Math.PI * 2 : 0);
@@ -265,6 +336,7 @@ function render(s) {
       el.className = cls;
       el.style.left = x + 'px';
       el.style.top = y + 'px';
+      el.style.zIndex = String(6 + Math.round(y / 60));
       el.style.setProperty('--lx', (dx / len).toFixed(3));
       el.style.setProperty('--ly', (dy / len).toFixed(3));
     });
@@ -339,9 +411,14 @@ socket.on('hit', (d) => {
 });
 socket.on('down', (d) => {
   if (d && d.uid && fighterEls[d.uid]) fighterEls[d.uid].classList.add('down'); // ngã ngay, không chờ state-update
-  if (d && d.name) playTts(d.name + ' đã gục!');
+  if (d && d.name) { playTts(d.name + ' đã gục!'); refSay('💀 ' + d.name + ' đã gục!', 4000); }
 });
-socket.on('match-win', (d) => { if (d && d.name) playTts(d.name + ' thắng trận!'); });
+socket.on('match-win', (d) => {
+  if (d && d.name) { playTts(d.name + ' thắng trận!'); refSay('👑 ' + d.name + ' thắng trận!', 6000); }
+  else refSay('🤝 Trận hòa — không ai sống sót!', 5000);
+});
+socket.on('zone', () => refSay('⭕ Vòng bo siết! Mọi người −1 HP!', 4000));
+socket.on('match-start', () => refSay('🔥 Trận đấu bắt đầu!', 4000));
 
 fetch('/api/state').then((r) => r.json()).then((s) => {
   render(s);
