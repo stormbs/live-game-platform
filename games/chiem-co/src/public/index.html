@@ -137,8 +137,8 @@
   const path = location.pathname.split('/').filter(Boolean);
   const username = path[2] || 'live';
   const apiBase = `/o/chiem-co/${username}`;
-  document.getElementById('overlay-link').href = apiBase + '/overlay';
-  document.getElementById('demo-link').href = apiBase + '/overlay?demo=1';
+  document.getElementById('overlay-link').href = apiBase;
+  document.getElementById('demo-link').href = apiBase + '?demo=1';
   let state = null;
 
   async function api(p, body) {

@@ -239,8 +239,9 @@ async function testCall(kind, extra) {
 $('demo-toggle').addEventListener('change', async (e) => {
   await api('/api/settings', { demoMode: e.target.checked });
 });
-$('overlay-url').textContent = location.pathname.replace(/\/index\.html$/, '/overlay.html');
-$('webhook-url').textContent = location.pathname.replace(/\/index\.html$/, '') + '/api/webhook';
+$('overlay-url').textContent = location.pathname.replace(/^\/room\//, '/o/');
+// transformText viết lại literal '/api/webhook' thành /o/<game>/<user>/api/webhook nên không cộng thêm prefix ở đây.
+$('webhook-url').textContent = '/api/webhook';
 socket.on('state-update', render);
 fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
 </script>

@@ -273,6 +273,7 @@ async function loadTikfinity() {
   try {
     const r = await fetch('/api/tikfinity-actions');
     const d = await r.json();
+    if (d.webhookUrl) { $('webhook-url').textContent = d.webhookUrl.replace(location.origin, ''); $('webhook-full').textContent = d.webhookUrl; }
     if (Array.isArray(d.actions)) {
       tikUrls = {};
       d.actions.forEach((a) => { tikUrls[a.key] = a.url; });
@@ -293,8 +294,6 @@ $('demo-toggle').addEventListener('change', async (e) => {
 const roomPath = location.pathname.replace(/\/index\.html$/, '');
 const overlayPath = roomPath.replace(/^\/room\//, '/o/');
 $('overlay-url').textContent = overlayPath;
-$('webhook-url').textContent = overlayPath + '/api/webhook';
-$('webhook-full').textContent = location.origin + overlayPath + '/api/webhook';
 $('guide-link').href = '/huong-dan-tikfinity?game=keo-co&username=' + encodeURIComponent(location.pathname.split('/')[3] || '');
 socket.on('state-update', render);
 fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
