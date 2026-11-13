@@ -12,7 +12,7 @@
     transform-origin:center center;
     /* (v8) Nền trống đồng Đông Sơn: ảnh mặt trống phủ kín khung, phủ thêm
        lớp tối để bản đồ 4 màu nổi lên. */
-    background:#050914 url(/trong-dong-bg.jpg) center center / cover no-repeat; }
+    background:#050914 url(trong-dong-bg.jpg) center center / cover no-repeat; }
   #stage::before { content:""; position:absolute; inset:0; pointer-events:none; z-index:1;
     background:radial-gradient(ellipse at 50% 42%, rgba(3,6,15,.10) 0%, rgba(3,6,15,.30) 62%, rgba(3,6,15,.50) 100%); }
   /* Bố cục mới (v8): header trên cùng; dưới là hàng ngang — bản đồ bên
@@ -23,25 +23,32 @@
      gom về ĐOẠN GIỮA (align-items:center) — không còn bảng nào kéo dài
      hết chiều cao hay 1 cái ở đầu 1 cái ở cuối; bản đồ (mapArea) giữ
      nguyên cao hết khung (align-self:stretch) nên không bị che. */
-  #mainRow { position:absolute; top:158px; left:0; right:0; bottom:0; display:flex; align-items:center; z-index:2; }
+  #mainRow { position:absolute; top:180px; left:0; right:0; bottom:0; display:flex; flex-direction:column; z-index:2; }
   #mapArea { position:relative; flex:1; align-self:stretch; overflow:hidden;
     /* Biển Đông là nước, không phải khoảng đen: nền biển xanh sáng hơn để
        vùng biển bên phải bản đồ đọc ra là biển (trước đây trong suốt, lộ nền
        tối của stage nên trông như dải đen thừa bên phải khung). */
     background:linear-gradient(180deg,#16407a 0%,#0e2c52 55%,#081426 100%); }
-  /* Họa tiết trống đồng (2026-11-13, Chủ tịch): tile SVG line-art vàng —
-     vòng tròn đồng tâm + sao 14 cánh + chấm, lặp kín sau nền biển, trước
-     lớp SVG bản đồ — vùng biển đọc ra là mặt trống đồng mờ, không còn
-     khoảng đen trơn. */
-  #drumPattern { position:absolute; inset:0; z-index:0; pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22240%22%20height%3D%22240%22%20viewBox%3D%220%200%20240%20240%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d4a017%22%20stroke-width%3D%222.5%22%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22120%22%20r%3D%22112%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d4a017%22%20stroke-width%3D%221.5%22%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22120%22%20r%3D%2292%22%2F%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22120%22%20r%3D%2268%22%2F%3E%3C%2Fg%3E%3Cg%20stroke%3D%22%23d4a017%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%3E%3Cline%20x1%3D%22120.0%22%20y1%3D%2298.0%22%20x2%3D%22120.0%22%20y2%3D%2260.0%22%2F%3E%3Cline%20x1%3D%22129.5%22%20y1%3D%22100.2%22%20x2%3D%22146.0%22%20y2%3D%2265.9%22%2F%3E%3Cline%20x1%3D%22137.2%22%20y1%3D%22106.3%22%20x2%3D%22166.9%22%20y2%3D%2282.6%22%2F%3E%3Cline%20x1%3D%22141.4%22%20y1%3D%22115.1%22%20x2%3D%22178.5%22%20y2%3D%22106.6%22%2F%3E%3Cline%20x1%3D%22141.4%22%20y1%3D%22124.9%22%20x2%3D%22178.5%22%20y2%3D%22133.4%22%2F%3E%3Cline%20x1%3D%22137.2%22%20y1%3D%22133.7%22%20x2%3D%22166.9%22%20y2%3D%22157.4%22%2F%3E%3Cline%20x1%3D%22129.5%22%20y1%3D%22139.8%22%20x2%3D%22146.0%22%20y2%3D%22174.1%22%2F%3E%3Cline%20x1%3D%22120.0%22%20y1%3D%22142.0%22%20x2%3D%22120.0%22%20y2%3D%22180.0%22%2F%3E%3Cline%20x1%3D%22110.5%22%20y1%3D%22139.8%22%20x2%3D%2294.0%22%20y2%3D%22174.1%22%2F%3E%3Cline%20x1%3D%22102.8%22%20y1%3D%22133.7%22%20x2%3D%2273.1%22%20y2%3D%22157.4%22%2F%3E%3Cline%20x1%3D%2298.6%22%20y1%3D%22124.9%22%20x2%3D%2261.5%22%20y2%3D%22133.4%22%2F%3E%3Cline%20x1%3D%2298.6%22%20y1%3D%22115.1%22%20x2%3D%2261.5%22%20y2%3D%22106.6%22%2F%3E%3Cline%20x1%3D%22102.8%22%20y1%3D%22106.3%22%20x2%3D%2273.1%22%20y2%3D%2282.6%22%2F%3E%3Cline%20x1%3D%22110.5%22%20y1%3D%22100.2%22%20x2%3D%2294.0%22%20y2%3D%2265.9%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23d4a017%22%3E%3Ccircle%20cx%3D%22137.8%22%20cy%3D%2242.0%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22169.9%22%20cy%3D%2257.5%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22192.1%22%20cy%3D%2285.3%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22200.0%22%20cy%3D%22120.0%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22192.1%22%20cy%3D%22154.7%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22169.9%22%20cy%3D%22182.5%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22137.8%22%20cy%3D%22198.0%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22102.2%22%20cy%3D%22198.0%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2270.1%22%20cy%3D%22182.5%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2247.9%22%20cy%3D%22154.7%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2240.0%22%20cy%3D%22120.0%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2247.9%22%20cy%3D%2285.3%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2270.1%22%20cy%3D%2257.5%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22102.2%22%20cy%3D%2242.0%22%20r%3D%223.5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); background-size:240px 240px; background-repeat:repeat; opacity:.16; }
+  /* 1 HỌA TIẾT TRỐNG ĐỒNG TO, MÀU ĐỒNG (2026-11-13, Chủ tịch: chỉ 1 cái,
+     không lặp tile): mặt trống đồng thật, hình tròn lớn sau bản đồ — vành
+     trống + sao hiện ra ở vùng biển quanh đất liền. Ảnh dùng đường dẫn
+     tương đối để nền tảng serve đúng dưới prefix phòng. */
+  #bigDrum { position:absolute; left:50%; top:46%; width:1350px; height:1350px;
+    transform:translate(-50%,-50%); border-radius:50%; z-index:0; pointer-events:none;
+    background:#050914 url(trong-dong-bg.jpg) center center / cover no-repeat; opacity:.55; }
   /* (v8.2) Bố cục 3 cột — bảng điểm sang TRÁI, cột phải chỉ giữ sự kiện
      gần đây (trên) + diễn biến (dưới). Quần đảo nay vẽ TRONG SVG bản đồ
      (cột giữa) nên không còn nằm sau khung nào, không bị che chút nào. */
-  #leftPanel { flex:none; width:200px; margin:0 0 12px 12px; display:flex; flex-direction:column; gap:10px;
-    background:rgba(8,12,24,.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border:1px solid rgba(255,255,255,.22); border-radius:20px; padding:14px 12px 12px; overflow:hidden; }
-  #rightCol { flex:none; width:200px; margin:0 12px 12px 0; display:flex; flex-direction:column; gap:10px; }
+  /* Dải bảng dưới bản đồ (v9): 4 cột, mỗi cột 1-2 bảng xếp dọc. */
+  #bottomStrip { flex:none; height:360px; display:flex; gap:10px; padding:10px 12px 12px; }
+  .bcol { flex:1; min-width:0; display:flex; flex-direction:column; gap:10px; }
+  .bcol .sideSec { flex:none; }
+  /* Hàng trạng thái trong header: đồng hồ + 2 thanh tiến độ, gọn 1 dòng. */
+  #headerStatus { display:flex; align-items:center; gap:14px; margin-top:10px; }
+  #headerStatus #timerText { font-size:30px; }
+  #headerStatus #timerBarWrap { flex:none; width:120px; margin-top:0; }
+  #headerStatus #barWrap { flex:1; margin-top:0; }
+  #headerStatus #progText { font-size:18px; white-space:nowrap; }
   #rightTop { flex:none; }
   /* Cột phải: các panel chỉ cao bằng nội dung (flex:none), cả cột gom về
      đoạn giữa nhờ align-items:center của #mainRow — không còn khoảng trống
@@ -60,9 +67,9 @@
   #timerLabel { font-size:17px; color:#e6efff; margin-top:2px; }
   #timerBarWrap { height:10px; background:#16223f; border-radius:5px; margin-top:8px; overflow:hidden; }
   #timerBar { height:100%; width:100%; background:linear-gradient(90deg,#ff9d00,#ffd700); border-radius:5px; transition:width 1s linear; }
-  #leftPanel .trow, #rightCol .trow { font-size:17px; }
-  #leftPanel .trow .pt, #rightCol .trow .pt { font-size:17px; }
-  #leftPanel .empty, #rightCol .empty { font-size:17px; }
+  .bcol .trow { font-size:17px; }
+  .bcol .trow .pt { font-size:17px; }
+  .bcol .empty { font-size:17px; }
   #sideFeed { font-size:15px; color:#c3d2f0; line-height:1.45; }
   #sideFeed div { padding:3px 0; border-bottom:1px solid rgba(255,255,255,.07); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   #sideFeed div:last-child { border-bottom:none; }
@@ -189,7 +196,7 @@
   #celebrate.show { display:flex; }
   .celebCard { background:rgba(3,6,15,.82); border:2px solid rgba(255,215,0,.6); border-radius:24px;
     padding:28px 36px; box-shadow:0 0 60px rgba(255,215,0,.35); }
-  /* (v8.2) Chữ vinh danh nhỏ lại cho vừa khu vực bản đồ hẹp hơn (656px):
+  /* (v8.2) Chữ vinh danh nhỏ lại cho vừa khu vực bản đồ (1080px):
      h1 72->54px, p 34->28px — vẫn 2 dòng như bản v8, không tràn. */
   #celebrate h1 { font-size:54px; color:#ffd700; text-shadow:0 0 30px rgba(255,215,0,.9); }
   #celebrate p { font-size:28px; margin-top:14px; line-height:1.6; }
@@ -217,41 +224,21 @@
       <div id="liveBadge" class="off">○ CHỜ KẾT NỐI</div>
       <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
     </div>
+    <div id="headerStatus">
+      <span id="timerText">60:00</span>
+      <div id="timerBarWrap"><div id="timerBar"></div></div>
+      <div id="barWrap"><div id="bar"></div></div>
+      <span id="progText">🇻🇳 Đã thắp sáng <span id="progNum">0 / 34 tỉnh</span></span>
+    </div>
   </div>
 
   <div id="mainRow">
-    <!-- (v8.2) Bố cục 3 cột: bảng điểm TRÁI + bản đồ GIỮA + cột phải.
-         Cột phải chỉ giữ sự kiện gần đây (trên) + gợi ý/chú thích (dưới),
-         giữa là khoảng trống trong suốt đúng chỗ 2 quần đảo — đảo không
-         bị che chút nào. -->
-    <div id="leftPanel">
-      <div id="timerBox" class="sideSec">
-        <div id="timerText">60:00</div>
-        <div id="timerLabel">⏰ Còn lại — tỉnh nhiều điểm nhất thắng</div>
-        <div id="timerBarWrap"><div id="timerBar"></div></div>
-      </div>
-      <div class="sideSec">
-        <div id="progText">🇻🇳 Đã thắp sáng <span id="progNum">0 / 34 tỉnh</span></div>
-        <div id="barWrap"><div id="bar"></div></div>
-      </div>
-      <div class="sideSec" id="boards">
-        <h2>🏆 TOP 5 TỈNH</h2><div id="topProv"></div>
-      </div>
-      <div class="sideSec">
-        <h2>🌟 TOP ĐÓNG GÓP</h2><div id="topUsers"></div>
-      </div>
-      <div class="sideSec" id="sideStats">
-        <span>👀 <b id="stViewers">0</b> người xem</span>
-        <span>🎁 <b id="stCoins">0</b> xu • ✨ <b id="stLights">0</b> lượt thắp</span>
-        <span class="stTrack">🎵 <b id="stTrack">…</b></span>
-      </div>
-      <div class="sideSec" id="sideFeedBox" style="flex:none; overflow:hidden; max-height:240px;">
-        <h2>📜 DIỄN BIẾN</h2><div id="sideFeed"></div>
-      </div>
-    </div>
-
+    <!-- (v9 2026-11-13, Chủ tịch: bỏ hết phần đen thừa) Bố cục mới: bản đồ
+         FULL-WIDTH + dải bảng bên DƯỚI (4 cột). Không còn 2 cột bảng 2 bên
+         bóp bản đồ — bản đồ 1080x1380 trong stage, đất liền ~600px, không
+         còn dải đen trên/dưới, 2 bên chỉ còn biển + trống đồng. -->
     <div id="mapArea">
-      <div id="drumPattern"></div>
+      <div id="bigDrum"></div>
       <svg id="mapSvg" viewBox="255 275 800 1260" preserveAspectRatio="xMidYMid meet">
         <defs>
           <!-- 4 màu tỉnh (v8, định lý bốn màu): mỗi gradient = 1 nhóm màu -->
@@ -278,7 +265,7 @@
       <div id="avatarLayer"></div>
 
       <div id="spotlight"><div class="spPic" id="spPic"></div><div class="spTxt"><div class="big" id="spBig"></div><div class="fact" id="spFact"></div></div></div>
-      <canvas id="confetti" width="656" height="1762"></canvas>
+      <canvas id="confetti" width="1080" height="1380"></canvas>
 
       <div id="celebrate">
         <div class="celebCard">
@@ -289,8 +276,28 @@
         </div>
       </div>
     </div>
-
-    <div id="rightCol">
+    <div id="bottomStrip">
+      <div class="bcol">
+      <div class="sideSec" id="boards">
+        <h2>🏆 TOP 5 TỈNH</h2><div id="topProv"></div>
+      </div>
+      </div>
+      <div class="bcol">
+      <div class="sideSec">
+        <h2>🌟 TOP ĐÓNG GÓP</h2><div id="topUsers"></div>
+      </div>
+      </div>
+      <div class="bcol">
+      <div class="sideSec" id="sideFeedBox" style="flex:none; overflow:hidden; max-height:240px;">
+        <h2>📜 DIỄN BIẾN</h2><div id="sideFeed"></div>
+      </div>
+      <div class="sideSec" id="sideStats">
+        <span>👀 <b id="stViewers">0</b> người xem</span>
+        <span>🎁 <b id="stCoins">0</b> xu • ✨ <b id="stLights">0</b> lượt thắp</span>
+        <span class="stTrack">🎵 <b id="stTrack">…</b></span>
+      </div>
+      </div>
+      <div class="bcol">
       <div class="sideSec" id="rightTop">
         <div class="big" id="recentText">✨ Chưa có ai thắp sáng — bạn sẽ là người đầu tiên?</div>
         <div id="voiceLine"></div>
@@ -304,6 +311,7 @@
       <div class="sideSec" id="rightBottom">
         <div class="sub" id="suggestText">Gợi ý tỉnh chưa sáng: …</div>
         <div id="sideLegend">🎨 Mỗi tỉnh 1 trong 4 màu <span class="dot" style="background:#2dd4bf"></span><span class="dot" style="background:#fb923c"></span><span class="dot" style="background:#a78bfa"></span><span class="dot" style="background:#a3e635"></span> — tỉnh kề nhau luôn khác màu<br>💡 Tỉnh càng nhiều điểm càng DÀY • Comment +1đ • 20 tim = 1đ • 1 xu = 5đ</div>
+      </div>
       </div>
     </div>
   </div>
@@ -394,10 +402,10 @@ function fmtTime(ms) {
 // ---------- Zoom phóng to / thu nhỏ: bay tới tỉnh vừa thắp rồi về toàn cảnh ----------
 // ViewBox gốc bao cả đất liền + Biển Đông (x 255–1055, y 275–1535) để chứa
 // 2 quần đảo ở VỊ TRÍ THỰC (2026-11-13: Hoàng Sa ngang Đà Nẵng, Trường Sa
-// đông-nam Khánh Hòa). Khu vực bản đồ giữa 2 bảng: 656x1762 trong stage
-// (bảng 2 bên thu từ 240px xuống 200px để bản đồ to hơn — Chủ tịch 20:59).
+// đông-nam Khánh Hòa). Khu vực bản đồ (v9): FULL-WIDTH 1080x1380 trong
+// stage — bảng chuyển xuống dải dưới nên không còn dải đen trên/dưới.
 const FULL_VB = { x: 255, y: 275, w: 800, h: 1260 };
-const MAP_W = 656, MAP_H = 1762;
+const MAP_W = 1080, MAP_H = 1380;
 const MAP_ASPECT = MAP_W / MAP_H;
 // Bbox thật của 2 quần đảo (tính từ path trong islands.json, vị trí THỰC
 // 2026-11-13): Hoàng Sa x 880–1030, y 855–985 (ngang Đà Nẵng);
@@ -638,14 +646,19 @@ function refreshMusicVolume() { try { bgm.volume = voicePlaying ? musicWantedVol
 function tryPlay() { try { const pr = bgm.play(); if (pr) pr.catch(() => {}); } catch (_) {} }
 function applyMusic(m) {
   if (!m) return;
-  // URL track do server phát hành dạng tuyệt đối từ gốc (/music/...) — trên
-  // nền tảng file chỉ tồn tại dưới prefix phòng (/o/<game>/<user>/music/...),
-  // gọi gốc trả 404 nên nhạc nền KHÔNG BAO GIỜ chạy (voice thì server đã
-  // gắn roomPrefix nên vẫn chạy). Gắn prefix phòng vào đây (chạy riêng thì
-  // location không có prefix nên URL giữ nguyên).
+  // URL track do server phát hành dạng tuyệt đối từ gốc — trên nền tảng file
+  // chỉ tồn tại dưới prefix phòng (/o/<game>/<user>/...), gọi gốc trả 404
+  // nên nhạc nền KHÔNG BAO GIỜ chạy (voice thì server đã gắn roomPrefix nên
+  // vẫn chạy). Gắn prefix phòng vào URL gốc ở đây (chạy riêng thì location
+  // không có prefix nên URL giữ nguyên). CẤM viết literal '/music/' ở đây:
+  // transform.js của nền tảng viết lại mọi literal đó thành đường dẫn phòng,
+  // khiến phép so sánh không bao giờ khớp (lỗi đã gặp ở bản d3727ed).
   const roomPrefix = (location.pathname.match(/^\/o\/[^/]+\/[^/]+/) || [''])[0];
-  musicTracks = (m.tracks || []).map(t => (t.url && t.url.startsWith('/music/'))
-    ? { ...t, url: roomPrefix + t.url } : t);
+  musicTracks = (m.tracks || []).map(t => {
+    const u = t.url || '';
+    return (u.charAt(0) === '/' && roomPrefix && u.indexOf(roomPrefix) !== 0)
+      ? { ...t, url: roomPrefix + u } : t;
+  });
   musicWantedPlaying = !!m.playing;
   musicWantedVolume = (m.volume === undefined ? 0.35 : m.volume);
   refreshMusicVolume();
@@ -717,18 +730,18 @@ function confettiStart() {
   if (confRunning) return; confRunning = true;
   const colors = ['#ffd700', '#ff5d5d', '#5da8ff', '#7dff9e', '#ff9de2', '#fff3a3'];
   const parts = Array.from({ length: 160 }, () => ({
-    x: Math.random() * 656, y: -20 - Math.random() * 400,
+    x: Math.random() * 1080, y: -20 - Math.random() * 400,
     w: 8 + Math.random() * 8, h: 6 + Math.random() * 8,
     vy: 2 + Math.random() * 3, vx: -1 + Math.random() * 2,
     rot: Math.random() * Math.PI, vr: -.05 + Math.random() * .1,
     color: colors[Math.floor(Math.random() * colors.length)],
   }));
   (function tick() {
-    if (!confRunning) { confCtx.clearRect(0, 0, 656, 1762); return; }
-    confCtx.clearRect(0, 0, 656, 1762);
+    if (!confRunning) { confCtx.clearRect(0, 0, 1080, 1380); return; }
+    confCtx.clearRect(0, 0, 1080, 1380);
     for (const p of parts) {
       p.y += p.vy; p.x += p.vx; p.rot += p.vr;
-      if (p.y > 1780) { p.y = -20; p.x = Math.random() * 656; }
+      if (p.y > 1420) { p.y = -20; p.x = Math.random() * 1080; }
       confCtx.save(); confCtx.translate(p.x, p.y); confCtx.rotate(p.rot);
       confCtx.fillStyle = p.color; confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); confCtx.restore();
     }
