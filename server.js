@@ -48,9 +48,10 @@ function createApp(opts = {}) {
     tiktokEnabled: opts.tiktokEnabled !== false,
   });
 
-  // Giám sát event loop (worker thread riêng): phát hiện app treo lặng rồi
-  // ép exit(1) để Railway restart. Chỉ start() mới chạy worker; createApp
-  // chỉ tạo handle để /healthz đọc được trạng thái.
+  // Giám sát event loop (supervisor child process riêng, xem
+  // lib/loop-watchdog.js): phát hiện app treo lặng rồi SIGKILL để
+  // Railway restart. Chỉ start() mới chạy supervisor (cần cổng thật để
+  // poll /healthz); createApp chỉ tạo handle để /healthz đọc trạng thái.
   const loopWatchdog = createLoopWatchdog();
 
   // ---- CORS cho API buff: website Strom (Cloudflare Pages) gọi API này
@@ -211,7 +212,8 @@ function start(port) {
   server.listen(p, () => {
     console.log(`live-game-platform chạy tại http://localhost:${p} (tối đa ${MAX_ROOMS} room, hủy room sau ${IDLE_MINUTES} phút không có người xem)`);
     // Khởi động watchdog sau khi server đã lắng nghe (chạy 1 lần duy nhất).
-    loopWatchdog.start();
+    // Truyền cổng thật để supervisor poll /healthz.
+    loopWatchdog.start(server.address().port);
   });
   return { app, server, rooms, loopWatchdog };
 }
