@@ -24,7 +24,14 @@ GIỮ nhãn này trong LED ticker + banner chip lúc vinh danh, vì đó là cơ
 - Hiệu ứng gift toàn màn hình — live thật chỉ hiện dòng chat.
 
 ## Kiểm chứng (CEO tự làm)
-- [ ] node --check JS inline overlay
-- [ ] npm test (toàn suite)
-- [ ] Mở overlay ?demo=1 xem bằng mắt (chuẩn Chủ tịch): sàn caro có đổi màu không, DJ + màn hình + EQ có thấy không, vũ công có đứng TRÊN SÀN đúng vị trí không, tên + avatar trên đầu không, người dẫn đầu có chip + cánh + vòng sáng + spotlight không, bảng hướng dẫn đọc được trong 3 giây không, có chữ chồng/chữ cắt không.
+- [x] node --check JS inline overlay (đợt 3)
+- [x] npm test (toàn suite) — fail 0 (đợt 3)
+- [x] Mở overlay ?demo=1 xem bằng mắt (chuẩn Chủ tịch) — kiểm chứng live Railway 18:36–18:46, deployment 301a1e37, phòng ceo_dibar + dibar5.0: ĐẠT — nhận ra bar ngay, sàn caro đổi màu, DJ + màn hình + 2 cột EQ rõ, 12 vũ công đứng TRÊN SÀN (tên + avatar trên đầu), người dẫn đầu có chip + vương miện + CÁNH + quầng sáng, bảng hướng dẫn đọc được, BXH "Vũ công nổi bật" + Bàn Vàng 1369 / Bàn Đỏ 362 đúng 12 người, demo badge hiện. CHƯA ĐẠT — xem "Lỗi camera kẹt zoom" dưới đây.
 - [ ] Commit + push + deploy Railway + kiểm chứng live bằng đúng luồng user (dashboard → link overlay).
+
+## Lỗi camera kẹt zoom (phát hiện khi kiểm chứng live 18:46, tái hiện 3/3 phòng)
+- Triệu chứng: overlay vừa tải thì vừa khung hoàn hảo, nhưng sau ~1–1,5 phút demo chạy, toàn bộ sân khấu tự phóng to và bị cắt hai bên (tên vũ công, hướng dẫn, ticker bị cắt; menu/bàn biến mất); không tự phục hồi qua DJ DROP hay sang Vòng 2; chỉ tải lại trang mới hết.
+- Nguyên nhân gốc (CEO chẩn đoán từ code, đã xác minh): `startShotTimer()` được `render()` gọi mỗi lần state cập nhật — demo/live đông broadcast state ~2s/lần — mà hàm cũ `clearInterval` + tạo lại interval 8s mỗi lần → `cycleShot()` không bao giờ tới lượt chạy → camera kẹt mãi ở góc zoom của sự kiện gần nhất. Cộng thêm `eventShot()` gia hạn hold vô hạn khi sự kiện dồn dập.
+- Sửa (CEO, commit sau e8cbbb3): `startShotTimer()` chỉ tạo interval 1 lần (idempotent); `eventShot()` không gia hạn hold đã kéo dài quá 20s; `cycleShot()` sau khi hết hold thì về toàn cảnh trước rồi mới chạy vòng lại. Đã kiểm chứng bằng mô phỏng node (`/tmp/camera-sim.js`): sự kiện dồn dập mỗi 1s trong 12s → camera về `full` ở 27,2s rồi chạy vòng `dj → top...` bình thường — PASS.
+- Sửa kèm theo đợt này: nút "Nhạc: Bật" + badge DEMO dời xuống dải trống y=404 (bản cũ nút nhạc chồng lên góc trái panel DJ/cột LED trái); vòng sáng dưới chân người dẫn đầu to + sáng hơn (200×42, bottom 8px — bản cũ mờ, không đọc ra); chùm spotlight đậm hơn (0,52).
+- Phòng `ceo-dibar` (gạch ngang) bị từ chối khi tạo room — đúng luật sẵn có (tên TikTok không có gạch ngang), không phải lỗi; dùng `ceo_dibar`.

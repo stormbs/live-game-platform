@@ -89,8 +89,9 @@
   /* Vùng vũ công: lưới 4×3 khi ≤12 người, 6×4 khi >12 người (tối đa 24 — MAX_FLOOR của engine), vũ công đứng TRÊN SÀN */
   #dancers { position: absolute; left: 16px; right: 16px; top: 196px; bottom: 14px; z-index: 2; }
   .floor-empty { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-size: 26px; color: #ddd; text-shadow: 0 2px 4px #000; }
-  /* Spotlight chiếu đúng vũ công dẫn đầu (chỉ transform/opacity) */
-  #spot-cone { position: absolute; top: 0; left: 50%; width: 280px; height: 40%; transform: translateX(-50%); z-index: 1; pointer-events: none; background: linear-gradient(rgba(253,224,71,.40), rgba(253,224,71,.08) 75%, transparent); clip-path: polygon(43% 0, 57% 0, 100% 100%, 0 100%); animation: conesway 3s ease-in-out infinite alternate; transform-origin: top center; display: none; }
+  /* Chùm spotlight chiếu đúng vũ công dẫn đầu (chỉ transform/opacity) — vàng đậm hơn
+     để đọc rõ trên sàn caro (kiểm chứng live 18:46: chùm cũ mờ, dễ nhầm với tia laser disco) */
+  #spot-cone { position: absolute; top: 0; left: 50%; width: 280px; height: 40%; transform: translateX(-50%); z-index: 1; pointer-events: none; background: linear-gradient(rgba(253,224,71,.52), rgba(253,224,71,.14) 75%, transparent); clip-path: polygon(43% 0, 57% 0, 100% 100%, 0 100%); animation: conesway 3s ease-in-out infinite alternate; transform-origin: top center; display: none; }
   @keyframes conesway { from { transform: translateX(-50%) rotate(-3deg); } to { transform: translateX(-50%) rotate(3deg); } }
   #spot-glow { position: absolute; left: 50%; width: 230px; height: 54px; transform: translate(-50%, -50%); z-index: 1; pointer-events: none; background: radial-gradient(ellipse, rgba(253,224,71,.55), transparent 70%); animation: glowpulse 1s ease-in-out infinite alternate; display: none; }
   @keyframes glowpulse { from { opacity: .5; } to { opacity: .95; } }
@@ -127,9 +128,10 @@
   .dancer.king .wings .w-l { left: 0; transform: rotate(-24deg); }
   .dancer.king .wings .w-r { right: 0; transform: scaleX(-1) rotate(-24deg); }
   @keyframes wingpulse { from { scale: 1; opacity: .85; } to { scale: 1.07; opacity: 1; } }
-  /* Vòng sáng dưới chân người nổi bật (như live thật: vòng sáng phát sáng dưới chân/bục đứng) */
+  /* Vòng sáng dưới chân người nổi bật — to + sáng hơn để đọc rõ giữa sàn caro rực rỡ
+     (kiểm chứng live 18:46: vòng cũ mờ, chỉ thấy quầng sáng quanh người) */
   .dancer .ring { display: none; }
-  .dancer.king .ring { display: block; position: absolute; left: 50%; bottom: 22px; width: 170px; height: 34px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse, rgba(253,224,71,.65), rgba(253,224,71,.12) 60%, transparent 75%); animation: glowpulse 1s ease-in-out infinite alternate; z-index: -1; }
+  .dancer.king .ring { display: block; position: absolute; left: 50%; bottom: 8px; width: 200px; height: 42px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse, rgba(253,224,71,.85), rgba(253,224,71,.25) 60%, transparent 78%); animation: glowpulse 1s ease-in-out infinite alternate; z-index: -1; }
   /* Sàn đông (>12 người): lưới dày 6×4, vũ công nhỏ lại để vẫn đọc được tên + tag (live thật góc rộng thấy 15–30 người) */
   #dancers.dense .dancer { width: 150px; }
   #dancers.dense .dancer .nm { font-size: 17px; }
@@ -143,7 +145,7 @@
   #dancers.dense .dancer .title-chip { font-size: 14px; max-width: 140px; }
   #dancers.dense .dancer.king .wings { width: 140px; height: 64px; }
   #dancers.dense .dancer.king .wings i { width: 64px; height: 58px; }
-  #dancers.dense .dancer.king .ring { width: 120px; height: 26px; bottom: 16px; }
+  #dancers.dense .dancer.king .ring { width: 150px; height: 32px; bottom: 6px; }
   @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-14px); } }
   @keyframes pop { from { transform: scale(1) rotate(-4deg); } to { transform: scale(1.15) rotate(4deg); } }
   @keyframes wave { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
@@ -177,10 +179,12 @@
   .vip.cover .cover { display: block; }
   /* LED bên: top 3 */
   #led-side { position: absolute; left: 30px; right: 30px; top: 1736px; height: 88px; background: #000; border: 3px solid #22d3ee; border-radius: 12px; padding: 8px 16px; font-size: 23px; line-height: 1.35; color: #a5f3fc; overflow: hidden; }
-  #demo-badge { position: absolute; top: 100px; right: 40px; z-index: 50; background: #facc15; color: #111; font-weight: 900; font-size: 26px; padding: 6px 14px; border-radius: 10px; display: none; }
+  /* Nút nhạc + badge DEMO đặt ở dải trống y=404 (giữa EQ và sàn) — bản cũ để top:100px
+     thì nút nhạc chồng lên góc trái panel DJ/cột LED trái (kiểm chứng live 18:46) */
+  #demo-badge { position: absolute; top: 404px; right: 40px; z-index: 50; background: #facc15; color: #111; font-weight: 900; font-size: 26px; padding: 6px 14px; border-radius: 10px; display: none; }
   body.demo #demo-badge { display: block; }
   #toast { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 45; background: rgba(0,0,0,.8); border: 2px solid #facc15; color: #fff; font-size: 30px; font-weight: 700; padding: 12px 24px; border-radius: 14px; display: none; max-width: 960px; text-align: center; }
-  #music-btn { position: absolute; top: 100px; left: 40px; z-index: 50; background: rgba(0,0,0,.6); color: #fff; border: 2px solid #fff; border-radius: 10px; font-size: 24px; padding: 8px 14px; cursor: pointer; }
+  #music-btn { position: absolute; top: 404px; left: 40px; z-index: 50; background: rgba(0,0,0,.6); color: #fff; border: 2px solid #fff; border-radius: 10px; font-size: 24px; padding: 8px 14px; cursor: pointer; }
   .confetti { position: absolute; top: -20px; width: 14px; height: 22px; z-index: 48; pointer-events: none; animation: confetti-fall 2.8s ease-in forwards; }
   @keyframes confetti-fall { to { transform: translateY(1980px) rotate(720deg); opacity: .9; } }
 </style>
@@ -289,7 +293,7 @@ const SHOTS = [
   { name: 'crowd', point: [540, 910], scale: 1.5 },
   { name: 'led', point: [540, 56], scale: 2 },
 ];
-let shotIdx = 0, shotTimer = null, eventShotUntil = 0;
+let shotIdx = 0, shotTimer = null, eventShotUntil = 0, eventHoldStartedAt = 0;
 function applyShot(shot) {
   const [px, py] = shot.point;
   const s = shot.scale;
@@ -300,17 +304,27 @@ function applyShot(shot) {
 function cycleShot() {
   if (!state || state.settings.cameraMode !== 'auto') return;
   if (Date.now() < eventShotUntil) return;
+  // Vừa hết hold sự kiện → về toàn cảnh trước, rồi mới chạy vòng lại (tránh kẹt ở góc zoom).
+  if (eventHoldStartedAt) { eventHoldStartedAt = 0; shotIdx = 0; applyShot(SHOTS[0]); return; }
   shotIdx = (shotIdx + 1) % SHOTS.length;
   applyShot(SHOTS[shotIdx]);
 }
 function eventShot(name, ms) {
   const shot = SHOTS.find((s) => s.name === name);
   if (!shot) return;
-  eventShotUntil = Date.now() + (ms || 8000);
+  const now = Date.now();
+  // Chống kẹt zoom khi sự kiện dồn dập: hold đã kéo dài quá 20s thì không gia hạn nữa,
+  // để camera được quay về toàn cảnh (live đông/demo quà liên tục vẫn phải thấy đủ sân).
+  if (now < eventShotUntil && now - eventHoldStartedAt > 20000) return;
+  if (now >= eventShotUntil) eventHoldStartedAt = now;
+  eventShotUntil = now + (ms || 8000);
   applyShot(shot);
 }
 function startShotTimer() {
-  if (shotTimer) clearInterval(shotTimer);
+  // CHỈ tạo interval 1 lần: render() chạy mỗi lần state cập nhật (demo/live đông ~2s/lần),
+  // clear + tạo lại interval mỗi lần sẽ khiến cycleShot không bao giờ tới lượt chạy
+  // → camera kẹt mãi ở góc zoom của sự kiện gần nhất (lỗi kiểm chứng live 2026-11-13 18:46).
+  if (shotTimer) return;
   shotTimer = setInterval(cycleShot, (state && state.settings.shotIntervalS || 8) * 1000);
 }
 
