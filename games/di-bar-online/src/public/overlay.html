@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Đi Bar Online — Overlay LIVE</title>
 <link rel="stylesheet" href="/shared/ui.css">
+<link rel="stylesheet" href="/shared/meme.css">
+<script src="/shared/meme.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #fff; }
@@ -81,9 +83,10 @@
   #floor-head { position: relative; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 30px; font-weight: 800; color: #f9a8d4; }
   /* Nhãn trạng thái bar gọn, không tràn (sửa lỗi tiêu đề góc phải bị cắt) */
   #round-chip { flex-shrink: 1; min-width: 0; max-width: 480px; font-size: 24px; font-weight: 800; color: #fff; background: rgba(0,0,0,.5); border: 2px solid rgba(255,255,255,.25); border-radius: 10px; padding: 4px 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* Bảng hướng dẫn chơi — số thật từ engine.js (xem cuối file). Nổi bật hơn sau bài học live thật
-     ("The live làm méo gì" — người mới phải đọc 3 giây là hiểu đây là game gì). */
-  #howto { position: relative; z-index: 3; margin-top: 8px; background: rgba(0,0,0,.68); border: 3px solid #facc15; border-radius: 14px; padding: 6px 14px; font-size: 20px; line-height: 1.35; color: #fef3c7; box-shadow: 0 0 16px rgba(250,204,21,.35); }
+  /* Bảng hướng dẫn chơi — số thật từ engine.js (JS render() cập nhật lại từ
+     s.settings mỗi lần có state — đổi setting trên dashboard thì bảng tự đổi
+     theo, không hardcode số chết). Font 23px/line-height 1.5 (chuẩn đợt 2). */
+  #howto { position: relative; z-index: 3; margin-top: 8px; background: rgba(0,0,0,.68); border: 3px solid #facc15; border-radius: 14px; padding: 6px 14px; font-size: 23px; line-height: 1.5; color: #fef3c7; box-shadow: 0 0 16px rgba(250,204,21,.35); }
   #howto div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #howto b { color: #fde047; }
   /* Vùng vũ công: lưới 4×3 khi ≤12 người, 6×4 khi >12 người (tối đa 24 — MAX_FLOOR của engine), vũ công đứng TRÊN SÀN */
@@ -103,6 +106,14 @@
   .dancer .av { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; }
   .dancer .av-fb { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #fff; background: var(--c, #888); text-shadow: 0 2px 4px rgba(0,0,0,.6); }
   .dancer .av-img { object-fit: cover; }
+  /* Vũ công MEME (v2, mẫu Kéo Co): mặt meme làm ĐẦU vũ công — mỗi người 1 mặt
+     khác nhau toàn sàn (faceImgIn với danh sách chung shown). Mặt KHÔNG cắt
+     tròn; khung vuông bo nhẹ, viền màu nhân vật; đầu lắc theo nhịp nhảy. */
+  .dancer .meme-head { display: block; width: 64px; height: 64px; margin: 3px auto; border: 3px solid var(--c, #888); border-radius: 14px; background: rgba(0,0,0,.35); box-shadow: 0 0 10px rgba(0,0,0,.6); animation: var(--mv, bounce) .9s ease-in-out infinite alternate; }
+  .dancer .meme-head img { width: 100%; height: 100%; object-fit: contain; }
+  .dancer.king .meme-head { border-color: #facc15; box-shadow: 0 0 16px #facc15; }
+  /* Thân/trang phục: dải màu nhân vật dưới đầu, nhảy cùng nhịp với emoji. */
+  .dancer .outfit { display: block; width: 72px; height: 16px; margin: -2px auto 0; border-radius: 8px; background: var(--c, #888); box-shadow: inset 0 -4px 0 rgba(0,0,0,.3), 0 2px 4px rgba(0,0,0,.5); animation: var(--mv, bounce) .9s ease-in-out infinite alternate; }
   .dancer .em { display: block; font-size: 66px; line-height: 1.05; animation: var(--mv, bounce) .9s ease-in-out infinite alternate; }
   .dancer .st { display: block; font-size: 24px; font-weight: 800; line-height: 1.2; }
   .dancer .en { color: #fde047; text-shadow: 0 2px 4px rgba(0,0,0,.8); }
@@ -147,6 +158,8 @@
   #dancers.dense .dancer .title-chip { font-size: 14px; max-width: 140px; }
   #dancers.dense .dancer.king .wings { width: 210px; height: 86px; }
   #dancers.dense .dancer.king .ring { width: 160px; height: 34px; bottom: 0; border-width: 4px; }
+  #dancers.dense .dancer .meme-head { width: 48px; height: 48px; margin: 2px auto; border-width: 2px; }
+  #dancers.dense .dancer .outfit { width: 54px; height: 12px; }
   @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-14px); } }
   @keyframes pop { from { transform: scale(1) rotate(-4deg); } to { transform: scale(1.15) rotate(4deg); } }
   @keyframes wave { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
@@ -210,10 +223,9 @@
     <div class="beam b1"></div><div class="beam b2"></div>
     <div id="floor-head"><span>💃 SÀN NHẢY</span><span id="round-chip">🎧 MỞ CẢ NGÀY</span></div>
     <div id="howto">
-      <div>💬 Bình luận <b>“vào bar”</b> để lên sàn • số <b>1–8</b> chọn nhân vật • tối đa 24 người</div>
-      <div>❤️ 1 tim <b>+1⚡</b> • 💬 1 bình luận <b>+5⚡</b> (1/5s) • 🎁 1 xu <b>+10⚡ + 1 ly</b> • ➕ Follow <b>+30⚡</b> (1 lần/phiên live)</div>
-      <div>👑 Nhiều ⚡ nhất lúc đó → Vua sàn • Rời đi thì tạm ẩn, vào lại tính tiếp ⚡ đã có</div>
-      <div>🎧 DJ drop mỗi 2 phút: <b>15s tim ×2</b> • 🍸 ≥10 xu cocktail • 🍾 ≥50 xu bottle • 🍾 ≥100 xu sâm panh</div>
+      <div id="h-line1">💬 Bình luận <b>“vào bar”</b> để lên sàn • số <b>1–8</b> chọn nhân vật • tối đa <b>24</b> người</div>
+      <div id="h-line2">❤️ 1 tim <b>+1⚡</b> • 💬 1 bình luận <b>+5⚡</b> (1/5s) • 🎁 1 xu <b>+10⚡ + 1 ly</b> • ➕ Follow <b>+30⚡</b></div>
+      <div id="h-line3">👑 Nhiều ⚡ nhất lúc đó → <b>Vua sàn</b> • 🎧 DJ drop mỗi <b>2 phút</b>: <b>15s tim ×2</b></div>
     </div>
     <div id="dancers">
       <div id="spot-cone"></div>
@@ -520,6 +532,16 @@ function render(s) {
   document.body.classList.toggle('drop', s.dropState === 'drop');
   const secTag = musicSection === 'DROP' ? '🔥 DROP' : musicSection === 'BUILD' ? '📈 BUILD-UP' : musicSection === 'BREAK' ? '🌙 BREAK' : '🎵 INTRO';
   $('round-chip').textContent = s.dropState === 'drop' ? '🔥 DROP • TIM X2' : '🎧 MỞ CẢ NGÀY • ' + s.totalDancers + ' dancer';
+  // Bảng hướng dẫn: số THẬT từ engine (s.settings — đổi ở dashboard thì bảng
+  // tự đổi theo). Nguồn: defaultSettings engine.js (tap/comment/coin/follow,
+  // commentSpamS, dropIntervalS/dropDurationS). Số thập phân viết kiểu VN.
+  if (s.settings) {
+    const st = s.settings;
+    const dropMin = Math.round((st.dropIntervalS ?? 120) / 60);
+    $('h-line1').innerHTML = '💬 Bình luận <b>“vào bar”</b> để lên sàn • số <b>1–8</b> chọn nhân vật • tối đa <b>24</b> người';
+    $('h-line2').innerHTML = '❤️ 1 tim <b>+' + (st.tapEnergy ?? 1) + '⚡</b> • 💬 1 bình luận <b>+' + (st.commentEnergy ?? 5) + '⚡</b> (1/' + (st.commentSpamS ?? 5) + 's) • 🎁 1 xu <b>+' + (st.coinToEnergy ?? 10) + '⚡ + 1 ly</b> • ➕ Follow <b>+' + (st.followEnergy ?? 30) + '⚡</b>';
+    $('h-line3').innerHTML = '👑 Nhiều ⚡ nhất lúc đó → <b>Vua sàn</b> • 🎧 DJ drop mỗi <b>' + dropMin + ' phút</b>: <b>' + (st.dropDurationS ?? 15) + 's tim ×2</b>';
+  }
   // LED chính: sự kiện mới nhất, tên Vua sàn (người dẫn đầu lúc đó).
   const last = s.logs.length ? s.logs[s.logs.length - 1].text : '';
   const leader = s.leader || (s.top.length && s.top[0].energy > 0 ? s.top[0] : null);
@@ -554,14 +576,18 @@ function render(s) {
     const slot = SLOTS[i] || [50, 50];
     const jx = ((i * 7) % 5 - 2) * 6;
     const jy = ((i * 11) % 5 - 2) * 5;
-    // Avatar thật; lỗi tải thì <img> tự gỡ, lộ chữ cái đầu tên phía dưới.
+    // Đầu vũ công = MẶT MEME (mẫu Kéo Co — faceImgIn, mỗi vũ công 1 mặt khác
+    // nhau toàn sàn); thân là dải màu nhân vật + emoji nhảy phía dưới.
+    const memeImg = window.MemeFaces ? window.MemeFaces.faceImgIn(d, shown, 'meme-face') : '';
     const initial = escapeHtml(((d.name || '?').trim().charAt(0) || '?').toUpperCase());
-    const av = `<span class="av-box"><span class="av av-fb">${initial}</span>${d.avatarUrl ? `<img class="av av-img" src="${escapeHtml(d.avatarUrl)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>`;
+    const av = memeImg
+      ? `<span class="meme-head" style="animation-delay:${delay}s">${memeImg}</span><span class="outfit" style="animation-delay:${delay}s"></span>`
+      : `<span class="av-box"><span class="av av-fb">${initial}</span>${d.avatarUrl ? `<img class="av av-img" src="${escapeHtml(d.avatarUrl)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>`;
     // Banner danh hiệu trên đầu người nổi bật (trạng thái thật từ engine: Vua lúc vinh danh, Dẫn đầu lúc đang nhảy).
     const isLeader = d.uid === leaderUid;
     const titleChip = isLeader ? '👑 VUA SÀN NHẢY' : '';
     return `<div class="dancer${isLeader ? ' king' : ''}${enCls}" style="--c:${c.color};--mv:${MOVE_CSS[c.move] || 'bounce'};left:calc(${slot[0]}% + ${jx}px);top:calc(${slot[1]}% + ${jy}px)">
-      ${titleChip ? `<span class="title-chip">${titleChip}</span>` : ''}<span class="nm">${escapeHtml(d.name)}${tbl}</span>${av}${isLeader ? '<span class="wings"><svg viewBox="0 0 300 120" aria-hidden="true"><defs><linearGradient id="wingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#BEF2FF"/><stop offset=".5" stop-color="#22D3EE"/><stop offset="1" stop-color="#A855F7"/></linearGradient></defs><g fill="url(#wingGrad)" stroke="rgba(255,255,255,.9)" stroke-width="2"><ellipse cx="72" cy="42" rx="60" ry="19" transform="rotate(-30 72 42)"/><ellipse cx="82" cy="60" rx="64" ry="19" transform="rotate(-15 82 60)"/><ellipse cx="90" cy="78" rx="64" ry="19" transform="rotate(-2 90 78)"/><ellipse cx="228" cy="42" rx="60" ry="19" transform="rotate(30 228 42)"/><ellipse cx="218" cy="60" rx="64" ry="19" transform="rotate(15 218 60)"/><ellipse cx="210" cy="78" rx="64" ry="19" transform="rotate(2 210 78)"/></g></svg></span>' : ''}<span class="em" style="animation-delay:${delay}s">${c.emoji}</span>
+      ${titleChip ? `<span class="title-chip">${titleChip}</span>` : ''}<span class="nm" title="${escapeHtml(d.name)}">${escapeHtml(d.name)}${tbl}</span>${av}${isLeader ? '<span class="wings"><svg viewBox="0 0 300 120" aria-hidden="true"><defs><linearGradient id="wingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#BEF2FF"/><stop offset=".5" stop-color="#22D3EE"/><stop offset="1" stop-color="#A855F7"/></linearGradient></defs><g fill="url(#wingGrad)" stroke="rgba(255,255,255,.9)" stroke-width="2"><ellipse cx="72" cy="42" rx="60" ry="19" transform="rotate(-30 72 42)"/><ellipse cx="82" cy="60" rx="64" ry="19" transform="rotate(-15 82 60)"/><ellipse cx="90" cy="78" rx="64" ry="19" transform="rotate(-2 90 78)"/><ellipse cx="228" cy="42" rx="60" ry="19" transform="rotate(30 228 42)"/><ellipse cx="218" cy="60" rx="64" ry="19" transform="rotate(15 218 60)"/><ellipse cx="210" cy="78" rx="64" ry="19" transform="rotate(2 210 78)"/></g></svg></span>' : ''}<span class="em" style="animation-delay:${delay}s">${c.emoji}</span>
       <span class="st"><span class="en">⚡${d.energy}</span>${d.drinks ? `<span class="dr">🍹×${d.drinks}</span>` : ''}</span>${isLeader ? '<span class="ring"></span>' : ''}</div>`;
   }).join('');
   box.innerHTML = html;
@@ -637,6 +663,9 @@ fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
 </body>
 </html>
 <!--
+  v2 (2026-11-14): vũ công = MẶT MEME làm đầu (faceImgIn, mỗi người 1 mặt khác
+  nhau toàn sàn) + dải màu trang phục nhân vật; bảng #howto còn 3 dòng, font
+  23px/line-height 1.5, số lấy động từ s.settings mỗi lần render.
   SỐ THẬT TRONG BẢNG HƯỚNG DẪN (#howto) — nguồn: games/di-bar-online/engine.js
   - "vào bar" / số 1–8 chọn nhân vật / tối đa 24 người: detectJoin, detectCharacterPick, MAX_FLOOR = 24
   - 1 tim +1⚡: defaultSettings.tapEnergy = 1
