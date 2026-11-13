@@ -26,6 +26,13 @@
   #led-main { position: absolute; left: 40px; right: 40px; top: 20px; height: 72px; background: #000; border: 3px solid #facc15; border-radius: 12px; overflow: hidden; display: flex; align-items: center; }
   #led-main span { display: inline-block; white-space: nowrap; font-size: 40px; font-weight: 800; color: #fde047; padding-left: 100%; animation: marquee 14s linear infinite; }
   @keyframes marquee { to { transform: translateX(-100%); } }
+  /* Sân khấu cuối sàn: màn hình nền phát sáng (logo/màn hình đỏ như live thật) + 2 cột LED equalizer dọc 2 bên */
+  #dj-screen { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); width: 780px; height: 232px; z-index: 1; border: 3px solid rgba(255,45,149,.55); border-radius: 22px; background: linear-gradient(135deg, rgba(190,18,60,.55), rgba(88,28,135,.55) 55%, rgba(8,145,178,.45)); box-shadow: 0 0 28px rgba(255,45,149,.35), inset 0 0 40px rgba(0,0,0,.5); animation: hue 7s linear infinite; overflow: hidden; }
+  .eq-col { position: absolute; top: 18px; bottom: 18px; width: 34px; display: flex; flex-direction: column; gap: 7px; }
+  .eq-col.c-l { left: 16px; } .eq-col.c-r { right: 16px; }
+  .eq-col i { flex: 1; border-radius: 4px; background: linear-gradient(90deg, #22d3ee, #a5f3fc); transform-origin: left center; animation: eqw .45s ease-in-out infinite alternate; }
+  .eq-col.c-r i { background: linear-gradient(90deg, #f472b6, #facc15); transform-origin: right center; }
+  @keyframes eqw { from { transform: scaleX(.25); opacity: .55; } to { transform: scaleX(1); opacity: 1; } }
   /* DJ booth — DJ đứng trên sân khấu, gật đầu + gạt đĩa theo nhạc */
   #dj { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); text-align: center; z-index: 2; }
   #dj .fig { font-size: 110px; line-height: 1.15; animation: nod .48s ease-in-out infinite alternate; display: inline-block; }
@@ -56,8 +63,13 @@
   #eq { position: absolute; left: 60px; right: 60px; top: 336px; height: 44px; display: flex; align-items: flex-end; gap: 6px; }
   #eq i { flex: 1; background: linear-gradient(180deg, #22d3ee, #ff2d95); border-radius: 4px 4px 0 0; animation: eqb .5s ease-in-out infinite alternate; }
   @keyframes eqb { from { height: 18%; } to { height: 100%; } }
-  /* SÀN NHẢY — vũ trường thật ở giữa màn hình */
-  #floor { position: absolute; left: 30px; right: 30px; top: 480px; height: 860px; overflow: hidden; background: linear-gradient(180deg, rgba(255,45,149,.14), rgba(34,211,238,.12)), repeating-linear-gradient(0deg, rgba(255,255,255,.07) 0 2px, transparent 2px 110px), repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 2px, transparent 2px 110px), #0d0618; border: 2px solid rgba(255,255,255,.18); border-radius: 24px; padding: 14px 16px; }
+  /* SÀN NHẢY — sàn CARO ĐỔI MÀU như live thật: ô vuông 2 màu xoay vòng màu liên tục (tím/hồng/xanh lá/xanh dương/vàng) */
+  #floor { position: absolute; left: 30px; right: 30px; top: 480px; height: 860px; overflow: hidden; background: #0d0618; border: 2px solid rgba(255,255,255,.18); border-radius: 24px; padding: 14px 16px; }
+  /* Lớp ô caro: 2 màu xen kẽ. Đổi màu bằng 2 lớp crossfade (tím/hồng ↔ xanh cyan/xanh lá) để lúc nào cũng
+     rực rỡ như live thật — KHÔNG dùng hue-rotate (pha giữa của hue-rotate ra màu nâu/xanh ô-liu xỉn). */
+  .floor-tiles { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .6; background: conic-gradient(#9333ea 25%, #ec4899 0 50%, #9333ea 0 75%, #ec4899 0); background-size: 120px 120px; }
+  .floor-tiles.alt { background: conic-gradient(#06b6d4 25%, #22c55e 0 50%, #06b6d4 0 75%, #22c55e 0); background-size: 120px 120px; animation: tilealt 8s ease-in-out infinite alternate; }
+  @keyframes tilealt { from { opacity: 0; } to { opacity: .6; } }
   /* Ánh sáng sàn nhấp nháy theo nhịp (chỉ opacity) */
   .floor-glow { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 25% 30%, rgba(255,45,149,.28) 0%, transparent 45%), radial-gradient(circle at 75% 60%, rgba(34,211,238,.28) 0%, transparent 45%); animation: floorpulse 2.4s ease-in-out infinite alternate; }
   @keyframes floorpulse { from { opacity: .35; } to { opacity: .75; } }
@@ -69,11 +81,12 @@
   #floor-head { position: relative; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 30px; font-weight: 800; color: #f9a8d4; }
   /* Nhãn vòng gọn, không tràn (sửa lỗi tiêu đề góc phải bị cắt) */
   #round-chip { flex-shrink: 1; min-width: 0; max-width: 360px; font-size: 24px; font-weight: 800; color: #fff; background: rgba(0,0,0,.5); border: 2px solid rgba(255,255,255,.25); border-radius: 10px; padding: 4px 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* Bảng hướng dẫn chơi — số thật từ engine.js (xem cuối file) */
-  #howto { position: relative; z-index: 3; margin-top: 8px; background: rgba(0,0,0,.55); border: 2px solid rgba(250,204,21,.55); border-radius: 14px; padding: 8px 14px; font-size: 20px; line-height: 1.4; color: #fef3c7; }
+  /* Bảng hướng dẫn chơi — số thật từ engine.js (xem cuối file). Nổi bật hơn sau bài học live thật
+     ("The live làm méo gì" — người mới phải đọc 3 giây là hiểu đây là game gì). */
+  #howto { position: relative; z-index: 3; margin-top: 8px; background: rgba(0,0,0,.68); border: 3px solid #facc15; border-radius: 14px; padding: 6px 14px; font-size: 20px; line-height: 1.35; color: #fef3c7; box-shadow: 0 0 16px rgba(250,204,21,.35); }
   #howto div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #howto b { color: #fde047; }
-  /* Vùng vũ công: 12 vị trí (4 cột × 3 hàng), vũ công đứng TRÊN SÀN */
+  /* Vùng vũ công: lưới 4×3 khi ≤12 người, 6×4 khi >12 người (tối đa 24 — MAX_FLOOR của engine), vũ công đứng TRÊN SÀN */
   #dancers { position: absolute; left: 16px; right: 16px; top: 196px; bottom: 14px; z-index: 2; }
   .floor-empty { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-size: 26px; color: #ddd; text-shadow: 0 2px 4px #000; }
   /* Spotlight chiếu đúng vũ công dẫn đầu (chỉ transform/opacity) */
@@ -103,6 +116,34 @@
   .dancer.king .nm { color: #fde047; }
   .dancer.king .nm::before { content: '👑 '; }
   .dancer.king .av-box { border-color: #facc15; box-shadow: 0 0 16px #facc15; }
+  /* Banner danh hiệu phía trên người nổi bật (như live thật: chip nhỏ trên đầu, lấy từ trạng thái thật —
+     "VUA SÀN NHẢY" lúc vinh danh theo engine, "DẪN ĐẦU" khi đang dẫn đầu về năng lượng; KHÔNG bịa danh hiệu khác) */
+  .dancer .title-chip { display: block; width: max-content; max-width: 200px; margin: 0 auto 3px; padding: 2px 10px; border-radius: 999px; background: linear-gradient(90deg, #fde047, #f59e0b); color: #111; font-size: 18px; font-weight: 900; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 0 12px rgba(250,204,21,.7); }
+  /* Cánh lớn sau lưng người nổi bật (như live thật: cánh là điểm nhận diện chính — vẽ bằng CSS,
+     lấy từ trạng thái thật isLeader, KHÔNG cần dữ liệu engine; chỉ transform/opacity/scale) */
+  .dancer .wings { display: none; }
+  .dancer.king .wings { display: block; position: absolute; left: 50%; top: 70%; width: 210px; height: 92px; transform: translate(-50%, -50%); z-index: -1; pointer-events: none; animation: wingpulse 1.1s ease-in-out infinite alternate; }
+  .dancer.king .wings i { position: absolute; top: 0; width: 96px; height: 86px; background: linear-gradient(135deg, rgba(165,243,252,.9), rgba(34,211,238,.5) 55%, rgba(168,85,247,.4)); border-radius: 100% 6px 100% 6px; filter: drop-shadow(0 0 10px rgba(34,211,238,.65)); }
+  .dancer.king .wings .w-l { left: 0; transform: rotate(-24deg); }
+  .dancer.king .wings .w-r { right: 0; transform: scaleX(-1) rotate(-24deg); }
+  @keyframes wingpulse { from { scale: 1; opacity: .85; } to { scale: 1.07; opacity: 1; } }
+  /* Vòng sáng dưới chân người nổi bật (như live thật: vòng sáng phát sáng dưới chân/bục đứng) */
+  .dancer .ring { display: none; }
+  .dancer.king .ring { display: block; position: absolute; left: 50%; bottom: 22px; width: 170px; height: 34px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse, rgba(253,224,71,.65), rgba(253,224,71,.12) 60%, transparent 75%); animation: glowpulse 1s ease-in-out infinite alternate; z-index: -1; }
+  /* Sàn đông (>12 người): lưới dày 6×4, vũ công nhỏ lại để vẫn đọc được tên + tag (live thật góc rộng thấy 15–30 người) */
+  #dancers.dense .dancer { width: 150px; }
+  #dancers.dense .dancer .nm { font-size: 17px; }
+  #dancers.dense .dancer .av-box { width: 40px; height: 40px; margin: 2px auto; }
+  #dancers.dense .dancer .av-fb { font-size: 18px; }
+  #dancers.dense .dancer .em { font-size: 46px; }
+  #dancers.dense .dancer.en-lo .em { font-size: 40px; }
+  #dancers.dense .dancer.en-hi .em { font-size: 56px; }
+  #dancers.dense .dancer .st { font-size: 19px; }
+  #dancers.dense .dancer .dr { font-size: 16px; }
+  #dancers.dense .dancer .title-chip { font-size: 14px; max-width: 140px; }
+  #dancers.dense .dancer.king .wings { width: 140px; height: 64px; }
+  #dancers.dense .dancer.king .wings i { width: 64px; height: 58px; }
+  #dancers.dense .dancer.king .ring { width: 120px; height: 26px; bottom: 16px; }
   @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-14px); } }
   @keyframes pop { from { transform: scale(1) rotate(-4deg); } to { transform: scale(1.15) rotate(4deg); } }
   @keyframes wave { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
@@ -151,6 +192,7 @@
   <div class="laser l1"></div><div class="laser l2"></div><div class="laser l3"></div>
   <div id="disco">🪩</div>
   <div id="led-main"><span id="led-text">🎧 ĐI BAR ONLINE — bình luận "vào bar" để lên sàn! 🎧</span></div>
+  <div id="dj-screen"><div class="eq-col c-l"><i style="animation-delay:-.05s;animation-duration:.42s"></i><i style="animation-delay:-.18s;animation-duration:.55s"></i><i style="animation-delay:-.3s;animation-duration:.38s"></i><i style="animation-delay:-.1s;animation-duration:.5s"></i><i style="animation-delay:-.24s;animation-duration:.44s"></i><i style="animation-delay:-.36s;animation-duration:.58s"></i></div><div class="eq-col c-r"><i style="animation-delay:-.12s;animation-duration:.5s"></i><i style="animation-delay:-.28s;animation-duration:.4s"></i><i style="animation-delay:-.04s;animation-duration:.56s"></i><i style="animation-delay:-.2s;animation-duration:.46s"></i><i style="animation-delay:-.33s;animation-duration:.52s"></i><i style="animation-delay:-.08s;animation-duration:.39s"></i></div></div>
   <div id="dj">
     <div class="dj-cheer" id="dj-cheer"></div>
     <div class="fig">🎧</div>
@@ -160,6 +202,8 @@
   </div>
   <div id="eq"></div>
   <div id="floor">
+    <div class="floor-tiles"></div>
+    <div class="floor-tiles alt"></div>
     <div class="floor-glow"></div>
     <div class="beam b1"></div><div class="beam b2"></div>
     <div id="floor-head"><span>💃 SÀN NHẢY</span><span id="round-chip">Vòng 1</span></div>
@@ -181,7 +225,7 @@
   </div>
   <div class="vip" id="vip-vang"><h3>🟡 BÀN VÀNG</h3><div class="score" id="score-vang">0</div><div class="sub" id="sub-vang">0 năng lượng • 0 ly</div><div class="cover">🔥 BAO CẢ BAR — ×2 năng lượng!</div></div>
   <div class="vip" id="vip-do"><h3>🔴 BÀN ĐỎ</h3><div class="score" id="score-do">0</div><div class="sub" id="sub-do">0 năng lượng • 0 ly</div><div class="cover">🔥 BAO CẢ BAR — ×2 năng lượng!</div></div>
-  <div id="led-side">🏆 TOP 3 — chưa có dancer nào.</div>
+  <div id="led-side">🏆 VŨ CÔNG NỔI BẬT — chưa có dancer nào.</div>
 </div></div>
 <div id="demo-badge">🧪 DEMO</div>
 <div id="toast"></div>
@@ -446,9 +490,12 @@ function toast(text, ms) {
 }
 
 const MOVE_CSS = { nod: 'nod', pop: 'pop', wave: 'wave', robot: 'robot', shake: 'shake', bounce: 'bounce', line: 'line', wobble: 'wobble' };
-// 12 vị trí trên sàn: 4 cột × 3 hàng (tâm mỗi ô, % của vùng #dancers).
-const FLOOR_SLOTS = [];
-for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) FLOOR_SLOTS.push([12.5 + c * 25, 17 + r * 33]);
+// Vị trí trên sàn — 2 lưới (live thật: góc rộng thấy 15–30 vũ công):
+// ≤12 người: 4 cột × 3 hàng (vũ công to, đọc rõ tên); >12 người: 6 cột × 4 hàng, tối đa 24 (MAX_FLOOR của engine).
+const FLOOR_SLOTS_12 = [];
+for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) FLOOR_SLOTS_12.push([12.5 + c * 25, 17 + r * 33]);
+const FLOOR_SLOTS_24 = [];
+for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) FLOOR_SLOTS_24.push([8.33 + c * 16.67, 14 + r * 24]);
 function render(s) {
   state = s;
   document.body.classList.toggle('demo', !!s.demoActive);
@@ -461,15 +508,18 @@ function render(s) {
   $('led-text').textContent = '🎧 ' + (last || 'ĐI BAR ONLINE — bình luận "vào bar" để lên sàn!') + kingTxt + ' 🎧';
   // Người dẫn đầu: Vua (lúc vinh danh) hoặc top 1 đang nhảy — spotlight chiếu đúng người này.
   const leaderUid = (s.king && s.king.uid) || (s.top.length && s.top[0].energy > 0 ? s.top[0].uid : null);
-  // Sàn chứa tối đa 12 vũ công; đảm bảo người dẫn đầu luôn có mặt trên sàn.
-  let shown = s.dancers.slice(0, 12);
-  if (leaderUid && shown.length === 12 && !shown.some((d) => d.uid === leaderUid)) {
+  // Sàn chứa tối đa 12 vũ công khi vắng, 24 khi đông (lưới dày 6×4); đảm bảo người dẫn đầu luôn có mặt trên sàn.
+  const MAX_ON_FLOOR = s.dancers.length > 12 ? 24 : 12;
+  const SLOTS = MAX_ON_FLOOR === 24 ? FLOOR_SLOTS_24 : FLOOR_SLOTS_12;
+  let shown = s.dancers.slice(0, MAX_ON_FLOOR);
+  if (leaderUid && shown.length === MAX_ON_FLOOR && !shown.some((d) => d.uid === leaderUid)) {
     const ld = s.dancers.find((d) => d.uid === leaderUid);
-    if (ld) shown[11] = ld;
+    if (ld) shown[MAX_ON_FLOOR - 1] = ld;
   }
   const leaderIdx = leaderUid ? shown.findIndex((d) => d.uid === leaderUid) : -1;
   // Sàn nhảy: vũ công đứng TRÊN SÀN (không còn lưới thẻ card).
   const box = $('dancers');
+  box.classList.toggle('dense', MAX_ON_FLOOR === 24);
   let html = '<div id="spot-cone"></div><div id="spot-glow"></div>';
   if (!shown.length) {
     html += '<div class="floor-empty">Chưa có dancer nào — bình luận "vào bar" để lên sàn!</div>';
@@ -482,21 +532,24 @@ function render(s) {
     // Mức năng lượng: <20 chậm/uể oải, >=100 nhanh + to hơn + phát sáng.
     const enCls = (d.energy || 0) >= 100 ? ' en-hi' : (d.energy || 0) < 20 ? ' en-lo' : '';
     // Vị trí ô + lệch nhẹ theo index cho giống đám đông thật, không ngay hàng thẳng lối.
-    const slot = FLOOR_SLOTS[i] || [50, 50];
+    const slot = SLOTS[i] || [50, 50];
     const jx = ((i * 7) % 5 - 2) * 6;
     const jy = ((i * 11) % 5 - 2) * 5;
     // Avatar thật; lỗi tải thì <img> tự gỡ, lộ chữ cái đầu tên phía dưới.
     const initial = escapeHtml(((d.name || '?').trim().charAt(0) || '?').toUpperCase());
     const av = `<span class="av-box"><span class="av av-fb">${initial}</span>${d.avatarUrl ? `<img class="av av-img" src="${escapeHtml(d.avatarUrl)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>`;
-    return `<div class="dancer${d.uid === leaderUid ? ' king' : ''}${enCls}" style="--c:${c.color};--mv:${MOVE_CSS[c.move] || 'bounce'};left:calc(${slot[0]}% + ${jx}px);top:calc(${slot[1]}% + ${jy}px)">
-      <span class="nm">${escapeHtml(d.name)}${tbl}</span>${av}<span class="em" style="animation-delay:${delay}s">${c.emoji}</span>
-      <span class="st"><span class="en">⚡${d.energy}</span>${d.drinks ? `<span class="dr">🍹×${d.drinks}</span>` : ''}</span></div>`;
+    // Banner danh hiệu trên đầu người nổi bật (trạng thái thật từ engine: Vua lúc vinh danh, Dẫn đầu lúc đang nhảy).
+    const isLeader = d.uid === leaderUid;
+    const titleChip = isLeader ? (s.phase === 'spotlight' ? '👑 VUA SÀN NHẢY' : '⭐ DẪN ĐẦU') : '';
+    return `<div class="dancer${isLeader ? ' king' : ''}${enCls}" style="--c:${c.color};--mv:${MOVE_CSS[c.move] || 'bounce'};left:calc(${slot[0]}% + ${jx}px);top:calc(${slot[1]}% + ${jy}px)">
+      ${titleChip ? `<span class="title-chip">${titleChip}</span>` : ''}<span class="nm">${escapeHtml(d.name)}${tbl}</span>${av}${isLeader ? '<span class="wings"><i class="w-l"></i><i class="w-r"></i></span>' : ''}<span class="em" style="animation-delay:${delay}s">${c.emoji}</span>
+      <span class="st"><span class="en">⚡${d.energy}</span>${d.drinks ? `<span class="dr">🍹×${d.drinks}</span>` : ''}</span>${isLeader ? '<span class="ring"></span>' : ''}</div>`;
   }).join('');
   box.innerHTML = html;
   // Spotlight chiếu đúng vị trí người dẫn đầu trên sàn.
   const cone = $('spot-cone'), glow = $('spot-glow');
   if (leaderIdx >= 0) {
-    const slot = FLOOR_SLOTS[leaderIdx];
+    const slot = SLOTS[leaderIdx];
     cone.style.display = 'block';
     cone.style.left = slot[0] + '%';
     cone.style.height = (slot[1] + 14) + '%';
@@ -507,8 +560,8 @@ function render(s) {
     cone.style.display = 'none';
     glow.style.display = 'none';
   }
-  // Khán giả quanh sàn: vũ công thứ 13–24.
-  const crowd = s.dancers.slice(12);
+  // Khán giả quanh sàn: vũ công vượt quá chỗ trên sàn (13–24 khi lưới thưa, 25+ khi lưới dày).
+  const crowd = s.dancers.slice(MAX_ON_FLOOR);
   const strip = $('crowd-strip');
   if (crowd.length) {
     strip.style.display = 'flex';
@@ -543,9 +596,9 @@ function render(s) {
   $('sub-do').textContent = `${s.tables.do.energy} năng lượng • ${s.tables.do.drinks} ly • ${s.tables.do.count} người`;
   $('vip-vang').classList.toggle('cover', !!(s.barCover && s.barCover.table === 'vang' && s.barCover.until > Date.now()));
   $('vip-do').classList.toggle('cover', !!(s.barCover && s.barCover.table === 'do' && s.barCover.until > Date.now()));
-  // LED bên: top 3 + điểm 2 bàn.
+  // LED bên: bảng "Vũ công nổi bật" như live thật (đổi tên từ "TOP 3") + điểm 2 bàn.
   const topTxt = s.top.slice(0, 3).map((t, i) => `${i + 1}. ${t.name} ⚡${t.energy}`).join('  •  ') || 'chưa có dancer';
-  $('led-side').textContent = `🏆 TOP 3: ${topTxt}   |   🟡 Bàn Vàng ${s.tables.vang.score} — 🔴 Bàn Đỏ ${s.tables.do.score}${s.tableWinner ? ' — Thắng vòng: ' + (s.tableWinner === 'vang' ? 'Bàn Vàng' : 'Bàn Đỏ') : ''}`;
+  $('led-side').textContent = `🏆 VŨ CÔNG NỔI BẬT: ${topTxt}   |   🟡 Bàn Vàng ${s.tables.vang.score} — 🔴 Bàn Đỏ ${s.tables.do.score}${s.tableWinner ? ' — Thắng vòng: ' + (s.tableWinner === 'vang' ? 'Bàn Vàng' : 'Bàn Đỏ') : ''}`;
   // Nhạc theo setting.
   if (s.settings.musicEnabled && musicOn) initMusic();
   startShotTimer();
@@ -576,4 +629,17 @@ fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
   - DJ drop mỗi 2 phút, 15s tim ×2: dropIntervalS = 120, dropDurationS = 15, tick() (báo trước 10s: dropWarningS = 10)
   - ≥10 xu cocktail / ≥50 xu bottle / ≥100 xu sâm panh: handleIntake gift tiers
   - Menu quầy bar (10/50/100 xu) khớp đúng 3 tier trên.
+  - "Vua sàn nhảy": engine gọi đúng tên này (state.king, log "Vua sàn nhảy vòng N") nên GIỮ trong LED + banner
+    lúc vinh danh (chip nhỏ trên đầu người dẫn đầu, không còn banner chữ to đè thẻ như bản cũ); bảng xếp hạng
+    đổi tên theo live thật thành "VŨ CÔNG NỔI BẬT". Quyết định của CEO 2026-11-13 (tự tay làm tiếp sau khi
+    worker #9 dừng): giữ tên này vì đó là cơ chế thật của engine mình, live thật chỉ không dùng đúng nhãn
+    đó chứ không cấm đặt tên cho khoảnh khắc vinh danh.
+  - Đợt 3 (2026-11-13, theo docs/research-di-bar-live-2026-11-13.md — xem trực tiếp 2 live thật @dibar5.0,
+    @hoang_thinh_hp): sàn đổi thành CARO ĐỔI MÀU (ô 2 màu xoay vòng màu); sân khấu thêm màn hình nền + 2 cột LED
+    equalizer dọc; người nổi bật có banner danh hiệu (VUA SÀN NHẢY/DẪN ĐẦU — từ trạng thái thật) + vòng sáng dưới
+    chân; lưới sàn dày 6×4 khi >12 người (tối đa 24); bảng hướng dẫn làm nổi bật hơn. CEO làm tiếp (sau khi
+    worker #9 dừng vì hết token nhân sự): thêm CÁNH CSS cho người dẫn đầu — vẽ bằng CSS từ trạng thái thật
+    isLeader, không cần dữ liệu engine (bác đề xuất engine #1). KHÔNG thêm: menu hành động mép trên
+    (CẢ SÀN QUẨY/MƯA TIM/PHÁO GIẤY... — engine không hỗ trợ, thêm nút giả là báo cáo cho có), vai trò
+    CHỦ TỊCH/PHÓ/THƯ KÝ (engine không có), hiệu ứng gift toàn màn hình (live thật chỉ hiện dòng chat).
 -->
