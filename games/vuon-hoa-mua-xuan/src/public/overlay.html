@@ -6,11 +6,14 @@
 <title>Vườn Hoa Mùa Xuân — Overlay</title>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/shared/music.js"></script>
+<link rel="stylesheet" href="/shared/ui.css">
+<script src="/shared/ui.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --ui-accent: #FF5E8A; --ui-accent-2: #2E7D32; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; }
   body {
-    font-family: "Segoe UI", Verdana, sans-serif; color: #2d1a0e;
+    font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif; color: #2d1a0e;
   }
   .sun { position: absolute; top: 40px; right: 60px; font-size: 90px; filter: drop-shadow(0 0 24px #ffd94d); }
   #demo-badge { position: absolute; top: 18px; left: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
@@ -24,23 +27,39 @@
   .sub { font-size: 26px; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.45); margin-top: 6px; }
   .progress { margin: 16px auto 0; width: 880px; background: rgba(255,255,255,.85); border-radius: 999px; padding: 10px 18px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
   .progress .label { font-size: 26px; font-weight: 800; color: #2e7d32; display: flex; justify-content: space-between; }
-  .bar { height: 18px; background: #d7e8c8; border-radius: 999px; margin-top: 6px; overflow: hidden; }
-  .bar i { display: block; height: 100%; background: linear-gradient(90deg, #ff8fb3, #ff5e8a); border-radius: 999px; transition: width .6s; }
+  .progress .ui-progress { margin-top: 6px; }
   .milestones { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-  .ms { font-size: 22px; font-weight: 800; background: rgba(255,255,255,.75); color: #6b4a12; padding: 6px 14px; border-radius: 999px; }
+  .ms { display: inline-block; font-size: 22px; font-weight: 800; background: rgba(255,255,255,.75); color: #6b4a12; padding: 6px 14px; border-radius: 999px; }
   .ms.hit { background: #ffd94d; color: #4a2f00; }
+  .ms-pop { animation: ms-pop .6s ease; }
+  @keyframes ms-pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
   .top5 { position: absolute; top: 330px; right: 24px; z-index: 6; width: 300px; background: rgba(255,255,255,.88); border-radius: 16px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
   .top5 h3 { font-size: 24px; color: #2e7d32; margin-bottom: 6px; }
-  .top5 div { font-size: 22px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .top5.ui-board h3 { font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif; font-size: 28px; color: var(--ui-accent); }
+  .top5 .ui-row { font-size: 22px; color: #2d1a0e; border-bottom-color: rgba(0,0,0,.12); }
+  .top5 .ui-row .ui-ava { width: 48px; height: 48px; }
+  .top5 .ui-row .ui-bar { background: rgba(0,0,0,.12); }
+  .top5 .top-empty { font-size: 22px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ui-ava-fallback { display: inline-flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #fff; background: var(--ui-accent); }
   .garden { position: absolute; top: 400px; left: 30px; width: 740px; height: 1180px; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(8, 1fr); gap: 10px; z-index: 4; }
-  .plot { background: rgba(101, 67, 33, .55); border: 3px solid rgba(255,255,255,.5); border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .plot { background:
+      radial-gradient(circle at 20% 30%, rgba(0,0,0,.28) 0 6px, transparent 7px),
+      radial-gradient(circle at 70% 60%, rgba(0,0,0,.24) 0 5px, transparent 6px),
+      radial-gradient(circle at 45% 82%, rgba(255,255,255,.16) 0 4px, transparent 5px),
+      linear-gradient(180deg, #7a4a22 0%, #5d3a1a 55%, #4a2c12 100%);
+    border: 3px solid rgba(255,255,255,.5); border-top: 6px solid #4caf50; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
   .plot .f { font-size: 62px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
-  .plot .nm { font-size: 15px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px #000; max-width: 96%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .plot .st { font-size: 13px; color: #ffe9bd; font-weight: 700; }
+  .plot .f.stage-ic { font-size: 40px; }
+  .plot .nm { font-size: 20px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px #000; max-width: 96%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .plot.golden { border-color: #ffd700; box-shadow: 0 0 18px #ffd700; }
   .plot.bloom { animation: sway 3s ease-in-out infinite; }
   @keyframes sway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
-  .plot.empty::after { content: "· · ·"; color: rgba(255,255,255,.5); font-size: 26px; }
+  .plot.just-bloomed .f { animation: bloom-pop .6s ease; }
+  @keyframes bloom-pop { 0% { transform: scale(.3) rotate(-20deg); opacity: 0; } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  .plot.empty::after { content: "🌱"; font-size: 30px; opacity: .45; }
+  #petals { position: absolute; inset: 0; pointer-events: none; z-index: 8; overflow: hidden; }
+  .petal { position: absolute; top: -40px; width: 26px; height: 34px; background: radial-gradient(circle at 35% 35%, #ffd1e0, #ff5e8a); border-radius: 60% 40% 60% 40%; opacity: .9; animation: fall 6s linear infinite; }
+  @keyframes fall { from { transform: translateY(-60px) rotate(0deg); } to { transform: translateY(1980px) rotate(540deg); } }
   .nursery { position: absolute; left: 30px; bottom: 250px; width: 740px; z-index: 5; background: rgba(255,255,255,.85); border-radius: 14px; padding: 10px 16px; font-size: 22px; font-weight: 700; color: #6b4a12; }
   .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
   .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
@@ -61,6 +80,10 @@
 </head>
 <body>
 <div id="scaler">
+<div class="ui-vignette"></div>
+<div class="ui-grain"></div>
+<div class="ui-toast" id="ui-toast"></div>
+<div id="petals"></div>
 <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="sun">☀️</div>
 <div class="cloud" style="top:90px; animation-delay:-6s;">☁️</div>
@@ -72,12 +95,12 @@
   <div class="sub" id="round-line">Ván 1 · Bình luận / thả tim để gieo hạt — quà tưới nước, follow tặng hồng vàng</div>
   <div class="progress">
     <div class="label"><span>🌸 Hoa đã nở: <b id="blooms">0</b>/<span id="target">100</span></span><span id="phase-label">Đang trồng…</span></div>
-    <div class="bar"><i id="bar" style="width:0%"></i></div>
+    <div class="ui-progress" id="progress"><i id="bar" style="width:0%"></i></div>
   </div>
   <div class="milestones" id="milestones"></div>
 </header>
 
-<div class="top5" id="top5"><h3>🏆 Top người trồng</h3><div>Chưa có ai trồng hoa…</div></div>
+<div class="top5 ui-board" id="top5"><h3>🏆 Top người trồng</h3><div>Chưa có ai trồng hoa…</div></div>
 <div class="garden" id="garden"></div>
 <div class="nursery" id="nursery">🌱 Vườn ươm: 0 hạt đang chờ</div>
 <div class="ticker" id="ticker"></div>
@@ -103,6 +126,8 @@ const FLOWER_ICON = { mai: '🌼', dao: '🌸', cuc: '🏵️', sen: '🪷', hon
 const STAGE_ICON = { seed: '🌱', sprout: '🌿', bud: '🌷' };
 const STAGE_NAME = { seed: 'Hạt', sprout: 'Mầm', bud: 'Nụ', bloom: 'Nở' };
 let lastState = null;
+let prevPhase = null;
+let prevStages = null; // stage từng ô ở lần render trước — để phát hiện hoa vừa nở (bloom-pop 1 lần)
 let voiceOn = true;
 const ttsQueue = [];
 let ttsPlaying = false;
@@ -139,6 +164,20 @@ function showBanner(title, text, names, ms) {
   if (ms) setTimeout(() => b.classList.remove('on'), ms);
 }
 
+function spawnPetals() {
+  const host = document.getElementById('petals');
+  if (!host) return;
+  let html = '';
+  for (let i = 0; i < 8; i++) {
+    const left = Math.floor(Math.random() * 1020);
+    const size = 18 + Math.floor(Math.random() * 16);
+    const dur = (5 + Math.random() * 3).toFixed(1);
+    const delay = (-Math.random() * 6).toFixed(1);
+    html += '<div class="petal" style="left:' + left + 'px;width:' + size + 'px;height:' + Math.round(size * 1.3) + 'px;animation-duration:' + dur + 's;animation-delay:' + delay + 's;"></div>';
+  }
+  host.innerHTML = html;
+}
+
 function render(s) {
   lastState = s;
   // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
@@ -146,7 +185,9 @@ function render(s) {
   voiceOn = s.settings.voiceEnabled !== false;
   document.getElementById('blooms').textContent = s.gardenBlooms;
   document.getElementById('target').textContent = s.target;
-  document.getElementById('bar').style.width = Math.min(100, s.gardenBlooms / s.target * 100) + '%';
+  const bloomPct = Math.min(100, s.gardenBlooms / s.target * 100);
+  document.getElementById('bar').style.width = bloomPct + '%';
+  document.getElementById('progress').classList.toggle('hot', bloomPct > 80);
   document.getElementById('round-line').textContent = 'Ván ' + s.roundNo + ' · Bình luận / thả tim để gieo hạt — quà tưới nước, follow tặng hồng vàng';
   document.getElementById('phase-label').textContent =
     s.phase === 'festival' ? '🎉 LỄ HỘI HOA!' : s.phase === 'results' ? '🏆 Kết quả ván' : 'Đang trồng…';
@@ -157,22 +198,35 @@ function render(s) {
   document.getElementById('bees').classList.toggle('on', s.milestonesHit.includes(50));
 
   const top = document.getElementById('top5');
+  const maxPts = s.top.length ? Math.max(1, s.top[0].points) : 1;
   top.innerHTML = '<h3>🏆 Top người trồng</h3>' + (s.top.length
-    ? s.top.map((t, i) => '<div>' + ['🥇','🥈','🥉','4.','5.'][i] + ' ' + escapeHtml(t.name) + ' — ' + t.points + 'đ</div>').join('')
-    : '<div>Chưa có ai trồng hoa…</div>');
+    ? s.top.map((t, i) => {
+        const medal = ['🥇', '🥈', '🥉'][i] || (i + 1);
+        const ava = t.avatar
+          ? '<img class="ui-ava" src="' + escapeHtml(t.avatar) + '" alt="">'
+          : '<span class="ui-ava ui-ava-fallback">' + escapeHtml((String(t.name || '?').trim().charAt(0)) || '?') + '</span>';
+        return '<div class="ui-row' + (i < 3 ? ' rank-' + (i + 1) : '') + '">' +
+          '<div class="ui-rank">' + medal + '</div>' + ava +
+          '<div class="ui-name">' + escapeHtml(t.name) + '<div class="ui-bar"><i style="width:' + Math.round(t.points / maxPts * 100) + '%"></i></div></div>' +
+          '<div class="ui-pts">' + t.points + 'đ</div></div>';
+      }).join('')
+    : '<div class="top-empty">Chưa có ai trồng hoa…</div>');
 
   const g = document.getElementById('garden');
   let html = '';
   for (let i = 0; i < s.plots; i++) {
     const f = s.flowers[i];
     if (!f) { html += '<div class="plot empty"></div>'; continue; }
+    const shortName = [...String(f.name || '')].slice(0, 8).join('');
+    const justBloomed = prevStages && prevStages[i] !== 'bloom' && f.stage === 'bloom';
     const icon = f.stage === 'bloom' ? FLOWER_ICON[f.type] : STAGE_ICON[f.stage];
-    html += '<div class="plot' + (f.golden ? ' golden' : '') + (f.stage === 'bloom' ? ' bloom' : '') + '">' +
-      '<div class="f">' + icon + '</div>' +
-      (f.stage === 'bloom' ? '<div class="nm">' + escapeHtml(f.name) + '</div>' : '<div class="st">' + STAGE_NAME[f.stage] + '</div>') +
+    html += '<div class="plot' + (f.golden ? ' golden' : '') + (f.stage === 'bloom' ? ' bloom' : '') + (justBloomed ? ' just-bloomed' : '') + '" title="' + escapeHtml(f.name) + ' — ' + STAGE_NAME[f.stage] + '">' +
+      '<div class="f' + (f.stage === 'bloom' ? '' : ' stage-ic') + '">' + icon + '</div>' +
+      (f.stage === 'bloom' ? '<div class="nm">' + escapeHtml(shortName) + '</div>' : '') +
       '</div>';
   }
   g.innerHTML = html;
+  prevStages = s.flowers.map((f) => (f ? f.stage : null));
 
   document.getElementById('nursery').textContent = '🌱 Vườn ươm: ' + s.nursery.count + ' hạt đang chờ' +
     (s.nursery.waiting.length ? ' — ' + s.nursery.waiting.map(escapeHtml).join(', ') : '');
@@ -182,6 +236,10 @@ function render(s) {
 
   const tk = document.getElementById('ticker');
   tk.innerHTML = s.logs.slice(-3).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
+
+  if (s.phase === 'festival' && prevPhase !== 'festival') spawnPetals();
+  if (s.phase !== 'festival' && prevPhase === 'festival') document.getElementById('petals').innerHTML = '';
+  prevPhase = s.phase;
 
   if (s.phase === 'festival') {
     const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
@@ -201,7 +259,17 @@ function escapeHtml(s) {
 socket.on('state-update', render);
 socket.on('bloom', (d) => { if (d && d.flower) playTts('Hoa của ' + d.flower.name + ' đã nở rồi!'); });
 socket.on('festival', () => playTts('Vườn hoa đã đầy! Lễ hội hoa bắt đầu!'));
-socket.on('milestone', (d) => { if (d) playTts('Mốc ' + d.milestone + ' hoa nở! ' + (d.effect || '')); });
+socket.on('milestone', (d) => {
+  if (!d) return;
+  playTts('Mốc ' + d.milestone + ' hoa nở! ' + (d.effect || ''));
+  if (window.StromUI) StromUI.sfx('pop');
+  document.querySelectorAll('#milestones .ms').forEach((el) => {
+    if (el.textContent.indexOf(String(d.milestone)) !== -1) {
+      el.classList.add('ms-pop');
+      setTimeout(() => el.classList.remove('ms-pop'), 700);
+    }
+  });
+});
 socket.on('rainbow', (d) => { if (d) playTts('Cầu vồng! Cảm ơn ' + d.name + ' đã tặng quà lớn!'); });
 
 fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});

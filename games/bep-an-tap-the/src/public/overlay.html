@@ -4,7 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bếp Ăn Tập Thể — Nấu Cỗ</title>
+<link rel="stylesheet" href="/shared/ui.css">
+<script src="/shared/ui.js"></script>
 <style>
+  :root { --ui-accent: #FF9A3D; --ui-accent-2: #C25E00; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; color: #fff8ee;
     font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -19,10 +22,10 @@
   .potzone { position: relative; height: 660px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
   .steam { font-size: 74px; animation: steam 2.4s ease-in-out infinite; opacity: .85; }
   @keyframes steam { 0%,100% { transform: translateY(14px) scale(1); opacity: .35; } 50% { transform: translateY(-16px) scale(1.12); opacity: .95; } }
-  .pot { font-size: 330px; line-height: 1; filter: drop-shadow(0 22px 18px rgba(0,0,0,.5)); }
+  .pot { font-size: 330px; line-height: 1; filter: drop-shadow(0 22px 18px rgba(0,0,0,.5)); position: relative; z-index: 1; }
   .pot.bubble { animation: bubble .55s ease-in-out infinite alternate; }
   @keyframes bubble { from { transform: scale(1); } to { transform: scale(1.03) translateY(-4px); } }
-  .fire { font-size: 120px; margin-top: -30px; }
+  .fire { font-size: 120px; margin-top: -30px; position: relative; z-index: 2; }
   .fire.big { animation: flame .35s ease-in-out infinite alternate; }
   @keyframes flame { from { transform: scale(1); } to { transform: scale(1.15) translateY(-6px); } }
   .barWrap { margin-top: 26px; background: rgba(0,0,0,.45); border: 3px solid #ffd9a0; border-radius: 22px; padding: 18px 22px; }
@@ -43,7 +46,7 @@
   .top h2 { font-size: 30px; margin-bottom: 10px; }
   .topRow { display: flex; align-items: center; gap: 14px; font-size: 28px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,.15); }
   .topRow:last-child { border-bottom: 0; }
-  .topRow img, .ava { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; }
+  .topRow img, .ava { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; }
   .topRow b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ticker { margin-top: 22px; background: rgba(0,0,0,.55); border-radius: 16px; padding: 16px 20px; font-size: 27px; min-height: 76px; color: #ffe9c4; }
   .banner { display: none; position: absolute; left: 40px; right: 40px; top: 640px; background: rgba(20, 8, 0, .92); border: 4px solid #ffc53d; border-radius: 26px; padding: 34px 30px; text-align: center; z-index: 5; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
@@ -52,14 +55,58 @@
   .banner p { font-size: 30px; color: #ffe9c4; }
   .winners { font-size: 30px; line-height: 1.7; margin-top: 12px; }
   .status { position: absolute; bottom: 22px; left: 40px; right: 40px; display: flex; justify-content: space-between; font-size: 22px; color: rgba(255,233,196,.75); }
+  #potPct { font-size: 40px; }
+  /* --- Nâng cấp UI 2026-11-13 (kế hoạch mục 3.5) --- */
+  /* (1) Nồi có bếp: bệ bếp + vòng lửa phát sáng + bong bóng sôi */
+  .stove { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 640px; height: 120px; z-index: 0; border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 30%, #6b3a12 0%, #4a2408 55%, #2e1503 100%);
+    box-shadow: 0 14px 30px rgba(0,0,0,.55), inset 0 4px 0 rgba(255,180,90,.25); }
+  .stove.hot { box-shadow: 0 0 60px #FF6B00, 0 0 120px rgba(255,107,0,.55), 0 14px 30px rgba(0,0,0,.55); }
+  .fire-ring { position: absolute; left: 50%; bottom: 128px; width: 560px; height: 70px; transform: translateX(-50%);
+    border-radius: 50%; border: 6px solid rgba(255,140,40,0); pointer-events: none; z-index: 2; }
+  .fire-ring.hot { border-color: rgba(255,140,40,.85); animation: ring-pulse 1s ease-in-out infinite alternate; }
+  @keyframes ring-pulse { from { box-shadow: 0 0 24px rgba(255,107,0,.5), inset 0 0 18px rgba(255,107,0,.4); } to { box-shadow: 0 0 60px rgba(255,107,0,.95), inset 0 0 40px rgba(255,107,0,.8); } }
+  .bubbles { position: absolute; left: 50%; bottom: 360px; width: 0; height: 0; z-index: 3; pointer-events: none; }
+  .bubbles i { position: absolute; bottom: 0; width: 20px; height: 20px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.9), rgba(255,255,255,.25));
+    opacity: 0; animation: bubble-up 1.2s ease-in infinite; }
+  .bubbles i:nth-child(1) { left: -90px; animation-delay: 0s; }
+  .bubbles i:nth-child(2) { left: -50px; animation-delay: .2s; width: 14px; height: 14px; }
+  .bubbles i:nth-child(3) { left: -10px; animation-delay: .45s; width: 24px; height: 24px; }
+  .bubbles i:nth-child(4) { left: 30px; animation-delay: .1s; width: 16px; height: 16px; }
+  .bubbles i:nth-child(5) { left: 70px; animation-delay: .6s; }
+  .bubbles i:nth-child(6) { left: 110px; animation-delay: .35s; width: 13px; height: 13px; }
+  @keyframes bubble-up { 0% { transform: translateY(0) scale(.5); opacity: 0; } 25% { opacity: .85; } 100% { transform: translateY(-150px) scale(1.15); opacity: 0; } }
+  /* (2) Món sắp mở: viền vàng nhấp nháy */
+  .dish.almost { opacity: .8; border: 2px solid #FFD700; animation: almost-blink 1s ease-in-out infinite alternate; }
+  @keyframes almost-blink { from { box-shadow: 0 0 4px rgba(255,215,0,.35); } to { box-shadow: 0 0 22px rgba(255,215,0,.95); } }
+  /* (3) Nhãn SẮP CHÍN! nhấp nháy khi thanh nấu > 80% */
+  .almost-done { display: none; text-align: center; font-size: 30px; font-weight: 900; color: #FFD700; margin-top: 12px;
+    text-shadow: 0 2px 8px rgba(0,0,0,.6); animation: ui-blink-soft 1s ease-in-out infinite alternate; }
+  .almost-done.show { display: block; }
+  /* (4) Top đầu bếp chuẩn .ui-board: avatar 64px */
+  .ui-row .ui-ava { width: 64px; height: 64px; }
+  .ui-row .ui-name { line-height: 1.25; }
+  /* (5) Nền có chiều sâu: khói mờ bay lên */
+  .smoke { position: absolute; bottom: 180px; width: 320px; height: 130px; border-radius: 50%; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse, rgba(255,255,255,.13), transparent 70%);
+    filter: blur(16px); opacity: 0; animation: smoke-up 8s ease-in-out infinite; }
+  .smoke.s1 { left: 40px; }
+  .smoke.s2 { right: 40px; animation-delay: 4s; }
+  @keyframes smoke-up { 0% { transform: translateY(60px) scale(.8); opacity: 0; } 30% { opacity: .8; } 100% { transform: translateY(-460px) scale(1.5); opacity: 0; } }
   #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
   html { background: #000; }
 </style>
 </head>
 <body>
 <div id="scaler">
+<div class="ui-vignette"></div>
+<div class="ui-grain"></div>
+<div class="ui-toast" id="ui-toast"></div>
 <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="wrap">
+  <div class="smoke s1"></div>
+  <div class="smoke s2"></div>
   <h1>🍲 BẾP ĂN TẬP THỂ 🍲</h1>
   <div class="sub">Bình luận thả nguyên liệu — 50 tim thổi lửa — Quà mở món đặc biệt</div>
 
@@ -67,11 +114,15 @@
     <div class="steam" id="steam">♨️</div>
     <div class="pot bubble" id="pot">🍲</div>
     <div class="fire" id="fire">🔥</div>
+    <div class="stove" id="stove"></div>
+    <div class="fire-ring" id="fireRing"></div>
+    <div class="bubbles"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   </div>
 
   <div class="barWrap">
     <div class="barTop"><span id="potLabel">🍲 Cỗ đang nấu — Nồi #1</span><span id="potPct">0%</span></div>
-    <div class="bar"><div id="potBar"></div></div>
+    <div class="bar ui-progress" id="potBarOuter"><i id="potBar"></i></div>
+    <div class="almost-done" id="almostDone">🔥 SẮP CHÍN! 🔥</div>
     <div class="barTop" style="margin-top:10px;font-size:26px"><span id="potPts">0 / 300 điểm nấu</span><span id="fireLabel">🔥 Lửa cấp 2</span></div>
   </div>
 
@@ -87,7 +138,7 @@
     <div class="nextDish" id="nextDish"></div>
   </div>
 
-  <div class="top">
+  <div class="top ui-board">
     <h2>🏆 Top đầu bếp</h2>
     <div id="topList"></div>
   </div>
@@ -136,8 +187,8 @@ window.addEventListener('resize', fit); fit();
     });
   }
   function avatarHtml(p) {
-    if (p.avatar) return '<img src="' + p.avatar + '" alt="">';
-    return '<span class="ava">' + (p.name ? p.name.charAt(0).toUpperCase() : '🍲') + '</span>';
+    if (p.avatar) return '<img class="ui-ava" src="' + p.avatar + '" alt="">';
+    return '<span class="ava ui-ava">' + (p.name ? p.name.charAt(0).toUpperCase() : '🍲') + '</span>';
   }
   function render(s) {
     lastState = s;
@@ -149,21 +200,29 @@ window.addEventListener('resize', fit); fit();
     $('potLabel').textContent = '🍲 ' + (s.phase === 'cooking' ? 'Cỗ đang nấu' : s.phase === 'serving' ? '🎉 Cỗ đã chín — Dọn cỗ!' : '🎁 Kết quả bốc thăm') + ' — Nồi #' + s.potNo;
     $('potPct').textContent = pct + '%';
     $('potBar').style.width = pct + '%';
+    $('potBarOuter').classList.toggle('hot', pct > 80);
+    $('almostDone').classList.toggle('show', pct > 80 && s.phase === 'cooking');
     $('potPts').textContent = s.pot.points + ' / ' + s.potTarget + ' điểm nấu';
     $('fireLabel').textContent = s.fireLevel === 3 ? '🔥🔥 Lửa TO cấp 3 — nguyên liệu +1!' : '🔥 Lửa cấp 2';
     $('fire').className = 'fire' + (s.fireLevel === 3 ? ' big' : '');
     $('fire').textContent = s.fireLevel === 3 ? '🔥🔥🔥' : '🔥';
+    $('stove').classList.toggle('hot', s.fireLevel === 3);
+    $('fireRing').classList.toggle('hot', s.fireLevel === 3);
     $('cThit').textContent = s.pot.counts.thit;
     $('cRau').textContent = s.pot.counts.rau;
     $('cGiaVi').textContent = s.pot.counts.giavi;
     const unlocked = new Set((s.pot.dishesUnlocked || []).map(d => d.name));
-    $('dishRow').innerHTML = (s.settings.dishMilestones || []).map(d =>
-      '<div class="dish' + (unlocked.has(d.name) ? ' on' : '') + '">' + d.icon + '<small>' + d.name + '<br>' + d.coins + ' xu</small></div>').join('');
+    $('dishRow').innerHTML = (s.settings.dishMilestones || []).map(d => {
+      const remain = d.coins - (s.pot.giftCoins || 0);
+      const almost = !unlocked.has(d.name) && remain > 0 && remain < 20;
+      return '<div class="dish' + (unlocked.has(d.name) ? ' on' : almost ? ' almost' : '') + '">' + d.icon + '<small>' + d.name + '<br>' + d.coins + ' xu</small></div>';
+    }).join('');
     $('nextDish').textContent = s.nextDish
       ? '🎯 Món tiếp theo: ' + s.nextDish.icon + ' ' + s.nextDish.name + ' — còn ' + (s.nextDish.coins - s.pot.giftCoins) + ' xu quà nữa'
       : '🎉 Đã mở hết món đặc biệt!';
+    const topMax = Math.max.apply(null, (s.top || []).map(p => p.points || 0).concat([1]));
     $('topList').innerHTML = (s.top || []).map((p, i) =>
-      '<div class="topRow"><span>' + ['🥇','🥈','🥉','4.','5.'][i] + '</span>' + avatarHtml(p) + '<b>' + esc(p.name) + '</b><span>' + p.points + 'đ</span></div>').join('')
+      '<div class="ui-row' + (i === 0 ? ' rank-1' : i === 1 ? ' rank-2' : i === 2 ? ' rank-3' : '') + '"><span class="ui-rank">' + ['🥇','🥈','🥉','4','5'][i] + '</span>' + avatarHtml(p) + '<div class="ui-name">' + esc(p.name) + (i === 0 ? ' 👑' : '') + '<div class="ui-bar"><i style="width:' + Math.round(100 * (p.points || 0) / topMax) + '%"></i></div></div><span class="ui-pts">' + p.points + 'đ</span></div>').join('')
       || '<div style="font-size:26px;color:#ffd9a0">Chưa có đầu bếp nào — bình luận nguyên liệu để lên bảng!</div>';
     const last = (s.logs || []).slice(-1)[0];
     if (last) $('ticker').textContent = last.text;
@@ -196,7 +255,7 @@ window.addEventListener('resize', fit); fit();
   const socket = io();
   socket.on('state-update', render);
   socket.on('serving', d => speak('Cỗ đã chín! Mời cả nhà ăn cỗ, sắp bốc thăm mười người may mắn!'));
-  socket.on('dish', d => speak('Món đặc biệt đã mở: ' + (d.dish && d.dish.name)));
+  socket.on('dish', d => { speak('Món đặc biệt đã mở: ' + (d.dish && d.dish.name)); if (window.StromUI) { StromUI.confetti(24); StromUI.sfx('gift'); } });
   socket.on('draw', d => speak('Chúc mừng mười người may mắn của nồi số ' + d.potNo + '!'));
 })();
 </script>
