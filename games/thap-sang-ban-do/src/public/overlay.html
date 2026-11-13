@@ -29,21 +29,24 @@
        vùng biển bên phải bản đồ đọc ra là biển (trước đây trong suốt, lộ nền
        tối của stage nên trông như dải đen thừa bên phải khung). */
     background:linear-gradient(180deg,#16407a 0%,#0e2c52 55%,#081426 100%); }
-  /* MẶT TRỐNG ĐỒNG ĐÔNG SƠN — VẼ LẠI HẲN HOI (2026-11-13, Chủ tịch 22:14:
-     "nhìn có ra cái trống đồng không? làm hẳn hoi vào").
-     Bản v9b SAI ở 2 chỗ: (1) SVG cũ chỉ là 3 vòng tròn + 14 đoạn thẳng ngắn
-     ở tâm (không phải ngôi sao, không có vành hoa văn) nên phóng to ra chỉ
-     đọc thành tia nắng/mặt trời; (2) trống 1300px đặt tâm ở 83%/29% nên bị
-     cắt mất 1/3 bên phải + 1/4 phía trên — không bao giờ thấy được 1 cái
-     trống TRỌN VẸN. Bản này vẽ lại mặt trống Đông Sơn đầy đủ: vành ngoài +
-     vành tam giác răng cưa + vành chấm + vành zigzag + NGÔI SAO 14 CÁNH
-     đặc (tâm vàng nhạt) — nhìn là ra trống đồng. Kích thước 500px, tâm ở
-     biển đông-bắc (75%/24%) để TRỌN cái trống nằm gọn trong biển, không bị
-     cắt, không đè lên Hoàng Sa/Trường Sa, chỉ chạm nhẹ mép đất liền (trống
-     nằm dưới bản đồ, z-index 0). Data URI — không cần mạng. */
-  #bigDrum { position:absolute; left:75%; top:24%; width:500px; height:500px;
+  /* TRỐNG ĐỒNG LÀM BACKGROUND — ẢNH THẬT, TO (2026-11-13, Chủ tịch 22:27:
+     "lấy đúng hình ảnh trống đồng đi, cho nó to ra mà làm background").
+     Dùng ảnh thật trong-dong-bg.jpg (mặt trống Đông Sơn 1600x1600, đã có
+     sẵn trong public/) thay cho SVG vẽ tay — SVG dù vẽ lại vẫn là hình
+     vẽ, không bằng ảnh thật. Trống 1200px, tâm ở biển đông (80%/40%),
+     bo tròn 50% để cắt 4 góc đen của ảnh vuông thành đĩa trống tròn,
+     sáng lên 1.3x cho đồng nổi trên nền biển tối. Trống nằm dưới bản đồ
+     (z-index 0) nên là background thật: đất liền che phần trái, biển
+     hiện phần phải + ngôi sao ở giữa. URL ảnh KHÔNG viết trong CSS (URL
+     tương đối resolve lên 1 cấp -> 400, lỗi v9) mà gắn bằng JS
+     (applyDrumBg, theo mẫu applyMusic): trên nền tảng gắn prefix phòng
+     /o/<game>/<room>/trong-dong-bg.jpg, chạy riêng giữ nguyên ở gốc.
+     Literal '/trong-dong-bg.jpg' KHÔNG nằm trong danh sách transform.js
+     viết lại nên an toàn. */
+  #bigDrum { position:absolute; left:80%; top:40%; width:1200px; height:1200px;
     transform:translate(-50%,-50%); z-index:0; pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22600%22%20height%3D%22600%22%20viewBox%3D%220%200%20600%20600%22%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22290%22%20fill%3D%22none%22%20stroke%3D%22%23d4a017%22%20stroke-width%3D%2210%22%2F%3E%3Cpath%20d%3D%22M546%20300L580.5%20329.5L540.6%20351.1ZM540.6%20351.1L568.2%20387.1L524.7%20400.1ZM524.7%20400.1L544.2%20441L499%20444.6ZM499%20444.6L509.6%20488.7L464.6%20482.8ZM464.6%20482.8L465.8%20528.1L423%20513ZM423%20513L414.7%20557.6L376%20534ZM376%20534L358.6%20575.8L325.7%20544.7ZM325.7%20544.7L300%20582L274.3%20544.7ZM274.3%20544.7L241.4%20575.8L224%20534ZM224%20534L185.3%20557.6L177%20513ZM177%20513L134.2%20528.1L135.4%20482.8ZM135.4%20482.8L90.4%20488.7L101%20444.6ZM101%20444.6L55.8%20441L75.3%20400.1ZM75.3%20400.1L31.8%20387.1L59.4%20351.1ZM59.4%20351.1L19.5%20329.5L54%20300ZM54%20300L19.5%20270.5L59.4%20248.9ZM59.4%20248.9L31.8%20212.9L75.3%20199.9ZM75.3%20199.9L55.8%20159L101%20155.4ZM101%20155.4L90.4%20111.3L135.4%20117.2ZM135.4%20117.2L134.2%2071.9L177%2087ZM177%2087L185.3%2042.4L224%2066ZM224%2066L241.4%2024.2L274.3%2055.3ZM274.3%2055.3L300%2018L325.7%2055.3ZM325.7%2055.3L358.6%2024.2L376%2066ZM376%2066L414.7%2042.4L423%2087ZM423%2087L465.8%2071.9L464.6%20117.2ZM464.6%20117.2L509.6%20111.3L499%20155.4ZM499%20155.4L544.2%20159L524.7%20199.9ZM524.7%20199.9L568.2%20212.9L540.6%20248.9ZM540.6%20248.9L580.5%20270.5L546%20300Z%22%20fill%3D%22%23d4a017%22%2F%3E%3Cg%20fill%3D%22%23d4a017%22%3E%3Ccircle%20cx%3D%22526.8%22%20cy%3D%22323.8%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22516.8%22%20cy%3D%22370.5%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22497.5%22%20cy%3D%22414%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22469.4%22%20cy%3D%22452.6%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22434%22%20cy%3D%22484.5%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22392.7%22%20cy%3D%22508.3%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22347.4%22%20cy%3D%22523%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22528%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22252.6%22%20cy%3D%22523%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22207.3%22%20cy%3D%22508.3%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22166%22%20cy%3D%22484.5%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22130.6%22%20cy%3D%22452.6%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22102.5%22%20cy%3D%22414%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%2283.2%22%20cy%3D%22370.5%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%2273.2%22%20cy%3D%22323.8%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%2273.2%22%20cy%3D%22276.2%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%2283.2%22%20cy%3D%22229.5%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22102.5%22%20cy%3D%22186%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22130.6%22%20cy%3D%22147.4%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22166%22%20cy%3D%22115.5%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22207.3%22%20cy%3D%2291.7%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22252.6%22%20cy%3D%2277%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%2272%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22347.4%22%20cy%3D%2277%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22392.7%22%20cy%3D%2291.7%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22434%22%20cy%3D%22115.5%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22469.4%22%20cy%3D%22147.4%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22497.5%22%20cy%3D%22186%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22516.8%22%20cy%3D%22229.5%22%20r%3D%227%22%2F%3E%3Ccircle%20cx%3D%22526.8%22%20cy%3D%22276.2%22%20r%3D%227%22%2F%3E%3C%2Fg%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22212%22%20fill%3D%22none%22%20stroke%3D%22%23d4a017%22%20stroke-width%3D%225%22%2F%3E%3Cpolyline%20points%3D%22506%20300%20474.1%20337%20488.2%20383.8%20444%20404.6%20437.8%20453.1%20389%20454.2%20363.7%20495.9%20318.6%20477%20278.5%20504.9%20245%20469.3%20197%20478.4%20180.9%20432.3%20133.3%20421.1%20137.4%20372.4%2098.5%20342.8%20122%20300%2098.5%20257.2%20137.4%20227.6%20133.3%20178.9%20180.9%20167.7%20197%20121.6%20245%20130.7%20278.5%2095.1%20318.6%20123%20363.7%20104.1%20389%20145.8%20437.8%20146.9%20444%20195.4%20488.2%20216.2%20474.1%20263%22%20fill%3D%22none%22%20stroke%3D%22%23d4a017%22%20stroke-width%3D%225%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%22162%22%20fill%3D%22none%22%20stroke%3D%22%23d4a017%22%20stroke-width%3D%225%22%2F%3E%3Cg%20fill%3D%22%23d4a017%22%3E%3Ccircle%20cx%3D%22442.8%22%20cy%3D%22318.8%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22433%22%20cy%3D%22355.1%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22414.2%22%20cy%3D%22387.7%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22387.7%22%20cy%3D%22414.2%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22355.1%22%20cy%3D%22433%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22318.8%22%20cy%3D%22442.8%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22281.2%22%20cy%3D%22442.8%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22244.9%22%20cy%3D%22433%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22212.3%22%20cy%3D%22414.2%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22185.8%22%20cy%3D%22387.7%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22167%22%20cy%3D%22355.1%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22157.2%22%20cy%3D%22318.8%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22157.2%22%20cy%3D%22281.2%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22167%22%20cy%3D%22244.9%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22185.8%22%20cy%3D%22212.3%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22212.3%22%20cy%3D%22185.8%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22244.9%22%20cy%3D%22167%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22281.2%22%20cy%3D%22157.2%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22318.8%22%20cy%3D%22157.2%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22355.1%22%20cy%3D%22167%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22387.7%22%20cy%3D%22185.8%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22414.2%22%20cy%3D%22212.3%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22433%22%20cy%3D%22244.9%22%20r%3D%226%22%2F%3E%3Ccircle%20cx%3D%22442.8%22%20cy%3D%22281.2%22%20r%3D%226%22%2F%3E%3C%2Fg%3E%3Cpolygon%20points%3D%22300%2C168%20313.8%2C239.6%20357.3%2C181.1%20338.7%2C251.5%20403.2%2C217.7%20355.9%2C273.1%20428.7%2C270.6%20362%2C300%20428.7%2C329.4%20355.9%2C326.9%20403.2%2C382.3%20338.7%2C348.5%20357.3%2C418.9%20313.8%2C360.4%20300%2C432%20286.2%2C360.4%20242.7%2C418.9%20261.3%2C348.5%20196.8%2C382.3%20244.1%2C326.9%20171.3%2C329.4%20238%2C300%20171.3%2C270.6%20244.1%2C273.1%20196.8%2C217.7%20261.3%2C251.5%20242.7%2C181.1%20286.2%2C239.6%22%20fill%3D%22%23d4a017%22%20stroke%3D%22%23a87f0e%22%20stroke-width%3D%222%22%20stroke-linejoin%3D%22round%22%2F%3E%3Ccircle%20cx%3D%22300%22%20cy%3D%22300%22%20r%3D%2220%22%20fill%3D%22%23f5c542%22%2F%3E%3C%2Fsvg%3E"); background-size:contain; background-repeat:no-repeat; background-position:center; opacity:.85; }
+    background-size:cover; background-repeat:no-repeat; background-position:center;
+    border-radius:50%; opacity:.95; filter:brightness(1.3) contrast(1.05); }
   /* (v8.2) Bố cục 3 cột — bảng điểm sang TRÁI, cột phải chỉ giữ sự kiện
      gần đây (trên) + diễn biến (dưới). Quần đảo nay vẽ TRONG SVG bản đồ
      (cột giữa) nên không còn nằm sau khung nào, không bị che chút nào. */
@@ -339,6 +342,13 @@ function fitStage() {
 }
 window.addEventListener('resize', fitStage);
 fitStage();
+
+// Nền trống đồng: ảnh thật làm background TO (xem ghi chú #bigDrum ở CSS).
+(function applyDrumBg() {
+  const roomPrefix = (location.pathname.match(/^\/o\/[^/]+\/[^/]+/) || [''])[0];
+  const el = document.getElementById('bigDrum');
+  if (el) el.style.backgroundImage = 'url(' + roomPrefix + '/trong-dong-bg.jpg)';
+})();
 const NS = 'http://www.w3.org/2000/svg';
 const svg = document.getElementById('mapSvg');
 let provMeta = []; // từ provinces.json (có bbox để zoom)
