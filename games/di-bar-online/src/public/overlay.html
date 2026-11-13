@@ -20,49 +20,89 @@
   .laser.l2 { background: linear-gradient(#22d3ee, transparent); animation-duration: 4.2s; animation-delay: -.7s; }
   .laser.l3 { background: linear-gradient(#facc15, transparent); animation-duration: 5.1s; animation-delay: -1.3s; }
   @keyframes laser { 0% { transform: rotate(-38deg); } 50% { transform: rotate(38deg); } 100% { transform: rotate(-38deg); } }
-  #disco { position: absolute; left: 50%; top: 400px; transform: translateX(-50%); font-size: 96px; animation: spin 6s linear infinite; filter: drop-shadow(0 0 24px #fff); z-index: 3; }
+  #disco { position: absolute; left: 50%; top: 384px; transform: translateX(-50%); font-size: 76px; animation: spin 6s linear infinite; filter: drop-shadow(0 0 24px #fff); z-index: 3; }
   @keyframes spin { to { transform: translateX(-50%) rotate(360deg); } }
   /* LED chính trên DJ */
   #led-main { position: absolute; left: 40px; right: 40px; top: 20px; height: 72px; background: #000; border: 3px solid #facc15; border-radius: 12px; overflow: hidden; display: flex; align-items: center; }
   #led-main span { display: inline-block; white-space: nowrap; font-size: 40px; font-weight: 800; color: #fde047; padding-left: 100%; animation: marquee 14s linear infinite; }
   @keyframes marquee { to { transform: translateX(-100%); } }
-  /* DJ booth */
-  #dj { position: absolute; left: 50%; top: 105px; transform: translateX(-50%); text-align: center; z-index: 2; }
-  #dj .fig { font-size: 150px; animation: nod .48s ease-in-out infinite alternate; display: inline-block; }
+  /* DJ booth — DJ đứng trên sân khấu, gật đầu + gạt đĩa theo nhạc */
+  #dj { position: absolute; left: 50%; top: 96px; transform: translateX(-50%); text-align: center; z-index: 2; }
+  #dj .fig { font-size: 110px; line-height: 1.15; animation: nod .48s ease-in-out infinite alternate; display: inline-block; }
   @keyframes nod { from { transform: rotate(-6deg) translateY(0); } to { transform: rotate(6deg) translateY(6px); } }
-  #dj .label { font-size: 38px; font-weight: 800; color: #c4b5fd; text-shadow: 0 0 18px #a855f7; }
-  #dj .drop { font-size: 32px; font-weight: 800; color: #ff2d95; display: none; margin-top: 6px; animation: blink .4s steps(2) infinite; }
+  #dj .label { font-size: 32px; font-weight: 800; color: #c4b5fd; text-shadow: 0 0 18px #a855f7; white-space: nowrap; }
+  #dj .label #dj-state { font-size: 24px; color: #4ade80; }
+  /* Bàn mix: 2 đĩa vinyl xoay + mixer ở giữa */
+  #dj .booth { position: relative; width: 460px; height: 56px; margin: 6px auto 0; background: linear-gradient(180deg, #1e1033, #0d0618); border: 2px solid #a855f7; border-radius: 14px; box-shadow: 0 0 18px rgba(168,85,247,.5); }
+  #dj .vinyl { position: absolute; top: 6px; width: 42px; height: 42px; border-radius: 50%; background: repeating-radial-gradient(circle at 50% 50%, #111 0 3px, #2a2a2a 3px 5px); border: 2px solid #facc15; animation: vinylspin 1.2s linear infinite; }
+  #dj .vinyl.v1 { left: 18px; }
+  #dj .vinyl.v2 { right: 18px; }
+  #dj .vinyl::after { content: ''; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; transform: translate(-50%, -50%); border-radius: 50%; background: #facc15; }
+  @keyframes vinylspin { to { transform: rotate(360deg); } }
+  #dj .mixer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 34px; }
+  #dj .drop { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 4px; font-size: 30px; font-weight: 800; color: #ff2d95; white-space: nowrap; display: none; animation: blink .4s steps(2) infinite; text-shadow: 0 2px 6px #000; z-index: 6; }
   @keyframes blink { 50% { opacity: .2; } }
   body.drop #dj .drop { display: block; }
+  /* DJ hò reo khi có Vua sàn mới: nhảy cẫng + bong bóng thoại (chỉ transform/opacity) */
+  #dj .dj-cheer { position: absolute; left: calc(100% + 12px); top: 56px; display: none; max-width: 290px; background: rgba(0,0,0,.8); border: 2px solid #facc15; color: #fde047; font-size: 24px; font-weight: 800; padding: 8px 14px; border-radius: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 7; }
+  #dj.cheer .dj-cheer { display: block; }
+  #dj.cheer .fig { animation: djcheer .4s ease-in-out infinite alternate; }
+  @keyframes djcheer { from { transform: translateY(0) rotate(-8deg) scale(1); } to { transform: translateY(-16px) rotate(8deg) scale(1.1); } }
+  /* Sàn đông/năng lượng cao: DJ gật nhanh hơn + phát sáng */
+  body.dj-hype #dj .fig { animation-duration: .3s; filter: drop-shadow(0 0 22px #facc15); }
+  /* Nhạc tắt: DJ + đĩa + EQ + cầu disco đứng yên */
+  body.music-off #dj .fig, body.music-off #dj .vinyl, body.music-off #eq i, body.music-off #disco { animation-play-state: paused; }
   /* Dải EQ nhảy theo nhạc */
-  #eq { position: absolute; left: 60px; right: 60px; top: 335px; height: 56px; display: flex; align-items: flex-end; gap: 6px; }
+  #eq { position: absolute; left: 60px; right: 60px; top: 336px; height: 44px; display: flex; align-items: flex-end; gap: 6px; }
   #eq i { flex: 1; background: linear-gradient(180deg, #22d3ee, #ff2d95); border-radius: 4px 4px 0 0; animation: eqb .5s ease-in-out infinite alternate; }
   @keyframes eqb { from { height: 18%; } to { height: 100%; } }
-  /* Sàn nhảy — TO, là trung tâm của phòng */
-  #floor { position: absolute; left: 30px; right: 30px; top: 480px; height: 960px; background: linear-gradient(180deg, rgba(255,45,149,.12), rgba(34,211,238,.10)); border: 2px solid rgba(255,255,255,.18); border-radius: 24px; padding: 16px; }
-  #floor-title { font-size: 32px; font-weight: 800; color: #f9a8d4; margin-bottom: 12px; display: flex; justify-content: space-between; }
-  #dancers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .dancer { position: relative; text-align: center; background: rgba(0,0,0,.35); border: 2px solid var(--c, #888); border-radius: 16px; padding: 10px 4px 8px; min-height: 210px; }
-  /* Thứ tự từ trên xuống: tên → avatar → emoji nhảy → năng lượng/đồ uống */
-  .dancer .nm { font-size: 24px; font-weight: 800; font-family: 'Be Vietnam Pro', system-ui, sans-serif; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; text-shadow: 0 2px 4px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.8); }
-  .dancer .av-box { position: relative; display: block; width: 56px; height: 56px; margin: 2px auto; border: 3px solid var(--c, #888); border-radius: 50%; overflow: hidden; background: #222; box-shadow: 0 0 10px rgba(0,0,0,.6); }
+  /* SÀN NHẢY — vũ trường thật ở giữa màn hình */
+  #floor { position: absolute; left: 30px; right: 30px; top: 480px; height: 860px; overflow: hidden; background: linear-gradient(180deg, rgba(255,45,149,.14), rgba(34,211,238,.12)), repeating-linear-gradient(0deg, rgba(255,255,255,.07) 0 2px, transparent 2px 110px), repeating-linear-gradient(90deg, rgba(255,255,255,.07) 0 2px, transparent 2px 110px), #0d0618; border: 2px solid rgba(255,255,255,.18); border-radius: 24px; padding: 14px 16px; }
+  /* Ánh sáng sàn nhấp nháy theo nhịp (chỉ opacity) */
+  .floor-glow { position: absolute; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(circle at 25% 30%, rgba(255,45,149,.28) 0%, transparent 45%), radial-gradient(circle at 75% 60%, rgba(34,211,238,.28) 0%, transparent 45%); animation: floorpulse 2.4s ease-in-out infinite alternate; }
+  @keyframes floorpulse { from { opacity: .35; } to { opacity: .75; } }
+  /* 2 chùm đèn quét trên sàn (chỉ transform) */
+  .beam { position: absolute; top: 150px; width: 120px; height: 520px; z-index: 1; pointer-events: none; background: linear-gradient(rgba(255,255,255,.20), transparent); clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%); transform-origin: top center; animation: beamsway 5s ease-in-out infinite alternate; }
+  .beam.b1 { left: 20%; background: linear-gradient(rgba(255,45,149,.28), transparent); }
+  .beam.b2 { left: 66%; background: linear-gradient(rgba(34,211,238,.28), transparent); animation-duration: 6.5s; animation-delay: -.8s; }
+  @keyframes beamsway { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
+  #floor-head { position: relative; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 30px; font-weight: 800; color: #f9a8d4; }
+  /* Nhãn vòng gọn, không tràn (sửa lỗi tiêu đề góc phải bị cắt) */
+  #round-chip { flex-shrink: 1; min-width: 0; max-width: 360px; font-size: 24px; font-weight: 800; color: #fff; background: rgba(0,0,0,.5); border: 2px solid rgba(255,255,255,.25); border-radius: 10px; padding: 4px 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Bảng hướng dẫn chơi — số thật từ engine.js (xem cuối file) */
+  #howto { position: relative; z-index: 3; margin-top: 8px; background: rgba(0,0,0,.55); border: 2px solid rgba(250,204,21,.55); border-radius: 14px; padding: 8px 14px; font-size: 20px; line-height: 1.4; color: #fef3c7; }
+  #howto div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #howto b { color: #fde047; }
+  /* Vùng vũ công: 12 vị trí (4 cột × 3 hàng), vũ công đứng TRÊN SÀN */
+  #dancers { position: absolute; left: 16px; right: 16px; top: 196px; bottom: 14px; z-index: 2; }
+  .floor-empty { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-size: 26px; color: #ddd; text-shadow: 0 2px 4px #000; }
+  /* Spotlight chiếu đúng vũ công dẫn đầu (chỉ transform/opacity) */
+  #spot-cone { position: absolute; top: 0; left: 50%; width: 280px; height: 40%; transform: translateX(-50%); z-index: 1; pointer-events: none; background: linear-gradient(rgba(253,224,71,.40), rgba(253,224,71,.08) 75%, transparent); clip-path: polygon(43% 0, 57% 0, 100% 100%, 0 100%); animation: conesway 3s ease-in-out infinite alternate; transform-origin: top center; display: none; }
+  @keyframes conesway { from { transform: translateX(-50%) rotate(-3deg); } to { transform: translateX(-50%) rotate(3deg); } }
+  #spot-glow { position: absolute; left: 50%; width: 230px; height: 54px; transform: translate(-50%, -50%); z-index: 1; pointer-events: none; background: radial-gradient(ellipse, rgba(253,224,71,.55), transparent 70%); animation: glowpulse 1s ease-in-out infinite alternate; display: none; }
+  @keyframes glowpulse { from { opacity: .5; } to { opacity: .95; } }
+  /* Vũ công: tên → avatar → thân nhảy → năng lượng (tất cả trên đầu nhân vật) */
+  .dancer { position: absolute; transform: translate(-50%, -50%); width: 216px; text-align: center; z-index: 2; }
+  .dancer .nm { display: block; font-size: 22px; font-weight: 800; font-family: 'Be Vietnam Pro', system-ui, sans-serif; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 4px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.8); }
+  .dancer .av-box { position: relative; display: block; width: 52px; height: 52px; margin: 3px auto; border: 3px solid var(--c, #888); border-radius: 50%; overflow: hidden; background: #222; box-shadow: 0 0 10px rgba(0,0,0,.6); }
   .dancer .av { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; }
-  .dancer .av-fb { display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #fff; background: var(--c, #888); text-shadow: 0 2px 4px rgba(0,0,0,.6); }
+  .dancer .av-fb { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #fff; background: var(--c, #888); text-shadow: 0 2px 4px rgba(0,0,0,.6); }
   .dancer .av-img { object-fit: cover; }
-  .dancer .em { font-size: 72px; line-height: 1.05; display: block; animation: var(--mv, bounce) .9s ease-in-out infinite alternate; }
-  .dancer .en { font-size: 26px; font-weight: 800; line-height: 1.15; color: #fde047; display: block; text-shadow: 0 2px 4px rgba(0,0,0,.8); }
-  .dancer .dr { font-size: 20px; line-height: 1.2; color: #fda4af; text-shadow: 0 2px 4px rgba(0,0,0,.8); }
+  .dancer .em { display: block; font-size: 66px; line-height: 1.05; animation: var(--mv, bounce) .9s ease-in-out infinite alternate; }
+  .dancer .st { display: block; font-size: 24px; font-weight: 800; line-height: 1.2; }
+  .dancer .en { color: #fde047; text-shadow: 0 2px 4px rgba(0,0,0,.8); }
+  .dancer .dr { font-size: 20px; font-weight: 700; color: #fda4af; margin-left: 6px; text-shadow: 0 2px 4px rgba(0,0,0,.8); }
   /* Nhịp nhảy riêng theo index (animation-delay inline trên .em) + theo năng lượng:
-     năng lượng thấp nhảy chậm/uể oải, cao nhảy nhanh + cả khung rung mạnh hơn. */
-  .dancer.en-lo .em { animation-duration: 1.35s; }
-  .dancer.en-hi .em { animation-duration: .55s; }
-  .dancer.en-hi { animation: hipulse 1.1s ease-in-out infinite alternate; }
-  @keyframes hipulse { from { transform: scale(1); } to { transform: scale(1.04); } }
-  .dancer.king { border-color: #facc15; box-shadow: 0 0 24px #facc15; padding-top: 28px; }
-  .dancer.king::before { content: '👑'; position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 44px; }
-  .dancer.king::after { content: '✨'; position: absolute; top: 118px; right: 12px; font-size: 30px; pointer-events: none; animation: king-spark 1s ease-in-out infinite alternate; }
-  @keyframes king-spark { from { opacity: .35; transform: scale(.75) rotate(-12deg); } to { opacity: 1; transform: scale(1.15) rotate(12deg); } }
-  .dancer .tbl { position: absolute; bottom: 6px; right: 8px; font-size: 24px; }
+     năng lượng thấp nhảy chậm/uể oải, cao nhảy nhanh + to hơn + phát sáng. */
+  .dancer.en-lo .em { animation-duration: 1.35s; font-size: 58px; opacity: .85; }
+  .dancer.en-hi .em { animation-duration: .5s; font-size: 84px; filter: drop-shadow(0 0 16px var(--c, #facc15)); }
+  .dancer.en-hi { z-index: 3; }
+  /* Vua sàn: vương miện gắn ngay trước tên (cùng 1 dòng — không đè lên vũ công khác),
+     tên vàng + avatar viền vàng phát sáng; spotlight chiếu bằng #spot-cone/#spot-glow. */
+  .dancer.king { z-index: 4; }
+  .dancer.king .nm { color: #fde047; }
+  .dancer.king .nm::before { content: '👑 '; }
+  .dancer.king .av-box { border-color: #facc15; box-shadow: 0 0 16px #facc15; }
   @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-14px); } }
   @keyframes pop { from { transform: scale(1) rotate(-4deg); } to { transform: scale(1.15) rotate(4deg); } }
   @keyframes wave { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
@@ -70,31 +110,34 @@
   @keyframes shake { from { transform: translateX(-4px) rotate(-3deg); } to { transform: translateX(4px) rotate(3deg); } }
   @keyframes line { from { transform: translateX(-10px); } to { transform: translateX(10px); } }
   @keyframes wobble { from { transform: rotate(-12deg) scale(1); } to { transform: rotate(12deg) scale(1.1); } }
+  /* Khán giả quanh sàn: vũ công thứ 13–24 (vượt 12 chỗ trên sàn) */
+  #crowd-strip { position: absolute; left: 30px; right: 30px; top: 1350px; height: 54px; display: none; align-items: center; gap: 10px; overflow: hidden; background: rgba(0,0,0,.4); border: 2px solid rgba(255,255,255,.14); border-radius: 14px; padding: 6px 12px; }
+  #crowd-strip .lbl { font-size: 22px; font-weight: 800; color: #c4b5fd; white-space: nowrap; }
+  #crowd-strip .chip { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.08); border-radius: 999px; padding: 3px 10px 3px 3px; font-size: 20px; font-weight: 700; white-space: nowrap; }
+  #crowd-strip .chip .c-av { position: relative; width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #444; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; flex-shrink: 0; }
+  #crowd-strip .chip .c-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   /* Quầy bar + chờ */
-  #bar { position: absolute; left: 30px; right: 30px; top: 1460px; height: 180px; background: rgba(0,0,0,.45); border: 2px solid #f59e0b; border-radius: 20px; padding: 14px 18px; display: flex; gap: 18px; }
+  #bar { position: absolute; left: 30px; right: 30px; top: 1416px; height: 150px; background: rgba(0,0,0,.45); border: 2px solid #f59e0b; border-radius: 20px; padding: 12px 16px; display: flex; gap: 18px; }
   #bar .menu { width: 360px; flex-shrink: 0; }
-  #bar .menu h3 { font-size: 28px; color: #fbbf24; margin-bottom: 6px; }
-  #bar .menu div { font-size: 24px; line-height: 1.5; color: #fde68a; }
-  #waiting-list { flex: 1; }
-  #waiting-list h3 { font-size: 28px; color: #fda4af; margin-bottom: 6px; }
-  #waiting-list .w { font-size: 24px; line-height: 1.45; }
+  #bar .menu h3 { font-size: 26px; color: #fbbf24; margin-bottom: 4px; }
+  #bar .menu div { font-size: 22px; line-height: 1.45; color: #fde68a; }
+  #waiting-list { flex: 1; min-width: 0; }
+  #waiting-list h3 { font-size: 26px; color: #fda4af; margin-bottom: 4px; }
+  #waiting-list .w { font-size: 22px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* 2 bàn VIP */
-  .vip { position: absolute; top: 1660px; width: 480px; background: rgba(0,0,0,.5); border-radius: 18px; padding: 14px 18px; border: 3px solid; }
+  .vip { position: absolute; top: 1580px; width: 480px; background: rgba(0,0,0,.5); border-radius: 18px; padding: 12px 16px; border: 3px solid; }
   #vip-vang { left: 30px; border-color: #facc15; }
   #vip-do { right: 30px; border-color: #ef4444; }
-  .vip h3 { font-size: 30px; font-weight: 800; }
+  .vip h3 { font-size: 28px; font-weight: 800; }
   #vip-vang h3 { color: #fde047; } #vip-do h3 { color: #fca5a5; }
-  .vip .score { font-size: 52px; font-weight: 900; }
-  .vip .sub { font-size: 22px; color: #ddd; }
-  .vip .cover { font-size: 24px; font-weight: 800; color: #4ade80; display: none; }
+  .vip .score { font-size: 46px; font-weight: 900; line-height: 1.1; }
+  .vip .sub { font-size: 20px; color: #ddd; }
+  .vip .cover { font-size: 22px; font-weight: 800; color: #4ade80; display: none; }
   .vip.cover .cover { display: block; }
   /* LED bên: top 3 */
-  #led-side { position: absolute; left: 30px; right: 30px; top: 1820px; height: 88px; background: #000; border: 3px solid #22d3ee; border-radius: 12px; padding: 10px 18px; font-size: 26px; line-height: 1.4; color: #a5f3fc; overflow: hidden; }
+  #led-side { position: absolute; left: 30px; right: 30px; top: 1736px; height: 88px; background: #000; border: 3px solid #22d3ee; border-radius: 12px; padding: 8px 16px; font-size: 23px; line-height: 1.35; color: #a5f3fc; overflow: hidden; }
   #demo-badge { position: absolute; top: 100px; right: 40px; z-index: 50; background: #facc15; color: #111; font-weight: 900; font-size: 26px; padding: 6px 14px; border-radius: 10px; display: none; }
   body.demo #demo-badge { display: block; }
-  #king-banner { position: absolute; left: 0; right: 0; top: 640px; text-align: center; z-index: 40; font-size: 72px; font-weight: 900; color: #fde047; text-shadow: 0 0 30px #f59e0b, 0 4px 0 #000; display: none; }
-  body.spotlight #king-banner { display: block; animation: kingpop .8s ease; }
-  @keyframes kingpop { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   #toast { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 45; background: rgba(0,0,0,.8); border: 2px solid #facc15; color: #fff; font-size: 30px; font-weight: 700; padding: 12px 24px; border-radius: 14px; display: none; max-width: 960px; text-align: center; }
   #music-btn { position: absolute; top: 100px; left: 40px; z-index: 50; background: rgba(0,0,0,.6); color: #fff; border: 2px solid #fff; border-radius: 10px; font-size: 24px; padding: 8px 14px; cursor: pointer; }
   .confetti { position: absolute; top: -20px; width: 14px; height: 22px; z-index: 48; pointer-events: none; animation: confetti-fall 2.8s ease-in forwards; }
@@ -108,12 +151,30 @@
   <div class="laser l1"></div><div class="laser l2"></div><div class="laser l3"></div>
   <div id="disco">🪩</div>
   <div id="led-main"><span id="led-text">🎧 ĐI BAR ONLINE — bình luận "vào bar" để lên sàn! 🎧</span></div>
-  <div id="dj"><div class="fig">🎧</div><div class="label">DJ STROM</div><div class="drop">🔥 DJ DROP — TIM ×2 🔥</div></div>
+  <div id="dj">
+    <div class="dj-cheer" id="dj-cheer"></div>
+    <div class="fig">🎧</div>
+    <div class="label">DJ STROM <span id="dj-state">• ĐANG MIX</span></div>
+    <div class="booth"><i class="vinyl v1"></i><span class="mixer">🎛️</span><i class="vinyl v2"></i></div>
+    <div class="drop">🔥 DJ DROP — TIM ×2 🔥</div>
+  </div>
   <div id="eq"></div>
   <div id="floor">
-    <div id="floor-title"><span>💃 SÀN NHẢY</span><span id="round-label">Vòng 1</span></div>
-    <div id="dancers"></div>
+    <div class="floor-glow"></div>
+    <div class="beam b1"></div><div class="beam b2"></div>
+    <div id="floor-head"><span>💃 SÀN NHẢY</span><span id="round-chip">Vòng 1</span></div>
+    <div id="howto">
+      <div>💬 Bình luận <b>“vào bar”</b> để lên sàn • số <b>1–8</b> chọn nhân vật • tối đa 24 người</div>
+      <div>❤️ 1 tim <b>+1⚡</b> • 💬 1 bình luận <b>+5⚡</b> (1/5s) • 🎁 1 xu <b>+10⚡ + 1 ly</b> • ➕ Follow <b>+30⚡</b> (1/vòng)</div>
+      <div>👑 Nhiều ⚡ nhất sau <b>3 phút</b> → Vua sàn (vinh danh 20s, vòng mới về 0)</div>
+      <div>🎧 DJ drop mỗi 2 phút: <b>15s tim ×2</b> • 🍸 ≥10 xu cocktail • 🍾 ≥50 xu bottle • 🍾 ≥100 xu sâm panh</div>
+    </div>
+    <div id="dancers">
+      <div id="spot-cone"></div>
+      <div id="spot-glow"></div>
+    </div>
   </div>
+  <div id="crowd-strip"><span class="lbl">👥 KHÁN GIẢ:</span><span id="crowd-chips" style="display:contents"></span></div>
   <div id="bar">
     <div class="menu"><h3>🍹 MENU QUẦY BAR</h3><div>🍸 Cocktail — 10 xu<br>🍾 Bottle Service — 50 xu<br>🍾 Sâm panh — 100 xu</div></div>
     <div id="waiting-list"><h3>🪑 ĐANG CHỜ Ở QUẦY</h3><div class="w" id="waiting-names">—</div></div>
@@ -123,7 +184,6 @@
   <div id="led-side">🏆 TOP 3 — chưa có dancer nào.</div>
 </div></div>
 <div id="demo-badge">🧪 DEMO</div>
-<div id="king-banner"></div>
 <div id="toast"></div>
 <button id="music-btn">🔊 Nhạc: Bật</button>
 </div>
@@ -139,6 +199,8 @@ let ttsBusy = false;
 let musicOn = true;
 let audioCtx = null, musicTimer = null, step16 = 0, nextNoteTime = 0;
 let musicSection = 'INTRO';
+let prevKingUid = null;
+let djCheerTimer = null;
 
 // ---- Co khung 1080x1920 vừa mọi cửa sổ / nguồn browser (giữ tỉ lệ dọc 9:16) ----
 function fitStage() {
@@ -177,10 +239,10 @@ function confettiBurst() {
 // ---- Camera director: toàn bộ cảnh trong #camera, camera = scale + translate, transition 1.2s ----
 const SHOTS = [
   { name: 'full', point: [540, 960], scale: 1 },
-  { name: 'dj', point: [540, 215], scale: 2.2 },
-  { name: 'top', point: [540, 960], scale: 2 },
-  { name: 'bar', point: [880, 1550], scale: 1.8 },
-  { name: 'crowd', point: [540, 960], scale: 1.5 },
+  { name: 'dj', point: [540, 200], scale: 2.2 },
+  { name: 'top', point: [540, 910], scale: 2 },
+  { name: 'bar', point: [880, 1490], scale: 1.8 },
+  { name: 'crowd', point: [540, 910], scale: 1.5 },
   { name: 'led', point: [540, 56], scale: 2 },
 ];
 let shotIdx = 0, shotTimer = null, eventShotUntil = 0;
@@ -347,10 +409,17 @@ function riser(t, dur, v) {
   const g = audioCtx.createGain(); g.gain.setValueAtTime(0.001, t); g.gain.exponentialRampToValueAtTime(v, t + dur);
   src.connect(f).connect(g).connect(audioCtx.destination); src.start(t); src.stop(t + dur);
 }
+function syncMusicOff() {
+  const off = !(musicOn && state && state.settings.musicEnabled);
+  document.body.classList.toggle('music-off', off);
+  const st = $('dj-state');
+  if (st) st.textContent = off ? '• TẠM NGHỈ' : '• ĐANG MIX';
+}
 $('music-btn').addEventListener('click', () => {
   musicOn = !musicOn;
   $('music-btn').textContent = musicOn ? '🔊 Nhạc: Bật' : '🔇 Nhạc: Tắt';
   if (musicOn) initMusic();
+  syncMusicOff();
 });
 
 // ---- TTS qua proxy server + hàng đợi ----
@@ -377,34 +446,95 @@ function toast(text, ms) {
 }
 
 const MOVE_CSS = { nod: 'nod', pop: 'pop', wave: 'wave', robot: 'robot', shake: 'shake', bounce: 'bounce', line: 'line', wobble: 'wobble' };
+// 12 vị trí trên sàn: 4 cột × 3 hàng (tâm mỗi ô, % của vùng #dancers).
+const FLOOR_SLOTS = [];
+for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) FLOOR_SLOTS.push([12.5 + c * 25, 17 + r * 33]);
 function render(s) {
   state = s;
   document.body.classList.toggle('demo', !!s.demoActive);
-  document.body.classList.toggle('spotlight', s.phase === 'spotlight');
   document.body.classList.toggle('drop', s.dropState === 'drop');
   const secTag = s.phase === 'spotlight' ? 'Vinh danh' : (musicSection === 'DROP' ? '🔥 DROP' : musicSection === 'BUILD' ? '📈 BUILD-UP' : musicSection === 'BREAK' ? '🌙 BREAK' : '🎵 INTRO');
-  $('round-label').textContent = 'Vòng ' + s.roundNo + (s.phase === 'dancing' ? ' • ' + secTag + ' • ' + Math.max(0, Math.ceil((s.roundEndsAt - Date.now()) / 1000)) + 's' : s.phase === 'spotlight' ? ' • Vinh danh' : ' • Chờ người');
+  $('round-chip').textContent = 'Vòng ' + s.roundNo + (s.phase === 'dancing' ? ' • ' + secTag + ' • ' + Math.max(0, Math.ceil((s.roundEndsAt - Date.now()) / 1000)) + 's' : s.phase === 'spotlight' ? ' • Vinh danh' : ' • Chờ người');
   // LED chính: sự kiện mới nhất, tên Vua sàn.
   const last = s.logs.length ? s.logs[s.logs.length - 1].text : '';
   const kingTxt = s.king ? ` 👑 VUA SÀN: ${s.king.name} ` : '';
   $('led-text').textContent = '🎧 ' + (last || 'ĐI BAR ONLINE — bình luận "vào bar" để lên sàn!') + kingTxt + ' 🎧';
-  // Sàn nhảy.
+  // Người dẫn đầu: Vua (lúc vinh danh) hoặc top 1 đang nhảy — spotlight chiếu đúng người này.
+  const leaderUid = (s.king && s.king.uid) || (s.top.length && s.top[0].energy > 0 ? s.top[0].uid : null);
+  // Sàn chứa tối đa 12 vũ công; đảm bảo người dẫn đầu luôn có mặt trên sàn.
+  let shown = s.dancers.slice(0, 12);
+  if (leaderUid && shown.length === 12 && !shown.some((d) => d.uid === leaderUid)) {
+    const ld = s.dancers.find((d) => d.uid === leaderUid);
+    if (ld) shown[11] = ld;
+  }
+  const leaderIdx = leaderUid ? shown.findIndex((d) => d.uid === leaderUid) : -1;
+  // Sàn nhảy: vũ công đứng TRÊN SÀN (không còn lưới thẻ card).
   const box = $('dancers');
-  box.innerHTML = s.dancers.map((d, i) => {
+  let html = '<div id="spot-cone"></div><div id="spot-glow"></div>';
+  if (!shown.length) {
+    html += '<div class="floor-empty">Chưa có dancer nào — bình luận "vào bar" để lên sàn!</div>';
+  }
+  html += shown.map((d, i) => {
     const c = d.character || { emoji: '🕺', color: '#888', move: 'bounce', name: '' };
-    const tbl = d.table === 'vang' ? '🟡' : d.table === 'do' ? '🔴' : '';
+    const tbl = d.table === 'vang' ? ' 🟡' : d.table === 'do' ? ' 🔴' : '';
     // Nhịp nhảy riêng: delay lệch theo index để không nhảy đồng bộ như robot.
     const delay = (-(i % 8) * 0.11).toFixed(2);
-    // Mức năng lượng: <20 chậm/uể oải, >=100 nhanh + rung mạnh (xem .en-lo/.en-hi).
+    // Mức năng lượng: <20 chậm/uể oải, >=100 nhanh + to hơn + phát sáng.
     const enCls = (d.energy || 0) >= 100 ? ' en-hi' : (d.energy || 0) < 20 ? ' en-lo' : '';
+    // Vị trí ô + lệch nhẹ theo index cho giống đám đông thật, không ngay hàng thẳng lối.
+    const slot = FLOOR_SLOTS[i] || [50, 50];
+    const jx = ((i * 7) % 5 - 2) * 6;
+    const jy = ((i * 11) % 5 - 2) * 5;
     // Avatar thật; lỗi tải thì <img> tự gỡ, lộ chữ cái đầu tên phía dưới.
     const initial = escapeHtml(((d.name || '?').trim().charAt(0) || '?').toUpperCase());
     const av = `<span class="av-box"><span class="av av-fb">${initial}</span>${d.avatarUrl ? `<img class="av av-img" src="${escapeHtml(d.avatarUrl)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>`;
-    return `<div class="dancer${d.isKing ? ' king' : ''}${enCls}" style="--c:${c.color};--mv:${MOVE_CSS[c.move] || 'bounce'}">
-      <span class="tbl">${tbl}</span><span class="nm">${escapeHtml(d.name)}</span>${av}<span class="em" style="animation-delay:${delay}s">${c.emoji}</span>
-      <span class="en">⚡${d.energy}</span>${d.drinks ? `<span class="dr">🍹×${d.drinks}</span>` : ''}</div>`;
-  }).join('') || '<div style="font-size:26px;color:#ddd;padding:20px">Chưa có dancer nào — bình luận "vào bar" để lên sàn!</div>';
-  // Quầy chờ.
+    return `<div class="dancer${d.uid === leaderUid ? ' king' : ''}${enCls}" style="--c:${c.color};--mv:${MOVE_CSS[c.move] || 'bounce'};left:calc(${slot[0]}% + ${jx}px);top:calc(${slot[1]}% + ${jy}px)">
+      <span class="nm">${escapeHtml(d.name)}${tbl}</span>${av}<span class="em" style="animation-delay:${delay}s">${c.emoji}</span>
+      <span class="st"><span class="en">⚡${d.energy}</span>${d.drinks ? `<span class="dr">🍹×${d.drinks}</span>` : ''}</span></div>`;
+  }).join('');
+  box.innerHTML = html;
+  // Spotlight chiếu đúng vị trí người dẫn đầu trên sàn.
+  const cone = $('spot-cone'), glow = $('spot-glow');
+  if (leaderIdx >= 0) {
+    const slot = FLOOR_SLOTS[leaderIdx];
+    cone.style.display = 'block';
+    cone.style.left = slot[0] + '%';
+    cone.style.height = (slot[1] + 14) + '%';
+    glow.style.display = 'block';
+    glow.style.left = slot[0] + '%';
+    glow.style.top = (slot[1] + 13) + '%';
+  } else {
+    cone.style.display = 'none';
+    glow.style.display = 'none';
+  }
+  // Khán giả quanh sàn: vũ công thứ 13–24.
+  const crowd = s.dancers.slice(12);
+  const strip = $('crowd-strip');
+  if (crowd.length) {
+    strip.style.display = 'flex';
+    $('crowd-chips').innerHTML = crowd.map((d) => {
+      const initial = escapeHtml(((d.name || '?').trim().charAt(0) || '?').toUpperCase());
+      return `<span class="chip"><span class="c-av">${initial}${d.avatarUrl ? `<img src="${escapeHtml(d.avatarUrl)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>${escapeHtml(d.name)}</span>`;
+    }).join('');
+  } else {
+    strip.style.display = 'none';
+    $('crowd-chips').innerHTML = '';
+  }
+  // DJ phản ứng: Vua mới → DJ hò reo (bong bóng + nhảy cẫng 6s); sàn nóng → DJ gật nhanh + phát sáng.
+  if (s.king && s.king.uid && s.king.uid !== prevKingUid) {
+    prevKingUid = s.king.uid;
+    $('dj-cheer').textContent = '👑 ' + s.king.name;
+    $('dj').classList.add('cheer');
+    clearTimeout(djCheerTimer);
+    djCheerTimer = setTimeout(() => $('dj').classList.remove('cheer'), 6000);
+  } else if (!s.king) {
+    prevKingUid = null;
+  }
+  const totalEnergy = s.dancers.reduce((a, d) => a + (d.energy || 0), 0);
+  const maxEnergy = s.dancers.reduce((m, d) => Math.max(m, d.energy || 0), 0);
+  document.body.classList.toggle('dj-hype', maxEnergy >= 100 || totalEnergy >= 300);
+  syncMusicOff();
+  // Quầy chờ (người thứ 25 trở đi).
   $('waiting-names').textContent = s.waiting.length ? s.waiting.map((w) => w.name).join(' • ') : '—';
   // 2 bàn VIP.
   $('score-vang').textContent = s.tables.vang.score;
@@ -416,8 +546,6 @@ function render(s) {
   // LED bên: top 3 + điểm 2 bàn.
   const topTxt = s.top.slice(0, 3).map((t, i) => `${i + 1}. ${t.name} ⚡${t.energy}`).join('  •  ') || 'chưa có dancer';
   $('led-side').textContent = `🏆 TOP 3: ${topTxt}   |   🟡 Bàn Vàng ${s.tables.vang.score} — 🔴 Bàn Đỏ ${s.tables.do.score}${s.tableWinner ? ' — Thắng vòng: ' + (s.tableWinner === 'vang' ? 'Bàn Vàng' : 'Bàn Đỏ') : ''}`;
-  // Banner Vua.
-  if (s.king && s.phase === 'spotlight') $('king-banner').textContent = `👑 VUA SÀN NHẢY: ${s.king.name} 👑`;
   // Nhạc theo setting.
   if (s.settings.musicEnabled && musicOn) initMusic();
   startShotTimer();
@@ -437,3 +565,15 @@ fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
 </script>
 </body>
 </html>
+<!--
+  SỐ THẬT TRONG BẢNG HƯỚNG DẪN (#howto) — nguồn: games/di-bar-online/engine.js
+  - "vào bar" / số 1–8 chọn nhân vật / tối đa 24 người: detectJoin, detectCharacterPick, MAX_FLOOR = 24
+  - 1 tim +1⚡: defaultSettings.tapEnergy = 1
+  - 1 bình luận +5⚡ (1 lần/5s): commentEnergy = 5, commentSpamS = 5
+  - 1 xu +10⚡ + 1 ly: coinToEnergy = 10, handleIntake gift (drinks +1)
+  - Follow +30⚡ (1 lần/vòng): followEnergy = 30, followedRound
+  - Vua sàn sau 3 phút, vinh danh 20s, vòng mới về 0: roundDurationS = 180, spotlightS = 20, endRound/resetRound
+  - DJ drop mỗi 2 phút, 15s tim ×2: dropIntervalS = 120, dropDurationS = 15, tick() (báo trước 10s: dropWarningS = 10)
+  - ≥10 xu cocktail / ≥50 xu bottle / ≥100 xu sâm panh: handleIntake gift tiers
+  - Menu quầy bar (10/50/100 xu) khớp đúng 3 tier trên.
+-->
