@@ -50,7 +50,7 @@ test('overlay: đảo vẽ TRONG #mapSvg (không còn #islandSvg/khung riêng), 
     assert.ok(!html.includes('islandBox'), 'không còn khung đảo');
     assert.ok(!html.includes('islandTitle') && !html.includes('islandSub'), 'không còn tiêu đề/phụ đề khung đảo');
     assert.ok(html.includes('id="mapSvg"'), 'có SVG bản đồ');
-    assert.ok(html.includes('viewBox="240 260 815 1300"'), 'viewBox bản đồ mở sang phải tới x=1055 để chứa đảo');
+    assert.ok(html.includes('viewBox="255 275 800 1260"'), 'viewBox bản đồ mở sang phải tới x=1055 để chứa đảo');
     assert.ok(html.includes('id="islandLayer"'), 'có lớp đảo trong SVG bản đồ');
     // Đảo ăn theo tỉnh chủ quản: island-6 theo Đà Nẵng (6), island-18 theo Khánh Hòa (18).
     assert.ok(html.includes("getElementById('island-6')"), 'đảo Hoàng Sa gắn với tỉnh 6');

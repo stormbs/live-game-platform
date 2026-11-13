@@ -14,7 +14,7 @@
        lớp tối để bản đồ 4 màu nổi lên. */
     background:#050914 url(/trong-dong-bg.jpg) center center / cover no-repeat; }
   #stage::before { content:""; position:absolute; inset:0; pointer-events:none; z-index:1;
-    background:radial-gradient(ellipse at 50% 42%, rgba(3,6,15,.18) 0%, rgba(3,6,15,.42) 62%, rgba(3,6,15,.66) 100%); }
+    background:radial-gradient(ellipse at 50% 42%, rgba(3,6,15,.10) 0%, rgba(3,6,15,.30) 62%, rgba(3,6,15,.50) 100%); }
   /* Bố cục mới (v8): header trên cùng; dưới là hàng ngang — bản đồ bên
      trái (to xuống dưới vì bảng đã dời sang phải), khung dọc trong suốt
      bên phải chứa đồng hồ + BXH + bảng điểm. */
@@ -25,17 +25,23 @@
      nguyên cao hết khung (align-self:stretch) nên không bị che. */
   #mainRow { position:absolute; top:158px; left:0; right:0; bottom:0; display:flex; align-items:center; z-index:2; }
   #mapArea { position:relative; flex:1; align-self:stretch; overflow:hidden;
-    /* Biển Đông là nước, không phải khoảng đen: nền biển xanh đậm để vùng
-       biển bên phải bản đồ đọc ra là biển (trước đây trong suốt, lộ nền tối
-       của stage nên trông như dải đen thừa bên phải khung). */
-    background:linear-gradient(180deg,#0b1e3a 0%,#081426 60%,#050914 100%); }
+    /* Biển Đông là nước, không phải khoảng đen: nền biển xanh sáng hơn để
+       vùng biển bên phải bản đồ đọc ra là biển (trước đây trong suốt, lộ nền
+       tối của stage nên trông như dải đen thừa bên phải khung). */
+    background:linear-gradient(180deg,#16407a 0%,#0e2c52 55%,#081426 100%); }
+  /* Họa tiết trống đồng (2026-11-13, Chủ tịch): tile SVG line-art vàng —
+     vòng tròn đồng tâm + sao 14 cánh + chấm, lặp kín sau nền biển, trước
+     lớp SVG bản đồ — vùng biển đọc ra là mặt trống đồng mờ, không còn
+     khoảng đen trơn. */
+  #drumPattern { position:absolute; inset:0; z-index:0; pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22240%22%20height%3D%22240%22%20viewBox%3D%220%200%20240%20240%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d4a017%22%20stroke-width%3D%222.5%22%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22120%22%20r%3D%22112%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d4a017%22%20stroke-width%3D%221.5%22%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22120%22%20r%3D%2292%22%2F%3E%3Ccircle%20cx%3D%22120%22%20cy%3D%22120%22%20r%3D%2268%22%2F%3E%3C%2Fg%3E%3Cg%20stroke%3D%22%23d4a017%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%3E%3Cline%20x1%3D%22120.0%22%20y1%3D%2298.0%22%20x2%3D%22120.0%22%20y2%3D%2260.0%22%2F%3E%3Cline%20x1%3D%22129.5%22%20y1%3D%22100.2%22%20x2%3D%22146.0%22%20y2%3D%2265.9%22%2F%3E%3Cline%20x1%3D%22137.2%22%20y1%3D%22106.3%22%20x2%3D%22166.9%22%20y2%3D%2282.6%22%2F%3E%3Cline%20x1%3D%22141.4%22%20y1%3D%22115.1%22%20x2%3D%22178.5%22%20y2%3D%22106.6%22%2F%3E%3Cline%20x1%3D%22141.4%22%20y1%3D%22124.9%22%20x2%3D%22178.5%22%20y2%3D%22133.4%22%2F%3E%3Cline%20x1%3D%22137.2%22%20y1%3D%22133.7%22%20x2%3D%22166.9%22%20y2%3D%22157.4%22%2F%3E%3Cline%20x1%3D%22129.5%22%20y1%3D%22139.8%22%20x2%3D%22146.0%22%20y2%3D%22174.1%22%2F%3E%3Cline%20x1%3D%22120.0%22%20y1%3D%22142.0%22%20x2%3D%22120.0%22%20y2%3D%22180.0%22%2F%3E%3Cline%20x1%3D%22110.5%22%20y1%3D%22139.8%22%20x2%3D%2294.0%22%20y2%3D%22174.1%22%2F%3E%3Cline%20x1%3D%22102.8%22%20y1%3D%22133.7%22%20x2%3D%2273.1%22%20y2%3D%22157.4%22%2F%3E%3Cline%20x1%3D%2298.6%22%20y1%3D%22124.9%22%20x2%3D%2261.5%22%20y2%3D%22133.4%22%2F%3E%3Cline%20x1%3D%2298.6%22%20y1%3D%22115.1%22%20x2%3D%2261.5%22%20y2%3D%22106.6%22%2F%3E%3Cline%20x1%3D%22102.8%22%20y1%3D%22106.3%22%20x2%3D%2273.1%22%20y2%3D%2282.6%22%2F%3E%3Cline%20x1%3D%22110.5%22%20y1%3D%22100.2%22%20x2%3D%2294.0%22%20y2%3D%2265.9%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23d4a017%22%3E%3Ccircle%20cx%3D%22137.8%22%20cy%3D%2242.0%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22169.9%22%20cy%3D%2257.5%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22192.1%22%20cy%3D%2285.3%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22200.0%22%20cy%3D%22120.0%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22192.1%22%20cy%3D%22154.7%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22169.9%22%20cy%3D%22182.5%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22137.8%22%20cy%3D%22198.0%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22102.2%22%20cy%3D%22198.0%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2270.1%22%20cy%3D%22182.5%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2247.9%22%20cy%3D%22154.7%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2240.0%22%20cy%3D%22120.0%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2247.9%22%20cy%3D%2285.3%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%2270.1%22%20cy%3D%2257.5%22%20r%3D%223.5%22%2F%3E%3Ccircle%20cx%3D%22102.2%22%20cy%3D%2242.0%22%20r%3D%223.5%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E"); background-size:240px 240px; background-repeat:repeat; opacity:.16; }
   /* (v8.2) Bố cục 3 cột — bảng điểm sang TRÁI, cột phải chỉ giữ sự kiện
      gần đây (trên) + diễn biến (dưới). Quần đảo nay vẽ TRONG SVG bản đồ
      (cột giữa) nên không còn nằm sau khung nào, không bị che chút nào. */
-  #leftPanel { flex:none; width:240px; margin:0 0 14px 14px; display:flex; flex-direction:column; gap:10px;
+  #leftPanel { flex:none; width:200px; margin:0 0 12px 12px; display:flex; flex-direction:column; gap:10px;
     background:rgba(8,12,24,.45); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     border:1px solid rgba(255,255,255,.22); border-radius:20px; padding:14px 12px 12px; overflow:hidden; }
-  #rightCol { flex:none; width:240px; margin:0 14px 14px 0; display:flex; flex-direction:column; gap:10px; }
+  #rightCol { flex:none; width:200px; margin:0 12px 12px 0; display:flex; flex-direction:column; gap:10px; }
   #rightTop { flex:none; }
   /* Cột phải: các panel chỉ cao bằng nội dung (flex:none), cả cột gom về
      đoạn giữa nhờ align-items:center của #mainRow — không còn khoảng trống
@@ -117,7 +123,7 @@
      khung + hiệu ứng phát sáng chung. */
   #sideLayer { filter:drop-shadow(0 8px 10px rgba(0,0,0,.5)); }
   .provSide { fill:#0e1626; stroke:#26344f; stroke-width:1.6; transition:fill .5s ease; }
-  #mapSvg { position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; }
+  #mapSvg { position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; z-index:1; }
   .prov { fill:#1b2947; stroke:#42557f; stroke-width:1.6;
     transition:transform .5s ease, fill .5s ease; }
   .prov.lit { stroke-width:2.2;
@@ -183,7 +189,7 @@
   #celebrate.show { display:flex; }
   .celebCard { background:rgba(3,6,15,.82); border:2px solid rgba(255,215,0,.6); border-radius:24px;
     padding:28px 36px; box-shadow:0 0 60px rgba(255,215,0,.35); }
-  /* (v8.2) Chữ vinh danh nhỏ lại cho vừa khu vực bản đồ hẹp hơn (572px):
+  /* (v8.2) Chữ vinh danh nhỏ lại cho vừa khu vực bản đồ hẹp hơn (656px):
      h1 72->54px, p 34->28px — vẫn 2 dòng như bản v8, không tràn. */
   #celebrate h1 { font-size:54px; color:#ffd700; text-shadow:0 0 30px rgba(255,215,0,.9); }
   #celebrate p { font-size:28px; margin-top:14px; line-height:1.6; }
@@ -245,7 +251,8 @@
     </div>
 
     <div id="mapArea">
-      <svg id="mapSvg" viewBox="240 260 815 1300" preserveAspectRatio="xMidYMid meet">
+      <div id="drumPattern"></div>
+      <svg id="mapSvg" viewBox="255 275 800 1260" preserveAspectRatio="xMidYMid meet">
         <defs>
           <!-- 4 màu tỉnh (v8, định lý bốn màu): mỗi gradient = 1 nhóm màu -->
           <linearGradient id="c0Grad" x1="0" y1="0" x2="1" y2="1">
@@ -271,7 +278,7 @@
       <div id="avatarLayer"></div>
 
       <div id="spotlight"><div class="spPic" id="spPic"></div><div class="spTxt"><div class="big" id="spBig"></div><div class="fact" id="spFact"></div></div></div>
-      <canvas id="confetti" width="572" height="1762"></canvas>
+      <canvas id="confetti" width="656" height="1762"></canvas>
 
       <div id="celebrate">
         <div class="celebCard">
@@ -357,8 +364,8 @@ async function initMap() {
     path.setAttribute('id', 'island-' + d.provinceNum);
     il.appendChild(path);
     const label = document.createElementNS(NS, 'text');
-    label.setAttribute('x', 955);
-    label.setAttribute('y', key === 'hoangSa' ? 555 : 835);
+    label.setAttribute('x', key === 'hoangSa' ? 955 : 975);
+    label.setAttribute('y', key === 'hoangSa' ? 1010 : 1470);
     label.setAttribute('class', 'islandLabel');
     label.setAttribute('id', 'islandLabel-' + d.provinceNum);
     label.textContent = 'QĐ. ' + d.label.split(' ').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
@@ -385,16 +392,17 @@ function fmtTime(ms) {
 }
 
 // ---------- Zoom phóng to / thu nhỏ: bay tới tỉnh vừa thắp rồi về toàn cảnh ----------
-// ViewBox gốc bao cả đất liền + Biển Đông (x 240–1055, y 260–1560) để chứa
-// 2 quần đảo trong bản đồ (2026-11-12; trước đây chỉ crop đất liền
-// x 240–840 nên đảo phải vẽ lớp riêng). Khu vực bản đồ giữa 2 bảng:
-// 572x1762 trong stage.
-const FULL_VB = { x: 240, y: 260, w: 815, h: 1300 };
-const MAP_W = 572, MAP_H = 1762;
+// ViewBox gốc bao cả đất liền + Biển Đông (x 255–1055, y 275–1535) để chứa
+// 2 quần đảo ở VỊ TRÍ THỰC (2026-11-13: Hoàng Sa ngang Đà Nẵng, Trường Sa
+// đông-nam Khánh Hòa). Khu vực bản đồ giữa 2 bảng: 656x1762 trong stage
+// (bảng 2 bên thu từ 240px xuống 200px để bản đồ to hơn — Chủ tịch 20:59).
+const FULL_VB = { x: 255, y: 275, w: 800, h: 1260 };
+const MAP_W = 656, MAP_H = 1762;
 const MAP_ASPECT = MAP_W / MAP_H;
-// Bbox thật của 2 quần đảo (tính từ path trong islands.json):
-// Hoàng Sa x 865–1045, y 360–525; Trường Sa x 865–1045, y 700–805.
-const ISLAND_BBOX = { 6: { x: 865, y: 360, w: 180, h: 165 }, 18: { x: 865, y: 700, w: 180, h: 105 } };
+// Bbox thật của 2 quần đảo (tính từ path trong islands.json, vị trí THỰC
+// 2026-11-13): Hoàng Sa x 880–1030, y 855–985 (ngang Đà Nẵng);
+// Trường Sa x 900–1050, y 1320–1440 (đông-nam Khánh Hòa).
+const ISLAND_BBOX = { 6: { x: 880, y: 855, w: 150, h: 130 }, 18: { x: 900, y: 1320, w: 150, h: 120 } };
 function unionBBox(a, b) {
   const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
   return { x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y };
@@ -630,7 +638,14 @@ function refreshMusicVolume() { try { bgm.volume = voicePlaying ? musicWantedVol
 function tryPlay() { try { const pr = bgm.play(); if (pr) pr.catch(() => {}); } catch (_) {} }
 function applyMusic(m) {
   if (!m) return;
-  musicTracks = m.tracks || [];
+  // URL track do server phát hành dạng tuyệt đối từ gốc (/music/...) — trên
+  // nền tảng file chỉ tồn tại dưới prefix phòng (/o/<game>/<user>/music/...),
+  // gọi gốc trả 404 nên nhạc nền KHÔNG BAO GIỜ chạy (voice thì server đã
+  // gắn roomPrefix nên vẫn chạy). Gắn prefix phòng vào đây (chạy riêng thì
+  // location không có prefix nên URL giữ nguyên).
+  const roomPrefix = (location.pathname.match(/^\/o\/[^/]+\/[^/]+/) || [''])[0];
+  musicTracks = (m.tracks || []).map(t => (t.url && t.url.startsWith('/music/'))
+    ? { ...t, url: roomPrefix + t.url } : t);
   musicWantedPlaying = !!m.playing;
   musicWantedVolume = (m.volume === undefined ? 0.35 : m.volume);
   refreshMusicVolume();
@@ -650,6 +665,14 @@ function applyMusic(m) {
 bgm.addEventListener('ended', () => {
   fetch('/api/action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'music', cmd: 'next' }) }).catch(() => {});
 });
+bgm.addEventListener('error', () => {
+  // File nhạc lỗi/404: bỏ qua, sang bài sau để nhạc không im hẳn.
+  fetch('/api/action', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'music', cmd: 'next' }) }).catch(() => {});
+});
+// Trình duyệt khóa autoplay tới khi host tương tác 1 lần: thử lại phát nhạc
+// mỗi 2s trong lúc đang muốn phát mà vẫn dừng — nhạc sẽ tự chạy ngay khi
+// trình duyệt cho phép (khi voice đã phát được thì audio đã mở).
+setInterval(() => { if (musicWantedPlaying && bgm.paused && musicTracks.length) tryPlay(); }, 2000);
 document.addEventListener('click', () => { if (musicWantedPlaying && bgm.paused) tryPlay(); });
 
 // ---------- Hiệu ứng âm thanh tổng hợp (WebAudio, không cần file nhạc) ----------
@@ -694,18 +717,18 @@ function confettiStart() {
   if (confRunning) return; confRunning = true;
   const colors = ['#ffd700', '#ff5d5d', '#5da8ff', '#7dff9e', '#ff9de2', '#fff3a3'];
   const parts = Array.from({ length: 160 }, () => ({
-    x: Math.random() * 780, y: -20 - Math.random() * 400,
+    x: Math.random() * 656, y: -20 - Math.random() * 400,
     w: 8 + Math.random() * 8, h: 6 + Math.random() * 8,
     vy: 2 + Math.random() * 3, vx: -1 + Math.random() * 2,
     rot: Math.random() * Math.PI, vr: -.05 + Math.random() * .1,
     color: colors[Math.floor(Math.random() * colors.length)],
   }));
   (function tick() {
-    if (!confRunning) { confCtx.clearRect(0, 0, 780, 1762); return; }
-    confCtx.clearRect(0, 0, 780, 1762);
+    if (!confRunning) { confCtx.clearRect(0, 0, 656, 1762); return; }
+    confCtx.clearRect(0, 0, 656, 1762);
     for (const p of parts) {
       p.y += p.vy; p.x += p.vx; p.rot += p.vr;
-      if (p.y > 1780) { p.y = -20; p.x = Math.random() * 780; }
+      if (p.y > 1780) { p.y = -20; p.x = Math.random() * 656; }
       confCtx.save(); confCtx.translate(p.x, p.y); confCtx.rotate(p.rot);
       confCtx.fillStyle = p.color; confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); confCtx.restore();
     }
