@@ -10,7 +10,7 @@
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #fff; }
   /* Khung 1080x1920, tự co vừa mọi cửa sổ/nguồn browser (giữ tỉ lệ dọc 9:16) */
   #stage { position: absolute; left: 50%; top: 50%; width: 1080px; height: 1920px; overflow: hidden; background: #0a0618; transform-origin: center center; }
-  #room { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, #2a0a4a 0%, #12081f 55%, #0a0618 100%); }
+  #room { position: absolute; inset: 0; background: #0a0618 url('/shared/bg/di-bar-online.webp') center / cover no-repeat; }
   #camera { position: absolute; inset: 0; transition: transform 1.2s ease; transform-origin: 0 0; }
   #beat-flash { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 45%, rgba(255,45,149,.55) 0%, transparent 60%); opacity: 0; z-index: 5; }
   /* Đèn neon đổi màu theo nhịp */
@@ -195,7 +195,6 @@
   <div class="neon"></div>
   <div id="beat-flash"></div>
   <div class="laser l1"></div><div class="laser l2"></div><div class="laser l3"></div>
-  <div id="disco">🪩</div>
   <div id="led-main"><span id="led-text">🎧 ĐI BAR ONLINE — bình luận "vào bar" để lên sàn! 🎧</span></div>
   <div id="dj-screen"><div class="eq-col c-l"><i style="animation-delay:-.05s;animation-duration:.42s"></i><i style="animation-delay:-.18s;animation-duration:.55s"></i><i style="animation-delay:-.3s;animation-duration:.38s"></i><i style="animation-delay:-.1s;animation-duration:.5s"></i><i style="animation-delay:-.24s;animation-duration:.44s"></i><i style="animation-delay:-.36s;animation-duration:.58s"></i></div><div class="eq-col c-r"><i style="animation-delay:-.12s;animation-duration:.5s"></i><i style="animation-delay:-.28s;animation-duration:.4s"></i><i style="animation-delay:-.04s;animation-duration:.56s"></i><i style="animation-delay:-.2s;animation-duration:.46s"></i><i style="animation-delay:-.33s;animation-duration:.52s"></i><i style="animation-delay:-.08s;animation-duration:.39s"></i></div></div>
   <div id="dj">
@@ -207,8 +206,6 @@
   </div>
   <div id="eq"></div>
   <div id="floor">
-    <div class="floor-tiles"></div>
-    <div class="floor-tiles alt"></div>
     <div class="floor-glow"></div>
     <div class="beam b1"></div><div class="beam b2"></div>
     <div id="floor-head"><span>💃 SÀN NHẢY</span><span id="round-chip">Vòng 1</span></div>
