@@ -14,7 +14,7 @@
   .clouds { position: absolute; top: 0; left: -160px; right: -160px; height: 260px; background: radial-gradient(ellipse 30% 40% at 20% 40%, rgba(255,255,255,.9), transparent), radial-gradient(ellipse 25% 35% at 70% 60%, rgba(255,255,255,.8), transparent), radial-gradient(ellipse 20% 30% at 45% 20%, rgba(255,255,255,.7), transparent); animation: drift 40s linear infinite; }
   @keyframes drift { from { transform: translateX(-120px); } to { transform: translateX(120px); } }
   header { position: absolute; top: 24px; left: 0; right: 0; text-align: center; z-index: 5; }
-  header h1 { font-size: 62px; letter-spacing: 4px; text-shadow: 0 4px 0 rgba(0,0,0,.3); }
+  header h1 { font-size: 56px; letter-spacing: 3px; text-shadow: 0 4px 0 rgba(0,0,0,.3); }
   header .sub { font-size: 26px; opacity: .95; margin-top: 6px; text-shadow: 0 2px 4px rgba(0,0,0,.3); }
   #score { position: absolute; top: 180px; left: 40px; right: 40px; display: flex; justify-content: space-between; z-index: 5; }
   .team-box { flex: 0 0 400px; border-radius: 22px; padding: 16px 20px; background: rgba(0,0,0,.4); border: 4px solid; }
@@ -34,29 +34,79 @@
   #timer { position: absolute; top: 180px; left: 50%; transform: translateX(-50%); width: 180px; text-align: center; background: rgba(0,0,0,.55); border-radius: 20px; padding: 12px 6px; z-index: 6; }
   #timer .clock { font-size: 46px; font-weight: 900; }
   #timer .lbl { font-size: 20px; opacity: .85; }
-  #river { position: absolute; top: 480px; left: 0; right: 0; bottom: 340px; }
+  /* Dải lễ hội: dây cờ hội + lồng đèn + khán giả 2 bờ (SVG tĩnh, không che thuyền/bảng điểm). */
+  #festival { position: absolute; top: 382px; left: 0; right: 0; height: 66px; z-index: 5; pointer-events: none; }
+  #festival svg { display: block; width: 1080px; height: 66px; }
+  /* Bảng hướng dẫn chơi — số THẬT lấy từ settings engine (renderGuide), không dùng số ví dụ. */
+  #guide { position: absolute; top: 456px; left: 40px; right: 40px; height: 88px; z-index: 5; background: rgba(0,0,0,.55); border: 3px solid #facc15; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; font-size: 22px; font-weight: 700; line-height: 1.35; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  #guide .g-line b { color: #fde047; }
+  #guide .g-line .g-team { color: #fff; }
+  #river { position: absolute; top: 556px; left: 0; right: 0; bottom: 348px; }
   .lane { position: relative; height: 46%; margin: 2% 0; background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.30) 0 8px, transparent 8px 70px), repeating-radial-gradient(ellipse 90px 14px at 20% 50%, rgba(255,255,255,.30) 0 3px, transparent 4px), linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.05)); background-size: 280px 100%, 280px 100%, 100% 100%; border-top: 3px dashed rgba(255,255,255,.5); border-bottom: 3px dashed rgba(255,255,255,.5); overflow: hidden; animation: waves 2.2s linear infinite; }
   @keyframes waves { from { background-position-x: 0; } to { background-position-x: 280px; } }
   .lane .milestones { position: absolute; inset: 0; }
   .lane .ms { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,.55); }
   .lane .ms span { position: absolute; top: 6px; left: 4px; font-size: 20px; font-weight: 700; color: rgba(255,255,255,.9); text-shadow: 0 1px 3px rgba(0,0,0,.4); }
   .lane .finish { position: absolute; top: 0; bottom: 0; right: 8px; width: 10px; background: repeating-linear-gradient(180deg, #111 0 16px, #fff 16px 32px); }
-  .lane .finish span { position: absolute; top: 6px; right: 16px; font-size: 22px; font-weight: 800; }
-  .boat { position: absolute; top: 50%; transform: translateY(-50%); font-size: 110px; line-height: 1; transition: left 0.6s ease; filter: drop-shadow(0 6px 6px rgba(0,0,0,.35)); white-space: nowrap; text-align: center; }
-  .boat .wake { position: absolute; right: 100%; top: 58%; transform: translateY(-50%); width: 120px; height: 30px; margin-right: 6px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.75)); border-radius: 50%; opacity: .55; filter: blur(2px); pointer-events: none; animation: wake-pulse 1.2s ease-in-out infinite alternate; }
+  .lane .finish-flag { position: absolute; left: -36px; top: 4px; width: 30px; height: 60px; object-fit: contain; z-index: 2; }
+  /* ============ THUYỀN DÀI (đợt 2) — SVG vector theo phác tay Chủ tịch ============
+     Đầu rồng TRÁI, đuôi PHẢI (đúng sprite Đợt B + phác tay), thân dài 800px chứa
+     8–12 người chèo ngồi thành hàng + NPC đánh trống ở mũi. Sprite Đợt B
+     thuyen-vang/do.png KHÔNG dùng làm thân thuyền nữa (quá ngắn); chỉ dùng
+     trong.png (trống) + co-dich.png (cờ đích) làm chi tiết nhỏ. */
+  .boat { position: absolute; top: 50%; transform: translateY(-50%); width: 800px; height: 300px; transition: left 0.6s ease; filter: drop-shadow(0 6px 6px rgba(0,0,0,.35)); }
+  .boat-inner { position: absolute; inset: 0; animation: boat-bob 1.6s ease-in-out infinite alternate; }
+  .boat.racing .boat-inner { animation: boat-rock var(--row-dur, .6s) ease-in-out infinite alternate; }
+  @keyframes boat-bob { from { transform: translateY(0); } to { transform: translateY(-4px); } }
+  @keyframes boat-rock { from { transform: rotate(-1deg) translateY(0); } to { transform: rotate(1deg) translateY(-3px); } }
+  .boat .wake { position: absolute; right: 100%; top: 68%; transform: translateY(-50%); width: 150px; height: 30px; margin-right: 6px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.75)); border-radius: 50%; opacity: .55; filter: blur(2px); pointer-events: none; animation: wake-pulse 1.2s ease-in-out infinite alternate; }
   @keyframes wake-pulse { from { opacity: .35; } to { opacity: .65; } }
-  .boat .oars { position: absolute; top: 46px; left: 50%; width: 0; height: 0; pointer-events: none; z-index: -1; }
-  .boat .oars i { position: absolute; top: 0; width: 10px; height: 120px; background: linear-gradient(#a06a35, #5d3a17); border-radius: 5px; transform-origin: top center; animation: row var(--row-dur, .6s) ease-in-out infinite alternate; }
-  .boat .oars i:nth-child(1) { left: -86px; animation-delay: 0s; }
-  .boat .oars i:nth-child(2) { left: -5px; animation-delay: .2s; }
-  .boat .oars i:nth-child(3) { left: 76px; animation-delay: .4s; }
-  @keyframes row { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
-  .boat .crew { font-size: 30px; letter-spacing: 2px; }
-  .boat .bname { display: inline-block; font-size: 30px; font-weight: 800; text-align: center; text-shadow: 0 2px 6px rgba(0,0,0,.7); background: rgba(0,0,0,.45); border-radius: 999px; padding: 6px 18px; margin-top: 4px; }
+  .boat .bname { position: absolute; top: 2px; left: 50%; transform: translateX(-50%); font-size: 28px; font-weight: 800; text-align: center; white-space: nowrap; text-shadow: 0 2px 6px rgba(0,0,0,.7); background: rgba(0,0,0,.45); border-radius: 999px; padding: 5px 18px; z-index: 2; }
+  .boat .hull-svg { position: absolute; left: 0; top: 150px; width: 800px; height: 130px; z-index: 1; overflow: visible; }
+  /* Màu thuyền theo đội: --team-color do applyTeamSettings() đặt trên .boat. */
+  .hull-body { fill: var(--team-color, #facc15); stroke: rgba(60,20,0,.55); stroke-width: 4; stroke-linejoin: round; }
+  .hull-dragon { fill: #fbbf24; stroke: rgba(60,20,0,.55); stroke-width: 3; stroke-linejoin: round; }
+  .hull-mane { fill: #ef4444; stroke: rgba(60,20,0,.5); stroke-width: 2; stroke-linejoin: round; }
+  .hull-flame { fill: #f97316; stroke: rgba(60,20,0,.45); stroke-width: 2; stroke-linejoin: round; }
+  .hull-horn { fill: #fde68a; stroke: rgba(60,20,0,.5); stroke-width: 2; stroke-linejoin: round; }
+  .hull-scale { fill: none; stroke: rgba(0,0,0,.22); stroke-width: 2; }
+  .hull-seat { stroke: rgba(0,0,0,.15); stroke-width: 2; }
+  .hull-pole { stroke: #7c2d12; stroke-width: 2.5; }
+  .hull-flag { stroke: rgba(0,0,0,.4); stroke-width: 1; }
+  /* Người chèo ngồi TRONG thuyền: avatar + tên trên đầu, thân người + mái chèo SVG. */
+  .boat .crew { position: absolute; top: 40px; left: 196px; right: 56px; height: 260px; display: flex; z-index: 2; }
+  .boat .rower { display: flex; flex-direction: column; align-items: center; flex: 1 1 0; min-width: 0; }
+  .boat .r-tag { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; height: 66px; }
+  .boat .r-av-wrap { position: relative; width: 26px; height: 26px; border-radius: 50%; overflow: hidden; border: 2px solid var(--team-color, #facc15); background: #0f172a; flex: 0 0 auto; }
+  .boat .r-av-fb { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; background: var(--team-color, #facc15); color: #111; }
+  .boat .r-av { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .boat .r-name { font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 12px; font-weight: 800; line-height: 1.15; max-width: 46px; text-align: center; word-break: break-word; background: rgba(0,0,0,.45); border-radius: 999px; padding: 1px 4px; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+  .boat .r-fig { width: 48px; height: 210px; overflow: visible; margin-top: 2px; }
+  .skin { fill: #f6c89f; stroke: #8a5a2b; stroke-width: 1.2; }
+  .skin-stroke { stroke: #f6c89f; stroke-width: 5; stroke-linecap: round; fill: none; }
+  .team-fill { fill: var(--team-color, #facc15); stroke: rgba(0,0,0,.45); stroke-width: 1.2; }
+  .shade { fill: rgba(0,0,0,.20); }
+  .pants { fill: #1e293b; }
+  .oar-shaft { stroke: #8a5a2b; stroke-width: 3.5; stroke-linecap: round; }
+  .oar-blade { fill: #a06a35; stroke: #5d3a17; stroke-width: 1.5; }
+  .boat .fig-bob { animation: rower-bob var(--row-dur, .6s) ease-in-out infinite alternate; }
+  .boat .oar-g { transform-box: view-box; transform-origin: 24px 54px; animation: oar-row var(--row-dur, .6s) ease-in-out infinite alternate; }
+  .boat:not(.racing) .fig-bob, .boat:not(.racing) .oar-g, .boat:not(.racing) .npc-bob, .boat:not(.racing) .drum-img { animation-duration: 1.6s; }
+  @keyframes rower-bob { from { transform: translateY(0) rotate(-3deg); } to { transform: translateY(-3px) rotate(3deg); } }
+  @keyframes oar-row { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+  /* NPC đánh trống ở mũi thuyền (ngồi sau đầu rồng, trước người chèo đầu tiên).
+     Trống = sprite Đợt B trong.png; NPC + trống cùng nhịp --row-dur, dồn dập .3s khi trống dồn. */
+  .boat .drummer { position: absolute; left: 92px; top: 40px; width: 108px; height: 196px; z-index: 3; }
+  .boat .npc-svg { position: absolute; left: 0; top: 0; width: 70px; height: 170px; overflow: visible; }
+  .boat .npc-bob { animation: npc-bob var(--row-dur, .6s) ease-in-out infinite alternate; }
+  @keyframes npc-bob { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-4px) rotate(2deg); } }
+  .boat .drum-img { position: absolute; left: 36px; bottom: 30px; width: 74px; height: 74px; object-fit: contain; filter: drop-shadow(0 3px 3px rgba(0,0,0,.4)); animation: drum-pulse var(--row-dur, .6s) ease-in-out infinite; }
+  @keyframes drum-pulse { 0%, 100% { transform: scale(1); } 25% { transform: scale(1.07) rotate(-1deg); } 50% { transform: scale(1); } }
+  .boat.drumming .fig-bob, .boat.drumming .oar-g, .boat.drumming .npc-bob, .boat.drumming .drum-img { animation-duration: .3s !important; }
   .boat.combo { animation: surge .5s ease 3; }
   @keyframes surge { 0% { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-58%) scale(1.08); } 100% { transform: translateY(-50%) scale(1); } }
   .lane-label { position: absolute; left: 12px; top: 8px; font-size: 26px; font-weight: 800; z-index: 3; text-shadow: 0 2px 4px rgba(0,0,0,.5); }
-  #drum-flash { position: absolute; top: 480px; left: 0; right: 0; bottom: 340px; display: flex; align-items: center; justify-content: center; font-size: 90px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); opacity: 0; pointer-events: none; z-index: 8; }
+  #drum-flash { position: absolute; top: 556px; left: 0; right: 0; bottom: 348px; display: flex; align-items: center; justify-content: center; font-size: 90px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); opacity: 0; pointer-events: none; z-index: 8; }
   #stage.shake { animation: shake .5s ease; }
   @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
   #drum-flash.on { animation: flash 1.2s ease; }
@@ -66,12 +116,18 @@
   .top-list h3 { font-size: 26px; margin-bottom: 8px; }
   .top-list.vang h3 { color: #fde047; }
   .top-list.do h3 { color: #fca5a5; }
-  .top-list .row { font-size: 24px; padding: 3px 0; display: flex; justify-content: space-between; }
+  .top-list .row { font-size: 24px; padding: 3px 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .top-list .top-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .top-list .top-left .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .top-list .top-av-wrap { position: relative; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,.7); background: #0f172a; flex: 0 0 auto; }
+  .top-list .top-av-fb { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900; background: #64748b; color: #fff; }
+  .top-list .top-av { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   #ticker { position: absolute; left: 0; right: 0; bottom: 130px; height: 64px; background: rgba(0,0,0,.55); display: flex; align-items: center; padding: 0 24px; font-size: 28px; white-space: nowrap; overflow: hidden; z-index: 5; }
   #ticker-text.scroll { animation: ticker-scroll 22s linear infinite; }
   @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  #statusbar { position: absolute; left: 0; right: 0; bottom: 56px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 26px; background: rgba(0,0,0,.4); z-index: 5; }
-  #banner { position: absolute; top: 820px; left: 90px; right: 90px; text-align: center; font-size: 72px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); display: none; z-index: 9; }
+  #statusbar { position: absolute; left: 0; right: 0; bottom: 56px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 24px; background: rgba(0,0,0,.4); z-index: 5; }
+  #statusbar span { white-space: nowrap; }
+  #banner { position: absolute; top: 980px; left: 90px; right: 90px; text-align: center; font-size: 72px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); display: none; z-index: 9; }
   #demo-badge { position: absolute; top: 24px; right: 24px; background: #f59e0b; color: #111; font-weight: 900; font-size: 26px; padding: 10px 18px; border-radius: 14px; display: none; z-index: 10; }
   #hint { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 22px; opacity: .8; z-index: 5; }
   #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
@@ -91,28 +147,164 @@
   </header>
   <div id="demo-badge">🧪 DEMO</div>
   <div id="score">
-    <div class="team-box vang"><div class="tname">🟡 ĐỘI VÀNG</div><div class="meters"><span id="m-vang">0</span><small>m</small></div><div class="ui-progress" id="prog-vang"><i id="bar-vang" style="width:0%"></i></div><div class="remain"><span class="pct" id="pct-vang">0%</span> • còn <span id="remain-vang">500m</span> tới đích</div></div>
-    <div class="team-box do"><div class="tname">🔴 ĐỘI ĐỎ</div><div class="meters"><span id="m-do">0</span><small>m</small></div><div class="ui-progress" id="prog-do"><i id="bar-do" style="width:0%"></i></div><div class="remain"><span class="pct" id="pct-do">0%</span> • còn <span id="remain-do">500m</span> tới đích</div></div>
+    <div class="team-box vang" id="team-box-vang"><div class="tname" id="tname-vang">🟡 ĐỘI VÀNG</div><div class="meters"><span id="m-vang">0</span><small>m</small></div><div class="ui-progress" id="prog-vang"><i id="bar-vang" style="width:0%"></i></div><div class="remain"><span class="pct" id="pct-vang">0%</span> • còn <span id="remain-vang">500m</span> tới đích</div></div>
+    <div class="team-box do" id="team-box-do"><div class="tname" id="tname-do">🔴 ĐỘI ĐỎ</div><div class="meters"><span id="m-do">0</span><small>m</small></div><div class="ui-progress" id="prog-do"><i id="bar-do" style="width:0%"></i></div><div class="remain"><span class="pct" id="pct-do">0%</span> • còn <span id="remain-do">500m</span> tới đích</div></div>
   </div>
   <div id="timer"><div class="clock" id="clock">5:00</div><div class="lbl" id="dist-label">Đích 500m</div></div>
+  <div id="festival" aria-hidden="true">
+    <svg viewBox="0 0 1080 66" width="1080" height="66">
+      <defs>
+        <pattern id="crowd-pat" width="108" height="66" patternUnits="userSpaceOnUse">
+          <path d="M5,66 A13,11 0 0 1 31,66 Z" fill="#ef4444"/>
+          <circle cx="18" cy="54" r="10" fill="#f6c89f" stroke="#7c4a21" stroke-width="1"/>
+          <path d="M41,66 A13,11 0 0 1 67,66 Z" fill="#3b82f6"/>
+          <circle cx="54" cy="57" r="10" fill="#e8b88a" stroke="#7c4a21" stroke-width="1"/>
+          <path d="M77,66 A13,11 0 0 1 103,66 Z" fill="#22c55e"/>
+          <circle cx="90" cy="53" r="10" fill="#f6c89f" stroke="#7c4a21" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <path d="M0,8 Q540,26 1080,8" fill="none" stroke="#7c2d12" stroke-width="2.5"/>
+      <g stroke="rgba(0,0,0,.35)" stroke-width="1">
+        <path d="M30,10 L48,11 L39,27 Z" fill="#ef4444"/><path d="M90,13 L108,14 L99,30 Z" fill="#facc15"/><path d="M150,16 L168,17 L159,33 Z" fill="#22c55e"/><path d="M210,18 L228,19 L219,35 Z" fill="#3b82f6"/><path d="M270,21 L288,22 L279,38 Z" fill="#f97316"/><path d="M330,23 L348,24 L339,40 Z" fill="#ef4444"/><path d="M390,24 L408,25 L399,41 Z" fill="#facc15"/><path d="M450,25 L468,26 L459,42 Z" fill="#22c55e"/><path d="M510,26 L528,27 L519,43 Z" fill="#3b82f6"/><path d="M570,26 L588,27 L579,43 Z" fill="#f97316"/><path d="M630,25 L648,26 L639,42 Z" fill="#ef4444"/><path d="M690,24 L708,25 L699,41 Z" fill="#facc15"/><path d="M750,23 L768,24 L759,40 Z" fill="#22c55e"/><path d="M810,21 L828,22 L819,38 Z" fill="#3b82f6"/><path d="M870,18 L888,19 L879,35 Z" fill="#f97316"/><path d="M930,16 L948,17 L939,33 Z" fill="#ef4444"/><path d="M990,13 L1008,14 L999,30 Z" fill="#facc15"/><path d="M1050,10 L1068,11 L1059,27 Z" fill="#22c55e"/>
+      </g>
+      <rect x="0" y="0" width="1080" height="66" fill="url(#crowd-pat)"/>
+      <g>
+        <line x1="120" y1="11" x2="120" y2="17" stroke="#7c2d12" stroke-width="2"/><rect x="112" y="15" width="16" height="5" rx="2" fill="#facc15"/><rect x="107" y="20" width="26" height="18" rx="9" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/><rect x="112" y="38" width="16" height="5" rx="2" fill="#facc15"/><line x1="120" y1="43" x2="120" y2="49" stroke="#facc15" stroke-width="2"/>
+        <line x1="540" y1="26" x2="540" y2="32" stroke="#7c2d12" stroke-width="2"/><rect x="532" y="30" width="16" height="5" rx="2" fill="#facc15"/><rect x="527" y="35" width="26" height="18" rx="9" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/><rect x="532" y="53" width="16" height="5" rx="2" fill="#facc15"/><line x1="540" y1="58" x2="540" y2="64" stroke="#facc15" stroke-width="2"/>
+        <line x1="960" y1="12" x2="960" y2="18" stroke="#7c2d12" stroke-width="2"/><rect x="952" y="16" width="16" height="5" rx="2" fill="#facc15"/><rect x="947" y="21" width="26" height="18" rx="9" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/><rect x="952" y="39" width="16" height="5" rx="2" fill="#facc15"/><line x1="960" y1="44" x2="960" y2="50" stroke="#facc15" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+  <div id="guide">
+    <div class="g-line">❤️ <b id="g-tap">1 tim +1m</b> &nbsp;•&nbsp; 💬 <b id="g-comment">1 bình luận +5m</b> &nbsp;•&nbsp; 🎁 <b id="g-coin">1 xu quà +5m</b> &nbsp;•&nbsp; ➕ <b id="g-follow">Follow +20m (1 lần/đua)</b></div>
+    <div class="g-line">Cmt <b>"1" / "vàng" → <span class="g-team" id="g-team-vang">Đội Vàng</span></b> &nbsp;•&nbsp; <b>"2" / "đỏ" → <span class="g-team" id="g-team-do">Đội Đỏ</span></b> &nbsp;•&nbsp; <b id="g-spam">1 bình luận / 5s</b> &nbsp;•&nbsp; 🥁 <b id="g-combo">10 tim / 2s = trống dồn +10m</b> &nbsp;•&nbsp; 🏁 <b id="g-dist">Đích 500m</b></div>
+  </div>
   <div id="river">
     <div class="lane" id="lane-vang">
-      <div class="lane-label">🟡 Đội Vàng</div>
+      <div class="lane-label" id="lane-label-vang">🟡 Đội Vàng</div>
       <div class="milestones" id="ms-vang"></div>
-      <div class="finish"><span>🏁</span></div>
-      <div class="boat" id="boat-vang" style="left:0px"><div class="wake"></div><div class="oars"><i></i><i></i><i></i></div><div>🐉🛶</div><div class="crew" id="crew-vang"></div><div class="bname">THUYỀN VÀNG</div></div>
+      <div class="finish"><img class="finish-flag" src="/shared/assets/2d/dua-thuyen-rong/curated/co-dich.png" alt="" onerror="this.remove()"></div>
+      <div class="boat" id="boat-vang" style="left:20px"><div class="boat-inner">
+        <div class="wake"></div>
+        <div class="bname" id="bname-vang">THUYỀN VÀNG</div>
+        <svg class="hull-svg" viewBox="0 0 800 130" aria-hidden="true">
+          <defs>
+            <clipPath id="hull-clip-vang"><path d="M78,26 L722,26 Q744,26 744,48 L744,78 Q744,104 714,106 L96,106 Q66,104 66,78 L66,48 Q66,26 78,26 Z"/></clipPath>
+            <pattern id="hull-scales-vang" width="26" height="18" patternUnits="userSpaceOnUse"><path class="hull-scale" d="M0,18 A13,13 0 0 1 26,18"/></pattern>
+          </defs>
+          <g transform="translate(55 50) scale(1.35) translate(-55 -50)">
+            <path d="M44,12 L58,2 L54,16 L68,10 L60,24 L72,22 L58,34 Z" class="hull-mane"/>
+            <path d="M36,14 Q34,2 44,4 Q40,12 46,16 Z" class="hull-horn"/>
+            <path d="M70,62 C48,60 36,50 32,34 L58,28 C64,42 68,52 76,58 Z" class="hull-body"/>
+            <path d="M14,30 Q8,20 18,14 Q26,8 36,12 Q46,16 46,26 Q46,36 36,40 Q24,42 16,36 Q12,33 14,30 Z" class="hull-dragon"/>
+            <path d="M16,34 Q24,42 36,38 L34,32 Q24,36 16,32 Z" fill="#f59e0b" stroke="rgba(60,20,0,.55)" stroke-width="2"/>
+            <path d="M20,30 l3,4 l3,-4 Z" fill="#fff"/><path d="M28,31 l3,4 l3,-4 Z" fill="#fff"/>
+            <path d="M18,36 Q24,40 30,36 Q26,38 22,37 Z" fill="#ef4444"/>
+            <circle cx="30" cy="22" r="4.5" fill="#fff" stroke="rgba(60,20,0,.55)" stroke-width="1.5"/><circle cx="31" cy="22" r="2.2" fill="#111"/>
+            <circle cx="16" cy="20" r="1.6" fill="#7c2d12"/>
+            <path d="M24,16 Q30,13 36,16" fill="none" stroke="rgba(60,20,0,.55)" stroke-width="2"/>
+            <path d="M14,32 Q4,36 2,46" fill="none" stroke="#fde68a" stroke-width="2.5"/><path d="M16,36 Q10,44 12,50" fill="none" stroke="#fde68a" stroke-width="2"/>
+          </g>
+          <g transform="translate(724 64) scale(1.3) translate(-724 -64)">
+            <path d="M724,64 C748,62 760,48 758,32 C756,18 768,6 780,10 C792,14 794,28 786,36 C779,42 770,38 772,28 C774,20 784,20 788,28 C792,38 784,52 770,58 C754,64 736,68 724,64 Z" class="hull-body"/>
+            <path d="M740,56 C754,54 762,44 760,34 C759,26 766,20 772,22 C778,24 778,32 774,36 C770,39 766,36 767,31 C768,27 773,27 775,31 C777,37 772,46 764,50 C756,53 746,56 740,56 Z" class="hull-flame"/>
+          </g>
+          <path class="hull-body" d="M78,26 L722,26 Q744,26 744,48 L744,78 Q744,104 714,106 L96,106 Q66,104 66,78 L66,48 Q66,26 78,26 Z"/>
+          <rect x="66" y="26" width="678" height="80" fill="url(#hull-scales-vang)" clip-path="url(#hull-clip-vang)"/>
+          <rect x="66" y="82" width="678" height="24" fill="rgba(0,0,0,.20)" clip-path="url(#hull-clip-vang)"/>
+          <rect x="66" y="26" width="678" height="14" fill="rgba(0,0,0,.16)" clip-path="url(#hull-clip-vang)"/>
+          <path d="M70,42 L740,42" stroke="#fde68a" stroke-width="3" clip-path="url(#hull-clip-vang)"/>
+          <g>
+            <path class="hull-seat" d="M196,46 L196,100"/><path class="hull-seat" d="M242,46 L242,100"/><path class="hull-seat" d="M287,46 L287,100"/><path class="hull-seat" d="M333,46 L333,100"/><path class="hull-seat" d="M379,46 L379,100"/><path class="hull-seat" d="M424,46 L424,100"/><path class="hull-seat" d="M470,46 L470,100"/><path class="hull-seat" d="M516,46 L516,100"/><path class="hull-seat" d="M561,46 L561,100"/><path class="hull-seat" d="M607,46 L607,100"/><path class="hull-seat" d="M653,46 L653,100"/><path class="hull-seat" d="M698,46 L698,100"/><path class="hull-seat" d="M744,46 L744,100"/>
+          </g>
+          <g>
+            <path class="hull-pole" d="M200,26 L200,8"/><path class="hull-flag" d="M200,8 L222,13 L200,18 Z" fill="#ef4444"/>
+            <path class="hull-pole" d="M350,26 L350,8"/><path class="hull-flag" d="M350,8 L372,13 L350,18 Z" fill="#facc15"/>
+            <path class="hull-pole" d="M500,26 L500,8"/><path class="hull-flag" d="M500,8 L522,13 L500,18 Z" fill="#22c55e"/>
+            <path class="hull-pole" d="M650,26 L650,8"/><path class="hull-flag" d="M650,8 L672,13 L650,18 Z" fill="#3b82f6"/>
+          </g>
+        </svg>
+        <div class="drummer" id="drummer-vang">
+          <svg class="npc-svg" viewBox="0 0 62 150" aria-hidden="true"><g class="npc-bob">
+            <circle cx="28" cy="20" r="10.5" class="skin"/>
+            <path d="M17,18 Q28,9 39,18 L39,13 Q28,5 17,13 Z" class="team-fill"/>
+            <circle cx="39" cy="11" r="4" class="team-fill"/>
+            <path d="M17,36 Q28,31 39,36 L43,80 L13,80 Z" class="team-fill"/>
+            <path d="M39,36 L43,80 L34,80 Z" class="shade"/>
+            <path d="M23,42 L50,88" class="skin-stroke"/><path d="M33,42 L54,84" class="skin-stroke"/>
+            <rect x="11" y="78" width="44" height="16" rx="6" class="pants"/>
+            <rect x="8" y="94" width="48" height="9" rx="3" fill="#7c4a21"/>
+          </g></svg>
+          <img class="drum-img" src="/shared/assets/2d/dua-thuyen-rong/curated/trong.png" alt="" onerror="this.style.display='none'">
+        </div>
+        <div class="crew" id="crew-vang"></div>
+      </div></div>
     </div>
     <div class="lane" id="lane-do">
-      <div class="lane-label">🔴 Đội Đỏ</div>
+      <div class="lane-label" id="lane-label-do">🔴 Đội Đỏ</div>
       <div class="milestones" id="ms-do"></div>
-      <div class="finish"><span>🏁</span></div>
-      <div class="boat" id="boat-do" style="left:0px"><div class="wake"></div><div class="oars"><i></i><i></i><i></i></div><div>🐉🛶</div><div class="crew" id="crew-do"></div><div class="bname">THUYỀN ĐỎ</div></div>
+      <div class="finish"><img class="finish-flag" src="/shared/assets/2d/dua-thuyen-rong/curated/co-dich.png" alt="" onerror="this.remove()"></div>
+      <div class="boat" id="boat-do" style="left:20px"><div class="boat-inner">
+        <div class="wake"></div>
+        <div class="bname" id="bname-do">THUYỀN ĐỎ</div>
+        <svg class="hull-svg" viewBox="0 0 800 130" aria-hidden="true">
+          <defs>
+            <clipPath id="hull-clip-do"><path d="M78,26 L722,26 Q744,26 744,48 L744,78 Q744,104 714,106 L96,106 Q66,104 66,78 L66,48 Q66,26 78,26 Z"/></clipPath>
+            <pattern id="hull-scales-do" width="26" height="18" patternUnits="userSpaceOnUse"><path class="hull-scale" d="M0,18 A13,13 0 0 1 26,18"/></pattern>
+          </defs>
+          <g transform="translate(55 50) scale(1.35) translate(-55 -50)">
+            <path d="M44,12 L58,2 L54,16 L68,10 L60,24 L72,22 L58,34 Z" class="hull-mane"/>
+            <path d="M36,14 Q34,2 44,4 Q40,12 46,16 Z" class="hull-horn"/>
+            <path d="M70,62 C48,60 36,50 32,34 L58,28 C64,42 68,52 76,58 Z" class="hull-body"/>
+            <path d="M14,30 Q8,20 18,14 Q26,8 36,12 Q46,16 46,26 Q46,36 36,40 Q24,42 16,36 Q12,33 14,30 Z" class="hull-dragon"/>
+            <path d="M16,34 Q24,42 36,38 L34,32 Q24,36 16,32 Z" fill="#f59e0b" stroke="rgba(60,20,0,.55)" stroke-width="2"/>
+            <path d="M20,30 l3,4 l3,-4 Z" fill="#fff"/><path d="M28,31 l3,4 l3,-4 Z" fill="#fff"/>
+            <path d="M18,36 Q24,40 30,36 Q26,38 22,37 Z" fill="#ef4444"/>
+            <circle cx="30" cy="22" r="4.5" fill="#fff" stroke="rgba(60,20,0,.55)" stroke-width="1.5"/><circle cx="31" cy="22" r="2.2" fill="#111"/>
+            <circle cx="16" cy="20" r="1.6" fill="#7c2d12"/>
+            <path d="M24,16 Q30,13 36,16" fill="none" stroke="rgba(60,20,0,.55)" stroke-width="2"/>
+            <path d="M14,32 Q4,36 2,46" fill="none" stroke="#fde68a" stroke-width="2.5"/><path d="M16,36 Q10,44 12,50" fill="none" stroke="#fde68a" stroke-width="2"/>
+          </g>
+          <g transform="translate(724 64) scale(1.3) translate(-724 -64)">
+            <path d="M724,64 C748,62 760,48 758,32 C756,18 768,6 780,10 C792,14 794,28 786,36 C779,42 770,38 772,28 C774,20 784,20 788,28 C792,38 784,52 770,58 C754,64 736,68 724,64 Z" class="hull-body"/>
+            <path d="M740,56 C754,54 762,44 760,34 C759,26 766,20 772,22 C778,24 778,32 774,36 C770,39 766,36 767,31 C768,27 773,27 775,31 C777,37 772,46 764,50 C756,53 746,56 740,56 Z" class="hull-flame"/>
+          </g>
+          <path class="hull-body" d="M78,26 L722,26 Q744,26 744,48 L744,78 Q744,104 714,106 L96,106 Q66,104 66,78 L66,48 Q66,26 78,26 Z"/>
+          <rect x="66" y="26" width="678" height="80" fill="url(#hull-scales-do)" clip-path="url(#hull-clip-do)"/>
+          <rect x="66" y="82" width="678" height="24" fill="rgba(0,0,0,.20)" clip-path="url(#hull-clip-do)"/>
+          <rect x="66" y="26" width="678" height="14" fill="rgba(0,0,0,.16)" clip-path="url(#hull-clip-do)"/>
+          <path d="M70,42 L740,42" stroke="#fde68a" stroke-width="3" clip-path="url(#hull-clip-do)"/>
+          <g>
+            <path class="hull-seat" d="M196,46 L196,100"/><path class="hull-seat" d="M242,46 L242,100"/><path class="hull-seat" d="M287,46 L287,100"/><path class="hull-seat" d="M333,46 L333,100"/><path class="hull-seat" d="M379,46 L379,100"/><path class="hull-seat" d="M424,46 L424,100"/><path class="hull-seat" d="M470,46 L470,100"/><path class="hull-seat" d="M516,46 L516,100"/><path class="hull-seat" d="M561,46 L561,100"/><path class="hull-seat" d="M607,46 L607,100"/><path class="hull-seat" d="M653,46 L653,100"/><path class="hull-seat" d="M698,46 L698,100"/><path class="hull-seat" d="M744,46 L744,100"/>
+          </g>
+          <g>
+            <path class="hull-pole" d="M200,26 L200,8"/><path class="hull-flag" d="M200,8 L222,13 L200,18 Z" fill="#ef4444"/>
+            <path class="hull-pole" d="M350,26 L350,8"/><path class="hull-flag" d="M350,8 L372,13 L350,18 Z" fill="#facc15"/>
+            <path class="hull-pole" d="M500,26 L500,8"/><path class="hull-flag" d="M500,8 L522,13 L500,18 Z" fill="#22c55e"/>
+            <path class="hull-pole" d="M650,26 L650,8"/><path class="hull-flag" d="M650,8 L672,13 L650,18 Z" fill="#3b82f6"/>
+          </g>
+        </svg>
+        <div class="drummer" id="drummer-do">
+          <svg class="npc-svg" viewBox="0 0 62 150" aria-hidden="true"><g class="npc-bob">
+            <circle cx="28" cy="20" r="10.5" class="skin"/>
+            <path d="M17,18 Q28,9 39,18 L39,13 Q28,5 17,13 Z" class="team-fill"/>
+            <circle cx="39" cy="11" r="4" class="team-fill"/>
+            <path d="M17,36 Q28,31 39,36 L43,80 L13,80 Z" class="team-fill"/>
+            <path d="M39,36 L43,80 L34,80 Z" class="shade"/>
+            <path d="M23,42 L50,88" class="skin-stroke"/><path d="M33,42 L54,84" class="skin-stroke"/>
+            <rect x="11" y="78" width="44" height="16" rx="6" class="pants"/>
+            <rect x="8" y="94" width="48" height="9" rx="3" fill="#7c4a21"/>
+          </g></svg>
+          <img class="drum-img" src="/shared/assets/2d/dua-thuyen-rong/curated/trong.png" alt="" onerror="this.style.display='none'">
+        </div>
+        <div class="crew" id="crew-do"></div>
+      </div></div>
     </div>
   </div>
   <div id="drum-flash">🥁 TRỐNG DỒN!</div>
   <div id="tops">
-    <div class="top-list vang"><h3>🟡 Top chèo — Đội Vàng</h3><div id="top-vang"></div></div>
-    <div class="top-list do"><h3>🔴 Top chèo — Đội Đỏ</h3><div id="top-do"></div></div>
+    <div class="top-list vang"><h3 id="top-title-vang">🟡 Top chèo — Đội Vàng</h3><div id="top-vang"></div></div>
+    <div class="top-list do"><h3 id="top-title-do">🔴 Top chèo — Đội Đỏ</h3><div id="top-do"></div></div>
   </div>
   <div id="ticker"><span id="ticker-text">Bình luận "vàng" hoặc "đỏ" để vào đội • 1 tim +1m, 1 bình luận +5m, 1 xu quà +5m • 10 tim/2s cùng đội = trống dồn +10m</span></div>
   <div id="statusbar"><span id="phase-label">Chờ cuộc đua</span><span id="counts"></span><span id="combos"></span></div>
@@ -187,6 +379,92 @@ window.addEventListener('resize', fit); fit();
       });
     } catch (e) {}
   }
+  // --- Tên/màu/nền đội từ settings (mặc định = tên cũ) ---
+  function teamName(s, team) {
+    const st = (s && s.settings) || {};
+    return team === 'vang' ? (st.teamVangName || 'Vàng') : (st.teamDoName || 'Đỏ');
+  }
+  function teamColor(s, team) {
+    const st = (s && s.settings) || {};
+    return team === 'vang' ? (st.teamVangColor || '#FACC15') : (st.teamDoColor || '#EF4444');
+  }
+  function teamBg(s, team) {
+    const st = (s && s.settings) || {};
+    return team === 'vang' ? (st.teamVangBg || '') : (st.teamDoBg || '');
+  }
+  function shortName(name) { return String(name == null ? '' : name).slice(0, 10); }
+  // Avatar tròn: img thật đè lên chữ cái đầu; img lỗi -> tự gỡ, lộ chữ cái.
+  function avatarHtml(p, wrapCls, imgCls, fbCls) {
+    const letter = escapeHtml(String(p.name || '?').trim().charAt(0).toUpperCase() || '?');
+    const img = p.avatarUrl ? `<img class="${imgCls}" src="${escapeHtml(p.avatarUrl)}" alt="" onerror="this.remove()">` : '';
+    return `<span class="${wrapCls}"><span class="${fbCls}">${letter}</span>${img}</span>`;
+  }
+  // Người chèo: tối đa 12 figure ngồi TRONG thuyền — avatar + tên trên đầu,
+  // thân người SVG (khăn đóng + áo màu đội) + mái chèo khua theo --row-dur.
+  // Chỉ rebuild khi danh sách đổi (không reset animation).
+  const ROWER_SVG = `<svg class="r-fig" viewBox="0 0 48 210" aria-hidden="true"><g class="fig-bob">` +
+    `<circle cx="24" cy="14" r="9" class="skin"/>` +
+    `<path d="M15,12 Q24,3 33,12 L33,8 Q24,0 15,8 Z" class="team-fill"/>` +
+    `<circle cx="33" cy="6" r="3.5" class="team-fill"/>` +
+    `<path d="M16,26 Q24,22 32,26 L36,58 L12,58 Z" class="team-fill"/>` +
+    `<path d="M32,26 L36,58 L28,58 Z" class="shade"/>` +
+    `<path d="M21,34 L25,52" class="skin-stroke"/><path d="M28,34 L25,52" class="skin-stroke"/>` +
+    `<rect x="12" y="56" width="24" height="10" rx="4" class="pants"/></g>` +
+    `<g class="oar-g"><path d="M24,52 L42,190" class="oar-shaft"/>` +
+    `<ellipse cx="43" cy="196" rx="6" ry="11" transform="rotate(18 43 196)" class="oar-blade"/></g></svg>`;
+  const lastCrewSig = { vang: '', do: '' };
+  function renderCrew(team, rowers) {
+    const list = (rowers || []).slice(0, 12);
+    const sig = list.map((p) => (p.uid || '') + '|' + p.name + '|' + (p.avatarUrl || '')).join(';');
+    if (sig === lastCrewSig[team]) return;
+    lastCrewSig[team] = sig;
+    document.getElementById('crew-' + team).innerHTML = list.map((p) =>
+      `<div class="rower" title="${escapeHtml(p.name)}"><div class="r-tag">${avatarHtml(p, 'r-av-wrap', 'r-av', 'r-av-fb')}<span class="r-name">${escapeHtml(shortName(p.name))}</span></div>${ROWER_SVG}</div>`
+    ).join('');
+  }
+  function renderTop(team, list) {
+    return (list || []).map((p, i) =>
+      `<div class="row"><span class="top-left">${avatarHtml(p, 'top-av-wrap', 'top-av', 'top-av-fb')}<span class="nm">${i + 1}. ${escapeHtml(p.name)}</span></span><span>${p.meters}m</span></div>`
+    ).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
+  }
+  function applyTeamSettings(s) {
+    for (const team of ['vang', 'do']) {
+      const name = teamName(s, team);
+      const color = teamColor(s, team);
+      const bg = teamBg(s, team);
+      const emoji = team === 'vang' ? '🟡' : '🔴';
+      const box = document.getElementById('team-box-' + team);
+      box.style.borderColor = color;
+      box.style.backgroundImage = bg ? `linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url("${bg}")` : '';
+      box.style.backgroundSize = bg ? 'cover' : '';
+      box.style.backgroundPosition = bg ? 'center' : '';
+      const tn = document.getElementById('tname-' + team);
+      tn.textContent = `${emoji} ĐỘI ${name.toUpperCase()}`;
+      tn.style.color = color;
+      document.getElementById('bar-' + team).style.background = color;
+      document.getElementById('lane-label-' + team).textContent = `${emoji} Đội ${name}`;
+      document.getElementById('bname-' + team).textContent = 'THUYỀN ' + name.toUpperCase();
+      const tt = document.getElementById('top-title-' + team);
+      tt.textContent = `${emoji} Top chèo — Đội ${name}`;
+      tt.style.color = color;
+      document.getElementById('boat-' + team).style.setProperty('--team-color', color);
+    }
+  }
+  // Bảng hướng dẫn: số THẬT từ settings engine (mặc định = giá trị engine).
+  function renderGuide(s) {
+    const st = (s && s.settings) || {};
+    const v = (k, d) => (st[k] != null ? st[k] : d);
+    const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+    setText('g-tap', '1 tim +' + v('tapM', 1) + 'm');
+    setText('g-comment', '1 bình luận +' + v('commentM', 5) + 'm');
+    setText('g-coin', '1 xu quà +' + v('coinToM', 5) + 'm');
+    setText('g-follow', 'Follow +' + v('followM', 20) + 'm (1 lần/đua)');
+    setText('g-team-vang', 'Đội ' + teamName(s, 'vang'));
+    setText('g-team-do', 'Đội ' + teamName(s, 'do'));
+    setText('g-spam', '1 bình luận / ' + v('commentSpamS', 5) + 's');
+    setText('g-combo', v('comboThreshold', 10) + ' tim / ' + v('comboWindowS', 2) + 's = trống dồn +' + v('comboBonusM', 10) + 'm');
+    setText('g-dist', 'Đích ' + v('raceDistanceM', 500) + 'm');
+  }
   function buildMilestones(dist) {
     const step = dist / 5;
     for (const id of ['ms-vang', 'ms-do']) {
@@ -202,12 +480,27 @@ window.addEventListener('resize', fit); fit();
       el.innerHTML = html;
     }
   }
+  // Nhịp chèo theo delta mét giữa 2 lần render: nhiều tim -> khua nhanh hơn.
+  const prevMeters = { vang: 0, do: 0 };
+  function rowDur(team, s) {
+    const d = (s.meters[team] || 0) - (prevMeters[team] || 0);
+    prevMeters[team] = s.meters[team] || 0;
+    if (s.phase !== 'racing') return '1.4s';
+    if (d >= 40) return '.4s';
+    if (d >= 15) return '.55s';
+    if (d > 0) return '.8s';
+    return '1.2s';
+  }
   function render(s) {
     if (!s || s.game !== 'dua-thuyen-rong') return;
     state = s;
     // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
     if (window.StromMusic) window.StromMusic.sync({ mood: 'drum', enabled: true, volume: 50, energy: (s.phase === 'spotlight' || (s.phase === 'racing' && (((s.combos.vang || 0) + (s.combos.do || 0)) > 0 || Math.max(s.progress.vang || 0, s.progress.do || 0) > 80))) ? 2 : (s.phase === 'racing' ? 1 : 0) });
     voiceOn = s.settings.voiceEnabled !== false;
+    applyTeamSettings(s);
+    renderGuide(s);
+    document.getElementById('boat-vang').classList.toggle('racing', s.phase === 'racing');
+    document.getElementById('boat-do').classList.toggle('racing', s.phase === 'racing');
     document.getElementById('m-vang').textContent = s.meters.vang;
     document.getElementById('m-do').textContent = s.meters.do;
     document.getElementById('bar-vang').style.width = s.progress.vang + '%';
@@ -218,29 +511,28 @@ window.addEventListener('resize', fit); fit();
     document.getElementById('pct-do').textContent = Math.round(s.progress.do) + '%';
     document.getElementById('remain-vang').textContent = Math.max(0, s.raceDistanceM - s.meters.vang) + 'm';
     document.getElementById('remain-do').textContent = Math.max(0, s.raceDistanceM - s.meters.do) + 'm';
-    document.getElementById('boat-vang').style.setProperty('--row-dur', (s.combos.vang || 0) > 0 ? '.35s' : '.6s');
-    document.getElementById('boat-do').style.setProperty('--row-dur', (s.combos.do || 0) > 0 ? '.35s' : '.6s');
+    document.getElementById('boat-vang').style.setProperty('--row-dur', rowDur('vang', s));
+    document.getElementById('boat-do').style.setProperty('--row-dur', rowDur('do', s));
     document.getElementById('dist-label').textContent = 'Đích ' + s.raceDistanceM + 'm';
     document.getElementById('clock').textContent = s.phase === 'racing' && s.raceEndsAt ? fmtClock(s.raceEndsAt - Date.now()) : (s.phase === 'spotlight' ? '⏳' : '--:--');
     document.getElementById('race-label').textContent = 'Cuộc đua ' + s.raceNo + (s.phase === 'lobby' ? ' — chờ người chơi vào đội' : s.phase === 'racing' ? ' — đang diễn ra' : ' — vinh danh đội thắng');
     buildMilestones(s.raceDistanceM);
-    const laneW = 1080 - 220;
-    document.getElementById('boat-vang').style.left = Math.round((s.progress.vang / 100) * laneW) + 'px';
-    document.getElementById('boat-do').style.left = Math.round((s.progress.do / 100) * laneW) + 'px';
-    document.getElementById('crew-vang').textContent = '🚣'.repeat(Math.min(6, s.rowers.vang.length));
-    document.getElementById('crew-do').textContent = '🚣'.repeat(Math.min(6, s.rowers.do.length));
-    const topV = s.top.vang.map((p, i) => `<div class="row"><span>${i + 1}. ${escapeHtml(p.name)}</span><span>${p.meters}m</span></div>`).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
-    const topD = s.top.do.map((p, i) => `<div class="row"><span>${i + 1}. ${escapeHtml(p.name)}</span><span>${p.meters}m</span></div>`).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
-    document.getElementById('top-vang').innerHTML = topV;
-    document.getElementById('top-do').innerHTML = topD;
+    // Thuyền dài 800px: trượt theo % tiến độ, đuôi chạm vạch đích ở 100%.
+    const BOAT_TRAVEL = 1080 - 800 - 40;
+    document.getElementById('boat-vang').style.left = (20 + Math.round((s.progress.vang / 100) * BOAT_TRAVEL)) + 'px';
+    document.getElementById('boat-do').style.left = (20 + Math.round((s.progress.do / 100) * BOAT_TRAVEL)) + 'px';
+    renderCrew('vang', s.rowers.vang);
+    renderCrew('do', s.rowers.do);
+    document.getElementById('top-vang').innerHTML = renderTop('vang', s.top.vang);
+    document.getElementById('top-do').innerHTML = renderTop('do', s.top.do);
     document.getElementById('phase-label').textContent =
       s.phase === 'lobby' ? '🕒 Chờ cuộc đua' : s.phase === 'racing' ? '🚣 Cuộc đua đang diễn ra' : '🏆 Vinh danh đội thắng';
-    document.getElementById('counts').textContent = `🟡 ${s.teamCounts.vang} • 🔴 ${s.teamCounts.do} • 👥 ${s.teamCounts.none} chưa chọn đội`;
+    document.getElementById('counts').textContent = `🟡 ${teamName(s, 'vang')} ${s.teamCounts.vang} • 🔴 ${teamName(s, 'do')} ${s.teamCounts.do} • 👥 ${s.teamCounts.none} chưa chọn đội`;
     document.getElementById('combos').textContent = `🥁 Trống dồn: 🟡${s.combos.vang} 🔴${s.combos.do}`;
     const banner = document.getElementById('banner');
     if (s.phase === 'spotlight' && s.winner) {
       banner.style.display = 'block';
-      banner.textContent = s.winner.team ? (s.winner.team === 'vang' ? '🟡 ĐỘI VÀNG VỀ NHẤT!' : '🔴 ĐỘI ĐỎ VỀ NHẤT!') : '🤝 HÒA!';
+      banner.textContent = s.winner.team ? (s.winner.team === 'vang' ? `🟡 ĐỘI ${teamName(s, 'vang').toUpperCase()} VỀ NHẤT!` : `🔴 ĐỘI ${teamName(s, 'do').toUpperCase()} VỀ NHẤT!`) : '🤝 HÒA!';
     } else banner.style.display = 'none';
     document.getElementById('demo-badge').style.display = s.demoActive ? 'block' : 'none';
     if (s.logs && s.logs.length) {
@@ -253,7 +545,7 @@ window.addEventListener('resize', fit); fit();
   function escapeHtml(x) { return String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   function drumFlash(team) {
     const el = document.getElementById('drum-flash');
-    el.textContent = '🥁 TRỐNG DỒN! ' + (team === 'vang' ? 'ĐỘI VÀNG' : 'ĐỘI ĐỎ');
+    el.textContent = '🥁 TRỐNG DỒN! ĐỘI ' + teamName(state, team).toUpperCase();
     el.classList.remove('on');
     void el.offsetWidth;
     el.classList.add('on');
@@ -261,6 +553,8 @@ window.addEventListener('resize', fit); fit();
     boat.classList.remove('combo');
     void boat.offsetWidth;
     boat.classList.add('combo');
+    boat.classList.add('drumming'); // NPC trống + người chèo khua dồn dập trong lúc trống dồn
+    setTimeout(() => boat.classList.remove('drumming'), 1500);
     const stage = document.getElementById('stage');
     stage.classList.remove('shake');
     void stage.offsetWidth;
