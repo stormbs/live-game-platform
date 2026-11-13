@@ -102,6 +102,31 @@
   .bees { position: absolute; font-size: 40px; z-index: 3; display: none; }
   .bees.on { display: block; animation: fly 9s linear infinite; }
   @keyframes fly { 0% { left: 60px; top: 500px; } 25% { left: 700px; top: 420px; } 50% { left: 300px; top: 900px; } 75% { left: 800px; top: 1100px; } 100% { left: 60px; top: 500px; } }
+  /* Bảng hướng dẫn chơi (chuẩn chung đợt 2 — nguyên tắc 3): cột phải dưới
+     bảng top (top5 đầy 5 hàng kết thúc ~716px), không che vườn hoa.
+     Số liệu lấy từ settings (engine.js defaultSettings), renderHowto()
+     cập nhật lại khi dashboard đổi số. */
+  .howto { position: absolute; top: 730px; right: 24px; z-index: 6; width: 300px; background: rgba(255,255,255,.92); border-radius: 16px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+  .howto h3 { font-size: 24px; color: #2e7d32; margin-bottom: 6px; }
+  .howto ul { list-style: none; }
+  .howto li { font-size: 19px; line-height: 1.4; margin-bottom: 7px; color: #2d1a0e; }
+  .howto li b { color: #2e7d32; }
+  /* NPC Bác Nông Dân (chuẩn chung đợt 2 — nguyên tắc 4): đứng góc dưới-phải
+     vườn, trên dải ticker; vẫy bình tưới khi hoa nở, chúc mừng khi chạm mốc,
+     nhảy múa khi lễ hội. Chỉ animate transform/opacity. */
+  .farmer { position: absolute; right: 30px; bottom: 300px; z-index: 6; width: 230px; text-align: center; }
+  .farmer-bubble { position: absolute; left: 50%; transform: translateX(-50%) translateY(6px); bottom: calc(100% + 4px); width: 250px; background: #fff; color: #2d1a0e; font-size: 21px; font-weight: 800; line-height: 1.35; padding: 10px 14px; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; }
+  .farmer-bubble::after { content: ""; position: absolute; left: 50%; bottom: -10px; margin-left: -10px; border: 10px solid transparent; border-top-color: #fff; border-bottom: 0; }
+  .farmer-bubble.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .farmer-body { font-size: 104px; line-height: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,.3)); }
+  .farmer.cheer .farmer-body { animation: farmer-wave 2.4s ease; }
+  @keyframes farmer-wave { 0%,100% { transform: rotate(0) translateY(0); } 20% { transform: rotate(-9deg) translateY(-8px); } 40% { transform: rotate(8deg) translateY(-4px); } 60% { transform: rotate(-7deg) translateY(-8px); } 80% { transform: rotate(5deg) translateY(-3px); } }
+  .farmer-can { position: absolute; right: 6px; top: 52px; font-size: 44px; opacity: 0; pointer-events: none; }
+  .farmer.cheer .farmer-can { opacity: 1; animation: can-pour 2.4s ease; }
+  @keyframes can-pour { 0%,100% { opacity: 0; transform: rotate(18deg) translate(6px,-4px); } 25% { opacity: 1; transform: rotate(-14deg) translate(0,0); } 70% { opacity: 1; transform: rotate(-20deg) translate(-2px,3px); } }
+  .farmer.festival .farmer-body { animation: farmer-dance .7s ease-in-out infinite; }
+  @keyframes farmer-dance { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-18px) rotate(6deg); } }
+  .farmer-name { font-size: 20px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000, 0 0 8px rgba(0,0,0,.55); margin-top: 2px; }
   #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; background: linear-gradient(180deg, #7ec8f7 0%, #aee3ff 22%, #e8f7d9 45%, #8fce62 100%); }
   html { background: #000; }
 </style>
@@ -129,8 +154,20 @@
 </header>
 
 <div class="top5 ui-board" id="top5"><h3>🏆 Top người trồng</h3><div>Chưa có ai trồng hoa…</div></div>
+<div class="howto" id="howto"><h3>📖 CÁCH CHƠI</h3><ul>
+  <li>💬 <b>Bình luận</b> (1 lần/<span id="ht-spam">5</span> giây): gieo <b>1 hạt</b> — tối đa <span id="ht-max">8</span> hoa/người</li>
+  <li>❤️ <b>Thả tim</b>: 1 tim = gieo 1 hạt (đủ hoa thì +1 cho hoa non nhất)</li>
+  <li>🎁 <b>Quà</b>: 1 xu = +1 tăng trưởng; ≥<span id="ht-rain">100</span> xu mưa cả vườn +5; ≥<span id="ht-rainbow">500</span> xu cầu vồng: 1 hoa nở ngay + cả vườn +10</li>
+  <li>➕ <b>Follow</b>: +<span id="ht-follow">5</span>đ + tặng 1 hồng vàng từ nụ (chỉ lần đầu)</li>
+  <li>🔁 <b>Chia sẻ</b>: +<span id="ht-share">2</span> tăng trưởng cho hoa non nhất</li>
+  <li>🌱 Hạt tự nảy mầm sau <span id="ht-sprout">10</span> giây; mầm→nụ→nở mỗi bậc cần <span id="ht-stage">3</span> tăng trưởng</li>
+  <li>💧 Sương xuân mỗi <span id="ht-dew">60</span> giây: cả vườn +<span id="ht-dewamt">1</span></li>
+  <li>🧺 Hoa nở <span id="ht-harvest">90</span> giây thì được hái, trả luống cho hạt mới</li>
+  <li>🎯 <b><span id="ht-target">100</span> hoa nở</b> → Lễ hội hoa! Mốc: <span id="ht-milestones">10 hoa 🦋 bướm · 50 hoa 🐝 ong · 75 hoa 🌈 cầu vồng · 100 hoa 🎉 lễ hội</span></li>
+</ul></div>
 <div class="garden" id="garden"></div>
 <div class="nursery" id="nursery">🌱 Vườn ươm: 0 hạt đang chờ</div>
+<div class="farmer" id="farmer"><div class="farmer-bubble" id="farmer-bubble"></div><div class="farmer-body">👨‍🌾</div><div class="farmer-can">💧</div><div class="farmer-name">Bác Nông Dân</div></div>
 <div class="ticker" id="ticker"></div>
 <div class="statusbar">
   <span>🌱 <span class="big" id="st-flowers">0</span> hoa trên vườn</span>
@@ -163,8 +200,71 @@ let prevStages = null; // stage từng ô ở lần render trước — để ph
 let lastWaterSeenT = null; // mốc log tưới mới nhất đã xử lý (null = lần render đầu, bỏ qua log cũ)
 let waterFx = []; // [{ idx, until }] — ô đang hiện animation bình tưới
 let voiceOn = true;
+let farmerTimer = null;
+let farmerWelcomed = false;
 const ttsQueue = [];
 let ttsPlaying = false;
+
+// NPC Bác Nông Dân: nói + vẫy bình tưới khi có sự kiện thật (hoa nở, chạm
+// mốc, lễ hội). Bong bóng tự ẩn sau ms; đang lễ hội thì giữ bong bóng lễ hội.
+function farmerSay(text, ms) {
+  const b = document.getElementById('farmer-bubble');
+  const f = document.getElementById('farmer');
+  if (!b || !f) return;
+  b.textContent = text;
+  b.classList.add('on');
+  f.classList.add('cheer');
+  if (farmerTimer) clearTimeout(farmerTimer);
+  farmerTimer = setTimeout(() => {
+    f.classList.remove('cheer');
+    if (f.classList.contains('festival')) {
+      b.textContent = '🎉 Lễ hội hoa! Cảm ơn cả phòng! 🎉';
+    } else {
+      b.classList.remove('on');
+    }
+  }, ms || 3000);
+}
+function farmerFestival(on) {
+  const f = document.getElementById('farmer');
+  const b = document.getElementById('farmer-bubble');
+  if (!f || !b) return;
+  f.classList.toggle('festival', !!on);
+  if (on) {
+    b.textContent = '🎉 Lễ hội hoa! Cảm ơn cả phòng! 🎉';
+    b.classList.add('on');
+  } else if (!f.classList.contains('cheer')) {
+    b.classList.remove('on');
+  }
+}
+
+// Bảng hướng dẫn: số liệu lấy từ settings (engine.js defaultSettings),
+// cập nhật theo state để đúng cả khi dashboard đổi số.
+function renderHowto(s) {
+  const st = s.settings || {};
+  const set = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== null) el.textContent = v; };
+  set('ht-spam', st.commentSpamS);
+  set('ht-max', st.maxFlowersPerViewer);
+  set('ht-rain', st.giftRainCoins);
+  set('ht-rainbow', st.giftRainbowCoins);
+  set('ht-follow', st.followPoints);
+  set('ht-share', st.shareGrowth);
+  set('ht-sprout', st.sproutAutoS);
+  set('ht-stage', st.growthPerStage);
+  set('ht-dew', st.dewIntervalS);
+  set('ht-dewamt', st.dewGrowth);
+  set('ht-harvest', st.harvestAfterBloomS);
+  set('ht-target', s.target);
+  const msEl = document.getElementById('ht-milestones');
+  if (msEl && Array.isArray(s.milestones)) {
+    msEl.textContent = s.milestones.map((m) => {
+      if (m >= s.target) return m + ' hoa 🎉 lễ hội';
+      if (m === 10) return m + ' hoa 🦋 bướm';
+      if (m === 50) return m + ' hoa 🐝 ong';
+      if (m === 75) return m + ' hoa 🌈 cầu vồng';
+      return m + ' hoa';
+    }).join(' · ');
+  }
+}
 
 function playTts(text) {
   if (!voiceOn || !text) return;
@@ -255,6 +355,8 @@ function detectWatering(s) {
 
 function render(s) {
   lastState = s;
+  renderHowto(s);
+  if (!farmerWelcomed) { farmerWelcomed = true; farmerSay('Chào mừng đến vườn hoa! 🌸', 4000); }
   // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
   if (window.StromMusic) window.StromMusic.sync({ mood: 'folk', enabled: true, volume: 50, energy: (s.phase === 'festival' || s.phase === 'results') ? 2 : (s.demoActive || (s.viewersOnline || 0) > 0 || (s.flowers || []).length > 0 ? 1 : 0) });
   voiceOn = s.settings.voiceEnabled !== false;
@@ -323,8 +425,8 @@ function render(s) {
   const tk = document.getElementById('ticker');
   tk.innerHTML = s.logs.slice(-3).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
 
-  if (s.phase === 'festival' && prevPhase !== 'festival') spawnPetals();
-  if (s.phase !== 'festival' && prevPhase === 'festival') document.getElementById('petals').innerHTML = '';
+  if (s.phase === 'festival' && prevPhase !== 'festival') { spawnPetals(); farmerFestival(true); }
+  if (s.phase !== 'festival' && prevPhase === 'festival') { document.getElementById('petals').innerHTML = ''; farmerFestival(false); }
   prevPhase = s.phase;
 
   if (s.phase === 'festival') {
@@ -343,11 +445,12 @@ function escapeHtml(s) {
 }
 
 socket.on('state-update', render);
-socket.on('bloom', (d) => { if (d && d.flower) playTts('Hoa của ' + d.flower.name + ' đã nở rồi!'); });
+socket.on('bloom', (d) => { if (d && d.flower) { playTts('Hoa của ' + d.flower.name + ' đã nở rồi!'); farmerSay('Hoa của ' + d.flower.name + ' nở rồi! 🌸'); } });
 socket.on('festival', () => playTts('Vườn hoa đã đầy! Lễ hội hoa bắt đầu!'));
 socket.on('milestone', (d) => {
   if (!d) return;
   playTts('Mốc ' + d.milestone + ' hoa nở! ' + (d.effect || ''));
+  farmerSay('Mốc ' + d.milestone + ' hoa nở! 🎉');
   if (window.StromUI) StromUI.sfx('pop');
   document.querySelectorAll('#milestones .ms').forEach((el) => {
     if (el.textContent.indexOf(String(d.milestone)) !== -1) {
