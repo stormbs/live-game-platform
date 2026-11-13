@@ -10,7 +10,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; }
   body {
-    font-family: "Segoe UI", Verdana, sans-serif; color: #fff;
+    font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif; color: #fff;
   }
   .demo-badge { position: absolute; top: 14px; left: 14px; z-index: 30; background: #b8860b; color: #1c1c1c; font-weight: 900; font-size: 24px; padding: 8px 16px; border-radius: 10px; display: none; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
   .demo-badge.on { display: block; }
@@ -25,15 +25,37 @@
   .arena-wrap { position: absolute; top: 330px; left: 0; width: 1080px; height: 1000px; z-index: 4; }
   .arena { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 960px; height: 900px; border-radius: 50%; background: radial-gradient(circle, #3d5a3a 0%, #2c4429 60%, #1e2f1c 100%); border: 6px solid #8a6d3b; box-shadow: inset 0 0 60px rgba(0,0,0,.5); }
   .zone-ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 5px solid rgba(255, 60, 60, .9); border-radius: 50%; box-shadow: 0 0 30px rgba(255, 0, 0, .5), inset 0 0 40px rgba(255, 0, 0, .25); pointer-events: none; transition: width 1s linear, height 1s linear; }
-  .fighter { position: absolute; width: 130px; margin-left: -65px; margin-top: -55px; text-align: center; z-index: 6; }
+  .fighter { position: absolute; width: 130px; margin-left: -65px; margin-top: -82px; text-align: center; z-index: 6; }
+  /* Idle: bob nhẹ lên xuống (chỉ transform) — chạy trên lớp trong để không
+     xung đột với lunge / giật lùi / ngã ở lớp ngoài .fighter. */
+  .fighter:not(.down) .fbody { animation: bob 1.8s ease-in-out infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  /* Tấn công: lao về phía đối thủ (hướng --lx/--ly = về tâm đấu trường, nơi
+     đối thủ đứng) 0.25s rồi về; vũ khí vung 1 nhịp. */
+  .fighter.atk { animation: lunge .25s ease-out; }
+  @keyframes lunge { 0% { transform: translate(0, 0); } 35% { transform: translate(calc(var(--lx, 0) * 16px), calc(var(--ly, 0) * 16px)); } 100% { transform: translate(0, 0); } }
+  .fighter.atk .wp { animation: swing .25s ease-in-out; }
+  @keyframes swing { 0% { transform: rotate(0deg); } 40% { transform: rotate(-35deg); } 100% { transform: rotate(0deg); } }
+  /* Bị đánh: giật lùi (ngược hướng đối thủ) + chớp đỏ 0.3s. */
+  .fighter.hurt { animation: hurtShake .3s ease-out; }
+  @keyframes hurtShake { 0% { transform: translate(0, 0); opacity: 1; } 30% { transform: translate(calc(var(--lx, 0) * -12px), calc(var(--ly, 0) * -12px)); opacity: .55; } 100% { transform: translate(0, 0); opacity: 1; } }
+  .fighter.hurt .av-fb, .fighter.hurt .av-img { border-color: #ff3b30; box-shadow: 0 0 14px rgba(255, 59, 48, .9); }
   .fighter .wp { font-size: 56px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
-  .fighter .nm { font-size: 19px; font-weight: 800; text-shadow: 0 1px 3px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fighter .nm { font-size: 19px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 6px rgba(0,0,0,.85), 0 2px 8px rgba(0,0,0,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Avatar tròn 44px ngay dưới tên; chữ cái đầu tên làm fallback khi không
+     có avatar thật (demo) hoặc ảnh lỗi — img lỗi tự gỡ để lộ chữ cái. */
+  .fighter .av-wrap { position: relative; width: 44px; height: 44px; margin: 2px auto 0; }
+  .fighter .av { width: 44px; height: 44px; border-radius: 50%; }
+  .fighter .av-fb { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #5b7fa6, #2c4a6b); font-size: 22px; font-weight: 900; color: #fff; border: 2px solid rgba(255,255,255,.75); text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  .fighter .av-img { position: absolute; left: 0; top: 0; object-fit: cover; border: 2px solid rgba(255,255,255,.75); background: #333; }
   .fighter .hpbar { height: 12px; background: rgba(0,0,0,.6); border-radius: 6px; overflow: hidden; margin-top: 3px; border: 1px solid rgba(255,255,255,.4); }
   .fighter .hpbar i { display: block; height: 100%; background: linear-gradient(90deg, #37d67a, #7dff9e); transition: width .4s; }
   .fighter .hpbar i.low { background: linear-gradient(90deg, #ff3b30, #ff8a80); }
   .fighter .hpnum { font-size: 16px; font-weight: 800; color: #7dff9e; text-shadow: 0 1px 3px #000; }
-  .fighter.down { opacity: .45; filter: grayscale(1); }
-  .fighter.down .wp { font-size: 48px; }
+  .fighter.down { opacity: .45; filter: grayscale(1); animation: fallDown .6s ease-in forwards; }
+  .fighter.down .fbody { animation: none; }
+  @keyframes fallDown { from { transform: translateY(0) rotate(0deg); opacity: 1; } to { transform: translateY(28px) rotate(70deg); opacity: .45; } }
+  .fighter.down .wp { font-size: 62px; }
   .hit-float { position: absolute; z-index: 8; font-size: 34px; font-weight: 900; color: #ff5b4d; text-shadow: 0 2px 4px #000; animation: floatUp 1.4s ease-out forwards; pointer-events: none; }
   @keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-70px); opacity: 0; } }
   .heal-float { color: #7dff9e; }
@@ -41,6 +63,10 @@
   .panel { flex: 1; background: rgba(0,0,0,.5); border-radius: 16px; padding: 14px 18px; }
   .panel h3 { font-size: 25px; margin-bottom: 6px; }
   .panel div { font-size: 22px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .panel .top-av-wrap { position: relative; display: inline-block; width: 28px; height: 28px; vertical-align: middle; margin-right: 6px; }
+  .panel .top-av { width: 28px; height: 28px; border-radius: 50%; }
+  .panel .top-av-fb { display: inline-flex; align-items: center; justify-content: center; background: #5b7fa6; font-size: 15px; font-weight: 900; color: #fff; }
+  .panel .top-av-img { position: absolute; left: 0; top: 0; object-fit: cover; }
   .queue-line { position: absolute; top: 1330px; left: 0; width: 1080px; text-align: center; font-size: 23px; font-weight: 800; color: #ffe9bd; text-shadow: 0 1px 3px #000; z-index: 6; }
   .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
   .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
@@ -103,6 +129,39 @@ let voiceOn = true;
 const ttsQueue = [];
 let ttsPlaying = false;
 const fighterPos = {}; // uid -> {x, y} trong arena-wrap
+const fighterEls = {}; // uid -> element .fighter (giữ lại giữa các lần render để animation bob/lunge không bị reset)
+const fighterCache = {}; // uid -> key(name|avatarUrl|weapon|alive) để chỉ rebuild innerHTML khi đổi
+const animUntil = {}; // uid -> {type: 'atk'|'hurt', until} — class tấn công/bị đánh còn hiệu lực
+let fightersPlaceholderOn = false;
+
+function avatarHtml(f) {
+  const initial = escapeHtml((String(f.name || '?').trim().charAt(0)) || '?');
+  const img = f.avatarUrl ? '<img class="av av-img" src="' + escapeHtml(f.avatarUrl) + '" alt="" onerror="this.remove()">' : '';
+  return '<div class="av-wrap"><div class="av av-fb">' + initial + '</div>' + img + '</div>';
+}
+function topAvatarHtml(t) {
+  const initial = escapeHtml((String(t.name || '?').trim().charAt(0)) || '?');
+  const img = t.avatarUrl ? '<img class="top-av top-av-img" src="' + escapeHtml(t.avatarUrl) + '" alt="" onerror="this.remove()">' : '';
+  return '<span class="top-av-wrap"><span class="top-av top-av-fb">' + initial + '</span>' + img + '</span>';
+}
+function fighterInner(f, pct) {
+  // Thứ tự từ trên xuống: tên → avatar → vũ khí → HP (gọn trong khung 130px).
+  return '<div class="fbody">' +
+    '<div class="nm">' + escapeHtml(f.name) + '</div>' +
+    avatarHtml(f) +
+    '<div class="wp">' + (f.alive ? f.weapon.icon : '💀') + '</div>' +
+    '<div class="hpbar"><i class="' + (pct <= 25 ? 'low' : '') + '" style="width:' + pct + '%"></i></div>' +
+    '<div class="hpnum">' + (f.alive ? f.hp + ' HP' : 'ĐÃ GỤC') + '</div></div>';
+}
+function pokeAnim(uid, type, ms) {
+  animUntil[uid] = { type, until: Date.now() + ms };
+  const el = fighterEls[uid];
+  if (!el) return;
+  el.classList.remove(type);
+  void el.offsetWidth; // restart animation khi đòn liên tiếp
+  el.classList.add(type);
+  setTimeout(() => { if (el.isConnected && (!animUntil[uid] || Date.now() >= animUntil[uid].until)) el.classList.remove(type); }, ms + 50);
+}
 
 function playTts(text) {
   if (!voiceOn || !text) return;
@@ -164,30 +223,61 @@ function render(s) {
   ring.style.height = Math.round(900 * shrink) + 'px';
   ring.style.display = s.phase === 'fighting' ? 'block' : 'none';
 
-  // Xếp chiến binh vòng tròn quanh đấu trường.
+  // Xếp chiến binh vòng tròn quanh đấu trường. Giữ lại element .fighter giữa
+  // các lần render (chỉ cập nhật HP/vị trí/class) để animation bob/lunge/
+  // ngã không bị reset mỗi lần innerHTML rebuild.
   const n = s.fighters.length;
   const cx = 540, cy = 500, rx = 400, ry = 340;
-  let html = '';
-  s.fighters.forEach((f, i) => {
-    const ang = -Math.PI / 2 + (n > 1 ? (i / n) * Math.PI * 2 : 0);
-    const x = Math.round(cx + rx * Math.cos(ang));
-    const y = Math.round(cy + ry * Math.sin(ang));
-    fighterPos[f.uid] = { x, y };
-    const pct = Math.max(0, Math.round(f.hp / f.maxHp * 100));
-    html += '<div class="fighter' + (f.alive ? '' : ' down') + '" style="left:' + x + 'px; top:' + y + 'px;">' +
-      '<div class="wp">' + (f.alive ? f.weapon.icon : '💀') + '</div>' +
-      '<div class="nm">' + escapeHtml(f.name) + '</div>' +
-      '<div class="hpbar"><i class="' + (pct <= 25 ? 'low' : '') + '" style="width:' + pct + '%"></i></div>' +
-      '<div class="hpnum">' + (f.alive ? f.hp + ' HP' : 'ĐÃ GỤC') + '</div></div>';
-  });
-  document.getElementById('fighters').innerHTML = html ||
-    '<div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:28px; font-weight:800; text-align:center; text-shadow:0 2px 6px #000;">Chưa có chiến binh nào<br>Bình luận "tham gia" để vào trận!</div>';
+  const wrap = document.getElementById('fighters');
+  if (n === 0) {
+    Object.keys(fighterEls).forEach((uid) => { fighterEls[uid].remove(); delete fighterEls[uid]; delete fighterCache[uid]; delete animUntil[uid]; });
+    wrap.innerHTML = '<div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:28px; font-weight:800; text-align:center; text-shadow:0 2px 6px #000;">Chưa có chiến binh nào<br>Bình luận "tham gia" để vào trận!</div>';
+    fightersPlaceholderOn = true;
+  } else {
+    if (fightersPlaceholderOn) { wrap.innerHTML = ''; fightersPlaceholderOn = false; }
+    const seen = {};
+    s.fighters.forEach((f, i) => {
+      const ang = -Math.PI / 2 + (n > 1 ? (i / n) * Math.PI * 2 : 0);
+      const x = Math.round(cx + rx * Math.cos(ang));
+      const y = Math.round(cy + ry * Math.sin(ang));
+      fighterPos[f.uid] = { x, y };
+      // Hướng về tâm đấu trường (nơi đối thủ đứng) cho lunge / giật lùi.
+      const dx = cx - x, dy = cy - y, len = Math.hypot(dx, dy) || 1;
+      const pct = Math.max(0, Math.round(f.hp / f.maxHp * 100));
+      seen[f.uid] = true;
+      let el = fighterEls[f.uid];
+      const key = f.name + '|' + (f.avatarUrl || '') + '|' + f.weapon.icon + '|' + f.alive;
+      if (!el) {
+        el = document.createElement('div');
+        el.dataset.uid = f.uid;
+        wrap.appendChild(el);
+        fighterEls[f.uid] = el;
+        fighterCache[f.uid] = null;
+      }
+      if (fighterCache[f.uid] !== key) { el.innerHTML = fighterInner(f, pct); fighterCache[f.uid] = key; }
+      const bar = el.querySelector('.hpbar i');
+      if (bar) { bar.style.width = pct + '%'; bar.className = pct <= 25 ? 'low' : ''; }
+      const hpnum = el.querySelector('.hpnum');
+      if (hpnum) hpnum.textContent = f.alive ? f.hp + ' HP' : 'ĐÃ GỤC';
+      let cls = 'fighter' + (f.alive ? '' : ' down');
+      const a = animUntil[f.uid];
+      if (f.alive && a && Date.now() < a.until) cls += ' ' + a.type;
+      el.className = cls;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.setProperty('--lx', (dx / len).toFixed(3));
+      el.style.setProperty('--ly', (dy / len).toFixed(3));
+    });
+    Object.keys(fighterEls).forEach((uid) => {
+      if (!seen[uid]) { fighterEls[uid].remove(); delete fighterEls[uid]; delete fighterCache[uid]; delete animUntil[uid]; }
+    });
+  }
 
   document.getElementById('queue-line').textContent = s.queueCount > 0
     ? '⏳ Hàng chờ: ' + s.queueCount + ' người (' + s.queueNames.map(escapeHtml).join(', ') + (s.queueCount > 8 ? '…' : '') + ')'
     : '';
   document.getElementById('top5').innerHTML = '<h3>🏆 Top sát thương</h3>' + (s.top.length
-    ? s.top.map((t, i) => '<div>' + ['🥇','🥈','🥉','4.','5.'][i] + ' ' + escapeHtml(t.name) + ' ' + t.weapon.icon + ' — ' + t.damage + ' dmg' + (t.alive ? '' : ' 💀') + '</div>').join('')
+    ? s.top.map((t, i) => '<div>' + ['🥇','🥈','🥉','4.','5.'][i] + ' ' + topAvatarHtml(t) + ' ' + escapeHtml(t.name) + ' ' + t.weapon.icon + ' — ' + t.damage + ' dmg' + (t.alive ? '' : ' 💀') + '</div>').join('')
     : '<div>Chưa có ai đánh…</div>');
   document.getElementById('downed').innerHTML = '<h3>💀 Đã gục</h3>' + (s.downed.length
     ? s.downed.slice(-6).reverse().map((d) => '<div>💀 ' + escapeHtml(d.name) + '</div>').join('')
@@ -235,8 +325,22 @@ function floatText(uid, text, heal) {
 }
 
 socket.on('state-update', render);
-socket.on('hit', (d) => { if (d && d.targetUid) floatText(d.targetUid, '-' + d.dmg + ' HP', false); });
-socket.on('down', (d) => { if (d && d.name) playTts(d.name + ' đã gục!'); });
+socket.on('hit', (d) => {
+  if (!d || !d.targetUid) return;
+  floatText(d.targetUid, '-' + d.dmg + ' HP', false);
+  pokeAnim(d.targetUid, 'hurt', 300); // bị đánh: giật lùi + chớp đỏ
+  // Người gây sát thương: lao về phía đối thủ + vung vũ khí.
+  let atkUid = d.attackerUid || null;
+  if (!atkUid && d.attacker && lastState) {
+    const a = lastState.fighters.find((f) => f.name === d.attacker);
+    if (a) atkUid = a.uid;
+  }
+  if (atkUid && atkUid !== d.targetUid) pokeAnim(atkUid, 'atk', 250);
+});
+socket.on('down', (d) => {
+  if (d && d.uid && fighterEls[d.uid]) fighterEls[d.uid].classList.add('down'); // ngã ngay, không chờ state-update
+  if (d && d.name) playTts(d.name + ' đã gục!');
+});
 socket.on('match-win', (d) => { if (d && d.name) playTts(d.name + ' thắng trận!'); });
 
 fetch('/api/state').then((r) => r.json()).then((s) => {

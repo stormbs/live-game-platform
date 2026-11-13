@@ -136,11 +136,12 @@ function createEngine(ctx) {
     const fighters = visibleFighters().map((f) => ({
       uid: f.uid, name: f.name, weapon: f.weapon, hp: f.hp, maxHp: f.maxHp,
       alive: f.alive, bonus: f.bonus, damageDealt: f.damageDealt, downAt: f.downAt,
+      avatarUrl: (session.players[f.uid] || {}).avatarUrl || null,
     }));
     const top = Object.values(session.fighters)
       .sort((a, b) => b.damageDealt - a.damageDealt)
       .slice(0, 5)
-      .map((f) => ({ uid: f.uid, name: f.name, weapon: f.weapon, damage: f.damageDealt, hp: f.hp, alive: f.alive }));
+      .map((f) => ({ uid: f.uid, name: f.name, weapon: f.weapon, damage: f.damageDealt, hp: f.hp, alive: f.alive, avatarUrl: (session.players[f.uid] || {}).avatarUrl || null }));
     return {
       game: 'dau-truong-sinh-ton',
       username: USERNAME,
@@ -250,7 +251,7 @@ function createEngine(ctx) {
     target.hp = Math.max(0, target.hp - dmg);
     if (attacker) attacker.damageDealt += dmg;
     session.stats.hits += 1;
-    ctx.io.emit('hit', { attacker: attacker ? attacker.name : null, target: target.name, targetUid: target.uid, dmg, source });
+    ctx.io.emit('hit', { attacker: attacker ? attacker.name : null, attackerUid: attacker ? attacker.uid : null, target: target.name, targetUid: target.uid, dmg, source });
     log(`💥 ${attacker ? attacker.name : 'Vòng bo'} đánh ${target.name} -${dmg} HP (còn ${target.hp})`);
     if (target.hp <= 0) downFighter(target);
     else checkWin();
