@@ -13,7 +13,7 @@
   header h1 { font-size: 62px; letter-spacing: 4px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
   header .sub { font-size: 26px; opacity: .9; margin-top: 6px; }
   #score { position: absolute; top: 180px; left: 40px; right: 40px; display: flex; gap: 16px; z-index: 5; }
-  .team-box { flex: 1; border-radius: 22px; padding: 16px 20px; background: rgba(0,0,0,.4); border: 4px solid; }
+  .team-box { flex: 1; border-radius: 22px; padding: 16px 20px; background: rgba(0,0,0,.4); border: 4px solid; text-align: center; }
   .team-box.a { border-color: #38bdf8; }
   .team-box.b { border-color: #fb923c; }
   .team-box .tname { font-size: 30px; font-weight: 800; }
@@ -21,6 +21,13 @@
   .team-box.b .tname { color: #fdba74; }
   .team-box .pts { font-size: 64px; font-weight: 900; line-height: 1; }
   .team-box .firsts { font-size: 22px; opacity: .9; }
+  /* Thành viên trong sân: avatar + tên ngay trong team-box (tối đa 5 + "+N người nữa"). */
+  .team-box .members { display: flex; gap: 5px; margin-top: 10px; min-height: 62px; align-items: flex-start; justify-content: center; }
+  .team-box .member { width: 86px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .team-box .member .av { width: 40px; height: 40px; }
+  .team-box .member .av-fallback { font-size: 20px; }
+  .team-box .member .mname { font-size: 16px; font-weight: 700; max-width: 86px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; }
+  .team-box .members-empty { font-size: 20px; opacity: .75; line-height: 1.35; }
   #timer { position: absolute; top: 180px; left: 50%; transform: translateX(-50%); width: 180px; text-align: center; background: rgba(0,0,0,.55); border-radius: 20px; padding: 12px 6px; z-index: 6; }
   #timer .clock { font-size: 52px; font-weight: 900; }
   #timer .lbl { font-size: 20px; opacity: .85; }
@@ -38,7 +45,7 @@
   .opt.correct .fill { background: #86efac; }
   .opt.correct .letter { background: #16a34a; }
   .opt.wrong-dim { opacity: .55; }
-  #first { position: absolute; top: 1040px; left: 50px; right: 50px; text-align: center; font-size: 34px; font-weight: 800; color: #fde047; text-shadow: 0 2px 6px rgba(0,0,0,.5); min-height: 48px; z-index: 5; }
+  #first { position: absolute; top: 1115px; left: 50px; right: 50px; text-align: center; font-size: 34px; font-weight: 800; color: #fde047; text-shadow: 0 2px 6px rgba(0,0,0,.5); min-height: 48px; z-index: 6; }
   #tops { position: absolute; left: 40px; right: 40px; bottom: 210px; display: flex; gap: 20px; z-index: 5; }
   .top-list { flex: 1; background: rgba(0,0,0,.4); border-radius: 18px; padding: 14px 18px; }
   .top-list h3 { font-size: 26px; margin-bottom: 8px; }
@@ -79,6 +86,27 @@
   #banner { position: absolute; top: 820px; left: 90px; right: 90px; text-align: center; font-size: 68px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); display: none; z-index: 9; }
   #demo-badge { position: absolute; top: 24px; right: 24px; background: #f59e0b; color: #111; font-weight: 900; font-size: 26px; padding: 10px 18px; border-radius: 14px; display: none; z-index: 10; }
   #hint { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 22px; opacity: .8; z-index: 5; }
+  /* Hàng MC + bảng hướng dẫn: ngay dưới thẻ câu hỏi / #first, trên bảng top. */
+  #guide-row { position: absolute; top: 1215px; left: 40px; right: 40px; display: flex; gap: 16px; z-index: 5; align-items: stretch; }
+  #mc { width: 200px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  #mc .mc-bubble { background: #fff; color: #1e293b; border-radius: 16px; padding: 10px 12px; font-size: 21px; font-weight: 700; line-height: 1.3; text-align: center; min-height: 72px; display: flex; align-items: center; justify-content: center; width: 100%; position: relative; }
+  #mc .mc-bubble::after { content: ''; position: absolute; left: 50%; bottom: -10px; margin-left: -10px; border: 10px solid transparent; border-top-color: #fff; border-bottom: 0; }
+  #mc .mc-fig { font-size: 88px; line-height: 1; filter: drop-shadow(0 6px 10px rgba(0,0,0,.45)); animation: mcBob 2.4s ease-in-out infinite; position: relative; }
+  #mc .mc-badge { position: absolute; right: -10px; top: -8px; font-size: 42px; line-height: 1; filter: drop-shadow(0 3px 6px rgba(0,0,0,.5)); }
+  #mc .mc-name { font-size: 20px; font-weight: 800; color: #fde047; text-shadow: 0 2px 4px rgba(0,0,0,.5); }
+  @keyframes mcBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes mcJump { 0%, 100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-26px) scale(1.12); } 70% { transform: translateY(0) scale(1.05); } }
+  @keyframes mcWave { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+  @keyframes bubblePop { from { transform: scale(.85); opacity: .4; } to { transform: scale(1); opacity: 1; } }
+  #mc.mc-celebrate .mc-fig { animation: mcJump .55s ease 4; }
+  #mc.mc-announce .mc-fig, #mc.mc-ask .mc-fig { animation: mcWave .5s ease 3; }
+  #mc.mc-honor .mc-fig { animation: mcJump .7s ease 3; }
+  #mc.mc-celebrate .mc-bubble, #mc.mc-announce .mc-bubble, #mc.mc-honor .mc-bubble, #mc.mc-ask .mc-bubble { animation: bubblePop .35s ease; }
+  #guide { flex: 1; background: rgba(0,0,0,.45); border: 2px solid rgba(253,224,71,.55); border-radius: 20px; padding: 10px 14px; }
+  #guide .guide-title { font-size: 25px; font-weight: 900; color: #fde047; letter-spacing: 1px; margin-bottom: 6px; }
+  #guide .guide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  #guide .chip { background: rgba(255,255,255,.09); border-radius: 10px; padding: 5px 10px; font-size: 21px; font-weight: 600; line-height: 1.3; }
+  #guide .guide-win { margin-top: 6px; font-size: 21px; font-weight: 700; line-height: 1.35; color: #fde047; }
   .cheer { position: absolute; font-size: 44px; animation: floatUp 1.6s ease forwards; pointer-events: none; z-index: 8; }
   @keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-160px); opacity: 0; } }
   #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
@@ -95,8 +123,8 @@
   </header>
   <div id="demo-badge">🧪 DEMO</div>
   <div id="score">
-    <div class="team-box a"><div class="tname" id="team-name-a">🔵 ĐỘI A</div><div class="pts" id="pts-a">0</div><div class="firsts" id="firsts-a">0 lần đúng đầu tiên</div></div>
-    <div class="team-box b"><div class="tname" id="team-name-b">🟠 ĐỘI B</div><div class="pts" id="pts-b">0</div><div class="firsts" id="firsts-b">0 lần đúng đầu tiên</div></div>
+    <div class="team-box a"><div class="tname" id="team-name-a">🔵 ĐỘI A</div><div class="pts" id="pts-a">0</div><div class="firsts" id="firsts-a">0 lần đúng đầu tiên</div><div class="members" id="members-a"></div></div>
+    <div class="team-box b"><div class="tname" id="team-name-b">🟠 ĐỘI B</div><div class="pts" id="pts-b">0</div><div class="firsts" id="firsts-b">0 lần đúng đầu tiên</div><div class="members" id="members-b"></div></div>
   </div>
   <div id="timer"><div class="clock" id="clock">--</div><div class="lbl" id="timer-lbl">Giây/câu</div></div>
   <div id="qcard">
@@ -105,6 +133,25 @@
     <div id="opts"></div>
   </div>
   <div id="first"></div>
+  <div id="guide-row">
+    <div id="mc">
+      <div class="mc-bubble" id="mc-bubble">🎤 Bình luận “đội a” / “đội b” để vào đội!</div>
+      <div class="mc-fig"><span class="mc-person">🧑‍🎤</span><span class="mc-badge" id="mc-badge">🎤</span></div>
+      <div class="mc-name">MC Đấu Trí</div>
+    </div>
+    <div id="guide">
+      <div class="guide-title">📖 CÁCH CHƠI</div>
+      <div class="guide-grid">
+        <div class="chip">💬 Vào đội: “đội a” / “đội b” (1 / 2)</div>
+        <div class="chip">✏️ Trả lời A / B / C / D — 1 lần/câu</div>
+        <div class="chip" id="g-chip-correct">✅ Đúng +10đ • ⚡ Đầu tiên +5đ</div>
+        <div class="chip" id="g-chip-gift">🎁 1 xu +2đ • Follow +10đ/trận</div>
+        <div class="chip" id="g-chip-match">🏆 10 câu/trận • 30s/câu</div>
+        <div class="chip">❤️ Tim chỉ cổ vũ, không tính điểm</div>
+      </div>
+      <div class="guide-win">🏆 Nhiều điểm hơn thắng • Hòa điểm → hơn lần đúng đầu tiên thắng</div>
+    </div>
+  </div>
   <div id="spotlight"><h2 id="spot-title"></h2><div class="top3" id="spot-top3"></div></div>
   <div id="tops">
     <div class="top-list a"><h3 id="top-title-a">🔵 Top đúng — Đội A</h3><div id="top-a"></div></div>
@@ -136,6 +183,10 @@ window.addEventListener('resize', fit); fit();
   let prevFirstKey = '';
   let prevTopCorrect = {};
   let prevSpotKey = '';
+  let prevPhase = '';
+  let prevQNo = 0;
+  let prevRevealKey = '';
+  let mcTimer = null;
   function avatarHtml(url, name) {
     const initial = escapeHtml((String(name || '?').trim().charAt(0) || '?').toUpperCase());
     const fb = '<span class="av av-fallback" style="display:none">' + initial + '</span>';
@@ -181,6 +232,60 @@ window.addEventListener('resize', fit); fit();
     };
     audio.play().catch(() => { ttsPlaying = false; nextTts(); });
   }
+  /* MC dẫn chương trình: đổi lời thoại + huy hiệu cảm xúc theo sự kiện thật, 5s rồi về trạng thái chờ. */
+  function mcSay(emoji, text, cls) {
+    const mc = document.getElementById('mc');
+    const bdg = document.getElementById('mc-badge');
+    const bub = document.getElementById('mc-bubble');
+    if (!mc || !bdg || !bub) return;
+    bdg.textContent = emoji;
+    bub.textContent = text;
+    mc.classList.remove('mc-celebrate', 'mc-announce', 'mc-honor', 'mc-ask');
+    void mc.offsetWidth;
+    if (cls) mc.classList.add(cls);
+    if (mcTimer) clearTimeout(mcTimer);
+    mcTimer = setTimeout(() => {
+      bdg.textContent = '🎤';
+      bub.textContent = 'Bình luận "đội a" / "đội b" để vào đội!';
+      mc.classList.remove('mc-celebrate', 'mc-announce', 'mc-honor', 'mc-ask');
+    }, 5000);
+  }
+  /* Thành viên trong team-box: tối đa 5 ô (đội >5 người thì 4 avatar + ô "+N người nữa"). */
+  function renderMembers() {
+    if (!state) return;
+    [['a', 'members-a'], ['b', 'members-b']].forEach(([team, id]) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const list = (state.players || []).filter((p) => p.team === team);
+      const total = (state.teamCounts && state.teamCounts[team]) || list.length;
+      if (!list.length) {
+        el.innerHTML = '<span class="members-empty">Chưa có thành viên — bình luận “đội ' + team + '” để vào đội!</span>';
+        return;
+      }
+      const shown = list.slice(0, total > 5 ? 4 : 5);
+      let html = shown.map((p) => '<div class="member">' + avatarHtml(p.avatarUrl, p.name) + '<span class="mname">' + escapeHtml(p.name) + '</span></div>').join('');
+      if (total > shown.length) {
+        html += '<div class="member more"><span class="av av-fallback">+' + (total - shown.length) + '</span><span class="mname">người nữa</span></div>';
+      }
+      el.innerHTML = html;
+    });
+  }
+  /* Bảng hướng dẫn: số lấy từ state.settings (mặc định = defaultSettings trong engine.js), đổi ở dashboard thì bảng đổi theo. */
+  function renderGuide() {
+    if (!state) return;
+    const st = state.settings || {};
+    const num = (v, d) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+    const cp = num(st.correctPoints, 10);
+    const fb = num(st.firstBonus, 5);
+    const c2p = num(st.coinToPoints, 2);
+    const fp = num(st.followPoints, 10);
+    const qpm = num(state.questionsPerMatch, num(st.questionsPerMatch, 10));
+    const qs = num(st.questionS, 30);
+    const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+    setText('g-chip-correct', '✅ Đúng +' + cp + 'đ • ⚡ Đầu tiên +' + fb + 'đ');
+    setText('g-chip-gift', '🎁 1 xu +' + c2p + 'đ • Follow +' + fp + 'đ/trận');
+    setText('g-chip-match', '🏆 ' + qpm + ' câu/trận • ' + qs + 's/câu');
+  }
   function render(s) {
     if (!s || s.game !== 'dau-tri') return;
     state = s;
@@ -218,6 +323,8 @@ window.addEventListener('resize', fit); fit();
     document.getElementById('pts-b').textContent = s.points.b;
     document.getElementById('firsts-a').textContent = s.firstCounts.a + ' lần đúng đầu tiên';
     document.getElementById('firsts-b').textContent = s.firstCounts.b + ' lần đúng đầu tiên';
+    renderMembers();
+    renderGuide();
     // Đếm ngược sang câu tiếp theo (reveal: phaseEndsAt có sẵn) / chờ streamer (between: không có hẹn giờ).
     const _between = s.phase === 'between';
     const _revealCd = s.phase === 'reveal' && s.phaseEndsAt ? Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000)) : null;
@@ -246,6 +353,7 @@ window.addEventListener('resize', fit); fit();
         const isNew = fk !== prevFirstKey;
         prevFirstKey = fk;
         firstEl.innerHTML = '<div class="first-fig' + (isNew ? ' flash' : '') + '">' + avatarHtml(fc.avatarUrl, fc.name) + '<span class="bolt">⚡</span><span class="fname">' + escapeHtml(fc.name) + ' trả lời đúng ĐẦU TIÊN!</span></div>';
+        if (isNew) mcSay('🎉', '⚡ ' + fc.name + ' nhanh nhất!', 'mc-celebrate');
       } else {
         prevFirstKey = '';
         firstEl.innerHTML = '';
@@ -290,6 +398,19 @@ window.addEventListener('resize', fit); fit();
       spot.style.display = 'none';
       banner.style.display = 'none';
     }
+    /* MC phản ứng theo sự kiện thật: mở câu mới / chốt đáp án / vinh danh. */
+    if (s.phase === 'question' && s.questionNo && s.questionNo !== prevQNo) {
+      prevQNo = s.questionNo;
+      mcSay('❓', 'Câu ' + s.questionNo + ' — trả lời nhanh nào!', 'mc-ask');
+    }
+    if (s.phase !== 'question') prevQNo = 0;
+    if (s.phase === 'reveal' && s.current && s.current.locked && s.current.correct) {
+      const rk = (s.current.questionId || '') + '|' + s.current.correct;
+      if (rk !== prevRevealKey) { prevRevealKey = rk; mcSay('📢', 'Đáp án đúng là ' + String(s.current.correct).toUpperCase() + '!', 'mc-announce'); }
+    }
+    if (s.phase !== 'reveal') prevRevealKey = '';
+    if (s.phase === 'spotlight' && prevPhase !== 'spotlight') mcSay('🏆', 'Vinh danh top 3 xuất sắc nhất!', 'mc-honor');
+    prevPhase = s.phase;
     document.getElementById('demo-badge').style.display = s.demoActive ? 'block' : 'none';
     if (s.logs && s.logs.length) {
       document.getElementById('ticker-text').textContent = s.logs[s.logs.length - 1].text;
