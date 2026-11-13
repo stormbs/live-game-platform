@@ -21,6 +21,7 @@
   td, th { padding: 7px 8px; border-bottom: 1px solid #334155; text-align: left; vertical-align: top; }
   label { display: block; font-size: 13px; opacity: .85; margin-bottom: 4px; }
   input[type=number], input[type=text], select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; }
+  input[type=color] { width: 100%; height: 38px; padding: 2px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; cursor: pointer; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   button { background: #0284c7; color: #fff; border: 0; border-radius: 9px; padding: 10px 16px; font-size: 15px; cursor: pointer; }
   button.big { background: #4f46e5; font-size: 17px; padding: 12px 22px; }
@@ -62,15 +63,15 @@
     </div>
     <div id="current-q" style="margin-top:14px"></div>
     <div class="grid" style="margin-top:14px">
-      <div class="stat"><div class="k">🔵 Đội A — điểm</div><div class="v" id="pts-a">0</div></div>
-      <div class="stat"><div class="k">🟠 Đội B — điểm</div><div class="v" id="pts-b">0</div></div>
+      <div class="stat"><div class="k" id="stat-team-a">🔵 Đội A — điểm</div><div class="v" id="pts-a">0</div></div>
+      <div class="stat"><div class="k" id="stat-team-b">🟠 Đội B — điểm</div><div class="v" id="pts-b">0</div></div>
       <div class="stat"><div class="k">👥 Người chơi</div><div class="v" id="players-count">0</div></div>
       <div class="stat"><div class="k">📝 Đã trả lời / Đúng</div><div class="v" id="answers-count">0 / 0</div></div>
     </div>
     <h3 style="margin:16px 0 8px">Top cá nhân (câu đúng)</h3>
     <div class="grid">
-      <div><strong>🔵 Đội A</strong><div id="top-a" class="muted">—</div></div>
-      <div><strong>🟠 Đội B</strong><div id="top-b" class="muted">—</div></div>
+      <div><strong id="dash-top-a-title">🔵 Đội A</strong><div id="top-a" class="muted">—</div></div>
+      <div><strong id="dash-top-b-title">🟠 Đội B</strong><div id="top-b" class="muted">—</div></div>
     </div>
     <h3 style="margin:16px 0 8px">Nhật ký</h3>
     <div class="log" id="logs">—</div>
@@ -105,6 +106,53 @@
       <div><label><input type="checkbox" id="set-voice" checked style="width:auto"> Bật giọng đọc (TTS)</label></div>
     </div>
     <div class="row" style="margin-top:12px"><button id="btn-save">💾 Lưu cài đặt</button><span class="muted" id="save-msg"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>⚙️ Tùy chỉnh đội</h2>
+    <div class="grid">
+      <div><label>Tên Đội A (tối đa 24 ký tự)</label><input type="text" id="set-team-a-name" maxlength="24" value="Đội A"></div>
+      <div><label>Màu chủ đạo Đội A</label><input type="color" id="set-team-a-color" value="#38BDF8"></div>
+      <div style="grid-column:1/-1"><label>Ảnh nền Đội A — nhập URL ảnh, hoặc chọn preset (để trống = không ảnh)</label><input type="text" id="set-team-a-bg" placeholder="/shared/bg/dau-tri.webp hoặc https://..."></div>
+      <div style="grid-column:1/-1"><label>Preset ảnh nền Đội A</label><select id="set-team-a-bg-preset">
+        <option value="">— Không ảnh —</option>
+        <option value="/shared/bg/dau-tri.webp">Đấu Trí (mặc định game)</option>
+        <option value="/shared/bg/bau-troi-phao-hoa.webp">Bầu trời pháo hoa</option>
+        <option value="/shared/bg/bep-an-tap-the.webp">Bếp ăn tập thể</option>
+        <option value="/shared/bg/chiem-co.webp">Chiếm cờ</option>
+        <option value="/shared/bg/dau-truong-sinh-ton.webp">Đấu trường sinh tồn</option>
+        <option value="/shared/bg/di-bar-online.webp">Đi bar online</option>
+        <option value="/shared/bg/dua-thuyen-rong.webp">Đua thuyền rồng</option>
+        <option value="/shared/bg/dua-xe-leo-nui.webp">Đua xe leo núi</option>
+        <option value="/shared/bg/keo-co.webp">Kéo co</option>
+        <option value="/shared/bg/thap-sang-ban-do.webp">Thắp sáng bản đồ</option>
+        <option value="/shared/bg/ve-avatar.webp">Vẽ avatar</option>
+        <option value="/shared/bg/vong-quay-may-man.webp">Vòng quay may mắn</option>
+        <option value="/shared/bg/vuon-hoa-mua-xuan.webp">Vườn hoa mùa xuân</option>
+        <option value="/shared/bg/buong-giam.webp">Buồng giam</option>
+      </select></div>
+      <div><label>Tên Đội B (tối đa 24 ký tự)</label><input type="text" id="set-team-b-name" maxlength="24" value="Đội B"></div>
+      <div><label>Màu chủ đạo Đội B</label><input type="color" id="set-team-b-color" value="#FB923C"></div>
+      <div style="grid-column:1/-1"><label>Ảnh nền Đội B — nhập URL ảnh, hoặc chọn preset (để trống = không ảnh)</label><input type="text" id="set-team-b-bg" placeholder="/shared/bg/dau-tri.webp hoặc https://..."></div>
+      <div style="grid-column:1/-1"><label>Preset ảnh nền Đội B</label><select id="set-team-b-bg-preset">
+        <option value="">— Không ảnh —</option>
+        <option value="/shared/bg/dau-tri.webp">Đấu Trí (mặc định game)</option>
+        <option value="/shared/bg/bau-troi-phao-hoa.webp">Bầu trời pháo hoa</option>
+        <option value="/shared/bg/bep-an-tap-the.webp">Bếp ăn tập thể</option>
+        <option value="/shared/bg/chiem-co.webp">Chiếm cờ</option>
+        <option value="/shared/bg/dau-truong-sinh-ton.webp">Đấu trường sinh tồn</option>
+        <option value="/shared/bg/di-bar-online.webp">Đi bar online</option>
+        <option value="/shared/bg/dua-thuyen-rong.webp">Đua thuyền rồng</option>
+        <option value="/shared/bg/dua-xe-leo-nui.webp">Đua xe leo núi</option>
+        <option value="/shared/bg/keo-co.webp">Kéo co</option>
+        <option value="/shared/bg/thap-sang-ban-do.webp">Thắp sáng bản đồ</option>
+        <option value="/shared/bg/ve-avatar.webp">Vẽ avatar</option>
+        <option value="/shared/bg/vong-quay-may-man.webp">Vòng quay may mắn</option>
+        <option value="/shared/bg/vuon-hoa-mua-xuan.webp">Vườn hoa mùa xuân</option>
+        <option value="/shared/bg/buong-giam.webp">Buồng giam</option>
+      </select></div>
+    </div>
+    <div class="row" style="margin-top:12px"><button id="btn-save-teams">💾 Lưu tùy chỉnh đội</button><span class="muted" id="save-teams-msg"></span></div>
   </div>
 
   <div class="card">
@@ -158,6 +206,20 @@
     return r.json();
   }
   function esc(x) { return String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function fillTeam(id, val) {
+    const el = document.getElementById(id);
+    if (el && document.activeElement !== el && val !== undefined && val !== null) el.value = val;
+  }
+  function teamSettingsBody() {
+    return {
+      teamAName: document.getElementById('set-team-a-name').value,
+      teamBName: document.getElementById('set-team-b-name').value,
+      teamABg: document.getElementById('set-team-a-bg').value,
+      teamBBg: document.getElementById('set-team-b-bg').value,
+      teamAColor: document.getElementById('set-team-a-color').value,
+      teamBColor: document.getElementById('set-team-b-color').value,
+    };
+  }
   function render(s) {
     if (!s || s.game !== 'dau-tri') return;
     state = s;
@@ -173,8 +235,20 @@
       `<div class="stat"><div class="k">Trận</div><div class="v">${s.matchNo}</div></div>` +
       `<div class="stat"><div class="k">Câu</div><div class="v">${s.questionNo} / ${s.questionsPerMatch}</div></div>` +
       `<div class="stat"><div class="k">Giai đoạn</div><div class="v" style="font-size:20px">${s.phase === 'lobby' ? 'Chờ mở câu' : s.phase === 'question' ? 'Đang trả lời' : s.phase === 'reveal' ? 'Đã chốt' : s.phase === 'between' ? 'Chờ câu kế' : 'Vinh danh'}</div></div>` +
-      `<div class="stat"><div class="k">Đội thắng</div><div class="v" style="font-size:20px">${s.winner ? (s.winner.team === 'a' ? '🔵 A' : s.winner.team === 'b' ? '🟠 B' : '🤝 Hòa') : '—'}</div></div>`;
+      `<div class="stat"><div class="k">Đội thắng</div><div class="v" style="font-size:20px">${s.winner ? (s.winner.team === 'a' ? '🔵 ' + esc((s.settings && s.settings.teamAName) || 'Đội A') : s.winner.team === 'b' ? '🟠 ' + esc((s.settings && s.settings.teamBName) || 'Đội B') : '🤝 Hòa') : '—'}</div></div>`;
     document.getElementById('phase-text').textContent = s.winner ? ('Kết quả: ' + (s.winner.reason || '')) : '';
+    const tA = (s.settings && s.settings.teamAName) || 'Đội A';
+    const tB = (s.settings && s.settings.teamBName) || 'Đội B';
+    document.getElementById('stat-team-a').textContent = '🔵 ' + tA + ' — điểm';
+    document.getElementById('stat-team-b').textContent = '🟠 ' + tB + ' — điểm';
+    document.getElementById('dash-top-a-title').textContent = '🔵 ' + tA;
+    document.getElementById('dash-top-b-title').textContent = '🟠 ' + tB;
+    fillTeam('set-team-a-name', s.settings.teamAName);
+    fillTeam('set-team-b-name', s.settings.teamBName);
+    fillTeam('set-team-a-bg', s.settings.teamABg);
+    fillTeam('set-team-b-bg', s.settings.teamBBg);
+    fillTeam('set-team-a-color', s.settings.teamAColor);
+    fillTeam('set-team-b-color', s.settings.teamBColor);
     document.getElementById('pts-a').textContent = s.points.a;
     document.getElementById('pts-b').textContent = s.points.b;
     document.getElementById('players-count').textContent = (s.teamCounts.a + s.teamCounts.b + s.teamCounts.none) + ` (🔵${s.teamCounts.a} 🟠${s.teamCounts.b} 👥${s.teamCounts.none})`;
@@ -243,10 +317,18 @@
       followPoints: +document.getElementById('set-follow').value,
       spotlightS: +document.getElementById('set-spot').value,
       voiceEnabled: document.getElementById('set-voice').checked,
+      ...teamSettingsBody(),
     };
     const r = await api('/api/settings', body);
     document.getElementById('save-msg').textContent = r.success ? 'Đã lưu ✓' : 'Lỗi lưu';
     setTimeout(() => { document.getElementById('save-msg').textContent = ''; }, 2000);
+  });
+  document.getElementById('set-team-a-bg-preset').addEventListener('change', (e) => { document.getElementById('set-team-a-bg').value = e.target.value; });
+  document.getElementById('set-team-b-bg-preset').addEventListener('change', (e) => { document.getElementById('set-team-b-bg').value = e.target.value; });
+  document.getElementById('btn-save-teams').addEventListener('click', async () => {
+    const r = await api('/api/settings', teamSettingsBody());
+    document.getElementById('save-teams-msg').textContent = r.success ? 'Đã lưu tùy chỉnh đội ✓' : 'Lỗi lưu';
+    setTimeout(() => { document.getElementById('save-teams-msg').textContent = ''; }, 2000);
   });
   document.getElementById('btn-add-q').addEventListener('click', async () => {
     const body = {

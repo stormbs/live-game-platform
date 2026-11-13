@@ -44,7 +44,33 @@
   .top-list h3 { font-size: 26px; margin-bottom: 8px; }
   .top-list.a h3 { color: #7dd3fc; }
   .top-list.b h3 { color: #fdba74; }
-  .top-list .row { font-size: 24px; padding: 3px 0; display: flex; justify-content: space-between; }
+  .top-list .row { font-size: 24px; padding: 3px 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .top-list .row .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .top-list .row .cc { flex-shrink: 0; font-weight: 800; }
+  @keyframes rowFlash { 0% { background: rgba(74,222,128,0); transform: scale(1); } 30% { background: rgba(74,222,128,.55); transform: scale(1.04); } 100% { background: rgba(74,222,128,0); transform: scale(1); } }
+  .top-list .row.flash { animation: rowFlash .9s ease; border-radius: 10px; }
+  /* Avatar người xem — hiển thị ngay trên đầu nhân vật (top list / first / spotlight). */
+  .av { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid rgba(255,255,255,.75); background: #475569; }
+  .av-fallback { display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: 20px; color: #fff; background: #6366f1; }
+  #first { display: flex; align-items: center; justify-content: center; }
+  #first .first-fig { display: flex; align-items: center; gap: 16px; background: rgba(0,0,0,.55); border: 3px solid #fde047; border-radius: 999px; padding: 10px 28px 10px 12px; max-width: 980px; }
+  #first .first-fig .av { width: 64px; height: 64px; border-color: #fde047; }
+  #first .first-fig .av-fallback { font-size: 34px; }
+  #first .fname { max-width: 620px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @keyframes firstFlash { 0% { transform: scale(.7); opacity: 0; } 40% { transform: scale(1.12); opacity: 1; } 70% { transform: scale(.98); } 100% { transform: scale(1); opacity: 1; } }
+  #first .first-fig.flash { animation: firstFlash .6s ease; }
+  @keyframes boltGlow { 0%, 100% { text-shadow: 0 0 0 rgba(253,224,71,0); } 50% { text-shadow: 0 0 26px rgba(253,224,71,.95); } }
+  #first .bolt { animation: boltGlow 1.2s ease-in-out infinite; }
+  #spotlight .top3 { display: flex; gap: 20px; justify-content: center; }
+  .spot-card { flex: 1; background: rgba(255,255,255,.1); border-radius: 20px; padding: 26px 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; animation: spotPop .5s ease; }
+  .spot-card .av { width: 110px; height: 110px; border: 4px solid #fff; }
+  .spot-card .av-fallback { font-size: 56px; }
+  .spot-card .sname { font-size: 30px; font-weight: 800; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spot-card .scount { font-size: 26px; opacity: .95; }
+  .spot-card .smedal { font-size: 44px; }
+  @keyframes spotPop { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes rankGlow { 0%, 100% { box-shadow: 0 0 18px rgba(253,224,71,.5); } 50% { box-shadow: 0 0 46px rgba(253,224,71,.95); } }
+  .spot-card.rank1 { border: 4px solid #fde047; animation: spotPop .5s ease, rankGlow 1.6s ease-in-out .5s infinite; }
   #spotlight { position: absolute; top: 440px; left: 50px; right: 50px; background: rgba(0,0,0,.6); border-radius: 28px; padding: 40px; text-align: center; display: none; z-index: 7; }
   #spotlight h2 { font-size: 56px; color: #fde047; margin-bottom: 20px; }
   #spotlight .top3 { font-size: 34px; line-height: 1.8; }
@@ -69,8 +95,8 @@
   </header>
   <div id="demo-badge">🧪 DEMO</div>
   <div id="score">
-    <div class="team-box a"><div class="tname">🔵 ĐỘI A</div><div class="pts" id="pts-a">0</div><div class="firsts" id="firsts-a">0 lần đúng đầu tiên</div></div>
-    <div class="team-box b"><div class="tname">🟠 ĐỘI B</div><div class="pts" id="pts-b">0</div><div class="firsts" id="firsts-b">0 lần đúng đầu tiên</div></div>
+    <div class="team-box a"><div class="tname" id="team-name-a">🔵 ĐỘI A</div><div class="pts" id="pts-a">0</div><div class="firsts" id="firsts-a">0 lần đúng đầu tiên</div></div>
+    <div class="team-box b"><div class="tname" id="team-name-b">🟠 ĐỘI B</div><div class="pts" id="pts-b">0</div><div class="firsts" id="firsts-b">0 lần đúng đầu tiên</div></div>
   </div>
   <div id="timer"><div class="clock" id="clock">--</div><div class="lbl" id="timer-lbl">Giây/câu</div></div>
   <div id="qcard">
@@ -81,8 +107,8 @@
   <div id="first"></div>
   <div id="spotlight"><h2 id="spot-title"></h2><div class="top3" id="spot-top3"></div></div>
   <div id="tops">
-    <div class="top-list a"><h3>🔵 Top đúng — Đội A</h3><div id="top-a"></div></div>
-    <div class="top-list b"><h3>🟠 Top đúng — Đội B</h3><div id="top-b"></div></div>
+    <div class="top-list a"><h3 id="top-title-a">🔵 Top đúng — Đội A</h3><div id="top-a"></div></div>
+    <div class="top-list b"><h3 id="top-title-b">🟠 Top đúng — Đội B</h3><div id="top-b"></div></div>
   </div>
   <div id="ticker"><span id="ticker-text">Bình luận "đội a" / "đội b" để vào đội • Trả lời bằng 1 chữ A, B, C hoặc D • Đúng +10 điểm, đúng đầu tiên +5 thưởng</span></div>
   <div id="statusbar"><span id="phase-label">Chờ trận đấu</span><span id="counts"></span></div>
@@ -107,6 +133,24 @@ window.addEventListener('resize', fit); fit();
   const username = path[2] || 'live';
   const demoParam = params.get('demo') === '1';
   let state = null;
+  let prevFirstKey = '';
+  let prevTopCorrect = {};
+  let prevSpotKey = '';
+  function avatarHtml(url, name) {
+    const initial = escapeHtml((String(name || '?').trim().charAt(0) || '?').toUpperCase());
+    const fb = '<span class="av av-fallback" style="display:none">' + initial + '</span>';
+    if (!url) return '<span class="av av-fallback">' + initial + '</span>';
+    return '<img class="av" src="' + escapeHtml(url) + '" alt="" onerror="this.style.display=\'none\';var f=this.nextElementSibling;if(f)f.style.display=\'inline-flex\';">' + fb;
+  }
+  function flashRow(uid) {
+    if (!uid) return;
+    const row = document.querySelector('.top-list .row[data-uid="' + String(uid).replace(/"/g, '') + '"]');
+    if (!row) return;
+    row.classList.remove('flash');
+    void row.offsetWidth;
+    row.classList.add('flash');
+    setTimeout(() => row.classList.remove('flash'), 1000);
+  }
   let voiceOn = true;
   const ttsQueue = [];
   let ttsPlaying = false;
@@ -143,6 +187,33 @@ window.addEventListener('resize', fit); fit();
     // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
     if (window.StromMusic) window.StromMusic.sync({ mood: 'edm', enabled: true, volume: 50, energy: (s.phase === 'question' ? 2 : ((s.phase === 'reveal' || s.phase === 'between') ? 1 : 0)) });
     voiceOn = s.settings.voiceEnabled !== false;
+    // Tên / màu / ảnh nền đội từ settings (dashboard tùy chỉnh được).
+    const st = s.settings || {};
+    const tA = st.teamAName || 'Đội A';
+    const tB = st.teamBName || 'Đội B';
+    const cA = st.teamAColor || '#38BDF8';
+    const cB = st.teamBColor || '#FB923C';
+    const boxA = document.querySelector('.team-box.a');
+    const boxB = document.querySelector('.team-box.b');
+    [[boxA, st.teamABg, cA], [boxB, st.teamBBg, cB]].forEach(([box, bg, color]) => {
+      if (!box) return;
+      box.style.borderColor = color;
+      if (bg) {
+        box.style.backgroundImage = 'linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url("' + String(bg).replace(/["()]/g, '') + '")';
+        box.style.backgroundSize = 'cover';
+        box.style.backgroundPosition = 'center';
+      } else {
+        box.style.backgroundImage = '';
+        box.style.backgroundSize = '';
+        box.style.backgroundPosition = '';
+      }
+    });
+    document.getElementById('team-name-a').textContent = '🔵 ' + tA;
+    document.getElementById('team-name-b').textContent = '🟠 ' + tB;
+    document.querySelector('.team-box.a .tname').style.color = cA;
+    document.querySelector('.team-box.b .tname').style.color = cB;
+    document.getElementById('top-title-a').textContent = '🔵 Top đúng — ' + tA;
+    document.getElementById('top-title-b').textContent = '🟠 Top đúng — ' + tB;
     document.getElementById('pts-a').textContent = s.points.a;
     document.getElementById('pts-b').textContent = s.points.b;
     document.getElementById('firsts-a').textContent = s.firstCounts.a + ' lần đúng đầu tiên';
@@ -169,17 +240,35 @@ window.addEventListener('resize', fit); fit();
         return `<div class="${cls}"><div class="fill" style="width:${pct}%"></div><div class="inner"><div class="letter">${L}</div><div class="otext">${escapeHtml(s.current.options[i])}</div><div class="cnt">${cnt} người</div></div></div>`;
       }).join('');
       const fc = s.current.firstCorrect;
-      document.getElementById('first').textContent = fc ? ('⚡ ' + fc.name + ' trả lời đúng ĐẦU TIÊN!') : '';
+      const firstEl = document.getElementById('first');
+      if (fc) {
+        const fk = (s.current.questionId || '') + '|' + (fc.uid || fc.name);
+        const isNew = fk !== prevFirstKey;
+        prevFirstKey = fk;
+        firstEl.innerHTML = '<div class="first-fig' + (isNew ? ' flash' : '') + '">' + avatarHtml(fc.avatarUrl, fc.name) + '<span class="bolt">⚡</span><span class="fname">' + escapeHtml(fc.name) + ' trả lời đúng ĐẦU TIÊN!</span></div>';
+      } else {
+        prevFirstKey = '';
+        firstEl.innerHTML = '';
+      }
     } else {
       qno.textContent = s.phase === 'spotlight' ? 'Hết trận!' : 'Chưa có câu hỏi';
       qtext.textContent = s.phase === 'spotlight' ? 'Xem top 3 cá nhân xuất sắc nhất bên dưới.' : 'Streamer bấm "Câu tiếp theo" trên dashboard để mở câu hỏi đầu tiên. Khán giả bình luận "đội a" / "đội b" để vào đội, rồi trả lời bằng 1 chữ A, B, C hoặc D.';
       optsEl.innerHTML = '';
-      document.getElementById('first').textContent = '';
+      prevFirstKey = '';
+      document.getElementById('first').innerHTML = '';
     }
-    const topA = s.top.a.map((p, i) => `<div class="row"><span>${i + 1}. ${escapeHtml(p.name)}</span><span>${p.correct} câu đúng</span></div>`).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
-    const topB = s.top.b.map((p, i) => `<div class="row"><span>${i + 1}. ${escapeHtml(p.name)}</span><span>${p.correct} câu đúng</span></div>`).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
-    document.getElementById('top-a').innerHTML = topA;
-    document.getElementById('top-b').innerHTML = topB;
+    function renderTop(list) {
+      if (!list.length) return '<div class="row"><span>— chưa có ai —</span></div>';
+      return list.map((p, i) => {
+        const uid = p.uid || '';
+        const increased = uid && prevTopCorrect[uid] !== undefined && (p.correct || 0) > prevTopCorrect[uid];
+        return `<div class="row${increased ? ' flash' : ''}" data-uid="${escapeHtml(uid)}">${avatarHtml(p.avatarUrl, p.name)}<span class="nm">${i + 1}. ${escapeHtml(p.name)}</span><span class="cc">${p.correct} câu đúng</span></div>`;
+      }).join('');
+    }
+    document.getElementById('top-a').innerHTML = renderTop(s.top.a);
+    document.getElementById('top-b').innerHTML = renderTop(s.top.b);
+    prevTopCorrect = {};
+    s.top.a.concat(s.top.b).forEach((p) => { if (p.uid) prevTopCorrect[p.uid] = p.correct || 0; });
     document.getElementById('phase-label').textContent =
       s.phase === 'lobby' ? '🕒 Chờ trận đấu' : s.phase === 'question' ? '❓ Đang trả lời' : s.phase === 'reveal' ? '✅ Đã chốt đáp án' : s.phase === 'between' ? '⏸️ Chờ câu tiếp theo' : '🏆 Vinh danh';
     document.getElementById('counts').textContent = `🔵 ${s.teamCounts.a} • 🟠 ${s.teamCounts.b} • 👥 ${s.teamCounts.none} chưa chọn đội • 📝 ${s.current ? s.current.totalAnswers : 0} người đã trả lời`;
@@ -187,11 +276,16 @@ window.addEventListener('resize', fit); fit();
     const banner = document.getElementById('banner');
     if (s.phase === 'spotlight' && s.winner) {
       banner.style.display = 'block';
-      banner.textContent = s.winner.team ? (s.winner.team === 'a' ? '🔵 ĐỘI A THẮNG!' : '🟠 ĐỘI B THẮNG!') : '🤝 HÒA!';
+      banner.textContent = s.winner.team ? (s.winner.team === 'a' ? '🔵 ' + tA.toUpperCase() + ' THẮNG!' : '🟠 ' + tB.toUpperCase() + ' THẮNG!') : '🤝 HÒA!';
       spot.style.display = 'block';
       document.getElementById('spot-title').textContent = '🏆 Top 3 cá nhân xuất sắc';
       const medals = ['🥇', '🥈', '🥉'];
-      document.getElementById('spot-top3').innerHTML = (s.top3.length ? s.top3.map((p, i) => `${medals[i]} ${escapeHtml(p.name)} — ${p.correct} câu đúng${p.first ? ' (' + p.first + ' lần đầu tiên)' : ''}`).join('<br>') : 'Chưa có ai trả lời đúng.');
+      const spotKey = JSON.stringify((s.top3 || []).map((p) => [p.uid || p.name, p.correct, p.first]));
+      if (spotKey !== prevSpotKey) {
+        prevSpotKey = spotKey;
+        document.getElementById('spot-top3').innerHTML = (s.top3.length ? s.top3.map((p, i) =>
+          `<div class="spot-card${i === 0 ? ' rank1' : ''}"><div class="smedal">${medals[i]}</div>${avatarHtml(p.avatarUrl, p.name)}<div class="sname">${escapeHtml(p.name)}</div><div class="scount">${p.correct} câu đúng${p.first ? ' • ' + p.first + ' lần đầu tiên' : ''}</div></div>`).join('') : 'Chưa có ai trả lời đúng.');
+      }
     } else {
       spot.style.display = 'none';
       banner.style.display = 'none';
@@ -226,7 +320,7 @@ window.addEventListener('resize', fit); fit();
       socket.on('state-update', (s) => render(s));
       socket.on('question', (d) => { if (d && d.text) playTts('Câu hỏi số ' + d.no + ': ' + d.text); });
       socket.on('match-win', (d) => { if (d && d.text) playTts(d.text); });
-      socket.on('cheer', (d) => { if (d) cheer(d.name); });
+      socket.on('cheer', (d) => { if (d) { cheer(d.name); flashRow(d.uid); } });
     } catch (e) { /* polling fallback */ }
     poll();
     if (demoParam) {

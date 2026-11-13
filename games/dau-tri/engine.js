@@ -55,6 +55,12 @@ function createEngine(ctx) {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
   const TEAM_NAMES = { a: 'Đội A', b: 'Đội B' };
+  // Tên đội hiển thị = settings (dashboard tùy chỉnh được); fallback TEAM_NAMES.
+  function teamName(t) {
+    if (t === 'a') return (settings.teamAName || TEAM_NAMES.a);
+    if (t === 'b') return (settings.teamBName || TEAM_NAMES.b);
+    return TEAM_NAMES.a;
+  }
   const DEMO_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khang', 'Linh', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo'];
   const DEMO_CHEERS = ['Câu này dễ!', 'Chắc chắn là A!', 'Tôi biết đáp án!', 'Hồi hộp quá!'];
   const LETTERS = ['a', 'b', 'c', 'd'];
@@ -86,6 +92,12 @@ function createEngine(ctx) {
     spotlightS: 30,       // vinh danh top 3 (giây)
     demoMode: false,
     voiceEnabled: true,
+    teamAName: 'Đội A',
+    teamBName: 'Đội B',
+    teamABg: '',
+    teamBBg: '',
+    teamAColor: '#38BDF8',
+    teamBColor: '#FB923C',
   };
   let settings = loadJson(SETTINGS_FILE, defaultSettings);
   saveJson(SETTINGS_FILE, settings);
@@ -142,6 +154,21 @@ function createEngine(ctx) {
     if (!Number.isFinite(n)) return dflt;
     return Math.max(min, Math.min(max, Math.floor(n)));
   }
+  function cleanTeamName(v, fallback) {
+    const t = String(v == null ? '' : v).replace(/[<>&]/g, '').trim().slice(0, 24);
+    return t || fallback;
+  }
+  function validTeamBg(v, fallback) {
+    const t = String(v == null ? '' : v).trim();
+    if (!t) return ''; // để trống = không ảnh nền
+    if (!/^(https?:\/\/|\/shared\/)/.test(t)) return fallback;
+    if (/[\s"'()]/.test(t)) return fallback;
+    return t;
+  }
+  function validTeamColor(v, fallback) {
+    const t = String(v == null ? '' : v).trim();
+    return /^#[0-9a-fA-F]{6}$/.test(t) ? t : fallback;
+  }
   function log(text) {
     session.logs.push({ t: Date.now(), text });
     if (session.logs.length > 100) session.logs = session.logs.slice(-100);
@@ -161,7 +188,7 @@ function createEngine(ctx) {
       .filter((p) => !p.left && (p.correctMatch || 0) > 0)
       .sort((x, y) => (y.correctMatch || 0) - (x.correctMatch || 0) || (y.firstMatch || 0) - (x.firstMatch || 0))
       .slice(0, 3)
-      .map((p) => ({ name: p.name, team: p.team || null, correct: p.correctMatch || 0, first: p.firstMatch || 0 }));
+      .map((p) => ({ uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, team: p.team || null, correct: p.correctMatch || 0, first: p.firstMatch || 0 }));
   }
   function statePayload() {
     const players = Object.values(session.players)
@@ -205,8 +232,8 @@ function createEngine(ctx) {
       })),
       teamCounts: { a: byTeam.a.length, b: byTeam.b.length, none: byTeam.none.length },
       top: {
-        a: byTeam.a.slice(0, 5).map((p) => ({ name: p.name, correct: p.correctMatch || 0 })),
-        b: byTeam.b.slice(0, 5).map((p) => ({ name: p.name, correct: p.correctMatch || 0 })),
+        a: byTeam.a.slice(0, 5).map((p) => ({ uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, correct: p.correctMatch || 0 })),
+        b: byTeam.b.slice(0, 5).map((p) => ({ uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, correct: p.correctMatch || 0 })),
       },
       top3: topIndividuals(),
       stats: session.stats,
@@ -227,6 +254,12 @@ function createEngine(ctx) {
         coinToPoints: settings.coinToPoints,
         followPoints: settings.followPoints,
         spotlightS: settings.spotlightS,
+        teamAName: settings.teamAName || TEAM_NAMES.a,
+        teamBName: settings.teamBName || TEAM_NAMES.b,
+        teamABg: settings.teamABg || '',
+        teamBBg: settings.teamBBg || '',
+        teamAColor: settings.teamAColor || '#38BDF8',
+        teamBColor: settings.teamBColor || '#FB923C',
       },
       now: Date.now(),
     };
@@ -359,8 +392,8 @@ function createEngine(ctx) {
     session.phaseEndsAt = now + settings.spotlightS * 1000;
     session.current = null;
     if (winner) {
-      log(`Hết trận: ${TEAM_NAMES[winner]} thắng (${reason}).`);
-      ctx.io.emit('match-win', { team: winner, text: `${TEAM_NAMES[winner]} đã thắng trận!` });
+      log(`Hết trận: ${teamName(winner)} thắng (${reason}).`);
+      ctx.io.emit('match-win', { team: winner, text: `${teamName(winner)} đã thắng trận!` });
     } else {
       log(`Hết trận: hòa (${reason}).`);
       ctx.io.emit('match-win', { team: null, text: 'Trận đấu kết thúc với tỷ số hòa!' });
@@ -455,13 +488,13 @@ function createEngine(ctx) {
         if (!inMatch) {
           if (p.team !== team) {
             p.team = team;
-            log(`${p.name} vào ${TEAM_NAMES[team]}.`);
+            log(`${p.name} vào ${teamName(team)}.`);
           }
         } else if (p.team && p.team !== team) {
-          log(`${p.name} muốn đổi sang ${TEAM_NAMES[team]} — chỉ đổi được giữa các trận.`);
+          log(`${p.name} muốn đổi sang ${teamName(team)} — chỉ đổi được giữa các trận.`);
         } else if (!p.team) {
           p.team = team;
-          log(`${p.name} vào ${TEAM_NAMES[team]}.`);
+          log(`${p.name} vào ${teamName(team)}.`);
         }
         saveSession(); broadcast();
         return { ok: true };
@@ -488,7 +521,7 @@ function createEngine(ctx) {
           if (p.team) {
             session.points[p.team] += settings.correctPoints;
             if (!cur.firstCorrect) {
-              cur.firstCorrect = { uid: p.uid, name: p.name, team: p.team };
+              cur.firstCorrect = { uid: p.uid, name: p.name, team: p.team, avatarUrl: p.avatarUrl || null };
               session.points[p.team] += settings.firstBonus;
               session.firstCounts[p.team] += 1;
               p.firstMatch = (p.firstMatch || 0) + 1;
@@ -497,7 +530,7 @@ function createEngine(ctx) {
           } else if (!cur.firstCorrect) {
             // Chưa có đội: vẫn ghi nhận đúng đầu tiên để hiện tên, nhưng
             // không cộng điểm đội và không tính vào firstCounts.
-            cur.firstCorrect = { uid: p.uid, name: p.name, team: null };
+            cur.firstCorrect = { uid: p.uid, name: p.name, team: null, avatarUrl: p.avatarUrl || null };
           }
         }
         saveSession(); broadcast();
@@ -533,7 +566,7 @@ function createEngine(ctx) {
       session.stats.gifts += 1;
       const pts = Math.floor(coins) * settings.coinToPoints;
       session.points[p.team] += pts;
-      log(`${p.name} tặng ${coins} xu -> +${pts} điểm ${TEAM_NAMES[p.team]}.`);
+      log(`${p.name} tặng ${coins} xu -> +${pts} điểm ${teamName(p.team)}.`);
       saveSession(); broadcast();
       return { ok: true, points: pts };
     }
@@ -543,7 +576,7 @@ function createEngine(ctx) {
       if (p && p.team && !p.followedMatch) {
         p.followedMatch = true;
         session.points[p.team] += settings.followPoints;
-        log(`${p.name} follow -> +${settings.followPoints} điểm ${TEAM_NAMES[p.team]}.`);
+        log(`${p.name} follow -> +${settings.followPoints} điểm ${teamName(p.team)}.`);
       }
       saveSession(); broadcast();
       return { ok: true };
@@ -685,6 +718,9 @@ function createEngine(ctx) {
       return res.json({ received: true, ok: false, reason: 'demo-mode' });
     }
     const ev = parseTikFinityEvent(req.body || {}, req.query || {});
+    // parseTikFinityEvent trả field `avatar`, còn engine dùng `avatarUrl` —
+    // không map thì avatar thật từ TikFinity không bao giờ vào player.
+    if (ev && !ev.avatarUrl && ev.avatar) ev.avatarUrl = ev.avatar;
     if (!ev) {
       saveSession();
       return res.json({ received: true, ok: false, reason: 'unrecognized', hint: 'Webhook chưa nhận diện: ' + String(JSON.stringify(req.body || {})).slice(0, 300) });
@@ -760,6 +796,12 @@ function createEngine(ctx) {
     if (b.spotlightS !== undefined) settings.spotlightS = clampInt(b.spotlightS, 1, 120, settings.spotlightS);
     if (b.demoMode !== undefined) settings.demoMode = !!b.demoMode;
     if (b.voiceEnabled !== undefined) settings.voiceEnabled = !!b.voiceEnabled;
+    if (b.teamAName !== undefined) settings.teamAName = cleanTeamName(b.teamAName, settings.teamAName);
+    if (b.teamBName !== undefined) settings.teamBName = cleanTeamName(b.teamBName, settings.teamBName);
+    if (b.teamABg !== undefined) settings.teamABg = validTeamBg(b.teamABg, settings.teamABg);
+    if (b.teamBBg !== undefined) settings.teamBBg = validTeamBg(b.teamBBg, settings.teamBBg);
+    if (b.teamAColor !== undefined) settings.teamAColor = validTeamColor(b.teamAColor, settings.teamAColor);
+    if (b.teamBColor !== undefined) settings.teamBColor = validTeamColor(b.teamBColor, settings.teamBColor);
     saveSettings();
     res.json({ success: true, settings });
     broadcast();
