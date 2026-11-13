@@ -6,6 +6,8 @@
 <title>Đấu Trường Sinh Tồn — Overlay</title>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/shared/music.js"></script>
+<link rel="stylesheet" href="/shared/meme.css">
+<script src="/shared/meme.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; }
@@ -25,29 +27,30 @@
   .arena-wrap { position: absolute; top: 330px; left: 0; width: 1080px; height: 1000px; z-index: 4; }
   .arena { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 960px; height: 900px; border-radius: 50%; background: radial-gradient(circle, #3d5a3a 0%, #2c4429 60%, #1e2f1c 100%); border: 6px solid #8a6d3b; box-shadow: inset 0 0 60px rgba(0,0,0,.5); }
   .zone-ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 5px solid rgba(255, 60, 60, .9); border-radius: 50%; box-shadow: 0 0 30px rgba(255, 0, 0, .5), inset 0 0 40px rgba(255, 0, 0, .25); pointer-events: none; transition: width 1s linear, height 1s linear; }
-  .fighter { position: absolute; width: 130px; margin-left: -65px; margin-top: -82px; text-align: center; z-index: 6; }
+  .fighter { position: absolute; width: 130px; margin-left: -65px; margin-top: -100px; text-align: center; z-index: 6; }
   /* Đông người (>14): thu nhỏ fighter để tên/avatar không chồng nhau —
      vòng tròn rx 400/ry 340 chỉ đủ chỗ ~97px/người khi đủ 24 chiến binh. */
-  .arena-wrap.crowded .fighter { width: 104px; margin-left: -52px; }
+  .arena-wrap.crowded .fighter { width: 104px; margin-left: -52px; margin-top: -78px; }
   .arena-wrap.crowded .fighter .nm { font-size: 17px; max-width: 100px; }
-  .arena-wrap.crowded .fighter .av-wrap, .arena-wrap.crowded .fighter .av { width: 36px; height: 36px; }
-  .arena-wrap.crowded .fighter .av-fb { font-size: 18px; }
-  .arena-wrap.crowded .fighter .wp { font-size: 46px; }
+  .arena-wrap.crowded .fighter .meme-head { width: 44px; height: 44px; border-width: 2px; border-radius: 10px; }
+  .arena-wrap.crowded .fighter .torso { width: 42px; height: 20px; }
+  .arena-wrap.crowded .fighter .wp { font-size: 34px; }
   .arena-wrap.crowded .fighter .hpnum { font-size: 14px; }
-  /* Trọng tài đứng góc dưới-phải đấu trường (ngoài vòng tròn fighter),
-     phất cờ + bình luận theo sự kiện thật (down / match-win / zone). */
-  .referee { position: absolute; right: 16px; bottom: 10px; z-index: 7; text-align: center; width: 190px; }
-  .ref-bubble { background: rgba(255,255,255,.95); color: #222; font-size: 20px; font-weight: 800; line-height: 1.3; border-radius: 14px; padding: 8px 12px; margin-bottom: 6px; box-shadow: 0 3px 10px rgba(0,0,0,.4); min-height: 56px; display: flex; align-items: center; justify-content: center; }
-  .ref-body { font-size: 72px; line-height: 1; position: relative; display: inline-block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
-  .ref-flag { position: absolute; right: -28px; top: -6px; font-size: 44px; display: inline-block; }
+  /* Trọng tài đứng GIỮA SÂN (tâm đấu trường, chỗ trống giữa vòng chiến
+     binh), to rõ — phất cờ + bình luận theo sự kiện thật. Ẩn khi chưa có
+     chiến binh nào (tránh đè dòng chữ chờ người chơi ở giữa sân). */
+  .referee { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 5; text-align: center; width: 280px; }
+  .ref-bubble { background: rgba(255,255,255,.95); color: #222; font-size: 23px; font-weight: 800; line-height: 1.3; border-radius: 14px; padding: 10px 14px; margin-bottom: 8px; box-shadow: 0 3px 10px rgba(0,0,0,.4); min-height: 64px; display: flex; align-items: center; justify-content: center; }
+  .ref-body { font-size: 104px; line-height: 1; position: relative; display: inline-block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+  .ref-flag { position: absolute; right: -34px; top: -8px; font-size: 56px; display: inline-block; }
   .referee.waving .ref-flag { animation: flagWave .5s ease-in-out 4; }
   @keyframes flagWave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-28deg); } }
-  .ref-name { font-size: 19px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 4px #000; margin-top: 2px; }
+  .ref-name { font-size: 22px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 4px #000; margin-top: 4px; }
   /* Bảng hướng dẫn chơi: dải gọn giữa infobar và đấu trường (vùng trống
      trên miệng vòng tròn — không che fighter, không che bảng top). Số mặc
      định = defaultSettings trong engine.js; render() đồng bộ lại theo
      s.settings nên đổi setting ở dashboard vẫn hiển thị đúng. */
-  .howto { position: absolute; top: 238px; left: 30px; width: 1020px; z-index: 6; background: rgba(0,0,0,.5); border: 2px solid rgba(255,217,77,.55); border-radius: 14px; padding: 8px 16px; font-size: 19px; font-weight: 700; line-height: 1.4; text-align: center; text-shadow: 0 1px 3px #000; }
+  .howto { position: absolute; top: 232px; left: 30px; width: 1020px; z-index: 6; background: rgba(0,0,0,.5); border: 2px solid rgba(255,217,77,.55); border-radius: 14px; padding: 6px 16px; font-size: 24px; font-weight: 700; line-height: 1.5; text-align: center; text-shadow: 0 1px 3px #000; }
   .howto b { color: #ffd94d; }
   /* Idle: bob nhẹ lên xuống (chỉ transform) — chạy trên lớp trong để không
      xung đột với lunge / giật lùi / ngã ở lớp ngoài .fighter. */
@@ -62,9 +65,15 @@
   /* Bị đánh: giật lùi (ngược hướng đối thủ) + chớp đỏ 0.3s. */
   .fighter.hurt { animation: hurtShake .3s ease-out; }
   @keyframes hurtShake { 0% { transform: translate(0, 0); opacity: 1; } 30% { transform: translate(calc(var(--lx, 0) * -12px), calc(var(--ly, 0) * -12px)); opacity: .55; } 100% { transform: translate(0, 0); opacity: 1; } }
-  .fighter.hurt .av-fb, .fighter.hurt .av-img { border-color: #ff3b30; box-shadow: 0 0 14px rgba(255, 59, 48, .9); }
-  .fighter .wp { font-size: 56px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
-  .fighter .nm { font-size: 19px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 6px rgba(0,0,0,.85), 0 2px 8px rgba(0,0,0,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 128px; background: rgba(0,0,0,.55); padding: 1px 8px; border-radius: 9px; }
+  .fighter.hurt .meme-head { border-color: #ff3b30; box-shadow: 0 0 14px rgba(255, 59, 48, .9); }
+  .fighter .wp { font-size: 46px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+  .fighter .nm { font-size: 18px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 6px rgba(0,0,0,.85), 0 2px 8px rgba(0,0,0,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 150px; background: rgba(0,0,0,.55); padding: 1px 8px; border-radius: 9px; }
+  /* Nhân vật MEME: mặt meme làm ĐẦU chiến binh (mỗi người 1 mặt khác nhau
+     trong toàn game qua faceImgIn — tránh trùng mặt) + thân là khối giáp
+     đơn giản + vũ khí + HP. Fallback khi meme.js lỗi: vòng chữ cái cũ. */
+  .fighter .meme-head { width: 64px; height: 64px; margin: 3px auto 0; border-radius: 14px; border: 3px solid rgba(255,255,255,.85); background: rgba(0,0,0,.25); }
+  .fighter .meme-head img { width: 100%; height: 100%; object-fit: contain; }
+  .fighter .torso { width: 58px; height: 28px; margin: 4px auto 0; border-radius: 14px 14px 8px 8px; background: linear-gradient(180deg, #c3cedb, #67748a); box-shadow: inset 0 -7px 0 rgba(0,0,0,.3), 0 2px 4px rgba(0,0,0,.5); }
   /* Avatar tròn 44px ngay dưới tên; chữ cái đầu tên làm fallback khi không
      có avatar thật (demo) hoặc ảnh lỗi — img lỗi tự gỡ để lộ chữ cái. */
   .fighter .av-wrap { position: relative; width: 44px; height: 44px; margin: 2px auto 0; }
@@ -86,9 +95,9 @@
   .panel { flex: 1; background: rgba(0,0,0,.5); border-radius: 16px; padding: 14px 18px; }
   .panel h3 { font-size: 25px; margin-bottom: 6px; }
   .panel div { font-size: 22px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .panel .top-av-wrap { position: relative; display: inline-block; width: 28px; height: 28px; vertical-align: middle; margin-right: 6px; }
-  .panel .top-av { width: 28px; height: 28px; border-radius: 50%; }
-  .panel .top-av-fb { display: inline-flex; align-items: center; justify-content: center; background: #5b7fa6; font-size: 15px; font-weight: 900; color: #fff; }
+  .panel .top-av-wrap { position: relative; display: inline-block; width: 24px; height: 24px; vertical-align: middle; margin-right: 10px; }
+  .panel .top-av { width: 24px; height: 24px; border-radius: 50%; }
+  .panel .top-av-fb { display: inline-flex; align-items: center; justify-content: center; background: #5b7fa6; font-size: 13px; font-weight: 900; color: #fff; }
   .panel .top-av-img { position: absolute; left: 0; top: 0; object-fit: cover; }
   .queue-line { position: absolute; top: 1330px; left: 0; width: 1080px; text-align: center; font-size: 23px; font-weight: 800; color: #ffe9bd; text-shadow: 0 1px 3px #000; z-index: 6; }
   .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
@@ -179,11 +188,18 @@ function topAvatarHtml(t) {
   const img = t.avatarUrl ? '<img class="top-av top-av-img" src="' + escapeHtml(t.avatarUrl) + '" alt="" onerror="this.remove()">' : '';
   return '<span class="top-av-wrap"><span class="top-av top-av-fb">' + initial + '</span>' + img + '</span>';
 }
-function fighterInner(f, pct) {
-  // Thứ tự từ trên xuống: tên → avatar → vũ khí → HP (gọn trong khung 130px).
+function fighterHeadHtml(f, allFighters) {
+  // Mặt meme làm ĐẦU chiến binh: mỗi người 1 mặt khác nhau trong toàn game
+  // (faceImgIn với danh sách chung s.fighters). Fallback: vòng chữ cái cũ.
+  if (window.MemeFaces) return '<div class="meme-head">' + window.MemeFaces.faceImgIn(f, allFighters || [f], 'meme-face') + '</div>';
+  return avatarHtml(f);
+}
+function fighterInner(f, pct, headHtml) {
+  // Thứ tự từ trên xuống: tên → đầu meme → thân giáp → vũ khí → HP.
   return '<div class="fbody">' +
     '<div class="nm">' + escapeHtml(f.name) + '</div>' +
-    avatarHtml(f) +
+    headHtml +
+    '<div class="torso"></div>' +
     '<div class="wp">' + (f.alive ? f.weapon.icon : '💀') + '</div>' +
     '<div class="hpbar"><i class="' + (pct <= 25 ? 'low' : '') + '" style="width:' + pct + '%"></i></div>' +
     '<div class="hpnum">' + (f.alive ? f.hp + ' HP' : 'ĐÃ GỤC') + '</div></div>';
@@ -296,6 +312,8 @@ function render(s) {
   const n = s.fighters.length;
   const cx = 540, cy = 500, rx = 400, ry = 340;
   const wrap = document.getElementById('fighters');
+  // Trọng tài ở giữa sân: ẩn khi chưa có chiến binh (tránh đè dòng chờ).
+  document.getElementById('referee').style.display = n === 0 ? 'none' : '';
   if (n === 0) {
     wrap.classList.remove('crowded');
     Object.keys(fighterEls).forEach((uid) => { fighterEls[uid].remove(); delete fighterEls[uid]; delete fighterCache[uid]; delete animUntil[uid]; });
@@ -317,7 +335,10 @@ function render(s) {
       const pct = Math.max(0, Math.round(f.hp / f.maxHp * 100));
       seen[f.uid] = true;
       let el = fighterEls[f.uid];
-      const key = f.name + '|' + (f.avatarUrl || '') + '|' + f.weapon.icon + '|' + f.alive;
+      // Mặt meme gán theo danh sách chung toàn game: đổi khi có người vào/ra
+      // nên đưa faceId vào key cache để rebuild đầu khi mặt được gán lại.
+      const faceId = window.MemeFaces ? window.MemeFaces.faceForIn(f, s.fighters) : '';
+      const key = f.name + '|' + faceId + '|' + (f.avatarUrl || '') + '|' + f.weapon.icon + '|' + f.alive;
       if (!el) {
         el = document.createElement('div');
         el.dataset.uid = f.uid;
@@ -325,7 +346,7 @@ function render(s) {
         fighterEls[f.uid] = el;
         fighterCache[f.uid] = null;
       }
-      if (fighterCache[f.uid] !== key) { el.innerHTML = fighterInner(f, pct); fighterCache[f.uid] = key; }
+      if (fighterCache[f.uid] !== key) { el.innerHTML = fighterInner(f, pct, fighterHeadHtml(f, s.fighters)); fighterCache[f.uid] = key; }
       const bar = el.querySelector('.hpbar i');
       if (bar) { bar.style.width = pct + '%'; bar.className = pct <= 25 ? 'low' : ''; }
       const hpnum = el.querySelector('.hpnum');
