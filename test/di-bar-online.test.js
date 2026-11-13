@@ -1,10 +1,12 @@
 // test/di-bar-online.test.js — Test game Đi Bar Online (game 14/14):
 // vào bar -> dancer với 1 trong 8 nhân vật; tap +năng lượng (delta); quà 10 xu
-// = +100 năng lượng + 1 ly; quà lạ = 0 + WARN; hết vòng dancer nhiều năng lượng
-// nhất thành Vua sàn; drop: tim x2 trong 15s; đấu bàn VIP: bàn nhiều điểm hơn
-// thắng vòng, thắng 2 vòng liên tiếp -> bao cả bar (x2 năng lượng 1 phút);
-// tối đa 24 dancer trên sàn, người thứ 25 chờ ở quầy; demo start/stop +
-// từ chối khi đã có event thật; ?demo=1 -> demoActive: true.
+// = +100 năng lượng + 1 ly; quà lạ = 0 + WARN; CHƠI TỰ DO, KHÔNG CÓ VÒNG
+// (Chủ tịch 2026-11-13): người nhiều năng lượng nhất lúc đó LUÔN là Vua
+// sàn (state.leader), năng lượng KHÔNG reset theo vòng; rời live -> dancer
+// tạm ẩn, vào lại tính tiếp ⚡ đã có; chỉ phiên live mới (/api/session/reset)
+// mới làm mới bar; drop: tim x2 trong 15s; điểm bàn = tổng live (không có
+// thắng vòng / bao bar); tối đa 24 dancer trên sàn, người thứ 25 chờ ở quầy;
+// demo start/stop + từ chối khi đã có event thật; ?demo=1 -> demoActive: true.
 // TikFinity thật: 6 Action, MỖI ACTION 1 URL RIÊNG ?event=<loại>, KHÔNG body.
 'use strict';
 
@@ -109,24 +111,28 @@ test('di-bar-online: vào bar -> dancer 1 trong 8 nhân vật; tap +năng lượ
   } finally { await stopTestServer(t); }
 });
 
-test('di-bar-online: hết vòng dancer nhiều năng lượng nhất thành Vua sàn (LED + camera ghi tên)', async () => {
+test('di-bar-online: chơi tự do — người nhiều năng lượng nhất lúc đó LUÔN là Vua sàn, không reset theo vòng', async () => {
   const t = await startTestServer();
   try {
     const user = uniq('bar_king');
     const room = await t.rooms.getOrCreate(GAME, user);
-    await setSettings(t, user, { roundDurationS: 6, spotlightS: 2 });
     await comment(t, room, 'u-a', 'An', 'vào bar');
     await comment(t, room, 'u-b', 'Bình', 'quẩy');
     await tap(t, room, 'u-a', 'An', 100);
     await tap(t, room, 'u-a', 'An', 120);
     await tap(t, room, 'u-b', 'Bình', 100);
     await tap(t, room, 'u-b', 'Bình', 105);
-    let st = await waitFor(t, user, (s) => s.phase === 'spotlight', 24, 500);
-    assert.equal(st.phase, 'spotlight', 'hết vòng -> vinh danh');
-    assert.ok(st.king, 'có Vua sàn');
-    assert.equal(st.king.name, 'An', 'An nhiều năng lượng nhất (25 vs 10)');
-    assert.equal(st.king.energy, 25, 'Vua 25 năng lượng');
+    let st = await getState(t, user);
+    assert.ok(st.leader, 'có người dẫn đầu');
+    assert.equal(st.leader.name, 'An', 'An nhiều năng lượng nhất (25 vs 10)');
+    assert.equal(st.leader.energy, 25, 'Vua 25 năng lượng');
     assert.ok(st.top[0].name === 'An', 'top 1 là An');
+    assert.ok(!('roundNo' in st) && !('phase' in st) && !('king' in st), 'không còn vòng/phase/king theo vòng');
+    // Chờ lâu hơn cả vòng cũ (6s) -> năng lượng KHÔNG reset, Vua vẫn là An.
+    await sleep(8000);
+    st = await getState(t, user);
+    assert.equal(st.dancers[0].energy, 25, 'không có vòng nên năng lượng không về 0');
+    assert.equal(st.leader.name, 'An', 'Vua vẫn là An sau 8s');
   } finally { await stopTestServer(t); }
 });
 
@@ -135,7 +141,7 @@ test('di-bar-online: DJ drop — trong 15s drop tim x2, hết drop tim về x1',
   try {
     const user = uniq('bar_drop');
     const room = await t.rooms.getOrCreate(GAME, user);
-    await setSettings(t, user, { roundDurationS: 120, dropIntervalS: 4, dropWarningS: 1, dropDurationS: 5, spotlightS: 2 });
+    await setSettings(t, user, { dropIntervalS: 4, dropWarningS: 1, dropDurationS: 5 });
     await comment(t, room, 'u-a', 'An', 'vào bar');
     // Chờ drop bắt đầu (dropInterval 4s + warning 1s).
     let st = await waitFor(t, user, (s) => s.dropState === 'drop', 16, 500);
@@ -153,12 +159,11 @@ test('di-bar-online: DJ drop — trong 15s drop tim x2, hết drop tim về x1',
   } finally { await stopTestServer(t); }
 });
 
-test('di-bar-online: đấu bàn VIP — bàn nhiều điểm hơn thắng vòng', async () => {
+test('di-bar-online: điểm bàn VIP = tổng live (không có thắng vòng / bao bar)', async () => {
   const t = await startTestServer();
   try {
     const user = uniq('bar_table');
     const room = await t.rooms.getOrCreate(GAME, user);
-    await setSettings(t, user, { roundDurationS: 6, spotlightS: 1 });
     await comment(t, room, 'u-a', 'An', 'vào bar');
     await comment(t, room, 'u-a', 'An', 'bàn vàng');
     await comment(t, room, 'u-b', 'Bình', 'vào bar');
@@ -167,51 +172,50 @@ test('di-bar-online: đấu bàn VIP — bàn nhiều điểm hơn thắng vòng
     await tap(t, room, 'u-a', 'An', 110);
     await tap(t, room, 'u-b', 'Bình', 100);
     await tap(t, room, 'u-b', 'Bình', 105);
-    let st = await waitFor(t, user, (s) => s.phase === 'spotlight', 24, 500);
-    assert.equal(st.phase, 'spotlight', 'hết vòng');
+    const st = await getState(t, user);
     // An: 5 (vào bar) + 10 tap = 15; Bình: 5 + 5 = 10 (comment chọn bàn bị
     // chống spam nên không cộng thêm — nhưng bàn vẫn được gán).
     assert.equal(st.tables.vang.score, 15, 'điểm Bàn Vàng 15');
     assert.equal(st.tables.do.score, 10, 'điểm Bàn Đỏ 10');
-    assert.equal(st.tableWinner, 'vang', 'Bàn Vàng thắng vòng');
-    assert.equal(st.tableStreak.vang, 1, 'chuỗi thắng Vàng = 1');
+    assert.ok(!('tableWinner' in st) && !('barCover' in st) && !('tableStreak' in st), 'không còn thắng vòng / bao bar');
   } finally { await stopTestServer(t); }
 });
 
-test('di-bar-online: thắng 2 vòng liên tiếp -> bao cả bar 1 phút (x2 năng lượng)', async () => {
+test('di-bar-online: rời live -> dancer tạm ẩn, vào lại tính tiếp ⚡ đã có; phiên live mới mới reset', async () => {
   const t = await startTestServer();
   try {
-    const user = uniq('bar_cover');
+    const user = uniq('bar_leave');
     const room = await t.rooms.getOrCreate(GAME, user);
-    await setSettings(t, user, { roundDurationS: 4, spotlightS: 1, dropIntervalS: 600 });
-    await comment(t, room, 'u-a', 'An', 'vào bar');
-    await comment(t, room, 'u-a', 'An', 'bàn vàng');
-    await comment(t, room, 'u-b', 'Bình', 'vào bar');
-    await comment(t, room, 'u-b', 'Bình', 'bàn đỏ');
-    // Vòng 1: An 15, Bình 10 -> Vàng thắng.
-    await tap(t, room, 'u-a', 'An', 100);
-    await tap(t, room, 'u-a', 'An', 110);
-    await tap(t, room, 'u-b', 'Bình', 100);
-    await tap(t, room, 'u-b', 'Bình', 105);
-    let st = await waitFor(t, user, (s) => s.phase === 'spotlight' && s.roundNo === 1, 24, 500);
-    assert.equal(st.tableWinner, 'vang', 'vòng 1 Vàng thắng');
-    // Chờ vòng 2 bắt đầu (vinh danh 1s -> lobby -> tick tự bắt đầu).
-    st = await waitFor(t, user, (s) => s.phase === 'dancing' && s.roundNo === 2, 12, 500);
-    assert.equal(st.phase, 'dancing', 'vòng 2 bắt đầu');
-    // Vòng 2: An +10, Bình +5 -> Vàng thắng lần 2 -> bao cả bar.
-    await tap(t, room, 'u-a', 'An', 120);
-    await tap(t, room, 'u-b', 'Bình', 110);
-    st = await waitFor(t, user, (s) => s.phase === 'spotlight' && s.roundNo === 2, 24, 500);
-    assert.equal(st.tableWinner, 'vang', 'vòng 2 Vàng thắng');
-    assert.ok(st.barCover, 'có bao cả bar');
-    assert.equal(st.barCover.table, 'vang', 'Bàn Vàng bao cả bar');
-    assert.ok(st.barCover.until > Date.now(), 'bao cả bar còn hiệu lực');
-    // Chờ vòng 3 bắt đầu, An tap tiếp -> x2 (Bàn Vàng).
-    st = await waitFor(t, user, (s) => s.phase === 'dancing' && s.roundNo === 3, 12, 500);
-    assert.equal(st.phase, 'dancing', 'vòng 3 bắt đầu');
-    await tap(t, room, 'u-a', 'An', 125);
+    await enableDemo(t, user);
+    // Vào bar qua endpoint test (demoMode đang bật nên webhook thật bị chặn):
+    // comment "vào bar" +5, quà 1 xu +10 -> An 15 năng lượng.
+    await postApi(t, user, '/api/test/join', { uid: 'u-a', name: 'An' });
+    await postApi(t, user, '/api/test/gift', { uid: 'u-a', name: 'An', coins: 1 });
+    let st = await getState(t, user);
+    assert.equal(st.dancers[0].energy, 15, 'An 15 năng lượng trước khi rời');
+    // Rời live (endpoint test) -> dancer tạm ẩn khỏi sàn.
+    const lv = await postApi(t, user, '/api/test/leave', { uid: 'u-a', name: 'An' });
+    assert.equal(lv.status, 200, 'test leave 200');
     st = await getState(t, user);
-    assert.equal(st.dancers.find((d) => d.uid === 'u-a').energy, 10, 'bao cả bar: tap 5 x2 = 10 năng lượng');
+    assert.equal(st.totalDancers, 0, 'rời live thì tạm ẩn khỏi sàn');
+    assert.equal(st.top.length, 0, 'không còn trong top khi đã rời');
+    // Tắt demoMode để webhook thật chạy lại, rồi vào lại live (webhook join,
+    // triggerTypeId 6) -> hiện lại, ⚡ giữ nguyên.
+    await setSettings(t, user, { demoMode: false });
+    const j = await t.rooms.dispatchWebhook(room, { triggerTypeId: 6, userId: 'u-a', nickname: 'An' });
+    assert.equal(j.status, 200, 'webhook join 200');
+    st = await getState(t, user);
+    assert.equal(st.totalDancers, 1, 'vào lại thì hiện lại trên sàn');
+    assert.equal(st.dancers[0].energy, 15, 'vào lại tính tiếp 15 năng lượng đã có');
+    assert.equal(st.leader.name, 'An', 'vào lại vẫn là người dẫn đầu');
+    // Phiên live mới -> bar làm mới hoàn toàn.
+    const rs = await postApi(t, user, '/api/session/reset', {});
+    assert.equal(rs.status, 200, 'session reset 200');
+    assert.equal(rs.json.success, true, 'reset ok');
+    st = await getState(t, user);
+    assert.equal(st.totalDancers, 0, 'phiên mới thì sàn trống');
+    assert.equal(st.top.length, 0, 'phiên mới thì top trống');
+    assert.equal(st.leader, null, 'phiên mới thì chưa có Vua');
   } finally { await stopTestServer(t); }
 });
 
@@ -333,8 +337,7 @@ test('di-bar-online: settings chặn giá trị vượt giới hạn; room A kh�
   try {
     const userA = uniq('bar_set_a');
     const userB = uniq('bar_set_b');
-    const s = await setSettings(t, userA, { roundDurationS: 1, tempo: 999, shotIntervalS: 1, volume: 500 });
-    assert.equal(s.roundDurationS, 5, 'roundDurationS min 5');
+    const s = await setSettings(t, userA, { tempo: 999, shotIntervalS: 1, volume: 500 });
     assert.equal(s.tempo, 180, 'tempo max 180');
     assert.equal(s.shotIntervalS, 3, 'shotIntervalS min 3');
     assert.equal(s.volume, 100, 'volume max 100');

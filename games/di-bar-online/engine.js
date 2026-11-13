@@ -9,19 +9,22 @@
 //   nhân vật gốc (random, hoặc bình luận số 1-8 để chọn). Tối đa 24 dancer
 //   trên sàn; người vào sau đứng ở quầy bar chờ lượt.
 // - Nhảy: 1 tim (delta) = +1 năng lượng; 1 bình luận tính điểm (chống spam
-//   1/5s) = +5; quà 1 xu = +10 năng lượng + 1 ly đồ uống; follow +30 (1 lần/vòng).
-// - Vua sàn nhảy: vòng 3 phút, dancer nhiều năng lượng nhất khi hết vòng ->
-//   lên ngôi Vua (camera zoom, LED chạy tên to, đội vương miện, TTS xướng tên).
-//   Vinh danh 20s -> vòng mới, năng lượng về 0.
+//   1/5s) = +5; quà 1 xu = +10 năng lượng + 1 ly đồ uống; follow +30 (1 lần/phiên live).
+// - CHƠI TỰ DO, MỞ CẢ NGÀY, KHÔNG CÓ VÒNG (Chủ tịch chốt 2026-11-13):
+//   không còn vòng 3 phút / vinh danh 20s / reset năng lượng cuối vòng.
+//   Năng lượng chỉ tích trong 1 phiên live; người dẫn đầu lúc đó (nhiều ⚡
+//   nhất) LUÔN là Vua sàn nhảy — cánh + vòng vàng + spotlight bám theo liên
+//   tục, đổi ngôi ngay khi có người vượt lên (TTS + pháo giấy, chống spam
+//   30s/lần). Rời live -> dancer TẠM ẨN khỏi sàn (không xóa), vào lại thì
+//   tính tiếp ⚡ đã có. Phiên live mới (sau >60 phút không có hoạt động, hoặc
+//   streamer bấm "Phiên live mới" ở dashboard) -> bar làm mới hoàn toàn.
 // - Đồ uống: quà >=10 xu = cocktail; >=50 xu = bottle service (pháo giấy +
 //   camera zoom người tặng + LED ghi tên); >=100 xu = mở sâm panh (phun sâm
 //   panh cả sàn, đèn chớp, LED tên to 10s).
 // - DJ drop: mỗi 2 phút DJ "drop" (báo trước 10s): trong 15s drop, mọi tim
 //   tính x2, đèn nhấp nháy nhanh, camera zoom vào DJ.
-// - Đấu bàn VIP: bình luận "bàn vàng" / "bàn đỏ" để chọn bàn. Tổng năng lượng
-//   + đồ uống của mỗi bàn được tính (điểm bàn = tổng năng lượng + số ly);
-//   hết vòng, bàn nhiều hơn thắng vòng (hiện trên LED). Thắng 2 vòng liên
-//   tiếp -> bàn đó "bao cả bar" 1 phút (mọi dancer của bàn được x2 năng lượng).
+// - Bàn VIP: bình luận "bàn vàng" / "bàn đỏ" để chọn bàn. Điểm bàn = tổng
+//   năng lượng + số ly của bàn (tổng live, không có thắng vòng / bao bar).
 // Demo theo ~/workspace/overlay-moi/demo-mode-contract.md: ?demo=1 tự chạy,
 // nút Chạy/Dừng demo ở dashboard, huy hiệu DEMO, tự dừng khi event thật tới,
 // từ chối khi phòng đã có event thật (webhookCount > 0).
@@ -76,15 +79,13 @@ function createEngine(ctx) {
   const MAX_FLOOR = 24;
 
   const defaultSettings = {
-    roundDurationS: 180,  // phút/vòng (giây)
     tapEnergy: 1,         // năng lượng / 1 tim (delta)
     commentEnergy: 5,     // năng lượng / 1 bình luận tính điểm
     coinToEnergy: 10,     // năng lượng / 1 xu quà
-    followEnergy: 30,     // năng lượng follow (1 lần/vòng)
+    followEnergy: 30,     // năng lượng follow (1 lần/phiên live)
     dropIntervalS: 120,   // nhịp drop (giây)
     dropWarningS: 10,     // báo trước drop (giây)
     dropDurationS: 15,    // thời gian drop (giây)
-    spotlightS: 20,       // vinh danh Vua sàn (giây)
     commentSpamS: 5,      // chống spam bình luận (giây/người)
     cameraMode: 'auto',   // auto | manual
     shotIntervalS: 8,     // thời gian mỗi shot camera (giây)
@@ -94,24 +95,20 @@ function createEngine(ctx) {
     demoMode: false,
     voiceEnabled: true,
   };
+  // Phiên live mới = sau hơn 60 phút không có hoạt động nào (streamer tắt
+  // live, room bị hủy sau 30 phút idle; live sau mở lại -> bar làm mới).
+  const LIVE_GAP_MS = 60 * 60 * 1000;
   let settings = loadJson(SETTINGS_FILE, defaultSettings);
   saveJson(SETTINGS_FILE, settings);
 
   function defaultSession() {
     return {
-      roundNo: 1,
-      phase: 'lobby',       // lobby | dancing | spotlight
-      phaseEndsAt: 0,
-      roundEndsAt: 0,
+      // Bar chơi tự do, mở cả ngày — KHÔNG có vòng, KHÔNG có phase, KHÔNG
+      // có Vua theo vòng. Vua = người dẫn đầu lúc đó (tính live từ top[0]).
       dropState: 'idle',    // idle | warning | drop
       nextDropAt: 0,
       dropEndsAt: 0,
       players: {},          // uid -> player (dancer)
-      king: null,           // { uid, name, energy, at, roundNo }
-      tableScores: { vang: 0, do: 0 },
-      tableStreak: { vang: 0, do: 0 },
-      tableWinner: null,    // bàn thắng vòng vừa rồi
-      barCover: null,       // { table, until } — bàn bao cả bar
       lastDrink: null,      // { tier, uid, name, coins, at }
       logs: [],
       stats: { joins: 0, comments: 0, commentsBlocked: 0, taps: 0, gifts: 0, giftsUnknown: 0, drinks: 0, follows: 0, shares: 0, leaves: 0, drops: 0 },
@@ -120,19 +117,25 @@ function createEngine(ctx) {
       webhookCount: 0,
       demoActive: false,
       createdAt: Date.now(),
+      lastActivityAt: Date.now(),
     };
   }
   let session = loadJson(SESSION_FILE, defaultSession());
   if (!session.players) session.players = {};
-  if (!session.tableScores) session.tableScores = { vang: 0, do: 0 };
-  if (!session.tableStreak) session.tableStreak = { vang: 0, do: 0 };
   if (!session.stats) session.stats = defaultSession().stats;
   if (!session.avatarStats) session.avatarStats = { total: 0, withAvatar: 0 };
   if (!session.avatarSeen) session.avatarSeen = {};
   if (typeof session.webhookCount !== 'number') session.webhookCount = 0;
+  if (typeof session.lastActivityAt !== 'number') session.lastActivityAt = session.createdAt || Date.now();
   session.demoActive = false; // demo không sống qua restart
-  if (session.phase === 'dancing') session.phase = 'lobby';
   session.dropState = 'idle';
+  // Phiên live mới sau >60 phút im ắng: bar làm mới hoàn toàn (năng lượng
+  // chỉ tích trong 1 phiên live). Live chỉ ngắt quãng vài phút (rớt mạng,
+  // VM thay) thì phiên cũ tiếp tục, dancer giữ nguyên ⚡.
+  if (Date.now() - session.lastActivityAt > LIVE_GAP_MS) {
+    session = defaultSession();
+    session.logs.push({ t: Date.now(), text: '🌙 Phiên live mới — bar làm mới hoàn toàn, chào buổi quẩy mới!' });
+  }
   saveJson(SESSION_FILE, session);
 
   const tapDelta = new TapDelta();
@@ -187,17 +190,17 @@ function createEngine(ctx) {
     return {
       game: GAME,
       username: USERNAME,
-      roundNo: session.roundNo,
-      phase: session.phase,
-      phaseEndsAt: session.phaseEndsAt,
-      roundEndsAt: session.roundEndsAt,
+      // Không có vòng/phase — bar mở cả ngày, Vua = người dẫn đầu lúc đó.
+      leader: top.length && top[0].energy > 0
+        ? { uid: top[0].uid, name: top[0].name, energy: top[0].energy || 0, character: charById(top[0].character) }
+        : null,
       dropState: session.dropState,
       nextDropAt: session.nextDropAt,
       dropEndsAt: session.dropEndsAt,
       dancers: floor.map((p) => ({
         uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null,
         character: charById(p.character), energy: p.energy || 0,
-        drinks: p.drinks || 0, table: p.table || null, isKing: !!(session.king && session.king.uid === p.uid),
+        drinks: p.drinks || 0, table: p.table || null,
       })),
       waiting: waiting.map((p) => ({
         uid: p.uid, name: p.name, character: charById(p.character),
@@ -208,10 +211,6 @@ function createEngine(ctx) {
       totalDancers: dancers.length,
       top: top.map((p) => ({ uid: p.uid, name: p.name, character: charById(p.character), energy: p.energy || 0, drinks: p.drinks || 0, table: p.table || null })),
       tables,
-      tableStreak: session.tableStreak,
-      tableWinner: session.tableWinner,
-      barCover: session.barCover,
-      king: session.king,
       lastDrink: session.lastDrink,
       stats: session.stats,
       avatarStats: session.avatarStats,
@@ -221,7 +220,6 @@ function createEngine(ctx) {
       demoMode: settings.demoMode,
       voiceEnabled: settings.voiceEnabled,
       settings: {
-        roundDurationS: settings.roundDurationS,
         tapEnergy: settings.tapEnergy,
         commentEnergy: settings.commentEnergy,
         coinToEnergy: settings.coinToEnergy,
@@ -229,7 +227,6 @@ function createEngine(ctx) {
         dropIntervalS: settings.dropIntervalS,
         dropWarningS: settings.dropWarningS,
         dropDurationS: settings.dropDurationS,
-        spotlightS: settings.spotlightS,
         commentSpamS: settings.commentSpamS,
         cameraMode: settings.cameraMode,
         shotIntervalS: settings.shotIntervalS,
@@ -265,76 +262,39 @@ function createEngine(ctx) {
     return null;
   }
 
-  // -- round lifecycle ---------------------------------------------------------
-  function startRound() {
-    if (session.phase !== 'lobby') return;
-    const now = Date.now();
-    session.phase = 'dancing';
-    session.roundEndsAt = now + settings.roundDurationS * 1000;
-    session.nextDropAt = now + settings.dropIntervalS * 1000;
-    session.dropState = 'idle';
-    session.dropEndsAt = 0;
-    session.king = null;
-    session.tableWinner = null;
-    log(`Vòng ${session.roundNo} bắt đầu (${settings.roundDurationS}s) — nhạc lên!`);
+  // -- phiên live (không có vòng) ----------------------------------------------
+  function markActivity() { session.lastActivityAt = Date.now(); }
+  // Phiên live mới: bar làm mới hoàn toàn (streamer bấm ở dashboard khi mở
+  // live mới, hoặc tự động khi room mở lại sau >60 phút im ắng).
+  function resetLiveSession() {
+    const fresh = defaultSession();
+    fresh.logs.push({ t: Date.now(), text: '🌙 Phiên live mới — bar làm mới hoàn toàn, chào buổi quẩy mới!' });
+    session = fresh;
+    prevLeaderUid = null;
+    lastKingEmitAt = 0;
     saveSession();
     broadcast();
+    return { success: true };
   }
-  function endRound() {
-    const now = Date.now();
+  // Vua sàn = người dẫn đầu lúc đó. Đổi ngôi -> log + TTS/pháo giấy qua
+  // socket 'king' (chống spam: tối đa 1 lần/30s — live đông đổi ngôi liên tục).
+  let prevLeaderUid = null;
+  let lastKingEmitAt = 0;
+  function checkLeader() {
     const top = topDancers(1);
-    const king = top.length > 0 && (top[0].energy || 0) > 0 ? top[0] : null;
-    session.king = king
-      ? { uid: king.uid, name: king.name, energy: king.energy || 0, character: charById(king.character), at: now, roundNo: session.roundNo }
-      : null;
-    // Đấu bàn VIP: điểm bàn = tổng năng lượng + số ly.
-    const tables = computeTableScores();
-    let tableWinner = null;
-    if (tables.vang.score !== tables.do.score) {
-      tableWinner = tables.vang.score > tables.do.score ? 'vang' : 'do';
-    }
-    session.tableWinner = tableWinner;
-    if (tableWinner) {
-      session.tableStreak[tableWinner] += 1;
-      session.tableStreak[tableWinner === 'vang' ? 'do' : 'vang'] = 0;
-      if (session.tableStreak[tableWinner] >= 2) {
-        session.barCover = { table: tableWinner, until: now + 60 * 1000 };
-        session.tableStreak[tableWinner] = 0;
-        log(`🔥 ${TABLE_NAMES[tableWinner]} thắng 2 vòng liên tiếp — BAO CẢ BAR 1 phút (x2 năng lượng)!`);
+    const leader = top.length > 0 && (top[0].energy || 0) > 0 ? top[0] : null;
+    const uid = leader ? leader.uid : null;
+    if (uid && uid !== prevLeaderUid) {
+      prevLeaderUid = uid;
+      log(`👑 ${leader.name} lên ngôi Vua sàn nhảy (${leader.energy} năng lượng)!`);
+      if (Date.now() - lastKingEmitAt > 30 * 1000) {
+        lastKingEmitAt = Date.now();
+        ctx.io.emit('king', { uid: leader.uid, name: leader.name, text: `${leader.name} là Vua sàn nhảy!` });
       }
-    } else {
-      session.tableStreak.vang = 0;
-      session.tableStreak.do = 0;
+      saveSession(); broadcast();
+    } else if (!uid) {
+      prevLeaderUid = null;
     }
-    session.phase = 'spotlight';
-    session.phaseEndsAt = now + settings.spotlightS * 1000;
-    if (king) {
-      log(`👑 ${king.name} là Vua sàn nhảy vòng ${session.roundNo} (${king.energy} năng lượng)!`);
-      ctx.io.emit('king', { uid: king.uid, name: king.name, text: `${king.name} là Vua sàn nhảy!` });
-    } else {
-      log(`Hết vòng ${session.roundNo}: chưa có ai nhảy (không có Vua).`);
-    }
-    if (tableWinner) log(`🏆 ${TABLE_NAMES[tableWinner]} thắng vòng (điểm ${tables[tableWinner].score} - ${tables[tableWinner === 'vang' ? 'do' : 'vang'].score}).`);
-    saveSession();
-    broadcast();
-  }
-  function resetRound() {
-    session.roundNo += 1;
-    session.phase = 'lobby';
-    session.phaseEndsAt = 0;
-    session.roundEndsAt = 0;
-    session.dropState = 'idle';
-    session.nextDropAt = 0;
-    session.dropEndsAt = 0;
-    session.tableWinner = null;
-    for (const p of Object.values(session.players)) {
-      p.energy = 0;
-      p.drinks = 0;
-      p.followedRound = false;
-    }
-    log(`Vòng ${session.roundNo} chuẩn bị — năng lượng về 0.`);
-    saveSession();
-    broadcast();
   }
 
   // -- players / energy --------------------------------------------------------
@@ -354,7 +314,7 @@ function createEngine(ctx) {
         energy: 0,
         drinks: 0,
         lastCommentAt: 0,
-        followedRound: false,
+        followed: false,      // follow +30 chỉ 1 lần/phiên live
         joinedAt: Date.now(),
         joinedBarAt: 0,
         left: false,
@@ -371,25 +331,30 @@ function createEngine(ctx) {
         if (!p.avatarUrl && !session.avatarSeen[uid]) session.avatarStats.withAvatar += 1;
         p.avatarUrl = ev.avatarUrl;
       }
+      // Rời đi rồi vào lại (cùng phiên live): dancer hiện lại, tính tiếp ⚡
+      // đã có — năng lượng KHÔNG reset (luật Chủ tịch 2026-11-13).
       if (p.left) { p.left = false; p.joinedAt = Date.now(); }
+      // Phòng cũ: followedRound (1 lần/vòng) -> followed (1 lần/phiên live).
+      if (p.followed === undefined && p.followedRound) p.followed = true;
     }
     return p;
   }
-  function energyMultiplier(p) {
-    if (session.barCover && session.barCover.until > Date.now() && p.table && p.table === session.barCover.table) return 2;
-    return 1;
-  }
   function addEnergy(p, amount) {
     if (!p || !p.isDancer || amount <= 0) return 0;
-    const m = energyMultiplier(p);
-    const total = amount * m;
-    p.energy = (p.energy || 0) + total;
-    return total;
+    p.energy = (p.energy || 0) + amount;
+    return amount;
   }
 
   // -- intake ----------------------------------------------------------------
+  // Wrapper: sau mỗi sự kiện, kiểm tra đổi ngôi Vua sàn (người dẫn đầu mới).
   function handleIntake(ev) {
+    const out = handleIntakeInner(ev);
+    checkLeader();
+    return out;
+  }
+  function handleIntakeInner(ev) {
     if (!ev || !ev.uid) return { ok: false, reason: 'no-uid' };
+    markActivity();
     const kind = ev.kind;
     const now = Date.now();
     if (kind === 'join') {
@@ -440,7 +405,6 @@ function createEngine(ctx) {
         const floorCount = floorDancers().length;
         session.stats.joins += 1;
         log(`${p.name} vào bar làm ${charById(p.character).name} ${floorCount > MAX_FLOOR ? '(đứng quầy bar chờ lượt)' : '(lên sàn)'}.`);
-        if (session.phase === 'lobby') startRound();
       }
       if (!p.isDancer) { saveSession(); broadcast(); return { ok: true }; }
       // Bình luận tính điểm (chống spam 1/5s).
@@ -507,8 +471,8 @@ function createEngine(ctx) {
     if (kind === 'follow') {
       const p = ensurePlayer(ev);
       session.stats.follows += 1;
-      if (p && p.isDancer && !p.followedRound) {
-        p.followedRound = true;
+      if (p && p.isDancer && !p.followed) {
+        p.followed = true;
         addEnergy(p, settings.followEnergy);
       }
       saveSession(); broadcast();
@@ -524,36 +488,37 @@ function createEngine(ctx) {
   }
 
   // -- tick ------------------------------------------------------------------
+  // Bar mở cả ngày: tick chỉ chạy máy DJ drop (báo trước -> drop 15s tim x2
+  // -> hẹn drop sau). Không có vòng, không reset năng lượng. Drop chỉ chạy
+  // khi có dancer trên sàn; dancer đầu tiên lên sàn thì hẹn drop đầu tiên.
   function tick() {
     const now = Date.now();
-    if (session.phase === 'lobby') {
-      if (floorDancers().length > 0) startRound();
+    markActivity();
+    if (floorDancers().length === 0) return;
+    if (!session.nextDropAt) {
+      session.nextDropAt = now + settings.dropIntervalS * 1000;
+      session.dropState = 'idle';
+      session.dropEndsAt = 0;
+      saveSession(); broadcast();
       return;
     }
-    if (session.phase === 'dancing') {
-      // DJ drop: báo trước dropWarningS, drop dropDurationS, rồi hẹn vòng sau.
-      if (session.dropState === 'idle' && session.nextDropAt && now >= session.nextDropAt - settings.dropWarningS * 1000) {
-        session.dropState = 'warning';
-        log('🎧 DJ chuẩn bị DROP trong 10s — sẵn sàng quẩy!');
-        ctx.io.emit('drop-warning', { text: 'DJ sắp drop!' });
-        saveSession(); broadcast();
-      } else if (session.dropState === 'warning' && session.nextDropAt && now >= session.nextDropAt) {
-        session.dropState = 'drop';
-        session.dropEndsAt = now + settings.dropDurationS * 1000;
-        session.stats.drops += 1;
-        log('🔥 DJ DROP! Tim x2 trong 15s!');
-        ctx.io.emit('drop', { text: 'DJ drop! Tim nhân đôi!' });
-        saveSession(); broadcast();
-      } else if (session.dropState === 'drop' && session.dropEndsAt && now >= session.dropEndsAt) {
-        session.dropState = 'idle';
-        session.nextDropAt = now + settings.dropIntervalS * 1000;
-        saveSession(); broadcast();
-      }
-      if (session.roundEndsAt && now >= session.roundEndsAt) endRound();
-      return;
-    }
-    if (session.phase === 'spotlight') {
-      if (session.phaseEndsAt && now >= session.phaseEndsAt) resetRound();
+    // DJ drop: báo trước dropWarningS, drop dropDurationS, rồi hẹn lần sau.
+    if (session.dropState === 'idle' && session.nextDropAt && now >= session.nextDropAt - settings.dropWarningS * 1000) {
+      session.dropState = 'warning';
+      log('🎧 DJ chuẩn bị DROP trong 10s — sẵn sàng quẩy!');
+      ctx.io.emit('drop-warning', { text: 'DJ sắp drop!' });
+      saveSession(); broadcast();
+    } else if (session.dropState === 'warning' && session.nextDropAt && now >= session.nextDropAt) {
+      session.dropState = 'drop';
+      session.dropEndsAt = now + settings.dropDurationS * 1000;
+      session.stats.drops += 1;
+      log('🔥 DJ DROP! Tim x2 trong 15s!');
+      ctx.io.emit('drop', { text: 'DJ drop! Tim nhân đôi!' });
+      saveSession(); broadcast();
+    } else if (session.dropState === 'drop' && session.dropEndsAt && now >= session.dropEndsAt) {
+      session.dropState = 'idle';
+      session.nextDropAt = now + settings.dropIntervalS * 1000;
+      saveSession(); broadcast();
     }
   }
 
@@ -579,7 +544,6 @@ function createEngine(ctx) {
       }
       handleIntake({ kind: 'tap', uid, name: `Demo ${name}`, totalLikeCount: 0 });
     });
-    if (session.phase === 'lobby') startRound();
     session.demoActive = true;
     log('🧪 Demo bắt đầu — 12 dancer demo quẩy trên sàn.');
     const step = () => {
@@ -628,7 +592,6 @@ function createEngine(ctx) {
         p.left = false;
       }
     });
-    if (session.phase === 'lobby') startRound();
     const u0 = demoUid(DEMO_NAMES[0]);
     const u1 = demoUid(DEMO_NAMES[1]);
     handleIntake({ kind: 'tap', uid: u0, name: 'Demo An', totalLikeCount: 0 });
@@ -677,7 +640,6 @@ function createEngine(ctx) {
 
   router.post('/api/settings', (req, res) => {
     const b = req.body || {};
-    if (b.roundDurationS !== undefined) settings.roundDurationS = clampInt(b.roundDurationS, 5, 1800, settings.roundDurationS);
     if (b.tapEnergy !== undefined) settings.tapEnergy = clampInt(b.tapEnergy, 1, 10, settings.tapEnergy);
     if (b.commentEnergy !== undefined) settings.commentEnergy = clampInt(b.commentEnergy, 1, 50, settings.commentEnergy);
     if (b.coinToEnergy !== undefined) settings.coinToEnergy = clampInt(b.coinToEnergy, 1, 100, settings.coinToEnergy);
@@ -685,7 +647,6 @@ function createEngine(ctx) {
     if (b.dropIntervalS !== undefined) settings.dropIntervalS = clampInt(b.dropIntervalS, 5, 600, settings.dropIntervalS);
     if (b.dropWarningS !== undefined) settings.dropWarningS = clampInt(b.dropWarningS, 1, 60, settings.dropWarningS);
     if (b.dropDurationS !== undefined) settings.dropDurationS = clampInt(b.dropDurationS, 2, 120, settings.dropDurationS);
-    if (b.spotlightS !== undefined) settings.spotlightS = clampInt(b.spotlightS, 1, 120, settings.spotlightS);
     if (b.commentSpamS !== undefined) settings.commentSpamS = clampInt(b.commentSpamS, 1, 60, settings.commentSpamS);
     if (b.cameraMode !== undefined && (b.cameraMode === 'auto' || b.cameraMode === 'manual')) settings.cameraMode = b.cameraMode;
     if (b.shotIntervalS !== undefined) settings.shotIntervalS = clampInt(b.shotIntervalS, 3, 30, settings.shotIntervalS);
@@ -698,11 +659,11 @@ function createEngine(ctx) {
     res.json({ success: true, settings });
     broadcast();
   });
-  router.post('/api/round/end', (req, res) => {
-    if (session.phase === 'dancing') { endRound(); res.json({ success: true, phase: session.phase }); }
-    else res.json({ success: false, message: 'Không có vòng đang diễn ra.' });
+  // Phiên live mới: bar làm mới hoàn toàn (streamer bấm ở dashboard khi mở
+  // live mới — thay cho "vòng mới" ngày trước). Không cần demoMode.
+  router.post('/api/session/reset', (req, res) => {
+    res.json(resetLiveSession());
   });
-  router.post('/api/round/reset', (req, res) => { resetRound(); res.json({ success: true, roundNo: session.roundNo }); });
 
   // ---- Endpoint test (chỉ chạy khi demoMode bật) ----
   function needDemo(req, res) {
@@ -768,6 +729,14 @@ function createEngine(ctx) {
     const r = handleIntake({ kind: 'follow', uid: b.uid || u.uid, name: b.name || u.name });
     res.json({ success: !!r.ok, ...r });
   });
+  router.post('/api/test/leave', (req, res) => {
+    if (!needDemo(req, res)) return;
+    const b = req.body || {};
+    const uid = String(b.uid || '');
+    if (!uid) return res.json({ success: false, message: 'Thiếu uid.' });
+    const out = handleIntake({ kind: 'leave', uid, name: b.name || uid });
+    res.json({ success: !!out.ok, ...out });
+  });
   router.post('/api/test/join', (req, res) => {
     if (!needDemo(req, res)) return;
     const b = req.body || {};
@@ -790,7 +759,6 @@ function createEngine(ctx) {
         p.left = false;
       }
     }
-    if (session.phase === 'lobby') startRound();
     saveSession(); broadcast();
     res.json({ success: true, count, floorCount: Math.min(count, MAX_FLOOR), waitingCount: Math.max(0, count - MAX_FLOOR) });
   });

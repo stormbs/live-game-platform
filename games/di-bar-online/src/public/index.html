@@ -44,28 +44,25 @@
       <button id="btn-mode-live" class="secondary">🔴 LIVE (sự kiện thật)</button>
     </div>
     <div class="row" style="margin-top:10px">
-      <button id="btn-end">🏁 Kết thúc vòng ngay</button>
-      <button id="btn-reset" class="secondary">🔄 Vòng mới</button>
+      <button id="btn-newsession" class="warn">🆕 Phiên live mới (bar làm mới)</button>
       <button id="btn-music" class="secondary">🔊 Tắt nhạc</button>
     </div>
   </div>
-  <div class="card"><h2>👑 Vua sàn nhảy</h2><div id="king">Chưa có Vua sàn vòng này.</div></div>
+  <div class="card"><h2>👑 Vua sàn nhảy</h2><div id="king">Chưa có Vua sàn.</div></div>
   <div class="grid2">
-    <div class="card vip-box"><h2>🟡 Bàn Vàng</h2><div class="score" id="score-vang">0</div><div id="sub-vang">—</div><div id="streak-vang">Chuỗi thắng: 0</div><div id="cover-vang" style="color:#4ade80;font-weight:700"></div></div>
-    <div class="card vip-box do"><h2>🔴 Bàn Đỏ</h2><div class="score" id="score-do">0</div><div id="sub-do">—</div><div id="streak-do">Chuỗi thắng: 0</div><div id="cover-do" style="color:#4ade80;font-weight:700"></div></div>
+    <div class="card vip-box"><h2>🟡 Bàn Vàng</h2><div class="score" id="score-vang">0</div><div id="sub-vang">—</div></div>
+    <div class="card vip-box do"><h2>🔴 Bàn Đỏ</h2><div class="score" id="score-do">0</div><div id="sub-do">—</div></div>
   </div>
   <div class="card"><h2>💃 Top dancer</h2><table><thead><tr><th>#</th><th>Dancer</th><th>Nhân vật</th><th>Bàn</th><th>⚡ Năng lượng</th><th>🍹 Ly</th></tr></thead><tbody id="top-body"><tr><td colspan="6">Chưa có dancer nào.</td></tr></tbody></table></div>
   <div class="card"><h2>🍹 Log đồ uống</h2><div id="log">—</div></div>
   <div class="card"><h2>⚙️ Cài đặt</h2>
-    <label>Phút/vòng (giây) <input id="s-round" type="number" min="5" max="1800" style="width:90px"></label>
     <label>Năng lượng/tim <input id="s-tap" type="number" min="1" max="10" style="width:70px"></label>
     <label>Năng lượng/xu <input id="s-coin" type="number" min="1" max="100" style="width:70px"></label>
     <label>Năng lượng/bình luận <input id="s-comment" type="number" min="1" max="50" style="width:70px"></label>
     <label>Năng lượng/follow <input id="s-follow" type="number" min="0" max="100" style="width:70px"></label><br>
     <label>Nhịp drop (giây) <input id="s-dropint" type="number" min="5" max="600" style="width:80px"></label>
     <label>Báo trước drop (giây) <input id="s-dropwarn" type="number" min="1" max="60" style="width:70px"></label>
-    <label>Thời gian drop (giây) <input id="s-dropdur" type="number" min="2" max="120" style="width:70px"></label>
-    <label>Vinh danh Vua (giây) <input id="s-spot" type="number" min="1" max="120" style="width:70px"></label><br>
+    <label>Thời gian drop (giây) <input id="s-dropdur" type="number" min="2" max="120" style="width:70px"></label><br>
     <label>Chế độ camera <select id="s-cam"><option value="auto">Tự động lia</option><option value="manual">Thủ công</option></select></label>
     <label>Thời gian mỗi shot (giây) <input id="s-shot" type="number" min="3" max="30" style="width:70px"></label>
     <label>Tempo (BPM) <input id="s-tempo" type="number" min="60" max="180" style="width:80px"></label>
@@ -112,36 +109,31 @@ async function api(path, opts) {
 }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function render(s) {
-  const phaseVi = { lobby: 'Chờ người', dancing: 'Đang quẩy', spotlight: 'Vinh danh Vua' }[s.phase] || s.phase;
   const modeTxt = s.demoMode ? '🧪 DEMO' : '🔴 LIVE';
-  $('status').textContent = `${modeTxt} • Vòng ${s.roundNo} • ${phaseVi} • ${s.totalDancers} dancer (${s.floorCount} trên sàn, ${s.waitingCount} chờ ở quầy) • Drop: ${s.dropState} • Sự kiện thật: ${s.webhookCount}`;
+  $('status').textContent = `${modeTxt} • 🎧 Bar mở cả ngày • ${s.totalDancers} dancer (${s.floorCount} trên sàn, ${s.waitingCount} chờ ở quầy) • Drop: ${s.dropState} • Sự kiện thật: ${s.webhookCount}`;
   $('demo-badge').style.display = s.demoActive ? 'inline-block' : 'none';
   $('btn-mode-demo').classList.toggle('mode-on', !!s.demoMode);
   $('btn-mode-live').classList.toggle('mode-on', !s.demoMode);
-  $('king').textContent = s.king ? `👑 ${s.king.name} — ${s.king.energy} năng lượng (vòng ${s.king.roundNo})` : 'Chưa có Vua sàn vòng này.';
+  $('king').textContent = s.leader ? `👑 ${s.leader.name} — ${s.leader.energy} năng lượng (đang dẫn đầu)` : 'Chưa có Vua sàn.';
   $('score-vang').textContent = s.tables.vang.score;
   $('sub-vang').textContent = `${s.tables.vang.energy} năng lượng • ${s.tables.vang.drinks} ly • ${s.tables.vang.count} người`;
   $('score-do').textContent = s.tables.do.score;
   $('sub-do').textContent = `${s.tables.do.energy} năng lượng • ${s.tables.do.drinks} ly • ${s.tables.do.count} người`;
-  $('streak-vang').textContent = 'Chuỗi thắng: ' + (s.tableStreak.vang || 0);
-  $('streak-do').textContent = 'Chuỗi thắng: ' + (s.tableStreak.do || 0);
-  $('cover-vang').textContent = s.barCover && s.barCover.table === 'vang' && s.barCover.until > Date.now() ? '🔥 ĐANG BAO CẢ BAR — ×2 năng lượng!' : '';
-  $('cover-do').textContent = s.barCover && s.barCover.table === 'do' && s.barCover.until > Date.now() ? '🔥 ĐANG BAO CẢ BAR — ×2 năng lượng!' : '';
   $('top-body').innerHTML = s.top.length ? s.top.map((t, i) => `<tr><td>${i + 1}</td><td>${esc(t.name)}</td><td>${esc(t.character ? t.character.emoji + ' ' + t.character.name : '')}</td><td>${t.table === 'vang' ? '🟡 Vàng' : t.table === 'do' ? '🔴 Đỏ' : '—'}</td><td>⚡${t.energy}</td><td>🍹${t.drinks}</td></tr>`).join('') : '<tr><td colspan="6">Chưa có dancer nào.</td></tr>';
   $('log').innerHTML = s.logs.length ? s.logs.slice().reverse().map((l) => `<div>${new Date(l.t).toLocaleTimeString('vi-VN')} — ${esc(l.text)}</div>`).join('') : '—';
   $('btn-music').textContent = s.settings.musicEnabled ? '🔊 Tắt nhạc' : '🔇 Bật nhạc';
   if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') {
-    $('s-round').value = s.settings.roundDurationS; $('s-tap').value = s.settings.tapEnergy;
+    $('s-tap').value = s.settings.tapEnergy;
     $('s-coin').value = s.settings.coinToEnergy; $('s-comment').value = s.settings.commentEnergy;
     $('s-follow').value = s.settings.followEnergy; $('s-dropint').value = s.settings.dropIntervalS;
     $('s-dropwarn').value = s.settings.dropWarningS; $('s-dropdur').value = s.settings.dropDurationS;
-    $('s-spot').value = s.settings.spotlightS; $('s-cam').value = s.settings.cameraMode;
+    $('s-cam').value = s.settings.cameraMode;
     $('s-shot').value = s.settings.shotIntervalS; $('s-tempo').value = s.settings.tempo;
     $('s-vol').value = s.settings.volume; $('s-music').checked = s.settings.musicEnabled;
     $('s-voice').checked = s.voiceEnabled; $('s-demo').checked = s.demoMode;
   }
 }
-$('btn-end').onclick = () => api('/api/round/end', { method: 'POST' }).then(refresh);
+$('btn-newsession').onclick = () => { if (confirm('Bắt đầu phiên live mới? Toàn bộ dancer, năng lượng và điểm bàn sẽ về 0.')) api('/api/session/reset', { method: 'POST' }).then(refresh); };
 $('btn-mode-demo').onclick = async () => {
   await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) });
   const r = await api('/api/demo/start', { method: 'POST' });
@@ -153,12 +145,11 @@ $('btn-mode-live').onclick = async () => {
   await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: false }) });
   refresh();
 };
-$('btn-reset').onclick = () => api('/api/round/reset', { method: 'POST' }).then(refresh);
 $('btn-music').onclick = async () => { const s = await api('/api/state'); await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ musicEnabled: !s.settings.musicEnabled }) }); refresh(); };
 $('btn-save').onclick = () => api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-  roundDurationS: +$('s-round').value, tapEnergy: +$('s-tap').value, coinToEnergy: +$('s-coin').value,
+  tapEnergy: +$('s-tap').value, coinToEnergy: +$('s-coin').value,
   commentEnergy: +$('s-comment').value, followEnergy: +$('s-follow').value, dropIntervalS: +$('s-dropint').value,
-  dropWarningS: +$('s-dropwarn').value, dropDurationS: +$('s-dropdur').value, spotlightS: +$('s-spot').value,
+  dropWarningS: +$('s-dropwarn').value, dropDurationS: +$('s-dropdur').value,
   cameraMode: $('s-cam').value, shotIntervalS: +$('s-shot').value, tempo: +$('s-tempo').value,
   volume: +$('s-vol').value, musicEnabled: $('s-music').checked, voiceEnabled: $('s-voice').checked, demoMode: $('s-demo').checked,
 }) }).then(refresh);

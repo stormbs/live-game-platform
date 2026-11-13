@@ -79,7 +79,7 @@
   .beam.b2 { left: 66%; background: linear-gradient(rgba(34,211,238,.28), transparent); animation-duration: 6.5s; animation-delay: -.8s; }
   @keyframes beamsway { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
   #floor-head { position: relative; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 30px; font-weight: 800; color: #f9a8d4; }
-  /* Nhãn vòng gọn, không tràn (sửa lỗi tiêu đề góc phải bị cắt) */
+  /* Nhãn trạng thái bar gọn, không tràn (sửa lỗi tiêu đề góc phải bị cắt) */
   #round-chip { flex-shrink: 1; min-width: 0; max-width: 360px; font-size: 24px; font-weight: 800; color: #fff; background: rgba(0,0,0,.5); border: 2px solid rgba(255,255,255,.25); border-radius: 10px; padding: 4px 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* Bảng hướng dẫn chơi — số thật từ engine.js (xem cuối file). Nổi bật hơn sau bài học live thật
      ("The live làm méo gì" — người mới phải đọc 3 giây là hiểu đây là game gì). */
@@ -119,7 +119,7 @@
   .dancer.king .nm::before { content: '👑 '; }
   .dancer.king .av-box { border-color: #facc15; box-shadow: 0 0 16px #facc15; }
   /* Banner danh hiệu phía trên người nổi bật (như live thật: chip nhỏ trên đầu, lấy từ trạng thái thật —
-     "VUA SÀN NHẢY" lúc vinh danh theo engine, "DẪN ĐẦU" khi đang dẫn đầu về năng lượng; KHÔNG bịa danh hiệu khác) */
+     người dẫn đầu lúc đó luôn là "👑 VUA SÀN NHẢY" (chơi tự do, không có vòng); KHÔNG bịa danh hiệu khác) */
   .dancer .title-chip { display: block; width: max-content; max-width: 200px; margin: 0 auto 3px; padding: 2px 10px; border-radius: 999px; background: linear-gradient(90deg, #fde047, #f59e0b); color: #111; font-size: 18px; font-weight: 900; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 0 12px rgba(250,204,21,.7); }
   /* Cánh thật sự cho người nổi bật (như live thật: cánh là điểm nhận diện chính — vẽ bằng SVG:
      3 lông vũ mỗi bên xòe ra sau lưng, viền trắng tách từng lông, lấy từ trạng thái thật isLeader.
@@ -208,11 +208,11 @@
   <div id="floor">
     <div class="floor-glow"></div>
     <div class="beam b1"></div><div class="beam b2"></div>
-    <div id="floor-head"><span>💃 SÀN NHẢY</span><span id="round-chip">Vòng 1</span></div>
+    <div id="floor-head"><span>💃 SÀN NHẢY</span><span id="round-chip">🎧 MỞ CẢ NGÀY</span></div>
     <div id="howto">
       <div>💬 Bình luận <b>“vào bar”</b> để lên sàn • số <b>1–8</b> chọn nhân vật • tối đa 24 người</div>
-      <div>❤️ 1 tim <b>+1⚡</b> • 💬 1 bình luận <b>+5⚡</b> (1/5s) • 🎁 1 xu <b>+10⚡ + 1 ly</b> • ➕ Follow <b>+30⚡</b> (1/vòng)</div>
-      <div>👑 Nhiều ⚡ nhất sau <b>3 phút</b> → Vua sàn (vinh danh 20s, vòng mới về 0)</div>
+      <div>❤️ 1 tim <b>+1⚡</b> • 💬 1 bình luận <b>+5⚡</b> (1/5s) • 🎁 1 xu <b>+10⚡ + 1 ly</b> • ➕ Follow <b>+30⚡</b> (1 lần/phiên live)</div>
+      <div>👑 Nhiều ⚡ nhất lúc đó → Vua sàn • Rời đi thì tạm ẩn, vào lại tính tiếp ⚡ đã có</div>
       <div>🎧 DJ drop mỗi 2 phút: <b>15s tim ×2</b> • 🍸 ≥10 xu cocktail • 🍾 ≥50 xu bottle • 🍾 ≥100 xu sâm panh</div>
     </div>
     <div id="dancers">
@@ -245,7 +245,7 @@ let ttsBusy = false;
 let musicOn = true;
 let audioCtx = null, musicTimer = null, step16 = 0, nextNoteTime = 0;
 let musicSection = 'INTRO';
-let prevKingUid = null;
+let prevLeaderUid = null;
 let djCheerTimer = null;
 
 // ---- Co khung 1080x1920 vừa mọi cửa sổ / nguồn browser (giữ tỉ lệ dọc 9:16) ----
@@ -518,14 +518,15 @@ function render(s) {
   state = s;
   document.body.classList.toggle('demo', !!s.demoActive);
   document.body.classList.toggle('drop', s.dropState === 'drop');
-  const secTag = s.phase === 'spotlight' ? 'Vinh danh' : (musicSection === 'DROP' ? '🔥 DROP' : musicSection === 'BUILD' ? '📈 BUILD-UP' : musicSection === 'BREAK' ? '🌙 BREAK' : '🎵 INTRO');
-  $('round-chip').textContent = 'Vòng ' + s.roundNo + (s.phase === 'dancing' ? ' • ' + secTag + ' • ' + Math.max(0, Math.ceil((s.roundEndsAt - Date.now()) / 1000)) + 's' : s.phase === 'spotlight' ? ' • Vinh danh' : ' • Chờ người');
-  // LED chính: sự kiện mới nhất, tên Vua sàn.
+  const secTag = musicSection === 'DROP' ? '🔥 DROP' : musicSection === 'BUILD' ? '📈 BUILD-UP' : musicSection === 'BREAK' ? '🌙 BREAK' : '🎵 INTRO';
+  $('round-chip').textContent = s.dropState === 'drop' ? '🔥 DROP • TIM X2' : '🎧 MỞ CẢ NGÀY • ' + s.totalDancers + ' dancer';
+  // LED chính: sự kiện mới nhất, tên Vua sàn (người dẫn đầu lúc đó).
   const last = s.logs.length ? s.logs[s.logs.length - 1].text : '';
-  const kingTxt = s.king ? ` 👑 VUA SÀN: ${s.king.name} ` : '';
+  const leader = s.leader || (s.top.length && s.top[0].energy > 0 ? s.top[0] : null);
+  const kingTxt = leader ? ` 👑 VUA SÀN: ${leader.name} ` : '';
   $('led-text').textContent = '🎧 ' + (last || 'ĐI BAR ONLINE — bình luận "vào bar" để lên sàn!') + kingTxt + ' 🎧';
-  // Người dẫn đầu: Vua (lúc vinh danh) hoặc top 1 đang nhảy — spotlight chiếu đúng người này.
-  const leaderUid = (s.king && s.king.uid) || (s.top.length && s.top[0].energy > 0 ? s.top[0].uid : null);
+  // Người dẫn đầu: top 1 đang nhảy — spotlight chiếu đúng người này.
+  const leaderUid = leader ? leader.uid : null;
   // Sàn chứa tối đa 12 vũ công khi vắng, 24 khi đông (lưới dày 6×4); đảm bảo người dẫn đầu luôn có mặt trên sàn.
   const MAX_ON_FLOOR = s.dancers.length > 12 ? 24 : 12;
   const SLOTS = MAX_ON_FLOOR === 24 ? FLOOR_SLOTS_24 : FLOOR_SLOTS_12;
@@ -558,7 +559,7 @@ function render(s) {
     const av = `<span class="av-box"><span class="av av-fb">${initial}</span>${d.avatarUrl ? `<img class="av av-img" src="${escapeHtml(d.avatarUrl)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>`;
     // Banner danh hiệu trên đầu người nổi bật (trạng thái thật từ engine: Vua lúc vinh danh, Dẫn đầu lúc đang nhảy).
     const isLeader = d.uid === leaderUid;
-    const titleChip = isLeader ? (s.phase === 'spotlight' ? '👑 VUA SÀN NHẢY' : '⭐ DẪN ĐẦU') : '';
+    const titleChip = isLeader ? '👑 VUA SÀN NHẢY' : '';
     return `<div class="dancer${isLeader ? ' king' : ''}${enCls}" style="--c:${c.color};--mv:${MOVE_CSS[c.move] || 'bounce'};left:calc(${slot[0]}% + ${jx}px);top:calc(${slot[1]}% + ${jy}px)">
       ${titleChip ? `<span class="title-chip">${titleChip}</span>` : ''}<span class="nm">${escapeHtml(d.name)}${tbl}</span>${av}${isLeader ? '<span class="wings"><svg viewBox="0 0 300 120" aria-hidden="true"><defs><linearGradient id="wingGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#BEF2FF"/><stop offset=".5" stop-color="#22D3EE"/><stop offset="1" stop-color="#A855F7"/></linearGradient></defs><g fill="url(#wingGrad)" stroke="rgba(255,255,255,.9)" stroke-width="2"><ellipse cx="72" cy="42" rx="60" ry="19" transform="rotate(-30 72 42)"/><ellipse cx="82" cy="60" rx="64" ry="19" transform="rotate(-15 82 60)"/><ellipse cx="90" cy="78" rx="64" ry="19" transform="rotate(-2 90 78)"/><ellipse cx="228" cy="42" rx="60" ry="19" transform="rotate(30 228 42)"/><ellipse cx="218" cy="60" rx="64" ry="19" transform="rotate(15 218 60)"/><ellipse cx="210" cy="78" rx="64" ry="19" transform="rotate(2 210 78)"/></g></svg></span>' : ''}<span class="em" style="animation-delay:${delay}s">${c.emoji}</span>
       <span class="st"><span class="en">⚡${d.energy}</span>${d.drinks ? `<span class="dr">🍹×${d.drinks}</span>` : ''}</span>${isLeader ? '<span class="ring"></span>' : ''}</div>`;
@@ -591,15 +592,16 @@ function render(s) {
     strip.style.display = 'none';
     $('crowd-chips').innerHTML = '';
   }
-  // DJ phản ứng: Vua mới → DJ hò reo (bong bóng + nhảy cẫng 6s); sàn nóng → DJ gật nhanh + phát sáng.
-  if (s.king && s.king.uid && s.king.uid !== prevKingUid) {
-    prevKingUid = s.king.uid;
-    $('dj-cheer').textContent = '👑 ' + s.king.name;
+  // DJ phản ứng: Vua mới (đổi ngôi) → DJ hò reo (bong bóng + nhảy cẫng 6s); sàn nóng → DJ gật nhanh + phát sáng.
+  if (leaderUid && leaderUid !== prevLeaderUid) {
+    prevLeaderUid = leaderUid;
+    const ln = s.dancers.find((d) => d.uid === leaderUid) || s.top[0];
+    $('dj-cheer').textContent = '👑 ' + (ln ? ln.name : '');
     $('dj').classList.add('cheer');
     clearTimeout(djCheerTimer);
     djCheerTimer = setTimeout(() => $('dj').classList.remove('cheer'), 6000);
-  } else if (!s.king) {
-    prevKingUid = null;
+  } else if (!leaderUid) {
+    prevLeaderUid = null;
   }
   const totalEnergy = s.dancers.reduce((a, d) => a + (d.energy || 0), 0);
   const maxEnergy = s.dancers.reduce((m, d) => Math.max(m, d.energy || 0), 0);
@@ -612,11 +614,9 @@ function render(s) {
   $('sub-vang').textContent = `${s.tables.vang.energy} năng lượng • ${s.tables.vang.drinks} ly • ${s.tables.vang.count} người`;
   $('score-do').textContent = s.tables.do.score;
   $('sub-do').textContent = `${s.tables.do.energy} năng lượng • ${s.tables.do.drinks} ly • ${s.tables.do.count} người`;
-  $('vip-vang').classList.toggle('cover', !!(s.barCover && s.barCover.table === 'vang' && s.barCover.until > Date.now()));
-  $('vip-do').classList.toggle('cover', !!(s.barCover && s.barCover.table === 'do' && s.barCover.until > Date.now()));
   // LED bên: bảng "Vũ công nổi bật" như live thật (đổi tên từ "TOP 3") + điểm 2 bàn.
   const topTxt = s.top.slice(0, 3).map((t, i) => `${i + 1}. ${t.name} ⚡${t.energy}`).join('  •  ') || 'chưa có dancer';
-  $('led-side').textContent = `🏆 VŨ CÔNG NỔI BẬT: ${topTxt}   |   🟡 Bàn Vàng ${s.tables.vang.score} — 🔴 Bàn Đỏ ${s.tables.do.score}${s.tableWinner ? ' — Thắng vòng: ' + (s.tableWinner === 'vang' ? 'Bàn Vàng' : 'Bàn Đỏ') : ''}`;
+  $('led-side').textContent = `🏆 VŨ CÔNG NỔI BẬT: ${topTxt}   |   🟡 Bàn Vàng ${s.tables.vang.score} — 🔴 Bàn Đỏ ${s.tables.do.score}`;
   // Nhạc theo setting.
   if (s.settings.musicEnabled && musicOn) initMusic();
   startShotTimer();
@@ -642,16 +642,21 @@ fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
   - 1 tim +1⚡: defaultSettings.tapEnergy = 1
   - 1 bình luận +5⚡ (1 lần/5s): commentEnergy = 5, commentSpamS = 5
   - 1 xu +10⚡ + 1 ly: coinToEnergy = 10, handleIntake gift (drinks +1)
-  - Follow +30⚡ (1 lần/vòng): followEnergy = 30, followedRound
-  - Vua sàn sau 3 phút, vinh danh 20s, vòng mới về 0: roundDurationS = 180, spotlightS = 20, endRound/resetRound
+  - Follow +30⚡ (1 lần/phiên live): followEnergy = 30, followed
+  - CHƠI TỰ DO, MỞ CẢ NGÀY, KHÔNG CÓ VÒNG (Chủ tịch chốt 2026-11-13):
+    không còn vòng 3 phút / vinh danh 20s / reset năng lượng cuối vòng.
+    Vua sàn = người dẫn đầu lúc đó (state.leader = top[0]), cánh + vòng +
+    spotlight bám theo liên tục; đổi ngôi -> engine emit 'king' (TTS +
+    pháo giấy, chống spam 30s/lần). Năng lượng chỉ tích trong 1 phiên live;
+    rời live -> dancer tạm ẩn (left=true, ⚡ giữ nguyên), vào lại tính tiếp;
+    phiên live mới (sau >60 phút im ắng, hoặc nút "Phiên live mới" ở
+    dashboard -> POST /api/session/reset) -> bar làm mới hoàn toàn.
   - DJ drop mỗi 2 phút, 15s tim ×2: dropIntervalS = 120, dropDurationS = 15, tick() (báo trước 10s: dropWarningS = 10)
   - ≥10 xu cocktail / ≥50 xu bottle / ≥100 xu sâm panh: handleIntake gift tiers
   - Menu quầy bar (10/50/100 xu) khớp đúng 3 tier trên.
-  - "Vua sàn nhảy": engine gọi đúng tên này (state.king, log "Vua sàn nhảy vòng N") nên GIỮ trong LED + banner
-    lúc vinh danh (chip nhỏ trên đầu người dẫn đầu, không còn banner chữ to đè thẻ như bản cũ); bảng xếp hạng
-    đổi tên theo live thật thành "VŨ CÔNG NỔI BẬT". Quyết định của CEO 2026-11-13 (tự tay làm tiếp sau khi
-    worker #9 dừng): giữ tên này vì đó là cơ chế thật của engine mình, live thật chỉ không dùng đúng nhãn
-    đó chứ không cấm đặt tên cho khoảnh khắc vinh danh.
+  - "Vua sàn nhảy": người dẫn đầu lúc đó (state.leader) nên GIỮ trong LED +
+    chip nhỏ trên đầu người dẫn đầu (không còn banner chữ to đè thẻ như bản
+    cũ); bảng xếp hạng đổi tên theo live thật thành "VŨ CÔNG NỔI BẬT".
   - Đợt 3 (2026-11-13, theo docs/research-di-bar-live-2026-11-13.md — xem trực tiếp 2 live thật @dibar5.0,
     @hoang_thinh_hp): sàn đổi thành CARO ĐỔI MÀU (ô 2 màu xoay vòng màu); sân khấu thêm màn hình nền + 2 cột LED
     equalizer dọc; người nổi bật có banner danh hiệu (VUA SÀN NHẢY/DẪN ĐẦU — từ trạng thái thật) + vòng sáng dưới
