@@ -45,7 +45,6 @@ function createEngine(ctx) {
   const SESSION_FILE = path.join(DATA_DIR, 'session.json');
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-  const TEAM_NAMES = { vang: 'Đội Vàng', do: 'Đội Đỏ' };
   const DEMO_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khang', 'Linh', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo'];
   const DEMO_CHEERS = ['Chèo đi!', 'Mạnh tay lên!', 'Nhịp đều nào!', 'Về đích thôi!', 'Cố lên cả đội!'];
 
@@ -64,6 +63,12 @@ function createEngine(ctx) {
     commentSpamS: 5,      // chống spam bình luận (giây/người)
     demoMode: false,
     voiceEnabled: true,
+    teamVangName: 'Vàng', // tên hiển thị đội Vàng (key đội 'vang' không đổi)
+    teamDoName: 'Đỏ',     // tên hiển thị đội Đỏ (key đội 'do' không đổi)
+    teamVangBg: '',       // ảnh nền đội Vàng (URL http(s) hoặc /shared/..., '' = không ảnh)
+    teamDoBg: '',
+    teamVangColor: '#FACC15', // màu chủ đạo đội Vàng
+    teamDoColor: '#EF4444',   // màu chủ đạo đội Đỏ
   };
   let settings = loadJson(SETTINGS_FILE, defaultSettings);
   saveJson(SETTINGS_FILE, settings);
@@ -107,6 +112,30 @@ function createEngine(ctx) {
   const tapTimes = { vang: [], do: [] };
   const lastComboAt = { vang: 0, do: 0 };
 
+  // Tên đội hiển thị (chỉ đổi tên, không đổi key đội 'vang'/'do').
+  function teamDisplayName(team) {
+    return team === 'vang' ? (settings.teamVangName || 'Vàng') : (settings.teamDoName || 'Đỏ');
+  }
+  function teamLabel(team) { return 'Đội ' + teamDisplayName(team); }
+  // Validate tên đội: trim, bỏ <>&, tối đa 24 ký tự; rỗng -> giữ cũ.
+  function cleanTeamName(v, current) {
+    const s = String(v == null ? '' : v).trim().replace(/[<>&]/g, '');
+    return s ? s.slice(0, 24) : current;
+  }
+  // Validate ảnh nền đội: '' = không ảnh; chỉ chấp nhận http(s):// hoặc
+  // /shared/... và không chứa khoảng trắng/dấu nháy/ngoặc — sai thì giữ cũ.
+  function cleanTeamBg(v, current) {
+    const s = String(v == null ? '' : v).trim();
+    if (s === '') return '';
+    if (!/^https?:\/\/|\/shared\//.test(s)) return current;
+    if (/[\s"'()]/.test(s)) return current;
+    return s;
+  }
+  // Validate màu đội: phải là #RRGGBB — sai thì giữ cũ.
+  function cleanTeamColor(v, current) {
+    const s = String(v == null ? '' : v).trim();
+    return /^#[0-9a-fA-F]{6}$/.test(s) ? s : current;
+  }
   function saveSession() { saveJson(SESSION_FILE, session); }
   function saveSettings() { saveJson(SETTINGS_FILE, settings); }
   function clampInt(v, min, max, dflt) {
@@ -149,13 +178,13 @@ function createEngine(ctx) {
         left: !!p.left,
       })),
       rowers: {
-        vang: byTeam.vang.slice(0, 12).map((p) => ({ name: p.name, meters: p.metersRace || 0 })),
-        do: byTeam.do.slice(0, 12).map((p) => ({ name: p.name, meters: p.metersRace || 0 })),
+        vang: byTeam.vang.slice(0, 12).map((p) => ({ uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, meters: p.metersRace || 0 })),
+        do: byTeam.do.slice(0, 12).map((p) => ({ uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, meters: p.metersRace || 0 })),
       },
       teamCounts: { vang: byTeam.vang.length, do: byTeam.do.length, none: byTeam.none.length },
       top: {
-        vang: byTeam.vang.slice(0, 5).map((p) => ({ name: p.name, meters: p.metersRace || 0 })),
-        do: byTeam.do.slice(0, 5).map((p) => ({ name: p.name, meters: p.metersRace || 0 })),
+        vang: byTeam.vang.slice(0, 5).map((p) => ({ uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, meters: p.metersRace || 0 })),
+        do: byTeam.do.slice(0, 5).map((p) => ({ uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, meters: p.metersRace || 0 })),
       },
       stats: session.stats,
       avatarStats: session.avatarStats,
@@ -178,6 +207,12 @@ function createEngine(ctx) {
         raceDurationS: settings.raceDurationS,
         spotlightS: settings.spotlightS,
         commentSpamS: settings.commentSpamS,
+        teamVangName: settings.teamVangName,
+        teamDoName: settings.teamDoName,
+        teamVangBg: settings.teamVangBg,
+        teamDoBg: settings.teamDoBg,
+        teamVangColor: settings.teamVangColor,
+        teamDoColor: settings.teamDoColor,
       },
       now: Date.now(),
     };
@@ -226,8 +261,8 @@ function createEngine(ctx) {
     session.phase = 'spotlight';
     session.phaseEndsAt = now + settings.spotlightS * 1000;
     if (winnerTeam) {
-      log(`Hết đua: ${TEAM_NAMES[winnerTeam]} thắng (${reason}).`);
-      ctx.io.emit('race-win', { team: winnerTeam, text: `${TEAM_NAMES[winnerTeam]} về nhất!` });
+      log(`Hết đua: ${teamLabel(winnerTeam)} thắng (${reason}).`);
+      ctx.io.emit('race-win', { team: winnerTeam, text: `${teamLabel(winnerTeam)} về nhất!` });
     } else {
       log(`Hết đua: hòa (${reason}).`);
       ctx.io.emit('race-win', { team: null, text: 'Cuộc đua kết thúc với tỷ số hòa!' });
@@ -239,7 +274,7 @@ function createEngine(ctx) {
     if (session.phase !== 'racing') return;
     if (session.meters.vang >= settings.raceDistanceM && session.meters.do >= settings.raceDistanceM) {
       const w = session.meters.vang === session.meters.do ? null : (session.meters.vang > session.meters.do ? 'vang' : 'do');
-      endRace(w, w ? `cả 2 cùng chạm đích, ${TEAM_NAMES[w]} xa hơn` : 'cả 2 cùng chạm đích cùng lúc');
+      endRace(w, w ? `cả 2 cùng chạm đích, ${teamLabel(w)} xa hơn` : 'cả 2 cùng chạm đích cùng lúc');
     } else if (session.meters.vang >= settings.raceDistanceM) {
       endRace('vang', `chạm đích ${settings.raceDistanceM}m trước`);
     } else if (session.meters.do >= settings.raceDistanceM) {
@@ -317,7 +352,7 @@ function createEngine(ctx) {
       lastComboAt[team] = now;
       session.combos[team] += 1;
       session.meters[team] += settings.comboBonusM;
-      log(`🥁 Trống dồn! ${TEAM_NAMES[team]} +${settings.comboBonusM}m thưởng.`);
+      log(`🥁 Trống dồn! ${teamLabel(team)} +${settings.comboBonusM}m thưởng.`);
       ctx.io.emit('drum', { team, text: 'Trống dồn!' });
       checkFinish();
     }
@@ -354,13 +389,13 @@ function createEngine(ctx) {
         if (session.phase !== 'racing') {
           if (p.team !== team) {
             p.team = team;
-            log(`${p.name} vào ${TEAM_NAMES[team]}.`);
+            log(`${p.name} vào ${teamLabel(team)}.`);
           }
         } else if (p.team && p.team !== team) {
-          log(`${p.name} muốn đổi sang ${TEAM_NAMES[team]} — chỉ đổi được giữa các cuộc đua.`);
+          log(`${p.name} muốn đổi sang ${teamLabel(team)} — chỉ đổi được giữa các cuộc đua.`);
         } else if (!p.team) {
           p.team = team;
-          log(`${p.name} vào ${TEAM_NAMES[team]}.`);
+          log(`${p.name} vào ${teamLabel(team)}.`);
         }
       }
       // Đua tự bắt đầu khi cả 2 đội đều có người (ngay trong intake).
@@ -589,9 +624,15 @@ function createEngine(ctx) {
     if (b.commentSpamS !== undefined) settings.commentSpamS = clampInt(b.commentSpamS, 1, 60, settings.commentSpamS);
     if (b.demoMode !== undefined) settings.demoMode = !!b.demoMode;
     if (b.voiceEnabled !== undefined) settings.voiceEnabled = !!b.voiceEnabled;
+    if (b.teamVangName !== undefined) settings.teamVangName = cleanTeamName(b.teamVangName, settings.teamVangName);
+    if (b.teamDoName !== undefined) settings.teamDoName = cleanTeamName(b.teamDoName, settings.teamDoName);
+    if (b.teamVangBg !== undefined) settings.teamVangBg = cleanTeamBg(b.teamVangBg, settings.teamVangBg);
+    if (b.teamDoBg !== undefined) settings.teamDoBg = cleanTeamBg(b.teamDoBg, settings.teamDoBg);
+    if (b.teamVangColor !== undefined) settings.teamVangColor = cleanTeamColor(b.teamVangColor, settings.teamVangColor);
+    if (b.teamDoColor !== undefined) settings.teamDoColor = cleanTeamColor(b.teamDoColor, settings.teamDoColor);
     saveSettings();
+    broadcast(); // overlay cập nhật tên/màu/nền đội ngay, không cần reload
     res.json({ success: true, settings });
-    broadcast();
   });
   router.post('/api/race/reset', (req, res) => { resetRace(); res.json({ success: true, raceNo: session.raceNo }); });
 

@@ -22,7 +22,8 @@
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   td, th { padding: 7px 8px; border-bottom: 1px solid #334155; text-align: left; }
   label { display: block; font-size: 13px; opacity: .85; margin-bottom: 4px; }
-  input[type=number], input[type=text] { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; }
+  input[type=number], input[type=text], select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #e2e8f0; }
+  input[type=color] { width: 100%; height: 40px; padding: 2px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; cursor: pointer; }
   .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   button { background: #0284c7; color: #fff; border: 0; border-radius: 9px; padding: 10px 16px; font-size: 15px; cursor: pointer; }
   button.ghost { background: #334155; }
@@ -53,15 +54,15 @@
       <span class="muted" id="phase-text"></span>
     </div>
     <div class="grid" style="margin-top:14px">
-      <div class="stat"><div class="k">🟡 Đội Vàng — mét</div><div class="v" id="m-vang">0</div><div class="prog"><i id="bar-vang" style="width:0%;background:#facc15"></i></div></div>
-      <div class="stat"><div class="k">🔴 Đội Đỏ — mét</div><div class="v" id="m-do">0</div><div class="prog"><i id="bar-do" style="width:0%;background:#ef4444"></i></div></div>
+      <div class="stat"><div class="k" id="team-k-vang">🟡 Đội Vàng — mét</div><div class="v" id="m-vang">0</div><div class="prog"><i id="bar-vang" style="width:0%;background:#facc15"></i></div></div>
+      <div class="stat"><div class="k" id="team-k-do">🔴 Đội Đỏ — mét</div><div class="v" id="m-do">0</div><div class="prog"><i id="bar-do" style="width:0%;background:#ef4444"></i></div></div>
       <div class="stat"><div class="k">👥 Người chơi</div><div class="v" id="players-count">0</div></div>
       <div class="stat"><div class="k">🥁 Trống dồn (Vàng / Đỏ)</div><div class="v" id="combos-count">0 / 0</div></div>
     </div>
     <h3 style="margin:16px 0 8px">Top chèo</h3>
     <div class="grid">
-      <div><strong>🟡 Vàng</strong><div id="top-vang" class="muted">—</div></div>
-      <div><strong>🔴 Đỏ</strong><div id="top-do" class="muted">—</div></div>
+      <div><strong id="top-h-vang">🟡 Vàng</strong><div id="top-vang" class="muted">—</div></div>
+      <div><strong id="top-h-do">🔴 Đỏ</strong><div id="top-do" class="muted">—</div></div>
     </div>
     <h3 style="margin:16px 0 8px">Nhật ký</h3>
     <div class="log" id="logs">—</div>
@@ -85,6 +86,54 @@
       <div><label><input type="checkbox" id="set-voice" checked style="width:auto"> Bật giọng đọc (TTS)</label></div>
     </div>
     <div class="row" style="margin-top:12px"><button id="btn-save">💾 Lưu cài đặt</button><span class="muted" id="save-msg"></span></div>
+  </div>
+
+  <div class="card">
+    <h2>⚙️ Tùy chỉnh đội</h2>
+    <p class="muted">Tên đội hiển thị trên overlay (khóa đội 'vàng'/'đỏ' và từ khóa bình luận vào đội không đổi). Ảnh nền: nhập URL http(s) hoặc chọn preset /shared/bg/*.webp; để trống = không ảnh.</p>
+    <div class="grid">
+      <div><label>Tên đội Vàng (tối đa 24 ký tự)</label><input type="text" id="set-team-vang-name" value="Vàng" maxlength="24"></div>
+      <div><label>Ảnh nền đội Vàng (URL ảnh)</label><input type="text" id="set-team-vang-bg" value="" placeholder="https://... hoặc /shared/bg/....webp"></div>
+      <div><label>Preset nền đội Vàng</label><select id="set-team-vang-bg-preset" onchange="document.getElementById('set-team-vang-bg').value=this.value">
+        <option value="">— Không ảnh —</option>
+        <option value="/shared/bg/dua-thuyen-rong.webp">dua-thuyen-rong.webp</option>
+        <option value="/shared/bg/bau-troi-phao-hoa.webp">bau-troi-phao-hoa.webp</option>
+        <option value="/shared/bg/bep-an-tap-the.webp">bep-an-tap-the.webp</option>
+        <option value="/shared/bg/buong-giam.webp">buong-giam.webp</option>
+        <option value="/shared/bg/chiem-co.webp">chiem-co.webp</option>
+        <option value="/shared/bg/dau-tri.webp">dau-tri.webp</option>
+        <option value="/shared/bg/dau-truong-sinh-ton.webp">dau-truong-sinh-ton.webp</option>
+        <option value="/shared/bg/di-bar-online.webp">di-bar-online.webp</option>
+        <option value="/shared/bg/dua-xe-leo-nui.webp">dua-xe-leo-nui.webp</option>
+        <option value="/shared/bg/keo-co.webp">keo-co.webp</option>
+        <option value="/shared/bg/thap-sang-ban-do.webp">thap-sang-ban-do.webp</option>
+        <option value="/shared/bg/ve-avatar.webp">ve-avatar.webp</option>
+        <option value="/shared/bg/vong-quay-may-man.webp">vong-quay-may-man.webp</option>
+        <option value="/shared/bg/vuon-hoa-mua-xuan.webp">vuon-hoa-mua-xuan.webp</option>
+      </select></div>
+      <div><label>Màu chủ đạo đội Vàng</label><input type="color" id="set-team-vang-color" value="#FACC15"></div>
+      <div><label>Tên đội Đỏ (tối đa 24 ký tự)</label><input type="text" id="set-team-do-name" value="Đỏ" maxlength="24"></div>
+      <div><label>Ảnh nền đội Đỏ (URL ảnh)</label><input type="text" id="set-team-do-bg" value="" placeholder="https://... hoặc /shared/bg/....webp"></div>
+      <div><label>Preset nền đội Đỏ</label><select id="set-team-do-bg-preset" onchange="document.getElementById('set-team-do-bg').value=this.value">
+        <option value="">— Không ảnh —</option>
+        <option value="/shared/bg/dua-thuyen-rong.webp">dua-thuyen-rong.webp</option>
+        <option value="/shared/bg/bau-troi-phao-hoa.webp">bau-troi-phao-hoa.webp</option>
+        <option value="/shared/bg/bep-an-tap-the.webp">bep-an-tap-the.webp</option>
+        <option value="/shared/bg/buong-giam.webp">buong-giam.webp</option>
+        <option value="/shared/bg/chiem-co.webp">chiem-co.webp</option>
+        <option value="/shared/bg/dau-tri.webp">dau-tri.webp</option>
+        <option value="/shared/bg/dau-truong-sinh-ton.webp">dau-truong-sinh-ton.webp</option>
+        <option value="/shared/bg/di-bar-online.webp">di-bar-online.webp</option>
+        <option value="/shared/bg/dua-xe-leo-nui.webp">dua-xe-leo-nui.webp</option>
+        <option value="/shared/bg/keo-co.webp">keo-co.webp</option>
+        <option value="/shared/bg/thap-sang-ban-do.webp">thap-sang-ban-do.webp</option>
+        <option value="/shared/bg/ve-avatar.webp">ve-avatar.webp</option>
+        <option value="/shared/bg/vong-quay-may-man.webp">vong-quay-may-man.webp</option>
+        <option value="/shared/bg/vuon-hoa-mua-xuan.webp">vuon-hoa-mua-xuan.webp</option>
+      </select></div>
+      <div><label>Màu chủ đạo đội Đỏ</label><input type="color" id="set-team-do-color" value="#EF4444"></div>
+    </div>
+    <div class="row" style="margin-top:12px"><button id="btn-save-team">💾 Lưu tùy chỉnh đội</button><span class="muted" id="save-team-msg"></span></div>
   </div>
 
   <div class="card">
@@ -136,6 +185,38 @@
     return r.json();
   }
   function esc(x) { return String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+  function teamName(s, team) {
+    const st = (s && s.settings) || {};
+    return team === 'vang' ? (st.teamVangName || 'Vàng') : (st.teamDoName || 'Đỏ');
+  }
+  function teamColor(s, team) {
+    const st = (s && s.settings) || {};
+    return team === 'vang' ? (st.teamVangColor || '#FACC15') : (st.teamDoColor || '#EF4444');
+  }
+  function teamBg(s, team) {
+    const st = (s && s.settings) || {};
+    return team === 'vang' ? (st.teamVangBg || '') : (st.teamDoBg || '');
+  }
+  // Điền form tùy chỉnh đội từ s.settings; không ghi đè ô đang được gõ.
+  function fillTeamSettings(s) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = v; };
+    set('set-team-vang-name', teamName(s, 'vang'));
+    set('set-team-do-name', teamName(s, 'do'));
+    set('set-team-vang-bg', teamBg(s, 'vang'));
+    set('set-team-do-bg', teamBg(s, 'do'));
+    set('set-team-vang-color', teamColor(s, 'vang'));
+    set('set-team-do-color', teamColor(s, 'do'));
+  }
+  function teamSettingsBody() {
+    return {
+      teamVangName: document.getElementById('set-team-vang-name').value,
+      teamDoName: document.getElementById('set-team-do-name').value,
+      teamVangBg: document.getElementById('set-team-vang-bg').value,
+      teamDoBg: document.getElementById('set-team-do-bg').value,
+      teamVangColor: document.getElementById('set-team-vang-color').value,
+      teamDoColor: document.getElementById('set-team-do-color').value,
+    };
+  }
   function render(s) {
     if (!s || s.game !== 'dua-thuyen-rong') return;
     state = s;
@@ -149,7 +230,14 @@
       `<div class="stat"><div class="k">Cuộc đua</div><div class="v">${s.raceNo}</div></div>` +
       `<div class="stat"><div class="k">Giai đoạn</div><div class="v" style="font-size:20px">${s.phase === 'lobby' ? 'Chờ người' : s.phase === 'racing' ? 'Đang đua' : 'Vinh danh'}</div></div>` +
       `<div class="stat"><div class="k">Cự ly</div><div class="v">${s.raceDistanceM}m</div></div>` +
-      `<div class="stat"><div class="k">Đội thắng</div><div class="v" style="font-size:20px">${s.winner ? (s.winner.team === 'vang' ? '🟡 Vàng' : s.winner.team === 'do' ? '🔴 Đỏ' : '🤝 Hòa') : '—'}</div></div>`;
+      `<div class="stat"><div class="k">Đội thắng</div><div class="v" style="font-size:20px">${s.winner ? (s.winner.team === 'vang' ? '🟡 ' + esc(teamName(s, 'vang')) : s.winner.team === 'do' ? '🔴 ' + esc(teamName(s, 'do')) : '🤝 Hòa') : '—'}</div></div>`;
+    document.getElementById('team-k-vang').textContent = '🟡 Đội ' + teamName(s, 'vang') + ' — mét';
+    document.getElementById('team-k-do').textContent = '🔴 Đội ' + teamName(s, 'do') + ' — mét';
+    document.getElementById('top-h-vang').textContent = '🟡 ' + teamName(s, 'vang');
+    document.getElementById('top-h-do').textContent = '🔴 ' + teamName(s, 'do');
+    document.getElementById('bar-vang').style.background = teamColor(s, 'vang');
+    document.getElementById('bar-do').style.background = teamColor(s, 'do');
+    fillTeamSettings(s);
     document.getElementById('phase-text').textContent = s.winner ? ('Kết quả: ' + (s.winner.reason || '')) : '';
     document.getElementById('m-vang').textContent = s.meters.vang;
     document.getElementById('m-do').textContent = s.meters.do;
@@ -197,10 +285,16 @@
       spotlightS: +document.getElementById('set-spot').value,
       commentSpamS: +document.getElementById('set-spam').value,
       voiceEnabled: document.getElementById('set-voice').checked,
+      ...teamSettingsBody(),
     };
     const r = await api('/api/settings', body);
     document.getElementById('save-msg').textContent = r.success ? 'Đã lưu ✓' : 'Lỗi lưu';
     setTimeout(() => { document.getElementById('save-msg').textContent = ''; }, 2000);
+  });
+  document.getElementById('btn-save-team').addEventListener('click', async () => {
+    const r = await api('/api/settings', teamSettingsBody());
+    document.getElementById('save-team-msg').textContent = r.success ? 'Đã lưu ✓ (overlay cập nhật ngay)' : 'Lỗi lưu';
+    setTimeout(() => { document.getElementById('save-team-msg').textContent = ''; }, 2000);
   });
   document.getElementById('set-demo').addEventListener('change', async (e) => { await api('/api/settings', { demoMode: e.target.checked }); });
   document.getElementById('btn-demo-start').addEventListener('click', async () => { const r = await api('/api/demo/start'); if (!r.success) alert('Không chạy được demo: ' + (r.reason || r.message || 'lỗi')); });
