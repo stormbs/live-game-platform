@@ -95,12 +95,18 @@
 const GAMES = [
   { id: 've-avatar', name: '🖌️ Vẽ Avatar', desc: 'Khán giả tặng quà, hoạ sĩ vẽ avatar của họ ngay trên live. Ai tặng nhiều lên khung đẹp hơn.' },
   { id: 'buong-giam', name: '⛓️ Buồng Giam', desc: 'Khán giả vào "cải tạo": gõ mõ, leo hạng, ăn mâm theo điểm. Top 1 ăn gà luộc nguyên con.' },
-  { id: 'thap-sang-ban-do', name: '🗺️ Thắp Sáng Bản Đồ', desc: 'Cả phòng cùng thắp sáng 63 tỉnh thành Việt Nam bằng like, bình luận và quà tặng.' },
+  { id: 'thap-sang-ban-do', name: '🗺️ Thắp Sáng Bản Đồ', desc: 'Cả phòng cùng thắp sáng 34 tỉnh thành Việt Nam bằng like, bình luận và quà tặng.' },
   { id: 'vuon-hoa-mua-xuan', name: '🌸 Vườn Hoa Mùa Xuân', desc: 'Bình luận và tim gieo hạt thành hoa; quà tưới nước, follow tặng hồng vàng. Đủ 100 hoa là lễ hội hoa.' },
   { id: 'bep-an-tap-the', name: '🍲 Bếp Ăn Tập Thể', desc: 'Bình luận thả nguyên liệu vào nồi, 50 tim thổi lửa, quà mở gà luộc/bánh chưng/mâm cỗ. Nồi chín thì bốc thăm 10 người.' },
   { id: 'dua-xe-leo-nui', name: '🏁 Đua Xe Leo Núi', desc: '4 xe leo dốc: xe streamer + xe top 3 quà. Comment +10m, tim +0,5m, 1 xu = 1m. Ai lên đỉnh 1000m trước thắng.' },
   { id: 'vong-quay-may-man', name: '🎡 Vòng Quay May Mắn', desc: 'Vòng quay 20 ô: cả phòng góp 50đ để quay chung, tặng quà quay riêng ngay. Trúng thưởng chỉ là vinh danh trong live.' },
   { id: 'bau-troi-phao-hoa', name: '🎆 Bầu Trời Pháo Hoa', desc: 'Bầu trời đêm: tap/comment/quà bắn pháo hoa. Quà lớn = pháo hình tim/sao/chữ. Cứ 100 pháo là màn pháo lớn.' },
+  { id: 'keo-co', name: '🪢 Kéo Co', desc: 'Hai đội Xanh – Đỏ kéo co bằng tim, bình luận và quà: tim +1 lực, bình luận +5, quà 1 xu = +10 lực. Thắng 3/5 hiệp là thắng trận.' },
+  { id: 'dau-truong-sinh-ton', name: '⚔️ Đấu Trường Sinh Tồn', desc: 'Battle royale: bình luận vào đấu trường với 100 HP, tim đánh ngẫu nhiên, bình luận tên địch trừ 3 HP. Vòng bo thu hẹp sau 3 phút — người cuối cùng còn sống thắng.' },
+  { id: 'chiem-co', name: '🚩 Chiếm Cờ', desc: 'Hai đội tranh 3 cờ Trái – Giữa – Phải: cứ 30 giây đội mạnh hơn chiếm cờ, giữ cờ cộng điểm mỗi giây (cờ Giữa x2). Trận 10 phút.' },
+  { id: 'dua-thuyen-rong', name: '🐉 Đua Thuyền Rồng', desc: 'Hai thuyền Vàng – Đỏ đua 500m: tim +1m, bình luận +5m, quà +5m, follow +20m. ≥10 tim cùng đội trong 2 giây kích combo trống +10m.' },
+  { id: 'dau-tri', name: '🧠 Đấu Trí', desc: 'Quiz 2 đội: bình luận đội A/B rồi trả lời A/B/C/D. Đúng +10 điểm đội, đúng đầu tiên +5, 30 giây/câu. Ngân hàng 10 câu mặc định.' },
+  { id: 'di-bar-online', name: '🪩 Đi Bar Online', desc: 'Phòng bar online: DJ + 8 vũ công, nhạc remix tự tổng hợp. Tim +1 năng lượng, quà tặng đồ uống — mỗi 3 phút chọn Vua sàn nhảy.' },
 ];
 let selected = 've-avatar';
 let pollTimer = null;
