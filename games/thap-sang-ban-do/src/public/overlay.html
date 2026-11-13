@@ -841,6 +841,15 @@ function render(s) {
   const bClass = !wh.count ? 'off' : (wh.secondsAgo != null && wh.secondsAgo <= 60 ? 'live' : 'stale');
   const bText = bClass === 'live' ? '● LIVE' : bClass === 'stale' ? '● TÍN HIỆU YẾU' : '○ CHỜ KẾT NỐI';
   if (badge && (badge.className !== bClass || badge.textContent !== bText)) { badge.className = bClass; badge.textContent = bText; }
+  // Dải cảnh báo "CHƯA LIVE" (đọc trạng thái nối TRỰC TIẾP TikTok — vốn
+  // chết vì thiếu key Euler nên luôn báo sai khi dùng TikFinity): ẩn đi khi
+  // đã nhận event webhook gần đây, vì đó mới là bằng chứng live thật đang
+  // nối. Ghi dấu thời điểm để hàm poll() bên dưới cũng tôn trọng.
+  if (wh.count > 0 && (wh.secondsAgo == null || wh.secondsAgo < 300)) {
+    window.__liveEventsAt = Date.now();
+    var dw = document.getElementById('direct-warn');
+    if (dw) dw.style.display = 'none';
+  }
   applyMusic(s.music);
   const top3Nums = new Set(s.topProvinces.slice(0, 3).map(tp => tp.num));
   for (const p of s.provinces) {
@@ -1076,6 +1085,10 @@ if (new URLSearchParams(location.search).get('demo') === '1') {
   async function poll() {
     var d = parts();
     if (!d.game || !d.username || !box) return;
+    // Đã nhận event webhook gần đây (TikFinity đang nối) -> live thật, ẩn
+    // dải cảnh báo dù trạng thái nối trực tiếp TikTok có báo offline (đường
+    // trực tiếp chết vì thiếu key Euler — xem ghi chú trong render()).
+    if (window.__liveEventsAt && Date.now() - window.__liveEventsAt < 300000) { box.style.display = 'none'; return; }
     try {
       var r = await fetch(statusUrl());
       var j = await r.json();

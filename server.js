@@ -115,6 +115,48 @@ function createApp(opts = {}) {
     res.json(rooms.status(room));
   });
 
+  // ---- Webhook CHUNG cho TikFinity — 1 Action cho mọi game/phòng ----
+  // TikFinity free giới hạn 5 Action; mỗi game có nhiều loại sự kiện nên
+  // tách riêng từng Action (1 Action/loại sự kiện) sẽ nhanh hết slot.
+  // Endpoint này cho phép dùng ĐÚNG 1 Action cho mọi game: URL duy nhất
+  //   POST /api/webhook?game=<slug>&room=<username>
+  // (thêm &event=gift|chat|like|follow|share|join nếu muốn tách riêng từng
+  // loại — không bắt buộc, máy chủ tự đọc loại sự kiện từ body TikFinity
+  // gửi kèm, giống hệt webhook riêng của phòng).
+  // Cách dùng: tạo 1 Action Trigger WebHook với URL trên, mọi Event đều trỏ
+  // vào Action đó. Đổi game/phòng chỉ cần sửa 2 tham số game=/room= trong
+  // URL, không cần tạo Action mới. Không thay thế webhook riêng của phòng
+  // (/o/<game>/<room>/api/webhook) — đường đó vẫn chạy bình thường.
+  // Kỹ thuật: chuyển tiếp y hệt roomDispatcher — giữ nguyên body (stream)
+  // và chỉ đổi đường dẫn thành /api/webhook, giữ lại các query khác (event).
+  app.post('/api/webhook', (req, res, next) => {
+    const game = String(req.query.game || '').trim();
+    const username = String(req.query.room || req.query.username || '').trim();
+    if (!game || !username) {
+      return res.status(400).json({
+        ok: false,
+        error: 'Thiếu game hoặc room. VD: /api/webhook?game=thap-sang-ban-do&room=ton_qmanh',
+      });
+    }
+    rooms.getOrCreate(game, username).then((room) => {
+      room.touch();
+      const q = { ...req.query };
+      delete q.game; delete q.room; delete q.username;
+      const qs = new URLSearchParams(q).toString();
+      req.url = '/api/webhook' + (qs ? '?' + qs : '');
+      req.query = q;
+      req.params = { game, username };
+      if (room.engine.type === 'raw') {
+        room.engine.handleRequest(req, res);
+      } else {
+        room.router(req, res, next);
+      }
+    }).catch((e) => {
+      const code = e.code === 'ROOM_FULL' ? 503 : 400;
+      res.status(code).json({ ok: false, error: e.message });
+    });
+  });
+
   // ---- Bài hướng dẫn cài đặt TikFinity (tạo Action bằng tay) ----
   // Trang độc lập, không cần tạo room. ?game=<game>&username=<user> để hiện
   // đúng link webhook của phòng đó; không có query thì hiện trang chung
