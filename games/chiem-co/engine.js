@@ -678,6 +678,9 @@ function createEngine(ctx) {
   });
   router.post('/api/test/demo', (req, res) => {
     if (!needDemo(req, res)) return;
+    const action = (req.body && req.body.action) || 'once';
+    if (action === 'start') return res.json(startDemo());
+    if (action === 'stop') return res.json(stopDemo());
     res.json(demoOneShot());
   });
   router.post('/api/test/tap', (req, res) => {

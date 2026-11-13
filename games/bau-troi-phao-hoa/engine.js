@@ -473,8 +473,14 @@ function createEngine(ctx) {
   // ---------------- API ----------------
   app.post('/api/webhook', (req, res) => {
     session.webhookCount = (session.webhookCount || 0) + 1;
-    // Live thật tiếp quản: demo đang chạy thì tự dừng ngay khi event thật đầu tiên tới.
-    if (demo.active) stopDemo('có event thật');
+    // Live thật tiếp quản: demo đang chạy thì tự dừng ngay khi event thật đầu tiên tới,
+    // đồng thời TẮT HẲN "Chế độ thử" — nếu chỉ dừng demo mà giữ demoMode=true
+    // thì mọi event thật sau đó đều bị bỏ qua im lặng (webhook trả demoMode:true).
+    if (demo.active) {
+      stopDemo('có event thật');
+      settings.demoMode = false;
+      saveSettings();
+    }
     const ev = parseTikFinityEvent(req.body, req.query);
     if (ev.kind === 'other' || !ev.uid) {
       let rawPrev = '';

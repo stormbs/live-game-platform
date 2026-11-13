@@ -667,6 +667,9 @@ function createEngine(ctx) {
   });
   router.post('/api/test/demo', (req, res) => {
     if (!needDemo(req, res)) return;
+    const action = (req.body && req.body.action) || 'once';
+    if (action === 'start') return res.json(startDemo());
+    if (action === 'stop') return res.json(stopDemo());
     const steps = [];
     const a = testUser('Demo A');
     const b = testUser('Demo B');

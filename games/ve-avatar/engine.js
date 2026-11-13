@@ -654,8 +654,14 @@ app.post('/api/webhook', (req, res) => {
   // Đếm mọi event thật qua intake nội bộ (adapter đẩy vào đây) — dashboard
   // dùng số này làm "số sự kiện đã nhận".
   session.webhookCount = (session.webhookCount || 0) + 1;
-  // Live thật tiếp quản: demo đang chạy thì tự dừng ngay khi event thật đầu tiên tới.
-  if (demo.active) stopDemo('có event thật');
+  // Live thật tiếp quản: demo đang chạy thì tự dừng ngay khi event thật đầu tiên tới,
+  // đồng thời TẮT HẲN "Chế độ thử" — nếu chỉ dừng demo mà giữ demoMode=true
+  // thì mọi event thật sau đó đều bị bỏ qua im lặng (webhook trả demoMode:true).
+  if (demo.active) {
+    stopDemo('có event thật');
+    settings.demoMode = false;
+    saveSettings();
+  }
   const ev = parseEvent(req.body, req.query);
   if (ev.kind === 'other' || !ev.uid) {
     // Event từ adapter TikTok LIVE gửi về nhưng không nhận diện được: ghi rõ để sửa cho đúng

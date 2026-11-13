@@ -328,3 +328,36 @@ test('keo-co: settings chặn giá trị vượt giới hạn; room A không l�
     assert.ok(!JSON.stringify(stB.body).includes('ChiPhongA'), 'room B không được thấy event room A');
   } finally { await stopTestServer(t); }
 });
+
+test('keo-co: /api/test/demo rẽ action start/stop/once đúng hàm (hồi quy lỗi B)', async () => {
+  const t = await startTestServer();
+  try {
+    const user = uniq('keo_demoaction');
+    await enableDemo(t, user);
+    const call = (b) => fetchJson(t.base, `/o/${GAME}/${user}/api/test/demo`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b || {}),
+    });
+    // stop khi demo chưa chạy: không bơm demo, demoActive false.
+    const stop0 = await call({ action: 'stop' });
+    assert.equal(stop0.json.demoActive, false, 'stop trước khi start thì demoActive false');
+    let st = await getState(t, user);
+    assert.equal(st.demoActive, false);
+    assert.equal(st.force.xanh, 0, 'stop không được bơm demo');
+    // start qua action: demo chạy, lực 2 đội tăng.
+    const start = await call({ action: 'start' });
+    assert.equal(start.json.demoActive, true, 'start qua action phải chạy demo');
+    st = await waitFor(t, user, (s) => s.demoActive === true && s.force.xanh > 0 && s.force.do > 0, 10, 500);
+    assert.equal(st.demoActive, true);
+    // stop qua action: demo dừng hẳn, lực đứng yên (không bơm thêm lượt mẫu).
+    const stop = await call({ action: 'stop' });
+    assert.equal(stop.json.demoActive, false, 'stop qua action phải dừng demo');
+    st = await getState(t, user);
+    const snap = JSON.stringify([st.force.xanh, st.force.do]);
+    await sleep(4000);
+    st = await getState(t, user);
+    assert.equal(JSON.stringify([st.force.xanh, st.force.do]), snap, 'stop qua action thì lực không tăng nữa');
+    // once (không action): vẫn 1 lượt mẫu như cũ, trả đủ 6 bước.
+    const once = await call({});
+    assert.equal(once.json.steps.length, 6, 'once giữ nguyên 1 lượt mẫu 6 bước');
+  } finally { await stopTestServer(t); }
+});

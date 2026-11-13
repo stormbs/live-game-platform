@@ -65,6 +65,17 @@ test('ve-avatar: demo tự dừng khi event thật tới; từ chối bật khi 
     let st = await getState(t, u);
     assert.equal(st.demoActive, false, 'event thật tới thì demo phải tự dừng');
     assert.ok(st.webhook.count >= 1);
+    // Hồi quy lỗi A: event thật THỨ 2 sau khi demo dừng KHÔNG được bị nuốt —
+    // webhook phải xử lý thật (không trả demoMode:true) vì "Chế độ thử" đã tự tắt.
+    const r2 = await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-that-2', nickname: 'NguoiThat2', content: 'hello lần 2' });
+    assert.equal(r2.body.demoMode, undefined, 'event thật thứ 2 không được trả demoMode');
+    assert.equal(r2.body.received, true);
+    st = await getState(t, u);
+    assert.ok(st.webhook.count >= 2, 'event thật thứ 2 phải được đếm');
+    // Phòng đã có event thật -> từ chối bật lại. Bật lại "Chế độ thử" trước
+    // rồi mới thử start: lần này phải từ chối theo chặn webhookCount (chứ
+    // không phải vì demoMode đã tắt sau event thật đầu tiên).
+    await enableDemo(t, u);
     const start2 = await postJson(t, `/o/${GAME}/${u}/api/test/demo`, { action: 'start' });
     assert.equal(start2.json.success, false, 'phòng có event thật thì không bật được demo');
     assert.match(start2.json.message || '', /event thật/);
