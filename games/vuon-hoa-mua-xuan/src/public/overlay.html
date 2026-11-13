@@ -59,10 +59,26 @@
       radial-gradient(circle at 70% 60%, rgba(0,0,0,.24) 0 5px, transparent 6px),
       radial-gradient(circle at 45% 82%, rgba(255,255,255,.16) 0 4px, transparent 5px),
       linear-gradient(180deg, #7a4a22 0%, #5d3a1a 55%, #4a2c12 100%);
-    border: 3px solid rgba(255,255,255,.5); border-top: 6px solid #4caf50; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-  .plot .f { font-size: 62px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
+    border: 3px solid rgba(255,255,255,.5); border-top: 6px solid #4caf50; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; overflow: hidden; padding: 6px 4px 4px; }
+  .plot.empty { justify-content: center; }
+  /* Hàng avatar + tên NGAY TRÊN ĐẦU hoa (mọi giai đoạn, không chỉ khi nở). */
+  .plot .who { display: flex; align-items: center; gap: 5px; width: 100%; min-height: 34px; }
+  .plot .who .av-wrap { position: relative; width: 34px; height: 34px; flex: 0 0 34px; }
+  .plot .who .av { position: absolute; inset: 0; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+  .plot .who .av-fb { display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900; color: #fff; background: var(--ui-accent); border: 2px solid rgba(255,255,255,.85); }
+  .plot .who .nm { font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif; font-size: 17px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000, 0 0 8px rgba(0,0,0,.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 92px; }
+  .plot .f { font-size: 62px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
   .plot .f.stage-ic { font-size: 40px; }
-  .plot .nm { font-size: 20px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px #000; max-width: 96%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Sprite 2D thay emoji khi load được; lỗi/thiếu thì emoji fallback hiện lại. */
+  .plot .f .spr { width: 68px; height: 68px; object-fit: contain; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
+  .plot .f.stage-ic .spr { width: 56px; height: 56px; }
+  /* Bình tưới phủ lên ô 1.2s khi có gift tưới (chỉ animate transform/opacity). */
+  .plot .water { position: absolute; right: 0; top: 36px; width: 70px; height: 70px; pointer-events: none; z-index: 3; animation: water-pour 1.2s ease forwards; }
+  .plot .water img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+  @keyframes water-pour { 0% { opacity: 0; transform: translate(16px,-12px) rotate(16deg); } 25% { opacity: 1; transform: translate(0,0) rotate(6deg); } 70% { opacity: 1; transform: translate(-3px,3px) rotate(-4deg); } 100% { opacity: 0; transform: translate(-8px,8px) rotate(-8deg); } }
+  /* Pop nhỏ khi chuyển giai đoạn hạt→mầm→nụ (nở đã có bloom-pop riêng). */
+  .plot.just-grew .f { animation: stage-pop .4s ease; }
+  @keyframes stage-pop { 0% { transform: scale(.55); opacity: .4; } 60% { transform: scale(1.18); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
   .plot.golden { border-color: #ffd700; box-shadow: 0 0 18px #ffd700; }
   .plot.bloom { animation: sway 3s ease-in-out infinite; }
   @keyframes sway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
@@ -137,9 +153,15 @@ const socket = io();
 const FLOWER_ICON = { mai: '🌼', dao: '🌸', cuc: '🏵️', sen: '🪷', hong: '🌹', huongduong: '🌻', 'hong-vang': '🌹' };
 const STAGE_ICON = { seed: '🌱', sprout: '🌿', bud: '🌷' };
 const STAGE_NAME = { seed: 'Hạt', sprout: 'Mầm', bud: 'Nụ', bloom: 'Nở' };
+// Sprite 2D Đợt B (1 frame/sheet, 512x512) — đường dẫn /shared/ không bị transform chạm.
+const STAGE_SPRITE = { seed: 'hat', sprout: 'mam', bud: 'nu', bloom: 'hoa-no' };
+const SPRITE_BASE = '/shared/assets/2d/vuon-hoa-mua-xuan/curated/';
+const WATER_SPRITE = SPRITE_BASE + 'binh-tuoi/sheet.png';
 let lastState = null;
 let prevPhase = null;
 let prevStages = null; // stage từng ô ở lần render trước — để phát hiện hoa vừa nở (bloom-pop 1 lần)
+let lastWaterSeenT = null; // mốc log tưới mới nhất đã xử lý (null = lần render đầu, bỏ qua log cũ)
+let waterFx = []; // [{ idx, until }] — ô đang hiện animation bình tưới
 let voiceOn = true;
 const ttsQueue = [];
 let ttsPlaying = false;
@@ -190,6 +212,47 @@ function spawnPetals() {
   host.innerHTML = html;
 }
 
+// Hoa non nhất trong vườn (theo đúng thứ tự engine: giai đoạn sớm nhất, rồi gieo sớm nhất).
+function youngestIdx(flowers, name) {
+  const order = ['seed', 'sprout', 'bud', 'bloom'];
+  let best = -1;
+  for (let i = 0; i < flowers.length; i++) {
+    const fl = flowers[i];
+    if (!fl) continue;
+    if (name !== undefined && fl.name !== name) continue;
+    if (best < 0) { best = i; continue; }
+    const a = flowers[best];
+    const d = order.indexOf(fl.stage) - order.indexOf(a.stage);
+    if (d < 0 || (d === 0 && fl.plantedAt < a.plantedAt)) best = i;
+  }
+  return best;
+}
+
+// Phát hiện log tưới MỚI trong state: 💧 = tưới 1 ô của người tưới,
+// 🌧️/🌈 = tưới cả vườn. Engine không emit event tưới riêng nên đọc log
+// (tên trong [..] → tìm hoa non nhất cùng tên; không khớp thì hoa non nhất vườn).
+function detectWatering(s) {
+  if (!s.logs || !s.logs.length) return;
+  let maxT = lastWaterSeenT;
+  for (const l of s.logs) {
+    if (!l || typeof l.t !== 'number') continue;
+    if (lastWaterSeenT === null) { if (maxT === null || l.t > maxT) maxT = l.t; continue; }
+    if (l.t <= lastWaterSeenT) continue;
+    if (l.kind !== 'gift' || typeof l.text !== 'string') continue;
+    const until = Date.now() + 1200;
+    if (l.text.indexOf('💧') === 0) {
+      const m = l.text.match(/\[([^\]]+)\]/);
+      let idx = m ? youngestIdx(s.flowers, m[1]) : -1;
+      if (idx < 0) idx = youngestIdx(s.flowers);
+      if (idx >= 0) waterFx.push({ idx, until });
+    } else if (l.text.indexOf('🌧️') === 0 || l.text.indexOf('🌈') === 0) {
+      for (let i = 0; i < s.flowers.length; i++) if (s.flowers[i]) waterFx.push({ idx: i, until });
+    }
+    if (maxT === null || l.t > maxT) maxT = l.t;
+  }
+  lastWaterSeenT = maxT;
+}
+
 function render(s) {
   lastState = s;
   // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
@@ -224,6 +287,9 @@ function render(s) {
       }).join('')
     : '<div class="top-empty">Chưa có ai trồng hoa…</div>');
 
+  detectWatering(s);
+  waterFx = waterFx.filter((w) => w.until > Date.now());
+
   const g = document.getElementById('garden');
   let html = '';
   for (let i = 0; i < s.plots; i++) {
@@ -231,10 +297,18 @@ function render(s) {
     if (!f) { html += '<div class="plot empty"></div>'; continue; }
     const shortName = [...String(f.name || '')].slice(0, 8).join('');
     const justBloomed = prevStages && prevStages[i] !== 'bloom' && f.stage === 'bloom';
+    const justGrew = prevStages && prevStages[i] && prevStages[i] !== f.stage && f.stage !== 'bloom';
     const icon = f.stage === 'bloom' ? FLOWER_ICON[f.type] : STAGE_ICON[f.stage];
-    html += '<div class="plot' + (f.golden ? ' golden' : '') + (f.stage === 'bloom' ? ' bloom' : '') + (justBloomed ? ' just-bloomed' : '') + '" title="' + escapeHtml(f.name) + ' — ' + STAGE_NAME[f.stage] + '">' +
-      '<div class="f' + (f.stage === 'bloom' ? '' : ' stage-ic') + '">' + icon + '</div>' +
-      (f.stage === 'bloom' ? '<div class="nm">' + escapeHtml(shortName) + '</div>' : '') +
+    const sprSrc = SPRITE_BASE + STAGE_SPRITE[f.stage] + '/sheet.png';
+    const watering = waterFx.some((w) => w.idx === i);
+    const initial = escapeHtml((String(f.name || '?').trim().charAt(0)) || '?');
+    const ava = f.avatar
+      ? '<span class="av-wrap"><span class="av av-fb">' + initial + '</span><img class="av" src="' + escapeHtml(f.avatar) + '" alt="" onerror="this.remove()"></span>'
+      : '<span class="av-wrap"><span class="av av-fb">' + initial + '</span></span>';
+    html += '<div class="plot' + (f.golden ? ' golden' : '') + (f.stage === 'bloom' ? ' bloom' : '') + (justBloomed ? ' just-bloomed' : '') + (justGrew ? ' just-grew' : '') + (watering ? ' watering' : '') + '" title="' + escapeHtml(f.name) + ' — ' + STAGE_NAME[f.stage] + '">' +
+      '<div class="who">' + ava + '<span class="nm">' + escapeHtml(shortName) + '</span></div>' +
+      '<div class="f' + (f.stage === 'bloom' ? '' : ' stage-ic') + '"><img class="spr" src="' + sprSrc + '" alt="" onerror="this.style.display=\'none\';var e=this.nextElementSibling;if(e)e.style.display=\'inline\';"><span class="emo" style="display:none">' + icon + '</span></div>' +
+      (watering ? '<div class="water"><img src="' + WATER_SPRITE + '" alt=""></div>' : '') +
       '</div>';
   }
   g.innerHTML = html;
