@@ -89,11 +89,12 @@
   /* Vùng vũ công: lưới 4×3 khi ≤12 người, 6×4 khi >12 người (tối đa 24 — MAX_FLOOR của engine), vũ công đứng TRÊN SÀN */
   #dancers { position: absolute; left: 16px; right: 16px; top: 196px; bottom: 14px; z-index: 2; }
   .floor-empty { position: absolute; left: 0; right: 0; top: 40%; text-align: center; font-size: 26px; color: #ddd; text-shadow: 0 2px 4px #000; }
-  /* Chùm spotlight chiếu đúng vũ công dẫn đầu (chỉ transform/opacity) — vàng đậm hơn
-     để đọc rõ trên sàn caro (kiểm chứng live 18:46: chùm cũ mờ, dễ nhầm với tia laser disco) */
-  #spot-cone { position: absolute; top: 0; left: 50%; width: 280px; height: 40%; transform: translateX(-50%); z-index: 1; pointer-events: none; background: linear-gradient(rgba(253,224,71,.52), rgba(253,224,71,.14) 75%, transparent); clip-path: polygon(43% 0, 57% 0, 100% 100%, 0 100%); animation: conesway 3s ease-in-out infinite alternate; transform-origin: top center; display: none; }
+  /* Chùm spotlight chiếu đúng vũ công dẫn đầu (chỉ transform/opacity) — vàng đậm, rộng hơn
+     để phân biệt rõ với tia laser disco quét tự do (kiểm chứng live 19:01: chùm cũ mờ,
+     nhìn như tia disco chứ không phải spotlight khóa vào người dẫn đầu) */
+  #spot-cone { position: absolute; top: 0; left: 50%; width: 320px; height: 40%; transform: translateX(-50%); z-index: 1; pointer-events: none; background: linear-gradient(rgba(253,224,71,.68), rgba(253,224,71,.22) 75%, transparent); clip-path: polygon(43% 0, 57% 0, 100% 100%, 0 100%); animation: conesway 3s ease-in-out infinite alternate; transform-origin: top center; display: none; }
   @keyframes conesway { from { transform: translateX(-50%) rotate(-3deg); } to { transform: translateX(-50%) rotate(3deg); } }
-  #spot-glow { position: absolute; left: 50%; width: 230px; height: 54px; transform: translate(-50%, -50%); z-index: 1; pointer-events: none; background: radial-gradient(ellipse, rgba(253,224,71,.55), transparent 70%); animation: glowpulse 1s ease-in-out infinite alternate; display: none; }
+  #spot-glow { position: absolute; left: 50%; width: 280px; height: 64px; transform: translate(-50%, -50%); z-index: 1; pointer-events: none; background: radial-gradient(ellipse, rgba(253,224,71,.7), transparent 70%); animation: glowpulse 1s ease-in-out infinite alternate; display: none; }
   @keyframes glowpulse { from { opacity: .5; } to { opacity: .95; } }
   /* Vũ công: tên → avatar → thân nhảy → năng lượng (tất cả trên đầu nhân vật) */
   .dancer { position: absolute; transform: translate(-50%, -50%); width: 216px; text-align: center; z-index: 2; }
@@ -121,17 +122,20 @@
      "VUA SÀN NHẢY" lúc vinh danh theo engine, "DẪN ĐẦU" khi đang dẫn đầu về năng lượng; KHÔNG bịa danh hiệu khác) */
   .dancer .title-chip { display: block; width: max-content; max-width: 200px; margin: 0 auto 3px; padding: 2px 10px; border-radius: 999px; background: linear-gradient(90deg, #fde047, #f59e0b); color: #111; font-size: 18px; font-weight: 900; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 0 12px rgba(250,204,21,.7); }
   /* Cánh lớn sau lưng người nổi bật (như live thật: cánh là điểm nhận diện chính — vẽ bằng CSS,
-     lấy từ trạng thái thật isLeader, KHÔNG cần dữ liệu engine; chỉ transform/opacity/scale) */
+     lấy từ trạng thái thật isLeader, KHÔNG cần dữ liệu engine; chỉ transform/opacity/scale).
+     RỘNG HƠN thân người để đọc rõ là cánh (bản cũ chỉ rộng bằng thân nên bị chìm sau emoji —
+     kiểm chứng live 19:01 không thấy cánh đâu dù chip DẪN ĐẦU đã hiện). */
   .dancer .wings { display: none; }
-  .dancer.king .wings { display: block; position: absolute; left: 50%; top: 70%; width: 210px; height: 92px; transform: translate(-50%, -50%); z-index: -1; pointer-events: none; animation: wingpulse 1.1s ease-in-out infinite alternate; }
-  .dancer.king .wings i { position: absolute; top: 0; width: 96px; height: 86px; background: linear-gradient(135deg, rgba(165,243,252,.9), rgba(34,211,238,.5) 55%, rgba(168,85,247,.4)); border-radius: 100% 6px 100% 6px; filter: drop-shadow(0 0 10px rgba(34,211,238,.65)); }
+  .dancer.king .wings { display: block; position: absolute; left: 50%; top: 64%; width: 284px; height: 112px; transform: translate(-50%, -50%); z-index: -1; pointer-events: none; animation: wingpulse 1.1s ease-in-out infinite alternate; }
+  .dancer.king .wings i { position: absolute; top: 0; width: 130px; height: 102px; background: linear-gradient(135deg, rgba(190,242,255,.98), rgba(34,211,238,.75) 50%, rgba(168,85,247,.65)); border-radius: 100% 6px 100% 6px; box-shadow: 0 0 18px rgba(34,211,238,.8); }
   .dancer.king .wings .w-l { left: 0; transform: rotate(-24deg); }
   .dancer.king .wings .w-r { right: 0; transform: scaleX(-1) rotate(-24deg); }
-  @keyframes wingpulse { from { scale: 1; opacity: .85; } to { scale: 1.07; opacity: 1; } }
-  /* Vòng sáng dưới chân người nổi bật — to + sáng hơn để đọc rõ giữa sàn caro rực rỡ
-     (kiểm chứng live 18:46: vòng cũ mờ, chỉ thấy quầng sáng quanh người) */
+  @keyframes wingpulse { from { scale: 1; opacity: .9; } to { scale: 1.07; opacity: 1; } }
+  /* Vòng sáng dưới chân người nổi bật — to, sáng, lõi đặc để đọc rõ là vũng sáng vàng
+     dưới chân (bản cũ mờ, kiểm chứng live 19:01 chỉ thấy "vệt sáng xanh mờ" — đó là cánh,
+     không phải vòng; vòng vàng cũ chìm giữa sàn caro rực rỡ). */
   .dancer .ring { display: none; }
-  .dancer.king .ring { display: block; position: absolute; left: 50%; bottom: 8px; width: 200px; height: 42px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse, rgba(253,224,71,.85), rgba(253,224,71,.25) 60%, transparent 78%); animation: glowpulse 1s ease-in-out infinite alternate; z-index: -1; }
+  .dancer.king .ring { display: block; position: absolute; left: 50%; bottom: 2px; width: 220px; height: 48px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse, rgba(253,224,71,.95), rgba(250,204,21,.5) 55%, transparent 80%); box-shadow: 0 0 26px rgba(250,204,21,.85); animation: glowpulse 1s ease-in-out infinite alternate; z-index: -1; }
   /* Sàn đông (>12 người): lưới dày 6×4, vũ công nhỏ lại để vẫn đọc được tên + tag (live thật góc rộng thấy 15–30 người) */
   #dancers.dense .dancer { width: 150px; }
   #dancers.dense .dancer .nm { font-size: 17px; }
@@ -143,9 +147,9 @@
   #dancers.dense .dancer .st { font-size: 19px; }
   #dancers.dense .dancer .dr { font-size: 16px; }
   #dancers.dense .dancer .title-chip { font-size: 14px; max-width: 140px; }
-  #dancers.dense .dancer.king .wings { width: 140px; height: 64px; }
-  #dancers.dense .dancer.king .wings i { width: 64px; height: 58px; }
-  #dancers.dense .dancer.king .ring { width: 150px; height: 32px; bottom: 6px; }
+  #dancers.dense .dancer.king .wings { width: 204px; height: 82px; }
+  #dancers.dense .dancer.king .wings i { width: 94px; height: 74px; }
+  #dancers.dense .dancer.king .ring { width: 160px; height: 36px; bottom: 0; }
   @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-14px); } }
   @keyframes pop { from { transform: scale(1) rotate(-4deg); } to { transform: scale(1.15) rotate(4deg); } }
   @keyframes wave { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
@@ -284,7 +288,14 @@ function confettiBurst() {
   }
 }
 
-// ---- Camera director: toàn bộ cảnh trong #camera, camera = scale + translate, transition 1.2s ----
+// ---- Camera director: MẶC ĐỊNH TOÀN CẢNH, không tự chạy vòng close-up.
+// Khán giả live phải luôn thấy đủ sàn + bảng hướng dẫn + 2 bàn; góc zoom chỉ dùng
+// briefly khi có sự kiện lớn (Vua/champagne/bottle/drop), hết hold thì về toàn cảnh ngay.
+// (Bài học 2 lần kiểm chứng live 18:46 + 19:01: vòng close-up tự chạy — 5/6 góc là zoom —
+// khiến khán giả gần như không bao giờ thấy toàn cảnh, dù cơ chế cycle có chạy đúng.
+// Chế độ dashboard "Tự động lia / Thủ công" giờ đều về toàn cảnh sau sự kiện vì
+// không có UI chọn góc thủ công; shotIntervalS hiện không còn dùng.)
+let shotTimer = null, eventShotUntil = 0, eventHoldStartedAt = 0;
 const SHOTS = [
   { name: 'full', point: [540, 960], scale: 1 },
   { name: 'dj', point: [540, 200], scale: 2.2 },
@@ -293,7 +304,6 @@ const SHOTS = [
   { name: 'crowd', point: [540, 910], scale: 1.5 },
   { name: 'led', point: [540, 56], scale: 2 },
 ];
-let shotIdx = 0, shotTimer = null, eventShotUntil = 0, eventHoldStartedAt = 0;
 function applyShot(shot) {
   const [px, py] = shot.point;
   const s = shot.scale;
@@ -302,12 +312,10 @@ function applyShot(shot) {
   $('camera').style.transform = `translate(${x}px, ${y}px) scale(${s})`;
 }
 function cycleShot() {
-  if (!state || state.settings.cameraMode !== 'auto') return;
+  // Watchdog trả về toàn cảnh: hết hold sự kiện thì về full ngay (kiểm tra 2s/lần).
   if (Date.now() < eventShotUntil) return;
-  // Vừa hết hold sự kiện → về toàn cảnh trước, rồi mới chạy vòng lại (tránh kẹt ở góc zoom).
-  if (eventHoldStartedAt) { eventHoldStartedAt = 0; shotIdx = 0; applyShot(SHOTS[0]); return; }
-  shotIdx = (shotIdx + 1) % SHOTS.length;
-  applyShot(SHOTS[shotIdx]);
+  eventHoldStartedAt = 0;
+  applyShot(SHOTS[0]);
 }
 function eventShot(name, ms) {
   const shot = SHOTS.find((s) => s.name === name);
@@ -325,7 +333,7 @@ function startShotTimer() {
   // clear + tạo lại interval mỗi lần sẽ khiến cycleShot không bao giờ tới lượt chạy
   // → camera kẹt mãi ở góc zoom của sự kiện gần nhất (lỗi kiểm chứng live 2026-11-13 18:46).
   if (shotTimer) return;
-  shotTimer = setInterval(cycleShot, (state && state.settings.shotIntervalS || 8) * 1000);
+  shotTimer = setInterval(cycleShot, 2000);
 }
 
 // ---- Nhạc: remix tự tổng hợp bằng WebAudio, 4 phân đoạn xoay vòng 16 nhịp ----
