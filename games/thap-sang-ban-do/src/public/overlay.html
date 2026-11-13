@@ -18,8 +18,13 @@
   /* Bố cục mới (v8): header trên cùng; dưới là hàng ngang — bản đồ bên
      trái (to xuống dưới vì bảng đã dời sang phải), khung dọc trong suốt
      bên phải chứa đồng hồ + BXH + bảng điểm. */
-  #mainRow { position:absolute; top:158px; left:0; right:0; bottom:0; display:flex; z-index:2; }
-  #mapArea { position:relative; flex:1; overflow:hidden;
+  /* (v8.2 + 2026-11-13) Bố cục 3 cột — bảng điểm sang TRÁI, cột phải chỉ
+     giữ sự kiện gần đây + quần đảo + gợi ý. Các bảng CHỈ ĐỦ CHỨA NỘI DUNG,
+     gom về ĐOẠN GIỮA (align-items:center) — không còn bảng nào kéo dài
+     hết chiều cao hay 1 cái ở đầu 1 cái ở cuối; bản đồ (mapArea) giữ
+     nguyên cao hết khung (align-self:stretch) nên không bị che. */
+  #mainRow { position:absolute; top:158px; left:0; right:0; bottom:0; display:flex; align-items:center; z-index:2; }
+  #mapArea { position:relative; flex:1; align-self:stretch; overflow:hidden;
     /* Biển Đông là nước, không phải khoảng đen: nền biển xanh đậm để vùng
        biển bên phải bản đồ đọc ra là biển (trước đây trong suốt, lộ nền tối
        của stage nên trông như dải đen thừa bên phải khung). */
@@ -32,11 +37,10 @@
     border:1px solid rgba(255,255,255,.22); border-radius:20px; padding:14px 12px 12px; overflow:hidden; }
   #rightCol { flex:none; width:240px; margin:0 14px 14px 0; display:flex; flex-direction:column; gap:10px; }
   #rightTop { flex:none; }
-  /* Cột phải: khoảng trống giữa 2 mục trước đây là div trống trong suốt,
-     lộ nền tối của stage nên trông như dải đen thừa bên phải khung bản đồ
-     (kiểm chứng live 19:48). Nay lấp bằng panel QUẦN ĐẢO (flex:1, kéo dài
-     lấp đầy cột) — vừa hết khoảng đen, vừa hiện trạng thái 2 đảo. */
-  #islandPanel { flex:1; }
+  /* Cột phải: các panel chỉ cao bằng nội dung (flex:none), cả cột gom về
+     đoạn giữa nhờ align-items:center của #mainRow — không còn khoảng trống
+     tối lớn giữa các bảng, không còn bảng nào ở đầu/cuối. */
+  #islandPanel { flex:none; }
   #islandPanel .islRow { font-size:17px; color:#c3d2f0; line-height:1.6; }
   #islandPanel .islDot { display:inline-block; width:13px; height:13px; border-radius:50%; background:#5b6b8c; margin-right:4px; vertical-align:-1px; }
   #islandPanel .islNote { font-size:15px; color:#b9c8e8; margin-top:8px; line-height:1.45; }
@@ -235,7 +239,7 @@
         <span>🎁 <b id="stCoins">0</b> xu • ✨ <b id="stLights">0</b> lượt thắp</span>
         <span class="stTrack">🎵 <b id="stTrack">…</b></span>
       </div>
-      <div class="sideSec" id="sideFeedBox" style="flex:1; overflow:hidden;">
+      <div class="sideSec" id="sideFeedBox" style="flex:none; overflow:hidden; max-height:240px;">
         <h2>📜 DIỄN BIẾN</h2><div id="sideFeed"></div>
       </div>
     </div>
@@ -434,17 +438,18 @@ function targetVB(bbox) {
   const y = Math.min(Math.max(cy - h / 2, FULL_VB.y), FULL_VB.y + FULL_VB.h - h);
   return { x, y, w, h };
 }
-function flyTo(bbox) {
-  if (zoomBusy) { zoomPending = bbox; return; }
+function flyTo(bbox, holdMs) {
+  if (zoomBusy) { zoomPending = { bbox, holdMs }; return; }
   zoomBusy = true;
   const to = targetVB(bbox);
+  const hold = holdMs || 1800;
   tweenVB({ ...FULL_VB }, to, 700, () => {
     setTimeout(() => {
       tweenVB(to, { ...FULL_VB }, 700, () => {
         zoomBusy = false;
-        if (zoomPending) { const b = zoomPending; zoomPending = null; flyTo(b); }
+        if (zoomPending) { const p = zoomPending; zoomPending = null; flyTo(p.bbox, p.holdMs); }
       });
-    }, 1800);
+    }, hold);
   });
 }
 
@@ -903,12 +908,15 @@ function render(s) {
     // Đà Nẵng/Khánh Hòa: zoom bao cả quần đảo của tỉnh để đảo vào khung
     // (trước đây zoom chỉ tới tỉnh nên đảo biến mất khỏi khung — kiểm chứng
     // live 19:48). Bbox hợp vẫn zoom ~1.9x nhờ targetVB clamp về 422x1300.
+    // Giữ khung đảo lâu hơn (4s thay vì 1.8s) để người xem kịp nhìn đảo sáng
+    // (kiểm chứng live 20:08: demo thắp ~1 tỉnh/giây nên khung đảo chỉ giữ
+    // 1–2 giây, người xem thường lỡ).
     if (r.t !== lastZoomRecentT && Date.now() - r.t < 4000 && s.phase === 'playing') {
       lastZoomRecentT = r.t;
       const p = provMeta.find(x => x.num === r.provinceNum);
       if (p && p.bbox) {
         const ib = ISLAND_BBOX[r.provinceNum];
-        flyTo(ib ? unionBBox(p.bbox, ib) : p.bbox);
+        flyTo(ib ? unionBBox(p.bbox, ib) : p.bbox, ib ? 4000 : 1800);
       }
     }
   } else {
