@@ -11,7 +11,6 @@
   html, body { width: 1080px; height: 1920px; overflow: hidden; }
   body {
     font-family: "Segoe UI", Verdana, sans-serif; color: #fff;
-    background: linear-gradient(180deg, #1b4d8a 0%, #3a7bd5 30%, #8a5a2b 62%, #6b4423 100%);
   }
   .demo-badge { position: absolute; top: 14px; left: 14px; z-index: 30; background: #b8860b; color: #1c1c1c; font-weight: 900; font-size: 24px; padding: 8px 16px; border-radius: 10px; display: none; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
   .demo-badge.on { display: block; }
@@ -36,11 +35,11 @@
   .field { position: absolute; top: 560px; left: 0; width: 1080px; height: 900px; z-index: 4; }
   .ground { position: absolute; top: 330px; left: 0; width: 1080px; height: 570px; background: linear-gradient(180deg, #a9743f, #7a4e22); border-top: 6px solid #c89b5e; }
   .centerline { position: absolute; top: 320px; left: 50%; transform: translateX(-50%); width: 10px; height: 130px; background: #fff; opacity: .9; border-radius: 4px; }
-  .centerline::after { content: "VẠCH GIỮA"; position: absolute; top: -34px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; color: #fff; white-space: nowrap; text-shadow: 0 2px 4px #000; }
+  .centerline::after { content: "VẠCH GIỮA"; position: absolute; top: 134px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; color: #fff; white-space: nowrap; text-shadow: 0 2px 4px #000; }
   .finish { position: absolute; top: 320px; width: 8px; height: 130px; border-radius: 4px; }
   .finish.left { left: 70px; background: #1e90ff; }
   .finish.right { right: 70px; background: #e63946; }
-  .finish span { position: absolute; top: -34px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; white-space: nowrap; text-shadow: 0 2px 4px #000; }
+  .finish span { position: absolute; top: 136px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; white-space: nowrap; text-shadow: 0 2px 4px #000; }
   .rope { position: absolute; top: 360px; left: 60px; width: 960px; height: 22px; background: repeating-linear-gradient(90deg, #d9a066 0 26px, #b57e42 26px 52px); border-radius: 11px; box-shadow: 0 4px 8px rgba(0,0,0,.4); }
   .flag { position: absolute; top: 300px; left: 50%; transform: translateX(-50%); font-size: 72px; z-index: 6; transition: left .5s ease; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
   .team-side { position: absolute; top: 60px; width: 470px; }
@@ -55,9 +54,9 @@
   .puller .fc { font-size: 17px; font-weight: 700; color: #ffd94d; text-shadow: 0 1px 3px #000; }
   .bench { text-align: center; font-size: 22px; font-weight: 700; margin-top: 10px; color: #ffe9bd; text-shadow: 0 1px 3px #000; }
   .hint { position: absolute; top: 500px; left: 0; width: 1080px; text-align: center; font-size: 26px; font-weight: 800; color: #fff; text-shadow: 0 2px 6px #000; z-index: 5; }
-  .top5 { position: absolute; top: 1480px; left: 30px; width: 1020px; z-index: 6; background: rgba(0,0,0,.5); border-radius: 16px; padding: 14px 20px; }
+  .top5 { position: absolute; top: 1440px; left: 30px; width: 1020px; z-index: 6; background: rgba(0,0,0,.5); border-radius: 16px; padding: 14px 20px; }
   .top5 h3 { font-size: 26px; margin-bottom: 6px; }
-  .top5 div { font-size: 23px; line-height: 1.5; }
+  .top5 div { font-size: 23px; line-height: 1.35; }
   .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
   .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
   .statusbar { position: absolute; left: 0; bottom: 0; width: 1080px; height: 140px; z-index: 5; background: #123a5c; color: #fff; display: flex; align-items: center; justify-content: space-around; font-size: 26px; font-weight: 800; padding: 0 30px; }
@@ -67,7 +66,7 @@
   @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
   .banner h2 { font-size: 54px; color: #123a5c; }
   .banner p { font-size: 30px; margin-top: 10px; line-height: 1.4; color: #333; }
-  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; background: linear-gradient(180deg, #1b4d8a 0%, #3a7bd5 30%, #8a5a2b 62%, #6b4423 100%); visibility: hidden; }
   html { background: #000; }
 </style>
 </head>
@@ -130,8 +129,10 @@ function fit() {
   scaler.style.transform = 'scale(' + s + ')';
   scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
   scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
+  scaler.style.visibility = 'visible'; // hiện khung chỉ khi đã co đúng tỉ lệ (tránh chớp khung chưa co lúc mới tải)
 }
 window.addEventListener('resize', fit); fit();
+setTimeout(() => { scaler.style.visibility = 'visible'; }, 500); // an toàn nếu fit() lỗi
 const socket = io();
 let lastState = null;
 let voiceOn = true;
@@ -221,7 +222,7 @@ function render(s) {
   document.getElementById('st-online').textContent = s.viewersOnline;
   document.getElementById('st-taps').textContent = s.stats.taps;
   document.getElementById('st-gifts').textContent = s.stats.gifts;
-  document.getElementById('ticker').innerHTML = s.logs.slice(-3).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
+  document.getElementById('ticker').innerHTML = s.logs.slice(-2).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
 
   if (s.phase === 'matchEnd' && s.results) {
     const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
