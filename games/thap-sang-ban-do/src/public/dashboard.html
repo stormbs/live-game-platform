@@ -63,25 +63,17 @@
 <div class="card" id="tikfinity-card">
   <h2>🎯 Cài đặt TikFinity (đường sự kiện chính)</h2>
   <p style="font-size:14px;line-height:1.7">Game nhận sự kiện live (bình luận, quà, tim, follow, share, vào phòng) qua <b>TikFinity</b> chạy trên máy Windows của bạn. TikFinity gửi sự kiện về máy chủ qua webhook bên dưới. Thẻ “Kết nối trực tiếp” ở trên cũng đếm mọi sự kiện này — khi tổng số sự kiện &gt; 0 là TikFinity đã nối đúng.</p>
-  <p style="font-size:14px;line-height:1.7">📖 <b>Bài hướng dẫn đầy đủ từng bước</b> (lấy link webhook riêng, tạo 6 Action, gắn 6 sự kiện, thứ tự lên live, cách kiểm chứng): <a id="tf-guide-link" href="/huong-dan-tikfinity" target="_blank">Mở hướng dẫn cài đặt TikFinity ↗</a><br>Nhớ thứ tự lên live: <b>Go LIVE</b> trong TikTok LIVE Studio TRƯỚC, rồi mới bấm <b>Connect</b> trong TikFinity.</p>
+  <p style="font-size:14px;line-height:1.7">📖 <b>Bài hướng dẫn đầy đủ từng bước</b> (lấy link webhook, tạo 1 Action duy nhất, gắn các sự kiện vào Action đó, thứ tự lên live, cách kiểm chứng): <a id="tf-guide-link" href="/huong-dan-tikfinity" target="_blank">Mở hướng dẫn cài đặt TikFinity ↗</a><br>Nhớ thứ tự lên live: <b>Go LIVE</b> trong TikTok LIVE Studio TRƯỚC, rồi mới bấm <b>Connect</b> trong TikFinity.</p>
 
   <h3 style="font-size:15px;margin:14px 0 6px">Webhook của phòng này</h3>
   <div style="font-size:14px"><code id="tf-webhook-url" style="background:#fff7d6;padding:4px 8px;border-radius:6px;word-break:break-all">…</code> <button class="primary" onclick="copyTfWebhook()">📋 Sao chép</button> <span id="tf-copy-msg"></span></div>
-  <h3 style="font-size:15px;margin:14px 0 6px">2. Tạo 6 Action webhook — mỗi sự kiện 1 URL riêng</h3>
+  <h3 style="font-size:15px;margin:14px 0 6px">Tạo 1 Action webhook duy nhất</h3>
   <ol>
-    <li>Tạo 6 Action riêng trong TikFinity, mỗi Action cho 1 sự kiện: loại <b>Webhook</b> (Trigger WebHook), Method <b>POST</b>, URL = URL của đúng sự kiện đó bên dưới. Tên Action theo mẫu “&lt;Tên game&gt; - &lt;Sự kiện&gt;”.</li>
-    <li><b>Không cần nhập body:</b> action webhook của TikFinity chỉ có ô URL — TikFinity tự gửi sẵn nội dung sự kiện, máy chủ phân biệt loại sự kiện bằng <code>?event=…</code> trên URL.</li>
-    <li>Tạo 6 Event, mỗi Event chọn đúng trigger (Quà = “Sending a gift with min. coins value”, min 1; Bình luận = “Chat (any comment)”; Tim = “Sending likes (taps)”; Follow = “Follow”; Share = “Share”; Vào phòng = “Join”), rồi ở ô “Trigger all of these actions” chọn đúng Action của nó.</li>
+    <li>Tạo <b>1 Action duy nhất</b> trong TikFinity: loại <b>Webhook</b> (Trigger WebHook), Method <b>POST</b>, URL = URL webhook của phòng này ở trên (không thêm <code>?event=</code>). Tên Action theo mẫu “&lt;Tên game&gt;” (vd “Thap Sang Ban Do Viet Nam”).</li>
+    <li><b>Không cần nhập body:</b> action webhook của TikFinity chỉ có ô URL — TikFinity tự gửi sẵn nội dung sự kiện KÈM loại sự kiện, máy chủ tự phân biệt loại sự kiện từ body nên 1 Action xử lý được mọi sự kiện.</li>
+    <li>Tạo các Event (Quà = “Sending a gift with min. coins value”, min 1; Bình luận = “Chat (any comment)”; Tim = “Sending likes (taps)”; Follow = “Follow”; Share = “Share”; Vào phòng = “Join”), rồi ở ô “Trigger all of these actions” đều chọn <b>Action duy nhất</b> vừa tạo. Không cần tạo Action riêng cho từng sự kiện.</li>
   </ol>
-  <div style="font-size:14px;line-height:1.9">
-    <div>🎁 Quà tặng — Action “Thap Sang Ban Do Viet Nam - Qua”<br><code id="tf-url-gift" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('gift')">📋 Sao chép URL</button></div>
-    <div>💬 Bình luận — Action “Thap Sang Ban Do Viet Nam - Binh luan”<br><code id="tf-url-chat" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('chat')">📋 Sao chép URL</button></div>
-    <div>❤️ Thả tim — Action “Thap Sang Ban Do Viet Nam - Tim”<br><code id="tf-url-like" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('like')">📋 Sao chép URL</button></div>
-    <div>➕ Theo dõi — Action “Thap Sang Ban Do Viet Nam - Follow”<br><code id="tf-url-follow" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('follow')">📋 Sao chép URL</button></div>
-    <div>🔗 Chia sẻ — Action “Thap Sang Ban Do Viet Nam - Share”<br><code id="tf-url-share" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('share')">📋 Sao chép URL</button></div>
-    <div>🚪 Vào phòng — Action “Thap Sang Ban Do Viet Nam - Vao phong”<br><code id="tf-url-join" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('join')">📋 Sao chép URL</button></div>
-  </div>
-  <p style="font-size:13px;line-height:1.7"><b>Mẹo — URL chung cho mọi game:</b> thay vì URL riêng của phòng, bạn có thể dùng URL chung <code id="tf-url-common" style="word-break:break-all;">…</code> — cùng tác dụng, đổi game chỉ cần sửa <code>game=</code> và <code>room=</code> trong URL. Vẫn cần <b>1 Action cho mỗi loại sự kiện</b> (mỗi Action 1 <code>event=</code> riêng) vì TikFinity không gửi loại sự kiện trong body — URL gốc không có <code>event=</code> thì Follow/Vào phòng bị bỏ qua, Thả tim bị nhận nhầm thành Quà.</p>
+  <p style="font-size:13px;line-height:1.7"><b>Mẹo — URL chung cho mọi game:</b> thay vì URL riêng của phòng, bạn có thể dùng URL chung <code id="tf-url-common" style="word-break:break-all;">…</code> làm URL cho Action duy nhất — cùng tác dụng, đổi game chỉ cần sửa <code>game=</code> và <code>room=</code> trong URL.</p>
   <p style="font-size:13px;line-height:1.7">Tên biến ($userId, $nickname, $uniqueId, $comment…) tùy phiên bản TikFinity — bấm nút chèn biến (insert variable) của TikFinity để lấy đúng tên. Nếu không có $uniqueId thì dùng biến tên TikTok mà TikFinity gợi ý, hoặc bỏ trường uniqueId (engine tự dùng nickname thay thế). Số xu chỉ lấy $diamondCount thật, không bịa.</p>
 </div>
 
@@ -300,7 +292,7 @@ function fillTfEventUrls() {
   // viết lại literal đó thành URL gắn prefix phòng
   // ('/o/<game>/<room>/api/...'), làm URL chung thành URL phòng (lỗi đã gặp
   // ở bản ebb6329, kiểm chứng 23:17).
-  if (common) common.textContent = location.origin + '/' + 'api' + '/webhook?game=' + d.game + '&room=' + d.username + '&event=<loại>';
+  if (common) common.textContent = location.origin + '/' + 'api' + '/webhook?game=' + d.game + '&room=' + d.username;
 }
 function copyTfEventUrl(key) {
   var el = document.getElementById('tf-url-' + key);
