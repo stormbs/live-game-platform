@@ -208,6 +208,16 @@ const PROVINCE_FACTS = {
   34: 'miền sông nước, có chợ nổi Trà Ôn',
 };
 
+// Tên "xứ" để đọc câu chào người mới vào tỉnh đã sáng (2026-11-13,
+// Chủ tịch: "Thêm một người con xứ Thanh nữa đã cùng chung tay thắp
+// sáng quê hương..."). Chỉ những tỉnh có tên xứ quen thuộc mới dùng
+// "xứ X"; tỉnh còn lại dùng "của {tên tỉnh}".
+const PROVINCE_XU = {
+  13: 'xứ Nghệ', 16: 'xứ Huế', 18: 'xứ Trầm', 21: 'xứ Lạng',
+  23: 'xứ Nghệ', 26: 'xứ Quảng', 32: 'xứ Thanh',
+};
+function xuName(num, name) { return PROVINCE_XU[num] || ('của ' + name); }
+
 // Tìm tối đa maxN tỉnh trong 1 comment. Trả về [{num, alias, isOld, idx}...]
 // theo thứ tự xuất hiện. alias = cụm đã khớp (đã chuẩn hóa), isOld = tên tỉnh cũ.
 function parseProvinces(text, maxN = 3) {
@@ -510,7 +520,7 @@ const provinces = new Map(); // num -> {lit, litBy, litAt, points, lights}
 function freshProvinces() {
   provinces.clear();
   for (const p of PROVINCES) {
-    provinces.set(p.num, { lit: false, litBy: null, litAt: 0, points: 0, lights: 0, milestoneIdx: 0 });
+    provinces.set(p.num, { lit: false, litBy: null, litAt: 0, points: 0, lights: 0, milestoneIdx: 0, lastWelcomeAt: 0 });
   }
 }
 freshProvinces();
@@ -810,8 +820,9 @@ function onChat(name, text, avatar, key) {
   // + 1 lần đổi), bản đồ chỉ đầy khi nhiều người cùng chơi. Điểm tỉnh
   // đã tích ở tỉnh cũ vẫn giữ nguyên (điểm thuộc về tỉnh).
   const target = matches[0].num;
+  let justJoined = false; // vừa mới chọn tỉnh này làm quê trong comment này
   if (!v.home) {
-    v.home = target; // chọn quê lần đầu
+    v.home = target; justJoined = true; // chọn quê lần đầu
     // Điểm quà đã tặng trước khi chọn quê (v7.7): trả về quê vừa chọn.
     if (v.bankedPoints > 0) {
       const b = v.bankedPoints; v.bankedPoints = 0;
@@ -821,7 +832,7 @@ function onChat(name, text, avatar, key) {
   } else if (target !== v.home) {
     if (v.homeChanges < (config.maxHomeChangesPerRound ?? 1)) {
       v.homeChanges += 1;
-      v.home = target; // dùng 1 lượt đổi quê (avatar bay sang tỉnh mới)
+      v.home = target; justJoined = true; // dùng 1 lượt đổi quê (avatar bay sang tỉnh mới)
     } else if (!v.homeChangeWarned) {
       v.homeChangeWarned = true; // báo 1 lần/ván/người để khỏi spam feed
       pushFeed(`🔒 ${v.name} đã hết lượt đổi quê trong ván này (đã đổi ${config.maxHomeChangesPerRound ?? 1} lần), ở lại ${byNum.get(v.home).name}!`);
@@ -847,6 +858,17 @@ function onChat(name, text, avatar, key) {
       }
     } else if (res === 'repeat' && mt.isOld) {
       pushAnnounce(`${OLD_DISPLAY[mt.alias]} nay thuộc ${p.name}, tỉnh này đã sáng rồi!`, ['old-' + mt.alias.replace(/ /g, '-'), 'already-lit'], { priority: 4 });
+    } else if (res === 'repeat' && justJoined) {
+      // Người mới vào tỉnh đã sáng: chào mừng kiểu "Thêm một người con
+      // xứ Thanh nữa đã cùng chung tay thắp sáng quê hương..." (Chủ tịch
+      // 2026-11-13). Chống spam voice: mỗi tỉnh tối đa 1 câu chào / 15
+      // giây — comment vẫn +1đ bình thường dù không đọc.
+      const pst = provinces.get(mt.num);
+      if (Date.now() - (pst.lastWelcomeAt || 0) >= 15000) {
+        pst.lastWelcomeAt = Date.now();
+        const sentence = `Thêm một người con ${xuName(mt.num, p.name)} nữa đã cùng chung tay thắp sáng quê hương, cảm ơn ${v.name}!`;
+        pushAnnounce(sentence, [], { priority: 4, ttsText: sentence });
+      }
     }
   }
 }

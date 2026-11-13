@@ -82,6 +82,52 @@ test('comment tên tỉnh thắp sáng; comment số không thắp gì', async (
   }
 });
 
+test('comment tỉnh đã sáng: người mới vào được chào "Thêm một người con xứ Thanh..."', async () => {
+  const t = await startTestServer();
+  try {
+    const base = `/o/${GAME}/welcome_user`;
+    await postChat(t.base, base, 'a_uid', 'Anh A', 'Thanh Hóa');
+    let state = await getState(t.base, base);
+    assert.ok(litNums(state).includes(32), 'Thanh Hóa phải sáng sau comment đầu');
+    assert.equal(state.provinces.find((p) => p.num === 32).lights, 1, 'chỉ 1 lượt thắp');
+    // Người B (mới) comment tỉnh đã sáng -> được chào, tỉnh vẫn 1 lượt thắp, +1đ.
+    await postChat(t.base, base, 'b_uid', 'Bình B', 'thanh hoá');
+    state = await getState(t.base, base);
+    assert.equal(state.provinces.find((p) => p.num === 32).lights, 1, 'không thắp lại');
+    assert.equal(state.provinces.find((p) => p.num === 32).points, 2, 'vẫn +1đ cho tỉnh');
+    const welcomes = state.announce.filter((a) => a.text.includes('Thêm một người con xứ Thanh'));
+    assert.equal(welcomes.length, 1, 'phải có đúng 1 câu chào xứ Thanh');
+    assert.ok(welcomes[0].text.includes('Bình B'), 'câu chào phải nhắc tên người mới');
+    assert.ok(welcomes[0].text.includes('cùng chung tay thắp sáng quê hương'), 'đúng mẫu câu Chủ tịch chốt');
+    // Người C (mới) comment ngay sau -> chống spam 15s/tỉnh, chưa chào.
+    await postChat(t.base, base, 'c_uid', 'Chi C', 'Thanh Hóa');
+    state = await getState(t.base, base);
+    assert.equal(state.announce.filter((a) => a.text.includes('Thêm một người con xứ Thanh')).length, 1, 'chào tối đa 1 lần/15s/tỉnh');
+    assert.equal(state.provinces.find((p) => p.num === 32).points, 3, 'C vẫn +1đ dù không đọc');
+  } finally {
+    await stopTestServer(t);
+  }
+});
+
+test('comment lại tỉnh đã sáng (đã có quê đó): không chào lại', async () => {
+  const t = await startTestServer();
+  try {
+    const base = `/o/${GAME}/welcome2_user`;
+    await postChat(t.base, base, 'a_uid', 'Anh A', 'Thanh Hóa');
+    await postChat(t.base, base, 'b_uid', 'Bình B', 'Thanh Hóa');
+    let state = await getState(t.base, base);
+    assert.equal(state.announce.filter((a) => a.text.includes('Thêm một người con xứ Thanh')).length, 1, 'B được chào 1 lần');
+    // Chờ qua cả chống spam chào (15s) lẫn cooldown comment (5s) rồi B comment lại.
+    await new Promise((r) => setTimeout(r, 16000));
+    await postChat(t.base, base, 'b_uid', 'Bình B', 'Thanh Hóa');
+    state = await getState(t.base, base);
+    assert.equal(state.announce.filter((a) => a.text.includes('Thêm một người con xứ Thanh')).length, 1, 'comment lại không chào nữa');
+    assert.equal(state.provinces.find((p) => p.num === 32).points, 3, 'vẫn +1đ khi comment lại');
+  } finally {
+    await stopTestServer(t);
+  }
+});
+
 test('overlay: không còn hiển thị số trên tỉnh', async () => {
   const t = await startTestServer();
   try {
