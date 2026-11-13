@@ -16,8 +16,8 @@
   header { position: absolute; top: 24px; left: 0; right: 0; text-align: center; z-index: 5; }
   header h1 { font-size: 62px; letter-spacing: 4px; text-shadow: 0 4px 0 rgba(0,0,0,.3); }
   header .sub { font-size: 26px; opacity: .95; margin-top: 6px; text-shadow: 0 2px 4px rgba(0,0,0,.3); }
-  #score { position: absolute; top: 180px; left: 40px; right: 40px; display: flex; gap: 16px; z-index: 5; }
-  .team-box { flex: 1; border-radius: 22px; padding: 16px 20px; background: rgba(0,0,0,.4); border: 4px solid; }
+  #score { position: absolute; top: 180px; left: 40px; right: 40px; display: flex; justify-content: space-between; z-index: 5; }
+  .team-box { flex: 0 0 400px; border-radius: 22px; padding: 16px 20px; background: rgba(0,0,0,.4); border: 4px solid; }
   .team-box.vang { border-color: #facc15; }
   .team-box.do { border-color: #f87171; }
   .team-box .tname { font-size: 30px; font-weight: 800; }
@@ -35,8 +35,8 @@
   #timer .clock { font-size: 46px; font-weight: 900; }
   #timer .lbl { font-size: 20px; opacity: .85; }
   #river { position: absolute; top: 480px; left: 0; right: 0; bottom: 340px; }
-  .lane { position: relative; height: 46%; margin: 2% 0; background-image: repeating-radial-gradient(ellipse 90px 14px at 20% 50%, rgba(255,255,255,.16) 0 2px, transparent 3px), linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.05)); background-size: 240px 100%, 100% 100%; border-top: 3px dashed rgba(255,255,255,.5); border-bottom: 3px dashed rgba(255,255,255,.5); overflow: hidden; animation: waves 3s linear infinite; }
-  @keyframes waves { from { background-position-x: 0; } to { background-position-x: 240px; } }
+  .lane { position: relative; height: 46%; margin: 2% 0; background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.30) 0 8px, transparent 8px 70px), repeating-radial-gradient(ellipse 90px 14px at 20% 50%, rgba(255,255,255,.30) 0 3px, transparent 4px), linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.05)); background-size: 280px 100%, 280px 100%, 100% 100%; border-top: 3px dashed rgba(255,255,255,.5); border-bottom: 3px dashed rgba(255,255,255,.5); overflow: hidden; animation: waves 2.2s linear infinite; }
+  @keyframes waves { from { background-position-x: 0; } to { background-position-x: 280px; } }
   .lane .milestones { position: absolute; inset: 0; }
   .lane .ms { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,.55); }
   .lane .ms span { position: absolute; top: 6px; left: 4px; font-size: 20px; font-weight: 700; color: rgba(255,255,255,.9); text-shadow: 0 1px 3px rgba(0,0,0,.4); }
@@ -68,6 +68,8 @@
   .top-list.do h3 { color: #fca5a5; }
   .top-list .row { font-size: 24px; padding: 3px 0; display: flex; justify-content: space-between; }
   #ticker { position: absolute; left: 0; right: 0; bottom: 130px; height: 64px; background: rgba(0,0,0,.55); display: flex; align-items: center; padding: 0 24px; font-size: 28px; white-space: nowrap; overflow: hidden; z-index: 5; }
+  #ticker-text.scroll { animation: ticker-scroll 22s linear infinite; }
+  @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   #statusbar { position: absolute; left: 0; right: 0; bottom: 56px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 26px; background: rgba(0,0,0,.4); z-index: 5; }
   #banner { position: absolute; top: 820px; left: 90px; right: 90px; text-align: center; font-size: 72px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); display: none; z-index: 9; }
   #demo-badge { position: absolute; top: 24px; right: 24px; background: #f59e0b; color: #111; font-weight: 900; font-size: 26px; padding: 10px 18px; border-radius: 14px; display: none; z-index: 10; }
@@ -133,7 +135,6 @@ window.addEventListener('resize', fit); fit();
   const params = new URLSearchParams(location.search);
   const path = location.pathname.split('/').filter(Boolean);
   const username = path[2] || 'live';
-  const apiBase = `/o/dua-thuyen-rong/${username}`;
   const demoParam = params.get('demo') === '1';
   let state = null;
   let voiceOn = true;
@@ -243,7 +244,10 @@ window.addEventListener('resize', fit); fit();
     } else banner.style.display = 'none';
     document.getElementById('demo-badge').style.display = s.demoActive ? 'block' : 'none';
     if (s.logs && s.logs.length) {
-      document.getElementById('ticker-text').textContent = s.logs[s.logs.length - 1].text;
+      const tk = document.getElementById('ticker-text');
+      const lt = s.logs[s.logs.length - 1].text;
+      tk.textContent = lt + '   •   ' + lt;
+      tk.classList.toggle('scroll', tk.scrollWidth > tk.parentElement.clientWidth);
     }
   }
   function escapeHtml(x) { return String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -267,7 +271,7 @@ window.addEventListener('resize', fit); fit();
   }
   async function poll() {
     try {
-      const r = await fetch(apiBase + '/api/state');
+      const r = await fetch('/api/state');
       const s = await r.json();
       render(s);
     } catch (e) { /* keep last */ }
@@ -281,9 +285,10 @@ window.addEventListener('resize', fit); fit();
       socket.on('race-win', (d) => { if (d && d.text) playTts(d.text); });
     } catch (e) { /* polling fallback */ }
     poll();
+    (function () { const tk = document.getElementById('ticker-text'); const t = tk.textContent; tk.textContent = t + '   •   ' + t; tk.classList.toggle('scroll', tk.scrollWidth > tk.parentElement.clientWidth); })();
     if (demoParam) {
-      fetch(apiBase + '/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
-        .then(() => fetch(apiBase + '/api/demo/start', { method: 'POST' })).catch(() => {});
+      fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+        .then(() => fetch('/api/demo/start', { method: 'POST' })).catch(() => {});
     }
   }
   boot();

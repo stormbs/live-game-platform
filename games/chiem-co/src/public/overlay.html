@@ -22,8 +22,8 @@
   header { position: absolute; top: 24px; left: 0; right: 0; text-align: center; }
   header h1 { font-size: 64px; letter-spacing: 6px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
   header .sub { font-size: 26px; opacity: .9; margin-top: 6px; }
-  #score { position: absolute; top: 170px; left: 40px; right: 40px; display: flex; gap: 20px; }
-  .team-box { flex: 1; border-radius: 22px; padding: 18px 20px; background: rgba(0,0,0,.35); border: 4px solid; }
+  #score { position: absolute; top: 170px; left: 40px; right: 40px; display: flex; justify-content: space-between; }
+  .team-box { flex: 0 0 400px; border-radius: 22px; padding: 18px 20px; background: rgba(0,0,0,.35); border: 4px solid; }
   .team-box.xanh { border-color: #38bdf8; }
   .team-box.do { border-color: #f87171; }
   .team-box .tname { font-size: 30px; font-weight: 800; }
@@ -40,7 +40,9 @@
   .flag { width: 300px; text-align: center; transition: transform .6s ease; transform-origin: 50% 100%; }
   .flag .pole { position: relative; height: 560px; margin: 0 auto; width: 14px; background: #d6d3d1; border-radius: 7px; box-shadow: 2px 2px 0 rgba(0,0,0,.3); }
   .flag .cloth { position: absolute; top: 0; left: 14px; width: 190px; height: 120px; clip-path: polygon(0 0, 100% 15%, 88% 50%, 100% 85%, 0 100%); display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.5); transition: background .4s; animation: flag-wave 1.2s ease-in-out infinite; }
-  @keyframes flag-wave { 0%, 100% { transform: skewY(0deg); } 50% { transform: skewY(3deg); } }
+  @keyframes flag-wave { 0%, 100% { transform: skewY(-3deg) translateX(-3px); } 50% { transform: skewY(5deg) translateX(3px); } }
+  .flag .cloth::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.30) 50%, transparent 70%); background-size: 220% 100%; animation: cloth-shine 1.2s linear infinite; pointer-events: none; }
+  @keyframes cloth-shine { from { background-position: 120% 0; } to { background-position: -120% 0; } }
   .flag.flag-captured { animation: flag-captured .9s ease; }
   @keyframes flag-captured { 0% { transform: scale(1); filter: brightness(1); } 40% { transform: scale(1.14); filter: brightness(1.4); } 100% { transform: scale(1); filter: brightness(1); } }
   .flag .cloth.neutral { background: #78716c; }
@@ -53,7 +55,7 @@
   .capbar .bx { background: #0284c7; height: 100%; }
   .capbar .bd { background: #dc2626; height: 100%; }
   .capbar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); animation: ui-shine 1.8s linear infinite; pointer-events: none; }
-  .capbar .lbl { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 20px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.8); white-space: nowrap; }
+  .capbar .lbl { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 2; font-size: 22px; font-weight: 900; color: #fff; background: rgba(0,0,0,.55); padding: 2px 12px; border-radius: 999px; text-shadow: 0 1px 3px rgba(0,0,0,.8); white-space: nowrap; }
   .flag .capwrap { position: relative; }
   .flag .capnum { font-size: 22px; margin-top: 6px; }
   #mid-flag .pole { height: 640px; }
@@ -65,6 +67,8 @@
   .top-list.do h3 { color: #fca5a5; }
   .top-list .row { font-size: 24px; padding: 3px 0; display: flex; justify-content: space-between; }
   #ticker { position: absolute; left: 0; right: 0; bottom: 130px; height: 64px; background: rgba(0,0,0,.55); display: flex; align-items: center; padding: 0 24px; font-size: 28px; white-space: nowrap; overflow: hidden; }
+  #ticker-text.scroll { animation: ticker-scroll 22s linear infinite; }
+  @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   #statusbar { position: absolute; left: 0; right: 0; bottom: 56px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 26px; background: rgba(0,0,0,.4); }
   /* #banner dùng class .ui-banner từ shared/ui.css (xem HTML) */
   #demo-badge { position: absolute; top: 24px; right: 24px; background: #f59e0b; color: #111; font-weight: 900; font-size: 26px; padding: 10px 18px; border-radius: 14px; display: none; }
@@ -140,7 +144,6 @@ window.addEventListener('resize', fit); fit();
   const params = new URLSearchParams(location.search);
   const path = location.pathname.split('/').filter(Boolean);
   const username = path[2] || 'live';
-  const apiBase = `/o/chiem-co/${username}`;
   const demoParam = params.get('demo') === '1';
   let state = null;
   let voiceOn = true;
@@ -209,7 +212,8 @@ window.addEventListener('resize', fit); fit();
     for (const id of ['left', 'mid', 'right']) {
       const fl = s.flags[id];
       const cloth = document.getElementById('cloth-' + id);
-      cloth.className = 'cloth ' + (fl.owner || 'neutral');
+      const clothCls = 'cloth ' + (fl.owner || 'neutral');
+      if (cloth.className !== clothCls) cloth.className = clothCls;
       cloth.textContent = fl.owner === 'xanh' ? 'X' : fl.owner === 'do' ? 'Đ' : '?';
       document.getElementById('owner-' + id).textContent = fl.owner === 'xanh' ? '🔵 Đội Xanh giữ' : fl.owner === 'do' ? '🔴 Đội Đỏ giữ' : '— trống —';
       const fx = fl.force.xanh, fd = fl.force.do, tot = fx + fd;
@@ -256,13 +260,16 @@ window.addEventListener('resize', fit); fit();
     prevMatchNo = s.matchNo;
     document.getElementById('demo-badge').style.display = s.demoActive ? 'block' : 'none';
     if (s.logs && s.logs.length) {
-      document.getElementById('ticker-text').textContent = s.logs[s.logs.length - 1].text;
+      const tk = document.getElementById('ticker-text');
+      const lt = s.logs[s.logs.length - 1].text;
+      tk.textContent = lt + '   •   ' + lt;
+      tk.classList.toggle('scroll', tk.scrollWidth > tk.parentElement.clientWidth);
     }
   }
   function escapeHtml(x) { return String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   async function poll() {
     try {
-      const r = await fetch(apiBase + '/api/state');
+      const r = await fetch('/api/state');
       const s = await r.json();
       render(s);
     } catch (e) { /* keep last */ }
@@ -276,9 +283,10 @@ window.addEventListener('resize', fit); fit();
       socket.on('match-win', (d) => { if (d && d.text) playTts(d.text); });
     } catch (e) { /* polling fallback */ }
     poll();
+    (function () { const tk = document.getElementById('ticker-text'); const t = tk.textContent; tk.textContent = t + '   •   ' + t; tk.classList.toggle('scroll', tk.scrollWidth > tk.parentElement.clientWidth); })();
     if (demoParam) {
-      fetch(apiBase + '/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
-        .then(() => fetch(apiBase + '/api/demo/start', { method: 'POST' })).catch(() => {});
+      fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+        .then(() => fetch('/api/demo/start', { method: 'POST' })).catch(() => {});
     }
   }
   boot();

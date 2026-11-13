@@ -105,7 +105,6 @@ window.addEventListener('resize', fit); fit();
   const params = new URLSearchParams(location.search);
   const path = location.pathname.split('/').filter(Boolean);
   const username = path[2] || 'live';
-  const apiBase = `/o/dau-tri/${username}`;
   const demoParam = params.get('demo') === '1';
   let state = null;
   let voiceOn = true;
@@ -215,7 +214,7 @@ window.addEventListener('resize', fit); fit();
   }
   async function poll() {
     try {
-      const r = await fetch(apiBase + '/api/state');
+      const r = await fetch('/api/state');
       const s = await r.json();
       render(s);
     } catch (e) { /* keep last */ }
@@ -231,8 +230,8 @@ window.addEventListener('resize', fit); fit();
     } catch (e) { /* polling fallback */ }
     poll();
     if (demoParam) {
-      fetch(apiBase + '/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
-        .then(() => fetch(apiBase + '/api/demo/start', { method: 'POST' })).catch(() => {});
+      fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
+        .then(() => fetch('/api/demo/start', { method: 'POST' })).catch(() => {});
     }
   }
   boot();
