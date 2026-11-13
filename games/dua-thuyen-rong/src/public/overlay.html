@@ -55,9 +55,12 @@
   #banner { position: absolute; top: 820px; left: 90px; right: 90px; text-align: center; font-size: 72px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); display: none; z-index: 9; }
   #demo-badge { position: absolute; top: 24px; right: 24px; background: #f59e0b; color: #111; font-weight: 900; font-size: 26px; padding: 10px 18px; border-radius: 14px; display: none; z-index: 10; }
   #hint { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 22px; opacity: .8; z-index: 5; }
+  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+  html { background: #000; }
 </style>
 </head>
 <body>
+<div id="scaler">
 <div id="stage">
   <div class="clouds"></div>
   <header>
@@ -94,8 +97,18 @@
   <div id="banner"></div>
   <div id="hint">Đua thuyền rồng — thả tim để chèo, cả đội chèo dồn dập thì trống dồn, thuyền vọt lên.</div>
 </div>
+</div>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/shared/music.js"></script>
 <script>
+var scaler = document.getElementById('scaler');
+function fit() {
+  var s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+  scaler.style.transform = 'scale(' + s + ')';
+  scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
+  scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
+}
+window.addEventListener('resize', fit); fit();
 (function () {
   const params = new URLSearchParams(location.search);
   const path = location.pathname.split('/').filter(Boolean);
@@ -171,6 +184,8 @@
   function render(s) {
     if (!s || s.game !== 'dua-thuyen-rong') return;
     state = s;
+    // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
+    if (window.StromMusic) window.StromMusic.sync({ mood: 'drum', enabled: true, volume: 50, energy: (s.phase === 'spotlight' || (s.phase === 'racing' && (((s.combos.vang || 0) + (s.combos.do || 0)) > 0 || Math.max(s.progress.vang || 0, s.progress.do || 0) > 80))) ? 2 : (s.phase === 'racing' ? 1 : 0) });
     voiceOn = s.settings.voiceEnabled !== false;
     document.getElementById('m-vang').textContent = s.meters.vang;
     document.getElementById('m-do').textContent = s.meters.do;

@@ -3,8 +3,8 @@
 // (KHỐI 1–4): 4 xe trên 1 dốc — xe streamer (vàng) + xe top 3 quà
 // (xanh/đỏ/tím). Comment +10m, tap +0,5m, quà 1 xu = 1m (xe của chính
 // người tặng nếu đang top 3, ngược lại đẩy xe streamer + vẫn tích điểm
-// đua top 3), follow +5m (1 lần/người/ván). Ai chạm 1000m thắng ngay;
-// hết 10 phút xe cao nhất thắng (hòa → ai đạt mức đó trước thắng).
+// đua top 3), follow +5m (1 lần/người/ván). Ai chạm 500m thắng ngay;
+// hết 5 phút xe cao nhất thắng (hòa → ai đạt mức đó trước thắng).
 // Thắng → bảng vinh danh 30s → ván mới.
 // Khác bản thiết kế: KHÔNG chạy server local cổng 3012; quà tra số xu thật
 // trong payload (không có bảng quà hardcode); xe chạy mượt bằng nội suy
@@ -28,8 +28,8 @@ function createEngine(ctx) {
   const CAR_COLOR_NAMES = ['xanh', 'đỏ', 'tím', 'xanh lá', 'cam'];
 
   const defaultSettings = {
-    trackLength: 1000,
-    roundS: 600,
+    trackLength: 500,
+    roundS: 300,
     commentMeters: 10,
     tapMeters: 0.5,
     giftMetersPerCoin: 1,

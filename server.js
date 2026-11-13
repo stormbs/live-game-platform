@@ -193,6 +193,10 @@ function createApp(opts = {}) {
     }
   }
 
+  // Tài nguyên dùng chung cho mọi overlay (vd. /shared/music.js) — không qua
+  // transformText của room, phục vụ nguyên bản.
+  app.use('/shared', express.static(path.join(ROOT, 'shared')));
+
   app.use('/o/:game/:username', (req, res, next) => roomDispatcher('overlay', req, res, next));
   app.use('/room/:game/:username', (req, res, next) => roomDispatcher('room', req, res, next));
 

@@ -52,9 +52,12 @@
   .banner p { font-size: 30px; color: #ffe9c4; }
   .winners { font-size: 30px; line-height: 1.7; margin-top: 12px; }
   .status { position: absolute; bottom: 22px; left: 40px; right: 40px; display: flex; justify-content: space-between; font-size: 22px; color: rgba(255,233,196,.75); }
+  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+  html { background: #000; }
 </style>
 </head>
 <body>
+<div id="scaler">
 <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="wrap">
   <h1>🍲 BẾP ĂN TẬP THỂ 🍲</h1>
@@ -95,8 +98,18 @@
 
   <div class="status"><span id="stPhase">Nồi #1 — Đang nấu</span><span id="stViewers">👥 0 người trong bếp</span></div>
 </div>
+</div>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/shared/music.js"></script>
 <script>
+var scaler = document.getElementById('scaler');
+function fit() {
+  var s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+  scaler.style.transform = 'scale(' + s + ')';
+  scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
+  scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
+}
+window.addEventListener('resize', fit); fit();
 (function () {
   const $ = (id) => document.getElementById(id);
   let lastState = null;
@@ -128,6 +141,8 @@
   }
   function render(s) {
     lastState = s;
+    // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
+    if (window.StromMusic) window.StromMusic.sync({ mood: 'folk', enabled: true, volume: 50, energy: (s.phase === 'serving' || s.phase === 'results') ? 2 : (s.fireLevel === 3 || s.demoActive || (s.viewersOnline || 0) > 0 || (s.pot && s.pot.points > 0) ? 1 : 0) });
     document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
     voiceOn = !!(s.settings && s.settings.voiceEnabled);
     const pct = Math.min(100, Math.round(100 * s.pot.points / s.potTarget));

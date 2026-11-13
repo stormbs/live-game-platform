@@ -48,9 +48,12 @@
   .trow b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ticker { margin-top: 14px; background: rgba(0,0,0,.6); border-radius: 16px; padding: 14px 20px; font-size: 26px; min-height: 70px; color: #ffe9c4; }
   .status { position: absolute; bottom: 16px; left: 36px; right: 36px; display: flex; justify-content: space-between; font-size: 21px; color: rgba(255,233,196,.8); }
+  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+  html { background: #000; }
 </style>
 </head>
 <body>
+<div id="scaler">
 <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="wrap">
   <header><h1>🎡 VÒNG QUAY MAY MẮN</h1><div class="viewers" id="viewers">👥 0 đang xem</div></header>
@@ -81,8 +84,18 @@
 
   <div class="status"><span id="stSpins">🎡 Tổng 0 lượt quay</span><span id="stQueue">Hàng chờ: 0</span></div>
 </div>
+</div>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/shared/music.js"></script>
 <script>
+var scaler = document.getElementById('scaler');
+function fit() {
+  var s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+  scaler.style.transform = 'scale(' + s + ')';
+  scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
+  scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
+}
+window.addEventListener('resize', fit); fit();
 (function () {
   const $ = (id) => document.getElementById(id);
   const PALETTE = ['#e74c3c','#f39c12','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e67e22','#16a085','#c0392b','#d35400','#27ae60','#2980b9','#8e44ad','#f39c12','#e74c3c','#2ecc71','#3498db','#95a5a6','#7f8c8d'];
@@ -129,6 +142,7 @@
     $('labels').innerHTML = html;
   }
   function animateWheel(spin) {
+    spinningUntil = spin.endsAt; // chặn vòng quay chờ trong lúc đang quay thật
     const k = spin.segmentIndex;
     const targetMod = (360 - (k * 18 + 9) + 360) % 360;
     const currentMod = ((wheelRotation % 360) + 360) % 360;
@@ -143,6 +157,16 @@
     $('labels').style.transform = 'rotate(' + wheelRotation + 'deg)';
     $('wheel').classList.toggle('epic', !!spin.epic);
   }
+  let spinningUntil = 0;
+  // Vòng quay chậm khi chờ (phòng vắng vẫn có chuyển động): 0.6°/100ms ≈ 1 vòng/phút.
+  setInterval(() => {
+    if (Date.now() < spinningUntil) return;
+    if (lastState && lastState.currentSpin && Date.now() < lastState.currentSpin.endsAt) return;
+    wheelRotation += 0.6;
+    const w = $('wheel'), l = $('labels');
+    if (w) { w.style.transition = 'transform 0.1s linear'; w.style.transform = 'rotate(' + wheelRotation + 'deg)'; }
+    if (l) { l.style.transition = 'transform 0.1s linear'; l.style.transform = 'rotate(' + wheelRotation + 'deg)'; }
+  }, 100);
   function showResult(spin) {
     const seg = spin.segment;
     const av = spin.winnerAvatar ? '<img src="' + spin.winnerAvatar + '" alt="">' : '<span class="ava">' + (spin.winnerName ? spin.winnerName.charAt(0).toUpperCase() : '🎡') + '</span>';
@@ -162,6 +186,8 @@
   }
   function render(s) {
     lastState = s;
+    // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
+    if (window.StromMusic) window.StromMusic.sync({ mood: 'calm', enabled: true, volume: 50, energy: (s.currentSpin ? 2 : (((s.queueLength || 0) > 0 || (s.progress || 0) > 0 || s.demoActive) ? 1 : 0)) });
     document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
     voiceOn = !!(s.settings && s.settings.voiceEnabled);
     if (s.settings && s.settings.segments) {

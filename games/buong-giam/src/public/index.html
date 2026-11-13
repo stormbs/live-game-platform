@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bảng Quản Trị • Buồng Giam 2D TikTok LIVE</title>
   <link rel="stylesheet" href="/css/dashboard.css">
+  <style>
+    /* Nút chuyển chế độ DEMO/LIVE nổi bật ở topbar: công tắc phóng to + pill trạng thái */
+    .demo-toggle-wrapper .switch { transform: scale(1.5); transform-origin: left center; }
+    #mode-pill { display: inline-block; font-weight: 800; font-size: 14px; border-radius: 20px; padding: 7px 14px; white-space: nowrap; }
+    #mode-pill.live { background: #16a34a; color: #fff; }
+    #mode-pill.demo { background: #f59e0b; color: #111; }
+  </style>
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
@@ -105,6 +112,7 @@
               <input type="checkbox" id="toggle-demo" onchange="toggleDemoMode(this.checked)">
               <span class="slider"></span>
             </label>
+            <span id="mode-pill" class="live">🟢 LIVE — đang nhận event thật</span>
           </div>
 
           <!-- Nút Làm Mới Nguồn OBS -->
@@ -1446,6 +1454,12 @@
 
       // Cập nhật công tắc demo
       document.getElementById('toggle-demo').checked = Boolean(state.isDemoMode);
+      const modePill = document.getElementById('mode-pill');
+      if (modePill) {
+        const isDemo = Boolean(state.isDemoMode);
+        modePill.className = isDemo ? 'demo' : 'live';
+        modePill.innerText = isDemo ? '🧪 DEMO — đang mô phỏng' : '🟢 LIVE — đang nhận event thật';
+      }
 
       // Cập nhật thông báo trạng thái xuất trại (LỖI 4)
       const relBanner = document.getElementById('release-status-banner');

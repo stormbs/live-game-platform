@@ -452,7 +452,7 @@ function createEngine(ctx) {
       countdown: cd ? { active: !!cd.active, targetAt: cd.targetAt, message: cd.message, secondsLeft: Math.max(0, Math.ceil((cd.targetAt - Date.now()) / 1000)) } : null,
       finaleCount: session.finaleCount,
       finaleActiveUntil: session.finaleActiveUntil,
-      top: topList(3),
+      top: topList(5),
       top10: topList(10),
       recentFireworks: session.recentFireworks.slice(-12),
       recentComments: session.recentComments.slice(-5),

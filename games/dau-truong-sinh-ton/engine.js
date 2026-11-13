@@ -1,7 +1,7 @@
 // ĐẤU TRƯỜNG SINH TỒN — engine nền tảng (room theo TikTok ID).
 // Cơ chế lấy từ ~/workspace/overlay-moi/prompt-agent-dau-truong-sinh-ton.md:
 // battle royale: bình luận "tham gia" -> chiến binh 100 HP + vũ khí ngẫu nhiên;
-// 1 tim = đánh ngẫu nhiên 1 địch -1 HP; bình luận tên 1 chiến binh = -3 HP;
+// 1 tim = đánh ngẫu nhiên 1 địch -2 HP; bình luận tên 1 chiến binh = -3 HP;
 // 1 xu quà = +1 sát thương đòn tiếp theo (dồn tối đa +20); quà >=100 xu hồi
 // +20 HP; follow = +10 HP 1 lần/trận. HP 0 -> gục, 10s sau biến mất khỏi sân.
 // Vòng bo sau 3 phút: mỗi 10s mọi chiến binh -1 HP. Hết 10 phút còn >1 người
@@ -41,7 +41,7 @@ function createEngine(ctx) {
 
   const defaultSettings = {
     startHp: 100,         // HP khởi đầu
-    tapDamage: 1,         // sát thương / 1 tim
+    tapDamage: 2,         // sát thương / 1 tim
     commentDamage: 3,     // sát thương khi bình luận đúng tên địch
     giftHealCoins: 100,   // quà >= X xu thì hồi máu
     giftHealHp: 20,       // hồi bao nhiêu HP

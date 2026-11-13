@@ -23,6 +23,7 @@
   table { width: 100%; border-collapse: collapse; font-size: 15px; }
   td, th { padding: 7px 8px; border-bottom: 1px solid #2e2450; text-align: left; }
   .badge { display: inline-block; background: #facc15; color: #111; font-weight: 800; border-radius: 6px; padding: 2px 8px; font-size: 13px; }
+  button.mode-on { background: #059669; box-shadow: 0 0 0 3px #facc15; }
   .mono { font-family: ui-monospace, monospace; font-size: 13px; word-break: break-all; background: #0f0a1f; padding: 8px; border-radius: 8px; }
   #log { max-height: 260px; overflow: auto; font-size: 14px; line-height: 1.6; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -37,6 +38,11 @@
 <main>
   <div class="card"><h2>📊 Trạng thái</h2>
     <div class="row"><span id="status">Đang tải…</span><span id="demo-badge" class="badge" style="display:none">🧪 DEMO ĐANG BẬT</span></div>
+    <div class="row" style="margin-top:10px">
+      <span style="font-weight:800">Chế độ:</span>
+      <button id="btn-mode-demo">🧪 DEMO (chạy thử)</button>
+      <button id="btn-mode-live" class="secondary">🔴 LIVE (sự kiện thật)</button>
+    </div>
     <div class="row" style="margin-top:10px">
       <button id="btn-end">🏁 Kết thúc vòng ngay</button>
       <button id="btn-reset" class="secondary">🔄 Vòng mới</button>
@@ -107,8 +113,11 @@ async function api(path, opts) {
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function render(s) {
   const phaseVi = { lobby: 'Chờ người', dancing: 'Đang quẩy', spotlight: 'Vinh danh Vua' }[s.phase] || s.phase;
-  $('status').textContent = `Vòng ${s.roundNo} • ${phaseVi} • ${s.totalDancers} dancer (${s.floorCount} trên sàn, ${s.waitingCount} chờ ở quầy) • Drop: ${s.dropState} • Sự kiện thật: ${s.webhookCount}`;
+  const modeTxt = s.demoMode ? '🧪 DEMO' : '🔴 LIVE';
+  $('status').textContent = `${modeTxt} • Vòng ${s.roundNo} • ${phaseVi} • ${s.totalDancers} dancer (${s.floorCount} trên sàn, ${s.waitingCount} chờ ở quầy) • Drop: ${s.dropState} • Sự kiện thật: ${s.webhookCount}`;
   $('demo-badge').style.display = s.demoActive ? 'inline-block' : 'none';
+  $('btn-mode-demo').classList.toggle('mode-on', !!s.demoMode);
+  $('btn-mode-live').classList.toggle('mode-on', !s.demoMode);
   $('king').textContent = s.king ? `👑 ${s.king.name} — ${s.king.energy} năng lượng (vòng ${s.king.roundNo})` : 'Chưa có Vua sàn vòng này.';
   $('score-vang').textContent = s.tables.vang.score;
   $('sub-vang').textContent = `${s.tables.vang.energy} năng lượng • ${s.tables.vang.drinks} ly • ${s.tables.vang.count} người`;
@@ -133,6 +142,17 @@ function render(s) {
   }
 }
 $('btn-end').onclick = () => api('/api/round/end', { method: 'POST' }).then(refresh);
+$('btn-mode-demo').onclick = async () => {
+  await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) });
+  const r = await api('/api/demo/start', { method: 'POST' });
+  if (r && r.success === false) alert(r.message || 'Không chạy demo được.');
+  refresh();
+};
+$('btn-mode-live').onclick = async () => {
+  await api('/api/demo/stop', { method: 'POST' });
+  await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: false }) });
+  refresh();
+};
 $('btn-reset').onclick = () => api('/api/round/reset', { method: 'POST' }).then(refresh);
 $('btn-music').onclick = async () => { const s = await api('/api/state'); await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ musicEnabled: !s.settings.musicEnabled }) }); refresh(); };
 $('btn-save').onclick = () => api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({

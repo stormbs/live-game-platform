@@ -428,9 +428,11 @@ function vaEase(k) {
   var unlockEl = document.getElementById('audio-unlock');
   var speakBadgeEl = document.getElementById('speak-badge');
   var VA_PROTO = 6;
+  // Cảnh báo dev (giọng đọc / server cũ) chỉ hiện khi mở ?debug=1 — overlay live không hiện.
+  var VA_DEBUG = (function () { try { return new URLSearchParams(window.location.search).get('debug') === '1'; } catch (e) { return false; } })();
   var vaFrames = null; // khung 5 moc do dashboard cau hinh, server dong bo qua state
   function vaProtoCheck(p) {
-    document.getElementById('proto-warn').style.display = (p === VA_PROTO) ? 'none' : 'block';
+    document.getElementById('proto-warn').style.display = (VA_DEBUG && p !== VA_PROTO) ? 'block' : 'none';
   }
   if (window.fetch) {
     fetch('/api/state').then(function (r) { return r.json(); }).then(function (st) {
@@ -910,7 +912,7 @@ function vaEase(k) {
   function vaShowVoiceWarn(show) {
     if (!voiceWarnEl) return;
     if (vaVoiceWarnTimer) { clearTimeout(vaVoiceWarnTimer); vaVoiceWarnTimer = null; }
-    if (!show) { voiceWarnEl.style.display = 'none'; return; }
+    if (!show || !VA_DEBUG) { voiceWarnEl.style.display = 'none'; return; }
     if (vaVoiceWarned) return; // chi nhac 1 lan moi lan mo trang
     vaVoiceWarned = true;
     voiceWarnEl.style.display = 'block';

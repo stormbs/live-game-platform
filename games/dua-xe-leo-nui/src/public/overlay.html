@@ -44,9 +44,12 @@
   .banner h2 { font-size: 54px; margin-bottom: 12px; }
   .banner p { font-size: 30px; color: #ffe9c4; line-height: 1.6; }
   .status { position: absolute; bottom: 18px; left: 36px; right: 36px; display: flex; justify-content: space-between; font-size: 22px; color: rgba(255,255,255,.85); text-shadow: 0 2px 4px rgba(0,0,0,.5); }
+  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+  html { background: #000; }
 </style>
 </head>
 <body>
+<div id="scaler">
 <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="wrap">
   <header>
@@ -71,8 +74,18 @@
 
   <div class="status"><span id="stPhase">Ván #1 — Đang đua</span><span id="stViewers">👥 0 tay đua</span></div>
 </div>
+</div>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/shared/music.js"></script>
 <script>
+var scaler = document.getElementById('scaler');
+function fit() {
+  var s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+  scaler.style.transform = 'scale(' + s + ')';
+  scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
+  scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
+}
+window.addEventListener('resize', fit); fit();
 (function () {
   const $ = (id) => document.getElementById(id);
   const CAR_EMOJI = { streamer: '🏎️', racer: '🏎️' };
@@ -108,6 +121,8 @@
   }
   function render(s) {
     lastState = s;
+    // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
+    if (window.StromMusic) window.StromMusic.sync({ mood: 'edm', enabled: true, volume: 50, energy: ((s.phase === 'racing' && (s.cars || []).length > 0 && (s.cars[0].meters / s.trackLength) > 0.8) ? 2 : ((s.phase === 'racing' || (s.cars || []).length > 0) ? 1 : 0)) });
     document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
     voiceOn = !!(s.settings && s.settings.voiceEnabled);
     $('roundLabel').textContent = 'Ván #' + s.roundNo;

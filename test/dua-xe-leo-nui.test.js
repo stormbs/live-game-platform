@@ -207,7 +207,7 @@ test('dua-xe: demo 10 bước -> Chi về đích 1050m, xe streamer 150m, rồi 
     assert.equal(st.winner.wonBy, 'summit');
     assert.equal(st.results.streamer.meters, 150, 'xe streamer: 30 cmt + 20 tap + 100 cmt = 150m');
     assert.equal(st.top[0].name, 'Chi');
-    assert.equal(st.top[0].giftPoints, 1050);
+    assert.equal(st.top[0].giftPoints, 900);
     assert.equal(st.top[1].name, 'Bình');
     assert.equal(st.top[1].giftPoints, 205);
     let ok = false;

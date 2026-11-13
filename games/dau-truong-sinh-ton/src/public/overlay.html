@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Đấu Trường Sinh Tồn — Overlay</title>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/shared/music.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; }
@@ -51,9 +52,12 @@
   @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
   .banner h2 { font-size: 54px; color: #7a5c00; }
   .banner p { font-size: 30px; margin-top: 10px; line-height: 1.4; color: #333; }
+  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+  html { background: #000; }
 </style>
 </head>
 <body>
+<div id="scaler">
 <div class="demo-badge" id="demo-badge">🧪 DEMO</div>
 <div class="demo-note" id="demo-note"></div>
 <header>
@@ -84,7 +88,16 @@
 </div>
 <div class="banner" id="banner"><h2 id="banner-title"></h2><p id="banner-text"></p></div>
 
+</div>
 <script>
+var scaler = document.getElementById('scaler');
+function fit() {
+  var s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+  scaler.style.transform = 'scale(' + s + ')';
+  scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
+  scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
+}
+window.addEventListener('resize', fit); fit();
 const socket = io();
 let lastState = null;
 let voiceOn = true;
@@ -127,6 +140,8 @@ function escapeHtml(s) {
 
 function render(s) {
   lastState = s;
+  // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
+  if (window.StromMusic) window.StromMusic.sync({ mood: 'battle', enabled: true, volume: 50, energy: (s.phase === 'spotlight' || (s.phase === 'fighting' && s.zoneActive)) ? 2 : (s.phase === 'fighting' ? 1 : 0) });
   voiceOn = s.settings.voiceEnabled !== false;
   document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
   document.getElementById('match-label').textContent = 'Trận ' + s.matchNo + ' · ' +

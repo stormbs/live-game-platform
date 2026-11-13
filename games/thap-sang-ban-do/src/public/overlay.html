@@ -743,7 +743,12 @@ function render(s) {
   const tb = document.getElementById('timerBar');
   if (tb) tb.style.width = (s.phase === 'playing' && s.durationMin ? (s.msRoundLeft / (s.durationMin * 60000) * 100) : 0) + '%';
   const pn = document.getElementById('progNum');
-  if (pn) pn.textContent = s.lit + ' / ' + s.total + ' tỉnh';
+  if (pn) {
+    // Mốc trung gian để phòng vắng vẫn thấy đích gần: 10 → 15 → 20 → 25 → 30 → 34.
+    const _miles = [10, 15, 20, 25, 30, 34];
+    const _next = _miles.find(m => m > s.lit);
+    pn.textContent = s.lit + ' / ' + s.total + ' tỉnh' + (_next ? ' — mốc tiếp theo: ' + _next + ' tỉnh' : ' 🎉');
+  }
   document.getElementById('bar').style.width = (s.lit / s.total * 100) + '%';
   document.getElementById('stViewers').textContent = s.viewers;
   document.getElementById('stCoins').textContent = s.stats.totalCoins;

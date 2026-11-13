@@ -3,7 +3,7 @@
 // (KHỐI 2–6): bình luận thả nguyên liệu (thịt +3 / rau +2 / gia vị +1,
 // lửa to +1); 50 tim thổi lửa (nồi +5, lửa to 30s); quà 1 xu = 10 điểm
 // mở món đặc biệt (gà 100 / bánh chưng 300 / giò 500 / mâm 1000 xu);
-// nồi 300 điểm = chín → dọn cỗ 15s → bốc thăm 10 người → nồi mới.
+// nồi 120 điểm = chín → dọn cỗ 15s → bốc thăm 10 người → nồi mới.
 // Khác bản thiết kế: KHÔNG chạy server local cổng 3011; quà tra số xu thật
 // trong payload (không có bảng quà hardcode — payload chính là bảng).
 // Tap có 2 bộ đếm độc lập theo bản thiết kế: cứ 20 tap = +1 điểm cá nhân,
@@ -70,7 +70,7 @@ function createEngine(ctx) {
   }
 
   const defaultSettings = {
-    potTarget: 300,
+    potTarget: 120,
     tapPerBlow: 50,
     blowPotPoints: 5,
     tapPersonalPer: 20,
@@ -436,7 +436,7 @@ function createEngine(ctx) {
         settings[k] = Math.min(max, Math.max(min, Number.isFinite(n) ? n : dflt));
       }
     };
-    num('potTarget', 1, 10000, 300);
+    num('potTarget', 1, 10000, 120);
     num('tapPerBlow', 1, 1000, 50);
     num('blowPotPoints', 0, 100, 5);
     num('tapPersonalPer', 1, 1000, 20);

@@ -19,6 +19,7 @@
   .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 13px; font-weight: 800; }
   .badge.live { background: #d61f26; color: #fff; }
   .badge.demo { background: #b8860b; color: #1c1c1c; }
+  .mode-on { background: #059669 !important; color: #fff !important; border: 2px solid #facc15 !important; box-shadow: 0 0 0 2px rgba(250,204,21,.45); }
   button { cursor: pointer; border: none; border-radius: 8px; font-weight: 800; }
   .btn { padding: 9px 16px; font-size: 14px; background: #24455f; color: #d8ecff; border: 1px solid #4a7396; }
   .btn:hover { background: #2e567a; }
@@ -57,6 +58,11 @@
   <div class="card">
     <h2>Trạng thái</h2>
     <div><span id="mode-badge" class="badge live">TRỰC TIẾP</span> <span id="round-label" style="font-weight:800;">Trận 1 · Chờ người chơi</span></div>
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <span style="font-weight:800">Chế độ:</span>
+      <button class="btn" id="btn-mode-demo" onclick="modeDemo()">🧪 DEMO (chạy thử)</button>
+      <button class="btn" id="btn-mode-live" onclick="modeLive()">🔴 LIVE (sự kiện thật)</button>
+    </div>
     <div style="margin-top:10px" class="score">⚔️ <span id="alive-count">0</span> <span class="stat-label">người còn sống</span> · ⭕ <span id="zone-label">Vòng bo chưa siết</span></div>
     <div style="margin-top:8px; font-size:14px;">⏱ <span id="timer">—</span> · 💀 Đã gục: <span id="down-count">0</span> · ⏳ Hàng chờ: <span id="queue-count">0</span></div>
     <div style="margin-top:6px; font-size:14px;">👀 <span id="st-online">0</span> đang xem · 💥 <span id="st-hits">0</span> đòn đánh · ❤️ <span id="st-taps">0</span> tim · 🎁 <span id="st-gifts">0</span> quà</div>
@@ -163,8 +169,10 @@ async function api(path, body) {
 }
 function render(s) {
   lastState = s;
-  $('mode-badge').textContent = s.settings.demoMode ? 'CHẾ ĐỘ THỬ' : 'TRỰC TIẾP';
+  $('mode-badge').textContent = s.settings.demoMode ? '🧪 DEMO' : '🔴 TRỰC TIẾP';
   $('mode-badge').className = 'badge ' + (s.settings.demoMode ? 'demo' : 'live');
+  $('btn-mode-demo').classList.toggle('mode-on', !!s.settings.demoMode);
+  $('btn-mode-live').classList.toggle('mode-on', !s.settings.demoMode);
   $('demo-toggle').checked = !!s.settings.demoMode;
   $('demo-state').textContent = 'Demo: ' + (s.demoActive ? '▶️ đang chạy' : 'đang tắt');
   $('round-label').textContent = 'Trận ' + s.matchNo + ' · ' +
@@ -241,6 +249,16 @@ async function demoStart() {
 async function demoStop() {
   const r = await api('/api/test/demo-stop', {});
   $('test-result').textContent = r.success ? '🧪 Demo đã dừng.' : '❌ ' + (r.message || 'Lỗi.');
+}
+async function modeDemo() {
+  await api('/api/settings', { demoMode: true });
+  $('demo-toggle').checked = true;
+  const r = await api('/api/test/demo-start', {});
+  if (!r.success) alert(r.message || 'Không chạy demo được.');
+}
+async function modeLive() {
+  await api('/api/test/demo-stop', {});
+  await api('/api/settings', { demoMode: false });
 }
 let tikUrls = {};
 function copyUrl(key) {

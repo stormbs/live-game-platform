@@ -30,6 +30,7 @@
   .log { font-size: 13px; line-height: 1.5; max-height: 220px; overflow: auto; background: #0f172a; border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; }
   .muted { opacity: .75; font-size: 14px; }
   .badge-demo { background: #f59e0b; color: #111; font-weight: 800; border-radius: 8px; padding: 4px 10px; display: none; }
+  .mode-on { background: #059669 !important; box-shadow: 0 0 0 3px #facc15 !important; }
   .copy-btn { padding: 5px 10px; font-size: 13px; }
   .url-cell { word-break: break-all; font-size: 12px; }
 </style>
@@ -37,7 +38,11 @@
 <body>
 <header>
   <h1>🐉 Đua Thuyền Rồng — Dashboard <span class="badge-demo" id="demo-badge">🧪 DEMO ĐANG BẬT</span></h1>
-  <div><a id="overlay-link" href="#" target="_blank">Mở overlay</a> · <a id="demo-link" href="#" target="_blank">Mở overlay demo</a></div>
+  <div><a id="overlay-link" href="#" target="_blank">Mở overlay</a> · <a id="demo-link" href="#" target="_blank">Mở overlay demo</a>
+    <span style="margin-left:14px; font-weight:800;">Chế độ:</span>
+    <button id="btn-mode-demo">🧪 DEMO (chạy thử)</button>
+    <button id="btn-mode-live" class="ghost">🔴 LIVE (sự kiện thật)</button>
+  </div>
 </header>
 <main>
   <div class="card">
@@ -134,7 +139,11 @@
   function render(s) {
     if (!s || s.game !== 'dua-thuyen-rong') return;
     state = s;
-    document.getElementById('demo-badge').style.display = s.demoActive ? 'inline-block' : 'none';
+    const modeBadge = document.getElementById('demo-badge');
+    if (s.demoMode) { modeBadge.style.display = 'inline-block'; modeBadge.textContent = '🧪 DEMO ĐANG BẬT'; modeBadge.style.background = '#f59e0b'; modeBadge.style.color = '#111'; }
+    else { modeBadge.style.display = 'inline-block'; modeBadge.textContent = '🔴 LIVE — sự kiện thật'; modeBadge.style.background = '#16a34a'; modeBadge.style.color = '#fff'; }
+    document.getElementById('btn-mode-demo').classList.toggle('mode-on', !!s.demoMode);
+    document.getElementById('btn-mode-live').classList.toggle('mode-on', !s.demoMode);
     document.getElementById('set-demo').checked = !!s.demoMode;
     document.getElementById('race-grid').innerHTML =
       `<div class="stat"><div class="k">Cuộc đua</div><div class="v">${s.raceNo}</div></div>` +
@@ -196,6 +205,16 @@
   document.getElementById('set-demo').addEventListener('change', async (e) => { await api('/api/settings', { demoMode: e.target.checked }); });
   document.getElementById('btn-demo-start').addEventListener('click', async () => { const r = await api('/api/demo/start'); if (!r.success) alert('Không chạy được demo: ' + (r.reason || r.message || 'lỗi')); });
   document.getElementById('btn-demo-stop').addEventListener('click', async () => { await api('/api/demo/stop'); });
+  document.getElementById('btn-mode-demo').addEventListener('click', async () => {
+    await api('/api/settings', { demoMode: true });
+    document.getElementById('set-demo').checked = true;
+    const r = await api('/api/demo/start');
+    if (!r.success) alert(r.message || r.reason || 'Không chạy demo được.');
+  });
+  document.getElementById('btn-mode-live').addEventListener('click', async () => {
+    await api('/api/demo/stop');
+    await api('/api/settings', { demoMode: false });
+  });
   document.getElementById('btn-test-demo').addEventListener('click', async () => { await api('/api/test/demo'); });
   document.getElementById('btn-test-tap').addEventListener('click', async () => { await api('/api/test/tap', { count: 20 }); });
   document.getElementById('btn-test-gift').addEventListener('click', async () => { await api('/api/test/gift', { coins: 10 }); });

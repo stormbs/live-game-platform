@@ -27,6 +27,7 @@
   .ok { color: #9be7a0; } .err { color: #ff9a9a; }
   code { background: rgba(0,0,0,.4); padding: 2px 6px; border-radius: 4px; word-break: break-all; }
   small { color: #d9c2f0; }
+  .mode-on { background: #059669 !important; color: #fff !important; box-shadow: 0 0 0 3px #facc15; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   td, th { padding: 4px 5px; border-bottom: 1px solid rgba(255,255,255,.1); text-align: left; }
   table input { padding: 4px 6px; font-size: 13px; margin: 0; }
@@ -36,7 +37,7 @@
 <body>
 <header>
   <h1>🎡 Vòng Quay May Mắn — Dashboard</h1>
-  <div><a href="/huong-dan-tikfinity?game=vong-quay-may-man" target="_blank" style="color:#ffd24d">📖 Hướng dẫn TikFinity</a> &nbsp; <span id="mode"></span></div>
+  <div><a href="/huong-dan-tikfinity?game=vong-quay-may-man" target="_blank" style="color:#ffd24d">📖 Hướng dẫn TikFinity</a> &nbsp; <span id="mode"></span> &nbsp; <b>Chế độ:</b> <button id="btn-mode-demo">🧪 DEMO (chạy thử)</button> <button id="btn-mode-live" class="ghost">🔴 LIVE (sự kiện thật)</button></div>
 </header>
 <main>
   <section>
@@ -159,7 +160,9 @@
     $('wc').textContent = s.webhookCount;
     $('av').textContent = s.avatarStats.withAvatar + '/' + s.avatarStats.total + (s.avatarWarning ? ' ⚠️ CHƯA CÓ AVATAR THẬT — kiểm tra TikFinity có gửi profilePictureUrl không' : '');
     $('viewers').textContent = s.viewersOnline;
-    $('mode').textContent = s.settings.demoMode ? '🧪 Chế độ thử' : '🔴 LIVE thật';
+    $('mode').textContent = s.settings.demoMode ? '🧪 DEMO • Chế độ thử' : '🔴 LIVE • Sự kiện thật';
+    $('btn-mode-demo').classList.toggle('mode-on', !!s.settings.demoMode);
+    $('btn-mode-live').classList.toggle('mode-on', !s.settings.demoMode);
     $('top').innerHTML = (s.top || []).map((p, i) => '<div class="row"><span>' + (i + 1) + '. ' + esc(p.name) + '</span><b>' + p.wins + ' lần trúng</b></div>').join('') || 'Chưa ai trúng thưởng.';
     $('history').innerHTML = (s.recentWins || []).map(w => '<div class="row"><span>' + new Date(w.time).toLocaleTimeString('vi-VN') + ' — ' + esc(w.name) + '</span><b>' + w.icon + ' ' + esc(w.segment) + (w.miss ? ' (trượt)' : '') + '</b></div>').join('') || 'Chưa có lượt quay nào.';
     $('giftLog').innerHTML = (s.giftLog || []).map(g => '<div>[' + new Date(g.time).toLocaleTimeString('vi-VN') + '] ' + esc(g.name) + ' tặng "' + esc(g.giftName) + '" ' + g.coins + ' xu → ' + g.spins + ' lượt</div>').join('') || 'Chưa có quà nào.';
@@ -236,13 +239,26 @@
   $('btnSpinNow').onclick = () => api('/api/spin/shared-now', { method: 'POST' }).then(poll);
   $('btnProgReset').onclick = () => api('/api/progress/reset', { method: 'POST' }).then(poll);
   $('btnReset').onclick = () => { if (confirm('Làm mới toàn bộ phiên (thanh + hàng chờ + lịch sử + top)?')) api('/api/session/reset', { method: 'POST' }).then(poll); };
+  $('btn-mode-demo').onclick = async () => {
+    await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) });
+    $('s_demo').checked = true;
+    const r = await api('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) });
+    if (!r.success) alert(r.message || 'Không chạy demo được.');
+    poll();
+  };
+  $('btn-mode-live').onclick = async () => {
+    await api('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stop' }) });
+    await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: false }) });
+    $('s_demo').checked = false;
+    poll();
+  };
   document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
     const t = b.dataset.t;
     const map = { join: ['/api/test/join', {}], comment: ['/api/test/comment', { text: 'Quay nào!' }],
       tap: ['/api/test/tap', { totalLikeCount: 10 }], gift: ['/api/test/gift', { coins: 10, giftName: 'Kính râm' }],
       gift50: ['/api/test/gift', { coins: 50, giftName: 'Heo may mắn' }], gift1000: ['/api/test/gift', { coins: 1000, giftName: 'Du thuyền' }],
       follow: ['/api/test/follow', {}], share: ['/api/test/share', {}], bulk: ['/api/test/bulk-join', { count: 100 }],
-      demo: ['/api/test/demo', {}], demo-start: ['/api/test/demo', { action: 'start' }], demo-stop: ['/api/test/demo', { action: 'stop' }], tiers: ['/api/test/gift-tiers', {}],
+      demo: ['/api/test/demo', {}], 'demo-start': ['/api/test/demo', { action: 'start' }], 'demo-stop': ['/api/test/demo', { action: 'stop' }], tiers: ['/api/test/gift-tiers', {}],
       rare: ['/api/test/force-segment', { segmentId: 1, name: 'Người Thử Ô Hiếm' }],
       extra: ['/api/test/force-segment', { segmentId: 10, name: 'Người Thử Ô Quay Thêm' }] };
     const [p, body] = map[t];

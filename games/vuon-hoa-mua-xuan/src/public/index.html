@@ -19,6 +19,7 @@
   .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 13px; font-weight: 800; }
   .badge.live { background: #d61f26; color: #fff; }
   .badge.demo { background: #b8860b; color: #1c1c1c; }
+  .mode-on { background: #059669 !important; color: #fff !important; border: 2px solid #facc15 !important; box-shadow: 0 0 0 2px rgba(250,204,21,.45); }
   button { cursor: pointer; border: none; border-radius: 8px; font-weight: 800; }
   .btn { padding: 9px 16px; font-size: 14px; background: #2a4a30; color: #d8f5cc; border: 1px solid #5a8a5f; }
   .btn:hover { background: #355c3c; }
@@ -58,6 +59,11 @@
   <div class="card">
     <h2>Trạng thái</h2>
     <div><span id="mode-badge" class="badge live">TRỰC TIẾP</span> <span id="round-label" style="font-weight:800;">Ván 1</span></div>
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <span style="font-weight:800">Chế độ:</span>
+      <button class="btn" id="btn-mode-demo" onclick="modeDemo()">🧪 DEMO (chạy thử)</button>
+      <button class="btn" id="btn-mode-live" onclick="modeLive()">🔴 LIVE (sự kiện thật)</button>
+    </div>
     <div style="margin-top:10px"><span class="stat" id="st-blooms">0</span> / <span id="st-target">100</span> <span class="stat-label">hoa đã nở trong ván</span></div>
     <div class="bar"><i id="st-bar" style="width:0%"></i></div>
     <div style="margin-top:8px; font-size:14px;">🌱 <span id="st-flowers">0</span> hoa trên vườn · 🌱 Vườn ươm: <span id="st-nursery">0</span> hạt chờ</div>
@@ -152,8 +158,10 @@ async function api(path, body) {
 }
 function render(s) {
   lastState = s;
-  $('mode-badge').textContent = s.settings.demoMode ? 'CHẾ ĐỘ THỬ' : 'TRỰC TIẾP';
+  $('mode-badge').textContent = s.settings.demoMode ? '🧪 DEMO' : '🔴 TRỰC TIẾP';
   $('mode-badge').className = 'badge ' + (s.settings.demoMode ? 'demo' : 'live');
+  $('btn-mode-demo').classList.toggle('mode-on', !!s.settings.demoMode);
+  $('btn-mode-live').classList.toggle('mode-on', !s.settings.demoMode);
   $('demo-toggle').checked = !!s.settings.demoMode;
   $('round-label').textContent = 'Ván ' + s.roundNo + (s.phase === 'festival' ? ' · 🎉 Lễ hội hoa!' : s.phase === 'results' ? ' · 🏆 Kết quả' : '');
   $('st-blooms').textContent = s.gardenBlooms;
@@ -213,6 +221,16 @@ async function demoStart() {
 async function demoStop() {
   const r = await api('/api/test/demo', { action: 'stop' });
   $('test-result').textContent = r.success ? '✅ Đã dừng demo.' : '❌ ' + (r.message || 'Lỗi.');
+}
+async function modeDemo() {
+  await api('/api/settings', { demoMode: true });
+  $('demo-toggle').checked = true;
+  const r = await api('/api/test/demo', { action: 'start' });
+  if (!r.success) alert(r.message || 'Không chạy demo được.');
+}
+async function modeLive() {
+  await api('/api/test/demo', { action: 'stop' });
+  await api('/api/settings', { demoMode: false });
 }
 async function testCall(kind, extra) {
   const r = await api('/api/test/' + kind, extra || {});

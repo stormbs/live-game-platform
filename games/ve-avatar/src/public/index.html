@@ -19,6 +19,7 @@
   .badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 13px; font-weight: 800; }
   .badge.live { background: #d61f26; color: #fff; }
   .badge.demo { background: #b8860b; color: #1c1c1c; }
+  .mode-on { background: #059669 !important; color: #fff !important; border: 2px solid #facc15 !important; box-shadow: 0 0 0 2px rgba(250,204,21,.45); }
   button { cursor: pointer; border: none; border-radius: 8px; font-weight: 800; }
   .btn { padding: 9px 16px; font-size: 14px; background: #3a2c16; color: #ffe9bd; border: 1px solid #8a6a2f; }
   .btn:hover { background: #4d3a1c; }
@@ -85,6 +86,11 @@
   <div class="card">
     <h2>Trạng thái</h2>
     <div><span id="mode-badge" class="badge live">TRỰC TIẾP</span></div>
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <span style="font-weight:800">Chế độ:</span>
+      <button class="btn" id="btn-mode-demo" onclick="modeDemo()">🧪 DEMO (chạy thử)</button>
+      <button class="btn" id="btn-mode-live" onclick="modeLive()">🔴 LIVE (sự kiện thật)</button>
+    </div>
     <div id="direct-box" style="margin-top:10px; font-size:14px; line-height:1.6;">Đang kiểm tra kết nối LIVE…</div>
     <div style="margin-top:10px"><span class="stat" id="st-waiting">0</span> <span class="stat-label">người đang chờ vẽ</span></div>
     <div style="margin-top:6px; font-size:14px;">Avatar: <span id="st-avatar">0/0</span> sự kiện có ảnh thật</div>
@@ -364,8 +370,10 @@
   function render(st) {
     lastState = st;
     var badge = document.getElementById('mode-badge');
-    if (st.settings.demoMode) { badge.textContent = 'BẢN THỬ'; badge.className = 'badge demo'; }
-    else { badge.textContent = 'TRỰC TIẾP'; badge.className = 'badge live'; }
+    if (st.settings.demoMode) { badge.textContent = '🧪 DEMO'; badge.className = 'badge demo'; }
+    else { badge.textContent = '🔴 TRỰC TIẾP'; badge.className = 'badge live'; }
+    document.getElementById('btn-mode-demo').classList.toggle('mode-on', !!st.settings.demoMode);
+    document.getElementById('btn-mode-live').classList.toggle('mode-on', !st.settings.demoMode);
     document.getElementById('demo-toggle').checked = !!st.settings.demoMode;
     document.getElementById('st-waiting').textContent = st.waitingCount;
     document.getElementById('st-avatar').textContent = st.avatarStats.withAvatar + '/' + st.avatarStats.total;
@@ -667,7 +675,7 @@
       })
       .then(function (r) { return r.json(); }).then(function (j) {
         demoStarting = false;
-        if (!j.success) { demoStatus('⛔ Không bật được demo: ' + (j.message || 'lỗi.')); return; }
+        if (!j.success) { demoStatus('⛔ Không bật được demo: ' + (j.message || 'lỗi.')); alert(j.message || 'Không chạy demo được.'); return; }
         demoRunning = true;
         document.getElementById('btn-demo-auto').style.display = 'none';
         document.getElementById('btn-demo-stop').style.display = '';
@@ -682,6 +690,11 @@
     document.getElementById('btn-demo-auto').style.display = '';
     document.getElementById('btn-demo-stop').style.display = 'none';
     demoStatus(msg || '■ Đã dừng demo.');
+  }
+  function modeDemo() { runAutoDemo(); }
+  function modeLive() {
+    stopAutoDemo();
+    fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: false }) }).catch(function () {});
   }
   function clearTestQueue() {
     fetch('/api/test/clear-queue', { method: 'POST' });

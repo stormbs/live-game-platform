@@ -10,6 +10,7 @@
   button { padding: 8px 14px; margin: 3px; border-radius: 8px; border: 1px solid #ccc; background:#fff; cursor: pointer; font-size: 14px; }
   button:hover { background:#fff7d6; } button.primary { background:#ffd700; border-color:#d4a900; font-weight: bold; }
   button.lit { background:#ffe98a; border-color:#d4a900; }
+  .mode-on { background:#059669 !important; color:#fff !important; border:2px solid #facc15 !important; box-shadow:0 0 0 2px rgba(250,204,21,.45); }
   input, select { padding: 7px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; margin: 3px; }
   .grid { display:grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .grid button { text-align:left; font-size: 13px; }
@@ -22,6 +23,17 @@
 <body>
 <h1>🗺️ Dashboard — Thắp Sáng Bản Đồ Việt Nam <span id="status"></span></h1>
 <p>Overlay: <a id="topOverlayLink" href="/overlay.html" target="_blank">…</a> &nbsp;•&nbsp; Dashboard: <a href="/dashboard" target="_blank">trang này</a></p>
+
+<div class="card" style="border:2px solid #d4a900">
+  <h2>🧪 Chế độ DEMO / 🔴 LIVE</h2>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+    <span style="font-weight:800">Chế độ:</span>
+    <button class="primary" id="btn-mode-demo" onclick="modeDemo()">🧪 DEMO (chạy thử)</button>
+    <button id="btn-mode-live" onclick="modeLive()">🔴 LIVE (sự kiện thật)</button>
+    <span id="mode-pill" style="font-weight:800">🔴 LIVE — sự kiện thật</span>
+  </div>
+  <p style="font-size:13px;color:#666;margin:8px 0 0">DEMO chạy mô phỏng liên tục để xem thử overlay; có sự kiện thật từ LIVE là demo tự dừng. LIVE là chế độ nhận sự kiện thật từ TikFinity.</p>
+</div>
 
 <div class="card" style="border:2px solid #d4a900">
   <h2>🔗 Link overlay cho TikTok LIVE Studio</h2>
@@ -168,9 +180,16 @@ async function render(s) {
       ⏰ Thời lượng 1 ván (phút): <input id="c-gameDurationMin" type="number" min="1" value="${CFG.gameDurationMin ?? 60}" style="width:70px"> — hết giờ thì tỉnh điểm cao nhất thắng + vinh danh người đóng góp nhiều nhất (sáng đủ 34/34 chỉ là 1 mốc, không hết ván)<br>
       Tự chơi lại sau khi hết giờ ván (giây): <input id="c-autoResetSeconds" type="number" value="${CFG.autoResetSeconds}" style="width:70px">`;
   }
-  document.getElementById('status').innerHTML = s.phase === 'complete'
+  document.getElementById('status').innerHTML = (s.demoActive ? '🧪 DEMO • ' : '🔴 LIVE • ') + (s.phase === 'complete'
     ? '<span class="ok">⏰ HẾT GIỜ — VINH DANH</span>' + (s.winner && s.winner.province ? ` 🏆 ${escapeHtml(s.winner.province.name)} (${s.winner.province.points}đ)` : '') + (s.winner && s.winner.contributor ? ` • 🌟 ${escapeHtml(s.winner.contributor.name)} (${s.winner.contributor.points}đ)` : '')
-    : `<span>${s.lit}/34 tỉnh</span> • ⏰ còn ${fmtTime(s.msRoundLeft)}`;
+    : `<span>${s.lit}/34 tỉnh</span> • ⏰ còn ${fmtTime(s.msRoundLeft)}`);
+  const isDemo = !!s.demoActive;
+  const btnModeDemo = document.getElementById('btn-mode-demo');
+  const btnModeLive = document.getElementById('btn-mode-live');
+  const modePill = document.getElementById('mode-pill');
+  if (btnModeDemo) btnModeDemo.classList.toggle('mode-on', isDemo);
+  if (btnModeLive) btnModeLive.classList.toggle('mode-on', !isDemo);
+  if (modePill) modePill.textContent = isDemo ? '🧪 DEMO — đang mô phỏng' : '🔴 LIVE — sự kiện thật';
   document.getElementById('state').innerHTML =
     `<b>Ván ${s.roundNo}</b> — đã sáng <b>${s.lit}/34</b> tỉnh • ${s.viewers} người xem • ` +
     `${s.stats.totalGifts} quà (${s.stats.totalCoins} xu) • ${s.stats.totalTaps} tim • ${s.stats.totalLights} lượt thắp` +
@@ -291,6 +310,16 @@ async function demoStart() {
   load();
 }
 async function demoStop() {
+  await fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stop' }) });
+  load();
+}
+async function modeDemo() {
+  const r = await fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) });
+  const j = await r.json().catch(() => ({}));
+  if (j && j.success === false) alert(j.message || 'Không chạy demo được.');
+  load();
+}
+async function modeLive() {
   await fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stop' }) });
   load();
 }

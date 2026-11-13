@@ -24,12 +24,13 @@
   .ok { color: #9be7a0; } .err { color: #ff9a9a; }
   code { background: rgba(0,0,0,.4); padding: 2px 6px; border-radius: 4px; word-break: break-all; }
   small { color: #bcd8ea; }
+  .mode-on { background: #059669 !important; color: #fff !important; box-shadow: 0 0 0 3px #facc15; }
 </style>
 </head>
 <body>
 <header>
   <h1>🏁 Đua Xe Leo Núi — Dashboard</h1>
-  <div><a href="/huong-dan-tikfinity?game=dua-xe-leo-nui" target="_blank" style="color:#ffd24d">📖 Hướng dẫn TikFinity</a> &nbsp; <span id="mode"></span></div>
+  <div><a href="/huong-dan-tikfinity?game=dua-xe-leo-nui" target="_blank" style="color:#ffd24d">📖 Hướng dẫn TikFinity</a> &nbsp; <span id="mode"></span> &nbsp; <b>Chế độ:</b> <button id="btn-mode-demo">🧪 DEMO (chạy thử)</button> <button id="btn-mode-live" class="ghost">🔴 LIVE (sự kiện thật)</button></div>
 </header>
 <main>
   <section>
@@ -123,7 +124,9 @@
     $('wc').textContent = s.webhookCount;
     $('av').textContent = s.avatarStats.withAvatar + '/' + s.avatarStats.total + (s.avatarWarning ? ' ⚠️ CHƯA CÓ AVATAR THẬT — kiểm tra TikFinity có gửi profilePictureUrl không' : '');
     $('viewers').textContent = s.viewersOnline;
-    $('mode').textContent = s.settings.demoMode ? '🧪 Chế độ thử' : '🔴 LIVE thật';
+    $('mode').textContent = s.settings.demoMode ? '🧪 DEMO • Chế độ thử' : '🔴 LIVE • Sự kiện thật';
+    $('btn-mode-demo').classList.toggle('mode-on', !!s.settings.demoMode);
+    $('btn-mode-live').classList.toggle('mode-on', !s.settings.demoMode);
     $('top').innerHTML = (s.top || []).map(t => '<div class="row"><span>' + t.color + ' Hạng ' + t.rank + ': ' + esc(t.name) + '</span><b>' + t.giftPoints + ' xu · ' + t.carMeters + 'm</b></div>').join('')
       || 'Chưa có tay đua nào có quà.';
     const st = s.stats;
@@ -159,6 +162,19 @@
       .then(r => { $('saveMsg').innerHTML = r.success ? '<span class="ok">Đã lưu ✅</span>' : '<span class="err">Lỗi</span>'; poll(); });
   };
   $('btnReset').onclick = () => { if (confirm('Làm mới toàn bộ phiên (ván + điểm + log)?')) api('/api/session/reset', { method: 'POST' }).then(poll); };
+  $('btn-mode-demo').onclick = async () => {
+    await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) });
+    $('s_demo').checked = true;
+    const r = await api('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) });
+    if (!r.success) alert(r.message || 'Không chạy demo được.');
+    poll();
+  };
+  $('btn-mode-live').onclick = async () => {
+    await api('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'stop' }) });
+    await api('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: false }) });
+    $('s_demo').checked = false;
+    poll();
+  };
   $('btnNewRace').onclick = () => api('/api/race/reset', { method: 'POST' }).then(poll);
   $('btnTimeout').onclick = () => api('/api/race/force-timeout', { method: 'POST' }).then(poll);
   $('btnClock60').onclick = () => api('/api/race/set-clock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seconds: 60 }) }).then(poll);
@@ -168,7 +184,7 @@
       tap: ['/api/test/tap', { count: 50 }], gift: ['/api/test/gift', { coins: 10, giftName: 'Hoa hồng' }],
       gift100: ['/api/test/gift', { coins: 100, giftName: 'Heo may mắn' }], follow: ['/api/test/follow', {}],
       share: ['/api/test/share', {}], bulk: ['/api/test/bulk-join', { count: 100 }], demo: ['/api/test/demo', {}],
-      demo-start: ['/api/test/demo', { action: 'start' }], demo-stop: ['/api/test/demo', { action: 'stop' }] };
+      'demo-start': ['/api/test/demo', { action: 'start' }], 'demo-stop': ['/api/test/demo', { action: 'stop' }] };
     const [p, body] = map[t];
     const call = () => api(p, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const req = t === 'demo-start'

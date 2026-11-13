@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Vườn Hoa Mùa Xuân — Overlay</title>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/shared/music.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; }
@@ -55,9 +56,12 @@
   .bees { position: absolute; font-size: 40px; z-index: 3; display: none; }
   .bees.on { display: block; animation: fly 9s linear infinite; }
   @keyframes fly { 0% { left: 60px; top: 500px; } 25% { left: 700px; top: 420px; } 50% { left: 300px; top: 900px; } 75% { left: 800px; top: 1100px; } 100% { left: 60px; top: 500px; } }
+  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+  html { background: #000; }
 </style>
 </head>
 <body>
+<div id="scaler">
 <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="sun">☀️</div>
 <div class="cloud" style="top:90px; animation-delay:-6s;">☁️</div>
@@ -85,7 +89,16 @@
 </div>
 <div class="banner" id="banner"><h2 id="banner-title"></h2><p id="banner-text"></p><div class="names" id="banner-names"></div></div>
 
+</div>
 <script>
+var scaler = document.getElementById('scaler');
+function fit() {
+  var s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+  scaler.style.transform = 'scale(' + s + ')';
+  scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
+  scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
+}
+window.addEventListener('resize', fit); fit();
 const socket = io();
 const FLOWER_ICON = { mai: '🌼', dao: '🌸', cuc: '🏵️', sen: '🪷', hong: '🌹', huongduong: '🌻', 'hong-vang': '🌹' };
 const STAGE_ICON = { seed: '🌱', sprout: '🌿', bud: '🌷' };
@@ -129,6 +142,8 @@ function showBanner(title, text, names, ms) {
 
 function render(s) {
   lastState = s;
+  // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
+  if (window.StromMusic) window.StromMusic.sync({ mood: 'folk', enabled: true, volume: 50, energy: (s.phase === 'festival' || s.phase === 'results') ? 2 : (s.demoActive || (s.viewersOnline || 0) > 0 || (s.flowers || []).length > 0 ? 1 : 0) });
   voiceOn = s.settings.voiceEnabled !== false;
   document.getElementById('blooms').textContent = s.gardenBlooms;
   document.getElementById('target').textContent = s.target;

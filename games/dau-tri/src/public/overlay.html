@@ -33,7 +33,8 @@
   .opt .letter { width: 56px; height: 56px; border-radius: 50%; background: #4f46e5; color: #fff; font-size: 32px; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .opt .otext { font-size: 32px; font-weight: 700; flex: 1; }
   .opt .cnt { font-size: 28px; font-weight: 800; color: #475569; }
-  .opt.correct { background: #bbf7d0; }
+  .opt.correct { background: #bbf7d0; animation: correctBlink 1s ease-in-out infinite; }
+  @keyframes correctBlink { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.4); } }
   .opt.correct .fill { background: #86efac; }
   .opt.correct .letter { background: #16a34a; }
   .opt.wrong-dim { opacity: .55; }
@@ -54,9 +55,12 @@
   #hint { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 22px; opacity: .8; z-index: 5; }
   .cheer { position: absolute; font-size: 44px; animation: floatUp 1.6s ease forwards; pointer-events: none; z-index: 8; }
   @keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-160px); opacity: 0; } }
+  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+  html { background: #000; }
 </style>
 </head>
 <body>
+<div id="scaler">
 <div id="stage">
   <div class="bg-decor"></div>
   <header>
@@ -85,8 +89,18 @@
   <div id="banner"></div>
   <div id="hint">Đấu Trí — trả lời nhanh + đúng để mang điểm về cho đội của bạn.</div>
 </div>
+</div>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/shared/music.js"></script>
 <script>
+var scaler = document.getElementById('scaler');
+function fit() {
+  var s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+  scaler.style.transform = 'scale(' + s + ')';
+  scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
+  scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
+}
+window.addEventListener('resize', fit); fit();
 (function () {
   const params = new URLSearchParams(location.search);
   const path = location.pathname.split('/').filter(Boolean);
@@ -127,13 +141,18 @@
   function render(s) {
     if (!s || s.game !== 'dau-tri') return;
     state = s;
+    // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
+    if (window.StromMusic) window.StromMusic.sync({ mood: 'edm', enabled: true, volume: 50, energy: (s.phase === 'question' ? 2 : ((s.phase === 'reveal' || s.phase === 'between') ? 1 : 0)) });
     voiceOn = s.settings.voiceEnabled !== false;
     document.getElementById('pts-a').textContent = s.points.a;
     document.getElementById('pts-b').textContent = s.points.b;
     document.getElementById('firsts-a').textContent = s.firstCounts.a + ' lần đúng đầu tiên';
     document.getElementById('firsts-b').textContent = s.firstCounts.b + ' lần đúng đầu tiên';
-    document.getElementById('clock').textContent = (s.phase === 'question' && s.current) ? fmtClock(s.current.endsAt - Date.now()) : (s.phase === 'reveal' ? '✓' : '--');
-    document.getElementById('timer-lbl').textContent = s.phase === 'question' ? 'Giây còn lại' : s.phase === 'reveal' ? 'Đã chốt' : 'Giây/câu';
+    // Đếm ngược sang câu tiếp theo (reveal: phaseEndsAt có sẵn) / chờ streamer (between: không có hẹn giờ).
+    const _between = s.phase === 'between';
+    const _revealCd = s.phase === 'reveal' && s.phaseEndsAt ? Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000)) : null;
+    document.getElementById('clock').textContent = (s.phase === 'question' && s.current) ? fmtClock(s.current.endsAt - Date.now()) : (_revealCd !== null ? _revealCd + 's' : (_between ? '⏸️' : (s.phase === 'reveal' ? '✓' : '--')));
+    document.getElementById('timer-lbl').textContent = s.phase === 'question' ? 'Giây còn lại' : s.phase === 'reveal' ? 'Câu tiếp theo sau' : _between ? 'Chờ câu tiếp theo' : 'Giây/câu';
     document.getElementById('match-label').textContent = 'Trận ' + s.matchNo + (s.phase === 'lobby' ? ' — chờ streamer mở câu hỏi' : s.phase === 'question' ? ' — câu ' + s.questionNo + '/' + s.questionsPerMatch : s.phase === 'reveal' ? ' — đã chốt đáp án' : s.phase === 'between' ? ' — chờ câu tiếp theo' : ' — vinh danh');
     const qno = document.getElementById('qno');
     const qtext = document.getElementById('qtext');

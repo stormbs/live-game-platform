@@ -1,7 +1,7 @@
 // VƯỜN HOA MÙA XUÂN — engine nền tảng (room theo TikTok ID).
 // Cơ chế lấy từ ~/workspace/overlay-moi/prompt-agent-vuon-hoa-mua-xuan.md
 // (KHỐI 0–4): bình luận/tim gieo hạt → mầm → nụ → nở; quà tưới nước;
-// follow = hoa hồng vàng; mốc 25/50/75/100 hoa nở → lễ hội → ván mới.
+// follow = hoa hồng vàng; mốc 10/50/75/100 hoa nở → lễ hội → ván mới.
 // Khác bản thiết kế: KHÔNG chạy server local cổng 3010 — chạy trong
 // platform, webhook qua dispatch có sẵn; quà tra số xu thật trong payload
 // (không có bảng quà hardcode — payload chính là bảng).
@@ -39,7 +39,7 @@ function createEngine(ctx) {
     dewGrowth: 1,
     harvestAfterBloomS: 90,
     gardenTargetBlooms: 100,
-    milestones: [25, 50, 75, 100],
+    milestones: [10, 50, 75, 100],
     giftCoinToGrowth: 1,
     giftRainCoins: 100,
     giftRainbowCoins: 500,
@@ -53,7 +53,7 @@ function createEngine(ctx) {
     voiceEnabled: true,
   };
   let settings = loadJson(SETTINGS_FILE, defaultSettings);
-  settings.milestones = Array.isArray(settings.milestones) ? settings.milestones : [25, 50, 75, 100];
+  settings.milestones = Array.isArray(settings.milestones) ? settings.milestones : [10, 50, 75, 100];
   saveJson(SETTINGS_FILE, settings);
 
   function defaultSession() {
@@ -155,7 +155,7 @@ function createEngine(ctx) {
           addLog(`🎉 VƯỜN ĐẦY — ${m} hoa đã nở! Lễ hội hoa bắt đầu!`, 'festival');
           io.emit('festival', { blooms: session.gardenBlooms, roundNo: session.roundNo });
         } else {
-          const effect = m === 25 ? '🦋 Bướm bay về vườn!' : m === 50 ? '🐝 Ong về vườn, sương xuân ×2!' : '🌈 Cầu vồng xuất hiện trên vườn!';
+          const effect = m === 10 ? '🦋 Bướm bay về vườn!' : m === 50 ? '🐝 Ong về vườn, sương xuân ×2!' : '🌈 Cầu vồng xuất hiện trên vườn!';
           addLog(`🌸 Mốc ${m} hoa nở: ${effect}`, 'milestone');
           io.emit('milestone', { milestone: m, effect });
         }

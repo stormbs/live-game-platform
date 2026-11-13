@@ -75,14 +75,14 @@ test('dau-truong: join -> 100 HP; tap -> địch ngẫu nhiên mất HP; comment
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-a', nickname: 'AnhA', likeCount: 105 });
     st = await getState(t, user);
     assert.equal(st.stats.taps, 5, 'tap tính theo delta');
-    assert.equal(hpOf(st, 'u-b'), 95, 'tap 5 lần -> địch -5 HP');
+    assert.equal(hpOf(st, 'u-b'), 90, 'tap 5 lần -> địch -10 HP (tapDamage 2)');
     assert.equal(hpOf(st, 'u-a'), 100, 'không tự đánh mình');
     // Bình luận đúng tên địch -> -3 HP.
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-a', nickname: 'AnhA', content: 'BanB' });
     st = await getState(t, user);
-    assert.equal(hpOf(st, 'u-b'), 92, 'bình luận tên địch -> -3 HP');
+    assert.equal(hpOf(st, 'u-b'), 87, 'bình luận tên địch -> -3 HP');
     assert.equal(st.top[0].uid, 'u-a');
-    assert.equal(st.top[0].damage, 8, 'top sát thương: 5 tap + 3 tên = 8');
+    assert.equal(st.top[0].damage, 13, 'top sát thương: 5 tap x 2 + 3 tên = 13');
   } finally { await stopTestServer(t); }
 });
 
@@ -97,11 +97,11 @@ test('dau-truong: quà 10 xu = +10 sát thương dồn, đòn sau dùng hết; q
     let st = await getState(t, user);
     assert.equal(st.fighters.find((f) => f.uid === 'u-a').bonus, 10, 'quà 10 xu = +10 sát thương dồn');
     assert.equal(hpOf(st, 'u-b'), 100, 'quà chưa đánh thì HP địch chưa đổi');
-    // Tap 1 lần -> đòn 1 + 10 = 11, bonus về 0.
+    // Tap 1 lần -> đòn 2 + 10 = 12, bonus về 0.
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-a', nickname: 'AnhA', likeCount: 1 });
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-a', nickname: 'AnhA', likeCount: 2 });
     st = await getState(t, user);
-    assert.equal(hpOf(st, 'u-b'), 89, 'đòn sau = 1 + 10 bonus = 11 sát thương');
+    assert.equal(hpOf(st, 'u-b'), 88, 'đòn sau = 2 + 10 bonus = 12 sát thương');
     assert.equal(st.fighters.find((f) => f.uid === 'u-a').bonus, 0, 'bonus chỉ dùng cho 1 đòn');
     // Quà lạ không rõ xu.
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 3, userId: 'u-a', nickname: 'AnhA', giftName: 'Quà lạ', repeatCount: 1 });
@@ -119,11 +119,11 @@ test('dau-truong: quà 100 xu hồi +20 HP; follow +10 HP 1 lần/trận', async
     const room = await t.rooms.getOrCreate(GAME, user);
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-a', nickname: 'AnhA', content: 'tham gia' });
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-b', nickname: 'BanB', content: 'tham gia' });
-    // B đánh A 5 lần (tap delta 5) -> A còn 95.
+    // B đánh A 5 lần (tap delta 5) -> A còn 90 (tapDamage 2).
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-b', nickname: 'BanB', likeCount: 10 });
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-b', nickname: 'BanB', likeCount: 15 });
     let st = await getState(t, user);
-    assert.equal(hpOf(st, 'u-a'), 95);
+    assert.equal(hpOf(st, 'u-a'), 90);
     // Quà 100 xu -> hồi 20 nhưng tối đa 100.
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 3, userId: 'u-a', nickname: 'AnhA', giftName: 'Heo may mắn', diamondCount: 100, repeatCount: 1 });
     st = await getState(t, user);
@@ -131,11 +131,11 @@ test('dau-truong: quà 100 xu hồi +20 HP; follow +10 HP 1 lần/trận', async
     // Follow +10: A đang 100 nên không vượt max; đánh A xuống rồi follow.
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-b', nickname: 'BanB', likeCount: 25 });
     st = await getState(t, user);
-    assert.equal(hpOf(st, 'u-a'), 90, 'B tap thêm 10 -> A còn 90');
+    assert.equal(hpOf(st, 'u-a'), 80, 'B tap thêm 10 -> A còn 80');
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 1, userId: 'u-a', nickname: 'AnhA' });
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 1, userId: 'u-a', nickname: 'AnhA' });
     st = await getState(t, user);
-    assert.equal(hpOf(st, 'u-a'), 100, 'follow +10 HP (1 lần/trận, lần 2 không cộng)');
+    assert.equal(hpOf(st, 'u-a'), 90, 'follow +10 HP (1 lần/trận, lần 2 không cộng)');
   } finally { await stopTestServer(t); }
 });
 

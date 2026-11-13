@@ -2566,8 +2566,24 @@
     window.addEventListener('DOMContentLoaded', tryStartBgm);
     socket.on('connect', tryStartBgm);
 
+    // Vẽ lại các danh sách nặng (leaderboard, tầng, huy hiệu) tối đa 1 lần/500ms
+    // để phòng đông (nhiều event/giây) không nhấp nháy/giật vì innerHTML liên tục.
+    let latestStateForHeavy = null, lastHeavyRenderAt = 0, heavyRenderTimer = null;
+    function runHeavyRender() {
+      lastHeavyRenderAt = Date.now();
+      const st = latestStateForHeavy;
+      if (!st) return;
+      updateLeaderboard(st.ranking || [], localUsers);
+      if (st.exemplaryInmates) {
+        lastExemplaryInmates = st.exemplaryInmates;
+        updateExemplaryBoard(st.exemplaryInmates);
+      }
+      renderCharacters(localUsers, st.ranking || []);
+      renderMam1WallMedals(lastExemplaryInmates, localUsers);
+    }
     function handleStateUpdate(state) {
       if (!state) return;
+      latestStateForHeavy = state;
       localUsers = state.users || {};
       chickenState = state.chicken || { stage: 0, currentTop1: null };
 
@@ -2609,13 +2625,13 @@
         if (a.sfxVolume !== undefined) window.buongGiamAudio.setSfxVolume(a.sfxVolume);
       }
 
-      updateLeaderboard(state.ranking || [], localUsers);
-      if (state.exemplaryInmates) {
-        lastExemplaryInmates = state.exemplaryInmates;
-        updateExemplaryBoard(state.exemplaryInmates);
+      // Danh sách nặng: vẽ ngay nếu đã quá 500ms, không thì dồn 1 lần sau.
+      const _nowHeavy = Date.now();
+      if (_nowHeavy - lastHeavyRenderAt >= 500) {
+        runHeavyRender();
+      } else if (!heavyRenderTimer) {
+        heavyRenderTimer = setTimeout(() => { heavyRenderTimer = null; runHeavyRender(); }, 500 - (_nowHeavy - lastHeavyRenderAt));
       }
-      renderCharacters(localUsers, state.ranking || []);
-      renderMam1WallMedals(lastExemplaryInmates, localUsers);
 
       if (state.chicken) {
         chickenState = state.chicken;

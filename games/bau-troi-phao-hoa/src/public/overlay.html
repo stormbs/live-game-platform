@@ -48,9 +48,12 @@
   .ticker { position: absolute; left: 0; right: 0; bottom: 140px; background: rgba(0,0,0,.6); padding: 16px 24px; font-size: 27px; min-height: 72px; color: #ffe9c4; z-index: 5; }
   .info { position: absolute; left: 0; right: 0; bottom: 40px; text-align: center; font-size: 25px; color: rgba(255,255,255,.9); text-shadow: 0 2px 4px rgba(0,0,0,.7); z-index: 5; }
   .status { position: absolute; bottom: 6px; left: 24px; right: 24px; display: flex; justify-content: space-between; font-size: 20px; color: rgba(255,233,196,.75); z-index: 5; }
+  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
+  html { background: #000; }
 </style>
 </head>
 <body>
+<div id="scaler">
 <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="wrap">
   <div class="stars"></div>
@@ -68,8 +71,18 @@
   <div class="info">Tap 20 = 1 pháo • Comment = 1 pháo • Follow = pháo tên bạn • Quà = pháo theo giá trị</div>
   <div class="status"><span id="stMode">🎆 Bầu Trời Pháo Hoa</span><span id="stViewers">👥 0 người xem</span></div>
 </div>
+</div>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/shared/music.js"></script>
 <script>
+var scaler = document.getElementById('scaler');
+function fit() {
+  var s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+  scaler.style.transform = 'scale(' + s + ')';
+  scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
+  scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
+}
+window.addEventListener('resize', fit); fit();
 (function () {
   const $ = (id) => document.getElementById(id);
   const canvas = $('sky'), ctx = canvas.getContext('2d');
@@ -234,6 +247,8 @@
   }
   function render(s) {
     voiceOn = !!(s.settings && s.settings.voiceEnabled);
+    // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
+    if (window.StromMusic) window.StromMusic.sync({ mood: 'calm', enabled: true, volume: 50, energy: (s.grandShow ? 2 : (((s.totalFireworks || 0) > 0 || (s.viewersOnline || 0) > 0 || s.demoActive) ? 1 : 0)) });
     document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
     $('totalLine').textContent = '🎆 ' + s.totalFireworks + ' pháo đã nổ';
     $('nextLine').textContent = s.grandShow ? '🎆 MÀN PHÁO LỚN ĐANG CHẠY!' : 'Còn ' + s.fireworksToGrand + ' pháo nữa tới màn lớn';
