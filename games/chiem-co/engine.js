@@ -55,7 +55,13 @@ function createEngine(ctx) {
     { id: 'right', name: 'Phải' },
   ];
   const FLAG_IDS = FLAGS.map((f) => f.id);
-  const TEAM_NAMES = { xanh: 'Đội Xanh', do: 'Đội Đỏ' };
+  // Tên đội hiển thị lấy từ settings (dashboard "Tùy chỉnh đội") để TTS/log
+  // dùng đúng tên mới; mặc định 'Đội Xanh'/'Đội Đỏ' như trước.
+  function teamLabel(team) {
+    const n = team === 'xanh' ? settings.teamXanhName : settings.teamDoName;
+    const clean = String(n || '').trim();
+    return 'Đội ' + (clean || (team === 'xanh' ? 'Xanh' : 'Đỏ'));
+  }
   const FLAG_NAMES = { left: 'cờ Trái', mid: 'cờ Giữa', right: 'cờ Phải' };
   const DEMO_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khang', 'Linh', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo'];
   const DEMO_FOCUS = ['left', 'mid', 'right'];
@@ -75,6 +81,12 @@ function createEngine(ctx) {
     commentSpamS: 5,      // chống spam bình luận (giây/người)
     demoMode: false,
     voiceEnabled: true,
+    teamXanhName: 'Xanh',   // tên đội Xanh (dashboard "Tùy chỉnh đội")
+    teamDoName: 'Đỏ',       // tên đội Đỏ
+    teamXanhBg: '',         // ảnh nền đội Xanh (URL http(s) hoặc /shared/..., '' = không ảnh)
+    teamDoBg: '',           // ảnh nền đội Đỏ
+    teamXanhColor: '#0284C7', // màu chủ đạo đội Xanh
+    teamDoColor: '#DC2626',   // màu chủ đạo đội Đỏ
   };
   let settings = loadJson(SETTINGS_FILE, defaultSettings);
   saveJson(SETTINGS_FILE, settings);
@@ -130,6 +142,25 @@ function createEngine(ctx) {
     if (!Number.isFinite(n)) return dflt;
     return Math.max(min, Math.min(max, Math.floor(n)));
   }
+  // Validate "Tùy chỉnh đội" (dashboard): tên trim + strip <>& + tối đa 24 ký
+  // tự; bg chỉ nhận URL http(s) hoặc /shared/... và không chứa khoảng trắng,
+  // dấu nháy hay ngoặc (chống chèn CSS/JS qua background-image); màu phải là
+  // hex #rrggbb. Giá trị sai -> giữ nguyên giá trị cũ.
+  function cleanTeamName(v, dflt) {
+    const t = String(v == null ? '' : v).replace(/[<>&]/g, '').trim().slice(0, 24);
+    return t || dflt;
+  }
+  function cleanTeamBg(v, dflt) {
+    const t = String(v == null ? '' : v).trim();
+    if (!t) return '';
+    if (!/^(https?:\/\/|\/shared\/)/.test(t)) return dflt;
+    if (/[\s"'()]/.test(t)) return dflt;
+    return t;
+  }
+  function cleanTeamColor(v, dflt) {
+    const t = String(v == null ? '' : v).trim();
+    return /^#[0-9a-fA-F]{6}$/.test(t) ? t : dflt;
+  }
   function log(text) {
     session.logs.push({ t: Date.now(), text });
     if (session.logs.length > 100) session.logs = session.logs.slice(-100);
@@ -166,8 +197,8 @@ function createEngine(ctx) {
       })),
       teamCounts: { xanh: byTeam.xanh.length, do: byTeam.do.length, none: byTeam.none.length },
       top: {
-        xanh: byTeam.xanh.slice(0, 5).map((p) => ({ name: p.name, force: p.forceMatch || 0 })),
-        do: byTeam.do.slice(0, 5).map((p) => ({ name: p.name, force: p.forceMatch || 0 })),
+        xanh: byTeam.xanh.slice(0, 5).map((p) => ({ uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, force: p.forceMatch || 0 })),
+        do: byTeam.do.slice(0, 5).map((p) => ({ uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, force: p.forceMatch || 0 })),
       },
       stats: session.stats,
       avatarStats: session.avatarStats,
@@ -189,6 +220,12 @@ function createEngine(ctx) {
         shareForce: settings.shareForce,
         spotlightS: settings.spotlightS,
         commentSpamS: settings.commentSpamS,
+        teamXanhName: settings.teamXanhName,
+        teamDoName: settings.teamDoName,
+        teamXanhBg: settings.teamXanhBg,
+        teamDoBg: settings.teamDoBg,
+        teamXanhColor: settings.teamXanhColor,
+        teamDoColor: settings.teamDoColor,
       },
       now: Date.now(),
     };
@@ -256,8 +293,8 @@ function createEngine(ctx) {
       if (fl.owner !== winTeam) {
         fl.owner = winTeam;
         session.lastCapture = { team: winTeam, flag: f.id, at: now };
-        log(`${TEAM_NAMES[winTeam]} chiếm ${FLAG_NAMES[f.id]}! (${fx} - ${fd})`);
-        ctx.io.emit('flag-capture', { team: winTeam, flag: f.id, text: `${TEAM_NAMES[winTeam]} vừa chiếm ${FLAG_NAMES[f.id]}!` });
+        log(`${teamLabel(winTeam)} chiếm ${FLAG_NAMES[f.id]}! (${fx} - ${fd})`);
+        ctx.io.emit('flag-capture', { team: winTeam, flag: f.id, text: `${teamLabel(winTeam)} vừa chiếm ${FLAG_NAMES[f.id]}!` });
       }
     }
     // Cờ hòa lực: lực cửa sổ vẫn reset (cửa sổ mới bắt đầu lại từ 0).
@@ -295,8 +332,8 @@ function createEngine(ctx) {
     session.phase = 'spotlight';
     session.phaseEndsAt = now + settings.spotlightS * 1000;
     if (winner) {
-      log(`Hết trận: ${TEAM_NAMES[winner]} thắng (${reason}).`);
-      ctx.io.emit('match-win', { team: winner, text: `${TEAM_NAMES[winner]} đã thắng trận!` });
+      log(`Hết trận: ${teamLabel(winner)} thắng (${reason}).`);
+      ctx.io.emit('match-win', { team: winner, text: `${teamLabel(winner)} đã thắng trận!` });
     } else {
       log(`Hết trận: hòa (${reason}).`);
       ctx.io.emit('match-win', { team: null, text: 'Trận đấu kết thúc với tỷ số hòa!' });
@@ -399,15 +436,15 @@ function createEngine(ctx) {
         if (session.phase !== 'playing') {
           if (p.team !== team) {
             p.team = team;
-            log(`${p.name} vào ${TEAM_NAMES[team]}.`);
+            log(`${p.name} vào ${teamLabel(team)}.`);
           }
         } else if (p.team && p.team !== team) {
           // Đang đấu: người đã có đội thì không được đổi đội.
-          log(`${p.name} muốn đổi sang ${TEAM_NAMES[team]} — chỉ đổi được giữa các trận.`);
+          log(`${p.name} muốn đổi sang ${teamLabel(team)} — chỉ đổi được giữa các trận.`);
         } else if (!p.team) {
           // Người mới chưa có đội vẫn được vào đội giữa trận.
           p.team = team;
-          log(`${p.name} vào ${TEAM_NAMES[team]}.`);
+          log(`${p.name} vào ${teamLabel(team)}.`);
         }
       }
       const focus = detectFocus(text);
@@ -650,6 +687,12 @@ function createEngine(ctx) {
     if (b.commentSpamS !== undefined) settings.commentSpamS = clampInt(b.commentSpamS, 1, 60, settings.commentSpamS);
     if (b.demoMode !== undefined) settings.demoMode = !!b.demoMode;
     if (b.voiceEnabled !== undefined) settings.voiceEnabled = !!b.voiceEnabled;
+    if (b.teamXanhName !== undefined) settings.teamXanhName = cleanTeamName(b.teamXanhName, settings.teamXanhName);
+    if (b.teamDoName !== undefined) settings.teamDoName = cleanTeamName(b.teamDoName, settings.teamDoName);
+    if (b.teamXanhBg !== undefined) settings.teamXanhBg = cleanTeamBg(b.teamXanhBg, settings.teamXanhBg);
+    if (b.teamDoBg !== undefined) settings.teamDoBg = cleanTeamBg(b.teamDoBg, settings.teamDoBg);
+    if (b.teamXanhColor !== undefined) settings.teamXanhColor = cleanTeamColor(b.teamXanhColor, settings.teamXanhColor);
+    if (b.teamDoColor !== undefined) settings.teamDoColor = cleanTeamColor(b.teamDoColor, settings.teamDoColor);
     saveSettings();
     res.json({ success: true, settings });
     broadcast();
