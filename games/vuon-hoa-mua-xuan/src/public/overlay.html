@@ -8,6 +8,8 @@
 <script src="/shared/music.js"></script>
 <link rel="stylesheet" href="/shared/ui.css">
 <script src="/shared/ui.js"></script>
+<link rel="stylesheet" href="/shared/meme.css">
+<script src="/shared/meme.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root { --ui-accent: #FF5E8A; --ui-accent-2: #2E7D32; }
@@ -45,11 +47,15 @@
   .ms.hit { background: #ffd94d; color: #4a2f00; }
   .ms-pop { animation: ms-pop .6s ease; }
   @keyframes ms-pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
-  .top5 { position: absolute; top: 330px; right: 24px; z-index: 6; width: 300px; background: rgba(255,255,255,.88); border-radius: 16px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+  .top5 { position: absolute; top: 300px; right: 24px; z-index: 6; width: 300px; background: rgba(255,255,255,.88); border-radius: 16px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
   .top5 h3 { font-size: 24px; color: #2e7d32; margin-bottom: 6px; }
-  .top5.ui-board h3 { font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif; font-size: 28px; color: var(--ui-accent); }
-  .top5 .ui-row { font-size: 22px; color: #2d1a0e; border-bottom-color: rgba(0,0,0,.12); }
-  .top5 .ui-row .ui-ava { width: 48px; height: 48px; }
+  .top5.ui-board h3 { font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif; font-size: 24px; color: var(--ui-accent); }
+  /* Hàng Top gọn lại (rank/avatar nhỏ hơn) để điểm không bị ép ra mép phải:
+     .ui-pts flex:none + nowrap — "40đ" không bao giờ bị co/cắt. */
+  .top5 .ui-row { font-size: 20px; color: #2d1a0e; border-bottom-color: rgba(0,0,0,.12); padding: 6px 0; }
+  .top5 .ui-row .ui-rank { width: 40px; height: 40px; font-size: 22px; }
+  .top5 .ui-row .ui-ava { width: 40px; height: 40px; }
+  .top5 .ui-row .ui-pts { flex: none; white-space: nowrap; font-size: 20px; }
   .top5 .ui-row .ui-bar { background: rgba(0,0,0,.12); }
   .top5 .top-empty { font-size: 22px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ui-ava-fallback { display: inline-flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #fff; background: var(--ui-accent); }
@@ -61,19 +67,24 @@
       linear-gradient(180deg, #7a4a22 0%, #5d3a1a 55%, #4a2c12 100%);
     border: 3px solid rgba(255,255,255,.5); border-top: 6px solid #4caf50; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; overflow: hidden; padding: 6px 4px 4px; }
   .plot.empty { justify-content: center; }
-  /* Hàng avatar + tên NGAY TRÊN ĐẦU hoa (mọi giai đoạn, không chỉ khi nở). */
-  .plot .who { display: flex; align-items: center; gap: 5px; width: 100%; min-height: 34px; }
-  .plot .who .av-wrap { position: relative; width: 34px; height: 34px; flex: 0 0 34px; }
-  .plot .who .av { position: absolute; inset: 0; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
-  .plot .who .av-fb { display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 900; color: #fff; background: var(--ui-accent); border: 2px solid rgba(255,255,255,.85); }
-  .plot .who .nm { font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif; font-size: 17px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000, 0 0 8px rgba(0,0,0,.55); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 92px; }
-  .plot .f { font-size: 62px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
-  .plot .f.stage-ic { font-size: 40px; }
+  /* Nhân vật NGƯỜI LÀM VƯỜN đứng trong vườn (mẫu Kéo Co): tên trên đầu
+     (13px) + mặt meme làm ĐẦU (44px, khung vuông bo nhẹ, không cắt tròn)
+     + thân áo xanh lá đơn giản. Mỗi luống hoa có người làm vườn của mình
+     đứng cạnh hoa — mặt khác nhau theo chủ luống (faceImgIn, danh sách
+     chung toàn vườn nên không ai trùng mặt). */
+  .plot .gardener { display: flex; flex-direction: column; align-items: center; width: 100%; animation: gardener-sway 3s ease-in-out infinite; }
+  @keyframes gardener-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  .plot .g-name { font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif; font-size: 13px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 128px; line-height: 1.3; }
+  .plot .g-face { width: 44px; height: 44px; border-radius: 12px; border: 2px solid rgba(255,255,255,.9); background: transparent; margin-top: 1px; }
+  .plot .g-face img { width: 100%; height: 100%; object-fit: contain; }
+  .plot .g-body { width: 40px; height: 12px; margin-top: 2px; border-radius: 6px 6px 4px 4px; background: #2e7d32; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+  .plot .f { font-size: 46px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .plot .f.stage-ic { font-size: 34px; }
   /* Sprite 2D thay emoji khi load được; lỗi/thiếu thì emoji fallback hiện lại. */
-  .plot .f .spr { width: 68px; height: 68px; object-fit: contain; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
-  .plot .f.stage-ic .spr { width: 56px; height: 56px; }
+  .plot .f .spr { width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
+  .plot .f.stage-ic .spr { width: 44px; height: 44px; }
   /* Bình tưới phủ lên ô 1.2s khi có gift tưới (chỉ animate transform/opacity). */
-  .plot .water { position: absolute; right: 0; top: 36px; width: 70px; height: 70px; pointer-events: none; z-index: 3; animation: water-pour 1.2s ease forwards; }
+  .plot .water { position: absolute; right: 0; top: 88px; width: 70px; height: 70px; pointer-events: none; z-index: 3; animation: water-pour 1.2s ease forwards; }
   .plot .water img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
   @keyframes water-pour { 0% { opacity: 0; transform: translate(16px,-12px) rotate(16deg); } 25% { opacity: 1; transform: translate(0,0) rotate(6deg); } 70% { opacity: 1; transform: translate(-3px,3px) rotate(-4deg); } 100% { opacity: 0; transform: translate(-8px,8px) rotate(-8deg); } }
   /* Pop nhỏ khi chuyển giai đoạn hạt→mầm→nụ (nở đã có bloom-pop riêng). */
@@ -88,7 +99,9 @@
   #petals { position: absolute; inset: 0; pointer-events: none; z-index: 8; overflow: hidden; }
   .petal { position: absolute; top: -40px; width: 26px; height: 34px; background: radial-gradient(circle at 35% 35%, #ffd1e0, #ff5e8a); border-radius: 60% 40% 60% 40%; opacity: .9; animation: fall 6s linear infinite; }
   @keyframes fall { from { transform: translateY(-60px) rotate(0deg); } to { transform: translateY(1980px) rotate(540deg); } }
-  .nursery { position: absolute; left: 30px; bottom: 250px; width: 740px; z-index: 5; background: rgba(255,255,255,.85); border-radius: 14px; padding: 10px 16px; font-size: 22px; font-weight: 700; color: #6b4a12; }
+  /* Thanh vườn ươm: bottom 260 (cách feed 2 dòng ~8px) — trước đây bottom 250
+     đè lên dòng feed thứ 3 của ticker khi ticker đủ 3 dòng. */
+  .nursery { position: absolute; left: 30px; bottom: 260px; width: 740px; z-index: 5; background: rgba(255,255,255,.85); border-radius: 14px; padding: 10px 16px; font-size: 22px; font-weight: 700; color: #6b4a12; }
   .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
   .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
   .statusbar { position: absolute; left: 0; bottom: 0; width: 1080px; height: 140px; z-index: 5; background: #2e7d32; color: #fff; display: flex; align-items: center; justify-content: space-around; font-size: 26px; font-weight: 800; padding: 0 30px; }
@@ -103,18 +116,19 @@
   .bees.on { display: block; animation: fly 9s linear infinite; }
   @keyframes fly { 0% { left: 60px; top: 500px; } 25% { left: 700px; top: 420px; } 50% { left: 300px; top: 900px; } 75% { left: 800px; top: 1100px; } 100% { left: 60px; top: 500px; } }
   /* Bảng hướng dẫn chơi (chuẩn chung đợt 2 — nguyên tắc 3): cột phải dưới
-     bảng top (top5 đầy 5 hàng kết thúc ~716px), không che vườn hoa.
-     Số liệu lấy từ settings (engine.js defaultSettings), renderHowto()
-     cập nhật lại khi dashboard đổi số. */
-  .howto { position: absolute; top: 730px; right: 24px; z-index: 6; width: 300px; background: rgba(255,255,255,.92); border-radius: 16px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
+     bảng top (top5 gọn lại kết thúc ~614px), không che vườn hoa.
+     Font 24px/1.5 (đợt 2: 19px quá nhỏ nên mắt đọc thành dính chữ) — nội
+     dung rút gọn câu chữ nhưng giữ đủ mọi con số thật từ settings;
+     renderHowto() cập nhật lại khi dashboard đổi số. */
+  .howto { position: absolute; top: 625px; right: 24px; z-index: 6; width: 300px; background: rgba(255,255,255,.92); border-radius: 16px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
   .howto h3 { font-size: 24px; color: #2e7d32; margin-bottom: 6px; }
   .howto ul { list-style: none; }
-  .howto li { font-size: 19px; line-height: 1.4; margin-bottom: 7px; color: #2d1a0e; }
+  .howto li { font-size: 24px; line-height: 1.5; margin-bottom: 5px; color: #2d1a0e; }
   .howto li b { color: #2e7d32; }
   /* NPC Bác Nông Dân (chuẩn chung đợt 2 — nguyên tắc 4): đứng góc dưới-phải
      vườn, trên dải ticker; vẫy bình tưới khi hoa nở, chúc mừng khi chạm mốc,
      nhảy múa khi lễ hội. Chỉ animate transform/opacity. */
-  .farmer { position: absolute; right: 30px; bottom: 300px; z-index: 6; width: 230px; text-align: center; }
+  .farmer { position: absolute; right: 30px; bottom: 280px; z-index: 6; width: 230px; text-align: center; }
   .farmer-bubble { position: absolute; left: 50%; transform: translateX(-50%) translateY(6px); bottom: calc(100% + 4px); width: 250px; background: #fff; color: #2d1a0e; font-size: 21px; font-weight: 800; line-height: 1.35; padding: 10px 14px; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; }
   .farmer-bubble::after { content: ""; position: absolute; left: 50%; bottom: -10px; margin-left: -10px; border: 10px solid transparent; border-top-color: #fff; border-bottom: 0; }
   .farmer-bubble.on { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -155,14 +169,14 @@
 
 <div class="top5 ui-board" id="top5"><h3>🏆 Top người trồng</h3><div>Chưa có ai trồng hoa…</div></div>
 <div class="howto" id="howto"><h3>📖 CÁCH CHƠI</h3><ul>
-  <li>💬 <b>Bình luận</b> (1 lần/<span id="ht-spam">5</span> giây): gieo <b>1 hạt</b> — tối đa <span id="ht-max">8</span> hoa/người</li>
-  <li>❤️ <b>Thả tim</b>: 1 tim = gieo 1 hạt (đủ hoa thì +1 cho hoa non nhất)</li>
-  <li>🎁 <b>Quà</b>: 1 xu = +1 tăng trưởng; ≥<span id="ht-rain">100</span> xu mưa cả vườn +5; ≥<span id="ht-rainbow">500</span> xu cầu vồng: 1 hoa nở ngay + cả vườn +10</li>
-  <li>➕ <b>Follow</b>: +<span id="ht-follow">5</span>đ + tặng 1 hồng vàng từ nụ (chỉ lần đầu)</li>
-  <li>🔁 <b>Chia sẻ</b>: +<span id="ht-share">2</span> tăng trưởng cho hoa non nhất</li>
-  <li>🌱 Hạt tự nảy mầm sau <span id="ht-sprout">10</span> giây; mầm→nụ→nở mỗi bậc cần <span id="ht-stage">3</span> tăng trưởng</li>
-  <li>💧 Sương xuân mỗi <span id="ht-dew">60</span> giây: cả vườn +<span id="ht-dewamt">1</span></li>
-  <li>🧺 Hoa nở <span id="ht-harvest">90</span> giây thì được hái, trả luống cho hạt mới</li>
+  <li>💬 <b>Bình luận</b> (1 lần/<span id="ht-spam">5</span>s): gieo <b>1 hạt</b>, tối đa <span id="ht-max">8</span> hoa</li>
+  <li>❤️ <b>Thả tim</b>: 1 tim = 1 hạt (đủ hoa: +1 hoa non nhất)</li>
+  <li>🎁 <b>Quà</b>: 1 xu = +1; ≥<span id="ht-rain">100</span> xu mưa +5; ≥<span id="ht-rainbow">500</span> xu cầu vồng: nở ngay 1 hoa +10</li>
+  <li>➕ <b>Follow</b>: +<span id="ht-follow">5</span>đ + hồng vàng (lần đầu)</li>
+  <li>🔁 <b>Chia sẻ</b>: +<span id="ht-share">2</span> hoa non nhất</li>
+  <li>🌱 Nảy mầm sau <span id="ht-sprout">10</span>s; mỗi bậc cần <span id="ht-stage">3</span></li>
+  <li>💧 Sương xuân mỗi <span id="ht-dew">60</span>s: cả vườn +<span id="ht-dewamt">1</span></li>
+  <li>🧺 Hoa nở <span id="ht-harvest">90</span>s thì hái, trả luống</li>
   <li>🎯 <b><span id="ht-target">100</span> hoa nở</b> → Lễ hội hoa! Mốc: <span id="ht-milestones">10 hoa 🦋 bướm · 50 hoa 🐝 ong · 75 hoa 🌈 cầu vồng · 100 hoa 🎉 lễ hội</span></li>
 </ul></div>
 <div class="garden" id="garden"></div>
@@ -393,6 +407,8 @@ function render(s) {
   waterFx = waterFx.filter((w) => w.until > Date.now());
 
   const g = document.getElementById('garden');
+  // Mặt meme khác nhau toàn vườn: gán theo danh sách chung mọi chủ luống.
+  const allOwners = s.flowers.filter(Boolean);
   let html = '';
   for (let i = 0; i < s.plots; i++) {
     const f = s.flowers[i];
@@ -403,12 +419,15 @@ function render(s) {
     const icon = f.stage === 'bloom' ? FLOWER_ICON[f.type] : STAGE_ICON[f.stage];
     const sprSrc = SPRITE_BASE + STAGE_SPRITE[f.stage] + '/sheet.png';
     const watering = waterFx.some((w) => w.idx === i);
-    const initial = escapeHtml((String(f.name || '?').trim().charAt(0)) || '?');
-    const ava = f.avatar
-      ? '<span class="av-wrap"><span class="av av-fb">' + initial + '</span><img class="av" src="' + escapeHtml(f.avatar) + '" alt="" onerror="this.remove()"></span>'
-      : '<span class="av-wrap"><span class="av av-fb">' + initial + '</span></span>';
+    // Người làm vườn: mặt meme làm ĐẦU (mỗi chủ luống 1 mặt khác nhau
+    // trong toàn vườn qua faceImgIn) + thân áo xanh lá, tên trên đầu.
+    const face = (window.MemeFaces
+      ? window.MemeFaces.faceImgIn(f, allOwners, 'meme-face')
+      : '<span>' + escapeHtml((String(f.name || '?').trim().charAt(0)) || '?') + '</span>');
     html += '<div class="plot' + (f.golden ? ' golden' : '') + (f.stage === 'bloom' ? ' bloom' : '') + (justBloomed ? ' just-bloomed' : '') + (justGrew ? ' just-grew' : '') + (watering ? ' watering' : '') + '" title="' + escapeHtml(f.name) + ' — ' + STAGE_NAME[f.stage] + '">' +
-      '<div class="who">' + ava + '<span class="nm">' + escapeHtml(shortName) + '</span></div>' +
+      '<div class="gardener"><div class="g-name">' + escapeHtml(shortName) + '</div>' +
+      '<div class="g-face">' + face + '</div>' +
+      '<div class="g-body"></div></div>' +
       '<div class="f' + (f.stage === 'bloom' ? '' : ' stage-ic') + '"><img class="spr" src="' + sprSrc + '" alt="" onerror="this.style.display=\'none\';var e=this.nextElementSibling;if(e)e.style.display=\'inline\';"><span class="emo" style="display:none">' + icon + '</span></div>' +
       (watering ? '<div class="water"><img src="' + WATER_SPRITE + '" alt=""></div>' : '') +
       '</div>';
@@ -422,8 +441,9 @@ function render(s) {
   document.getElementById('st-online').textContent = s.viewersOnline;
   document.getElementById('st-gifts').textContent = s.stats.gifts;
 
+  // Ticker chỉ 2 dòng (đợt 2: 3 dòng mọc cao lên đè thanh vườn ươm).
   const tk = document.getElementById('ticker');
-  tk.innerHTML = s.logs.slice(-3).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
+  tk.innerHTML = s.logs.slice(-2).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
 
   if (s.phase === 'festival' && prevPhase !== 'festival') { spawnPetals(); farmerFestival(true); }
   if (s.phase !== 'festival' && prevPhase === 'festival') { document.getElementById('petals').innerHTML = ''; farmerFestival(false); }

@@ -6,6 +6,8 @@
 <title>Bếp Ăn Tập Thể — Nấu Cỗ</title>
 <link rel="stylesheet" href="/shared/ui.css">
 <script src="/shared/ui.js"></script>
+<link rel="stylesheet" href="/shared/meme.css">
+<script src="/shared/meme.js"></script>
 <style>
   :root { --ui-accent: #FF9A3D; --ui-accent-2: #C25E00; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,7 +51,7 @@
   .topRow img, .ava { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; }
   .topRow b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ticker { margin-top: 10px; background: rgba(0,0,0,.55); border-radius: 16px; padding: 10px 20px; font-size: 25px; min-height: 60px; color: #ffe9c4; }
-  .banner { display: none; position: absolute; left: 40px; right: 40px; top: 700px; background: rgba(20, 8, 0, .92); border: 4px solid #ffc53d; border-radius: 26px; padding: 34px 30px; text-align: center; z-index: 5; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
+  .banner { display: none; position: absolute; left: 40px; right: 40px; top: 1030px; background: rgba(20, 8, 0, .92); border: 4px solid #ffc53d; border-radius: 26px; padding: 34px 30px; text-align: center; z-index: 5; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
   .banner.show { display: block; }
   .banner h2 { font-size: 52px; margin-bottom: 10px; }
   .banner p { font-size: 30px; color: #ffe9c4; }
@@ -105,21 +107,22 @@
   #fire.big .fire-sprite { width: 170px; height: 170px; background-size: 680px 170px; animation: fire-burn-big .35s steps(4) infinite; }
   @keyframes fire-burn { from { background-position: 0 0; } to { background-position: -600px 0; } }
   @keyframes fire-burn-big { from { background-position: 0 0; } to { background-position: -680px 0; } }
+  /* Đầu bếp quanh nồi (mẫu Kéo Co, đợt 2): mặt meme làm ĐẦU (64px, khung
+     vuông bo nhẹ, không cắt tròn — mỗi đầu bếp 1 mặt khác nhau toàn bếp
+     qua faceImgIn) + tên trên đầu + thân áo đầu bếp trắng + muôi đảo. */
   .chefs { display: flex; justify-content: center; gap: 14px; margin-top: 10px; min-height: 130px; }
   .chefs-empty { align-self: center; font-size: 24px; color: #ffd9a0; opacity: .8; }
   .chef { width: 120px; text-align: center; }
   .chef-head { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .chef-ava-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center;
-    width: 42px; height: 42px; border-radius: 50%; background: #ffb37a; color: #3d1503;
-    font-size: 22px; font-weight: 800; overflow: hidden; border: 2px solid #ffd9a0; }
-  .chef-ava-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .chef-face { width: 64px; height: 64px; border-radius: 14px; border: 3px solid #ffd9a0; background: transparent; display: flex; align-items: center; justify-content: center; }
+  .chef-face img { width: 100%; height: 100%; object-fit: contain; }
   .chef-name { max-width: 116px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    font-size: 21px; font-weight: 800; color: #fff8ee; background: rgba(0,0,0,.55);
+    font-size: 16px; font-weight: 800; color: #fff8ee; background: rgba(0,0,0,.55);
     border-radius: 999px; padding: 2px 9px;
     text-shadow: 0 2px 4px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.9); }
   .chef-body { position: relative; margin-top: 2px; animation: chef-bob 1.2s ease-in-out infinite alternate; }
-  .chef-emoji { font-size: 56px; line-height: 1; filter: drop-shadow(0 6px 6px rgba(0,0,0,.45)); }
-  .chef-ladle { position: absolute; left: 50%; top: 30px; margin-left: 6px; font-size: 32px;
+  .chef-coat { width: 54px; height: 30px; margin: 0 auto; border-radius: 14px 14px 8px 8px; background: #fff8ee; box-shadow: inset 0 -6px 0 rgba(0,0,0,.18), 0 2px 4px rgba(0,0,0,.4); }
+  .chef-ladle { position: absolute; left: 50%; top: 2px; margin-left: 16px; font-size: 30px;
     display: inline-block; transform-origin: 50% 12%; animation: chef-stir 1.2s linear infinite; }
   @keyframes chef-stir { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   @keyframes chef-bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
@@ -132,8 +135,8 @@
   /* --- Bảng hướng dẫn chơi (chuẩn chung đợt 2 — nguyên tắc 3): số thật từ engine.js,
      JS renderHowto() cập nhật lại theo s.settings mỗi lần render, HTML tĩnh giữ số mặc định --- */
   .howto { margin-top: 12px; background: rgba(0,0,0,.5); border: 2px solid #ffc53d; border-radius: 18px; padding: 10px 18px 10px; }
-  .howto-title { font-size: 22px; font-weight: 900; color: #ffd700; letter-spacing: 1px; text-align: center; }
-  .howto-line { font-size: 19px; line-height: 1.35; color: #ffe9c4; text-align: center; margin-top: 2px; }
+  .howto-title { font-size: 26px; font-weight: 900; color: #ffd700; letter-spacing: 1px; text-align: center; }
+  .howto-line { font-size: 24px; line-height: 1.5; color: #ffe9c4; text-align: center; margin-top: 2px; }
   .howto-line b { color: #fff; }
   /* --- Bếp trưởng NPC (chuẩn chung đợt 2 — nguyên tắc 4): đứng cạnh bếp, to hơn đầu bếp
      thường; nếm/đảo nhanh khi lửa cấp 3, vỗ tay khi mở món đặc biệt / cỗ chín --- */
@@ -321,13 +324,14 @@ window.addEventListener('resize', fit); fit();
     applyChefState(lastState);
     setTimeout(() => applyChefState(lastState), ms + 100);
   }
-  // --- Đầu bếp quanh nồi: top 5 thành figure, avatar + tên trên đầu, muôi đảo nồi ---
-  const CHEF_EMOJI = ['👨‍🍳', '👩‍🍳', '🧑‍🍳'];
+  // --- Đầu bếp quanh nồi: top 5 thành figure, mặt meme làm ĐẦU (mỗi người
+  // 1 mặt khác nhau toàn bếp qua faceImgIn) + tên trên đầu + áo đầu bếp +
+  // muôi đảo nồi (mẫu Kéo Co) ---
   function shortName(n) { n = String(n || ''); return n.length > 10 ? n.slice(0, 10) + '…' : n; }
-  function chefAvatarHtml(p) {
+  function chefFaceHtml(p, allTop) {
+    if (window.MemeFaces) return '<div class="chef-face">' + window.MemeFaces.faceImgIn(p, allTop || [p], 'meme-face') + '</div>';
     const initial = (p.name ? p.name.charAt(0).toUpperCase() : '🍲');
-    if (p.avatar) return '<span class="chef-ava-wrap">' + esc(initial) + '<img class="chef-ava" src="' + p.avatar + '" alt="" onerror="this.remove()"></span>';
-    return '<span class="chef-ava-wrap">' + esc(initial) + '</span>';
+    return '<div class="chef-face">' + esc(initial) + '</div>';
   }
   function renderChefs(s) {
     const box = $('chefs');
@@ -343,8 +347,8 @@ window.addEventListener('resize', fit); fit();
     }
     box.innerHTML = top.map((p, i) =>
       '<div class="chef" data-name="' + esc(p.name) + '">' +
-        '<div class="chef-head">' + chefAvatarHtml(p) + '<span class="chef-name">' + esc(shortName(p.name)) + '</span></div>' +
-        '<div class="chef-body"><span class="chef-emoji">' + CHEF_EMOJI[i % CHEF_EMOJI.length] + '</span><span class="chef-ladle">🥄</span></div>' +
+        '<div class="chef-head"><span class="chef-name">' + esc(shortName(p.name)) + '</span>' + chefFaceHtml(p, top) + '</div>' +
+        '<div class="chef-body"><div class="chef-coat"></div><span class="chef-ladle">🥄</span></div>' +
       '</div>').join('');
     reapplyBursts();
   }
