@@ -68,7 +68,7 @@
   .pfig { position: absolute; bottom: 205px; width: 96px; text-align: center; z-index: 3; animation: run-bob .7s ease-in-out infinite; }
   .pfig-xanh { left: 2px; }
   .pfig-do { right: 2px; }
-  .pfig .pname { font-size: 19px; font-weight: 800; max-width: 96px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 3px rgba(0,0,0,.9), 0 0 6px rgba(0,0,0,.8); }
+  .pfig .pname { font-size: 16px; font-weight: 800; max-width: 116px; margin-left: -10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 3px rgba(0,0,0,.9), 0 0 6px rgba(0,0,0,.8); }
   .pfig .pavatar { width: 44px; height: 44px; margin: 3px auto 0; border-radius: 50%; border: 3px solid #fff; overflow: hidden; position: relative; background: #334155; display: flex; align-items: center; justify-content: center; }
   .pfig-xanh .pavatar { border-color: #38bdf8; background: #0284c7; }
   .pfig-do .pavatar { border-color: #f87171; background: #dc2626; }
@@ -115,6 +115,31 @@
   /* #banner dùng class .ui-banner từ shared/ui.css (xem HTML) */
   #demo-badge { position: absolute; top: 24px; right: 24px; background: #f59e0b; color: #111; font-weight: 900; font-size: 26px; padding: 10px 18px; border-radius: 14px; display: none; }
   #hint { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 22px; opacity: .75; }
+  /* Bảng hướng dẫn chơi (Đợt 2, chuẩn chung #3): dải 4 dòng gọn giữa bảng
+     điểm và sân cờ — số lấy từ settings (JS cập nhật theo s.settings),
+     HTML tĩnh giữ đúng số mặc định của engine.js. Không che sân/capbar. */
+  #howto { position: absolute; top: 350px; left: 40px; right: 40px; background: rgba(0,0,0,.45); border: 2px solid rgba(255,255,255,.25); border-radius: 16px; padding: 6px 16px; font-size: 19px; line-height: 1.3; z-index: 5; }
+  #howto .howto-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Trọng tài NPC (Đợt 2, chuẩn chung #4): đứng giữa sân trước cột cờ Giữa
+     (vòng tròn giữa sân), áo sọc + còi sprite coi-sheet.png (frame 9,258,
+     493x245). Chỉ animate transform/opacity. */
+  #referee { position: absolute; left: 50%; top: 330px; transform: translateX(-50%); width: 96px; text-align: center; z-index: 4; }
+  .ref-tag { display: inline-block; font-size: 19px; font-weight: 900; letter-spacing: 1px; white-space: nowrap; background: rgba(0,0,0,.6); border: 2px solid #fff; border-radius: 999px; padding: 2px 12px; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+  .ref-head { position: relative; font-size: 54px; line-height: 1.05; margin-top: 2px; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+  .ref-whistle { position: absolute; right: 0; bottom: 4px; width: 40px; height: 20px; background-image: url('/shared/assets/2d/chiem-co/curated/coi-sheet.png'); background-size: 42px 42px; background-position: -0.7px -21.2px; background-repeat: no-repeat; transform-origin: 80% 50%; }
+  .ref-whistle-fb { display: none; position: absolute; right: 0; bottom: 0; font-size: 26px; }
+  #referee.no-coi .ref-whistle { display: none; }
+  #referee.no-coi .ref-whistle-fb { display: block; }
+  .ref-puff { position: absolute; right: -26px; bottom: 8px; font-size: 26px; opacity: 0; pointer-events: none; }
+  .ref-shirt { width: 68px; height: 52px; margin: 2px auto 0; border-radius: 10px; border: 2px solid #111; background: repeating-linear-gradient(90deg, #111 0 8px, #f8fafc 8px 16px); box-shadow: 0 3px 3px rgba(0,0,0,.4); }
+  .ref-shorts { width: 68px; height: 14px; margin: 2px auto 0; background: #111; border-radius: 0 0 8px 8px; }
+  .ref-shoes { font-size: 24px; line-height: 1.1; letter-spacing: 6px; }
+  #referee.blowing .ref-bob { animation: ref-bounce .18s ease-in-out 5; }
+  #referee.blowing .ref-whistle { animation: whistle-shake .12s linear 7; }
+  #referee.blowing .ref-puff { animation: puff-out .9s ease forwards; }
+  @keyframes ref-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes whistle-shake { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(14deg); } }
+  @keyframes puff-out { 0% { opacity: 1; transform: translateX(0) scale(.6); } 100% { opacity: 0; transform: translateX(26px) scale(1.2); } }
   #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
   html { background: #000; }
 </style>
@@ -134,6 +159,12 @@
     <div class="team-box do"><div class="tname">🔴 ĐỘI ĐỎ</div><div class="pts" id="pts-do">0</div><div class="flags-held" id="flags-do">0 cờ</div></div>
   </div>
   <div id="timer"><div class="clock" id="clock">10:00</div><div class="win" id="win-label">Cửa sổ: 30s</div></div>
+  <div id="howto">
+    <div class="howto-line" id="howto-1">📋 Vào đội: bình luận “xanh” / “đỏ” • Chọn cờ: “cờ trái / giữa / phải” — mặc định cờ Giữa</div>
+    <div class="howto-line" id="howto-2">💪 1 tim +1 lực • 1 bình luận +5 lực (1/5s) • 1 xu +20 lực • Follow +30 • Share +15 (1 lần/trận)</div>
+    <div class="howto-line" id="howto-3">🏁 Cửa sổ 30s: đội nhiều lực hơn chiếm cờ (hòa giữ nguyên) • Giữ cờ +1 điểm/s, cờ Giữa ×2</div>
+    <div class="howto-line" id="howto-4">🏆 Trận 10 phút: nhiều điểm thắng • Hòa điểm → xét số cờ • Vẫn hòa → đội chiếm cờ cuối thắng</div>
+  </div>
   <div id="field">
     <div class="pitch-lines"></div>
     <div class="flag" id="flag-left">
@@ -165,6 +196,15 @@
       <div class="capnum" id="capnum-right">0 — 0</div>
       <div class="pfig pfig-xanh" id="pfig-right-xanh" style="display:none"><div class="pname"></div><div class="pavatar"><span class="pletter">?</span><img alt=""></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
       <div class="pfig pfig-do" id="pfig-right-do" style="display:none"><div class="pname"></div><div class="pavatar"><span class="pletter">?</span><img alt=""></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+    </div>
+    <div id="referee" title="Trọng tài">
+      <div class="ref-bob">
+        <div class="ref-tag">TRỌNG TÀI</div>
+        <div class="ref-head">🧑<span class="ref-whistle"></span><span class="ref-whistle-fb">📣</span><span class="ref-puff">💨</span></div>
+        <div class="ref-shirt"></div>
+        <div class="ref-shorts"></div>
+        <div class="ref-shoes">👟👟</div>
+      </div>
     </div>
   </div>
   <div id="tops">
@@ -214,6 +254,44 @@ window.addEventListener('resize', fit); fit();
     im.onerror = () => { spriteReady[k] = false; };
     im.src = SPRITE_URLS[k];
   });
+  // Trọng tài NPC (Đợt 2): preload sprite còi; lỗi -> hiện fallback 📣.
+  const coiImg = new Image();
+  coiImg.onerror = () => { const r = document.getElementById('referee'); if (r) r.classList.add('no-coi'); };
+  coiImg.src = '/shared/assets/2d/chiem-co/curated/coi-sheet.png';
+  let blowTimer = null;
+  // Trọng tài thổi còi: nảy người + rung còi + hơi 💨 + tiếng pop (0.9s).
+  function blowWhistle() {
+    const r = document.getElementById('referee');
+    if (!r) return;
+    r.classList.remove('blowing');
+    void r.offsetWidth; // ép chạy lại animation thổi còi
+    r.classList.add('blowing');
+    if (window.StromUI) window.StromUI.sfx('pop');
+    if (blowTimer) clearTimeout(blowTimer);
+    blowTimer = setTimeout(() => r.classList.remove('blowing'), 950);
+  }
+  // Bảng hướng dẫn chơi: số lấy từ settings thật của engine (state.settings);
+  // thiếu settings thì dùng đúng số mặc định của engine.js.
+  function updateHowto(s) {
+    const st = (s && s.settings) || {};
+    const num = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
+    const windowS = num(st.windowS, 30);
+    const tap = num(st.tapForce, 1);
+    const cmt = num(st.commentForce, 5);
+    const spam = num(st.commentSpamS, 5);
+    const coin = num(st.coinToForce, 20);
+    const fol = num(st.followForce, 30);
+    const shr = num(st.shareForce, 15);
+    const pps = num(st.pointsPerFlagS, 1);
+    const mid = num(st.midMultiplier, 2);
+    const dur = num(st.matchDurationS, 600);
+    const durText = dur % 60 === 0 ? (dur / 60) + ' phút' : dur + ' giây';
+    const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+    setText('howto-1', '📋 Vào đội: bình luận “xanh” / “đỏ” • Chọn cờ: “cờ trái / giữa / phải” — mặc định cờ Giữa');
+    setText('howto-2', '💪 1 tim +' + tap + ' lực • 1 bình luận +' + cmt + ' lực (1/' + spam + 's) • 1 xu +' + coin + ' lực • Follow +' + fol + ' • Share +' + shr + ' (1 lần/trận)');
+    setText('howto-3', '🏁 Cửa sổ ' + windowS + 's: đội nhiều lực hơn chiếm cờ (hòa giữ nguyên) • Giữ cờ +' + pps + ' điểm/s, cờ Giữa ×' + mid);
+    setText('howto-4', '🏆 Trận ' + durText + ': nhiều điểm thắng • Hòa điểm → xét số cờ • Vẫn hòa → đội chiếm cờ cuối thắng');
+  }
   function teamCfg(s) {
     const st = (s && s.settings) || {};
     return {
@@ -320,6 +398,8 @@ window.addEventListener('resize', fit); fit();
     // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
     if (window.StromMusic) window.StromMusic.sync({ mood: 'battle', enabled: true, volume: 50, energy: (s.phase === 'spotlight' || (s.phase === 'playing' && ['left', 'mid', 'right'].some(function (id) { return s.flags[id].force.xanh + s.flags[id].force.do > 20; }))) ? 2 : (s.phase === 'playing' ? 1 : 0) });
     voiceOn = s.settings.voiceEnabled !== false;
+    // Bảng hướng dẫn chơi: cập nhật số thật từ settings mỗi lần render.
+    updateHowto(s);
     // Tên/màu/ảnh nền đội từ settings (dashboard "Tùy chỉnh đội").
     const cfg = teamCfg(s);
     for (const t of ['xanh', 'do']) {
@@ -423,6 +503,8 @@ window.addEventListener('resize', fit); fit();
         if (window.StromUI) { window.StromUI.confetti(48); window.StromUI.sfx('win'); }
       }
     } else banner.classList.remove('show');
+    // Trận vừa bắt đầu (lobby -> playing): trọng tài thổi còi khai cuộc.
+    if (prevPhase === 'lobby' && s.phase === 'playing') blowWhistle();
     prevPhase = s.phase;
     prevMatchNo = s.matchNo;
     document.getElementById('demo-badge').style.display = s.demoActive ? 'block' : 'none';
@@ -455,8 +537,8 @@ window.addEventListener('resize', fit); fit();
     try {
       const socket = io();
       socket.on('state-update', (s) => render(s));
-      socket.on('flag-capture', (d) => { if (d && d.text) playTts(d.text); });
-      socket.on('match-win', (d) => { if (d && d.text) playTts(d.text); });
+      socket.on('flag-capture', (d) => { if (d && d.text) playTts(d.text); blowWhistle(); });
+      socket.on('match-win', (d) => { if (d && d.text) playTts(d.text); blowWhistle(); });
     } catch (e) { /* polling fallback */ }
     poll();
     (function () { const tk = document.getElementById('ticker-text'); const t = tk.textContent; tk.textContent = t + '   •   ' + t; tk.classList.toggle('scroll', tk.scrollWidth > tk.parentElement.clientWidth); })();
