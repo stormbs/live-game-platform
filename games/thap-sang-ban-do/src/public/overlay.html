@@ -19,7 +19,11 @@
      trái (to xuống dưới vì bảng đã dời sang phải), khung dọc trong suốt
      bên phải chứa đồng hồ + BXH + bảng điểm. */
   #mainRow { position:absolute; top:158px; left:0; right:0; bottom:0; display:flex; z-index:2; }
-  #mapArea { position:relative; flex:1; overflow:hidden; }
+  #mapArea { position:relative; flex:1; overflow:hidden;
+    /* Biển Đông là nước, không phải khoảng đen: nền biển xanh đậm để vùng
+       biển bên phải bản đồ đọc ra là biển (trước đây trong suốt, lộ nền tối
+       của stage nên trông như dải đen thừa bên phải khung). */
+    background:linear-gradient(180deg,#0b1e3a 0%,#081426 60%,#050914 100%); }
   /* (v8.2) Bố cục 3 cột — bảng điểm sang TRÁI, cột phải chỉ giữ sự kiện
      gần đây (trên) + diễn biến (dưới). Quần đảo nay vẽ TRONG SVG bản đồ
      (cột giữa) nên không còn nằm sau khung nào, không bị che chút nào. */
@@ -28,9 +32,14 @@
     border:1px solid rgba(255,255,255,.22); border-radius:20px; padding:14px 12px 12px; overflow:hidden; }
   #rightCol { flex:none; width:240px; margin:0 14px 14px 0; display:flex; flex-direction:column; gap:10px; }
   #rightTop { flex:none; }
-  /* Khoảng trống giữa 2 mục của cột phải (giữ bố cục 3 cột thoáng;
-     quần đảo nay nằm trong SVG bản đồ nên không cần chừa chỗ cho đảo nữa). */
-  #rightSpacer { flex:1; }
+  /* Cột phải: khoảng trống giữa 2 mục trước đây là div trống trong suốt,
+     lộ nền tối của stage nên trông như dải đen thừa bên phải khung bản đồ
+     (kiểm chứng live 19:48). Nay lấp bằng panel QUẦN ĐẢO (flex:1, kéo dài
+     lấp đầy cột) — vừa hết khoảng đen, vừa hiện trạng thái 2 đảo. */
+  #islandPanel { flex:1; }
+  #islandPanel .islRow { font-size:17px; color:#c3d2f0; line-height:1.6; }
+  #islandPanel .islDot { display:inline-block; width:13px; height:13px; border-radius:50%; background:#5b6b8c; margin-right:4px; vertical-align:-1px; }
+  #islandPanel .islNote { font-size:15px; color:#b9c8e8; margin-top:8px; line-height:1.45; }
   #rightBottom { flex:none; }
   .sideSec { background:rgba(10,18,40,.55); border:1px solid rgba(255,215,0,.28);
     border-radius:14px; padding:10px 12px; }
@@ -275,7 +284,12 @@
         <div class="big" id="recentText">✨ Chưa có ai thắp sáng — bạn sẽ là người đầu tiên?</div>
         <div id="voiceLine"></div>
       </div>
-      <div id="rightSpacer"></div>
+      <div class="sideSec" id="islandPanel">
+        <h2>🏝️ QUẦN ĐẢO</h2>
+        <div class="islRow"><span class="islDot" id="isDotHS"></span>Hoàng Sa — <b>Đà Nẵng</b>: <span id="isHoangSa">chưa sáng</span></div>
+        <div class="islRow"><span class="islDot" id="isDotTS"></span>Trường Sa — <b>Khánh Hòa</b>: <span id="isTruongSa">chưa sáng</span></div>
+        <div class="islNote">Đảo sáng cùng màu với tỉnh chủ quản khi tỉnh được thắp sáng.</div>
+      </div>
       <div class="sideSec" id="rightBottom">
         <div class="sub" id="suggestText">Gợi ý tỉnh chưa sáng: …</div>
         <div id="sideLegend">🎨 Mỗi tỉnh 1 trong 4 màu <span class="dot" style="background:#2dd4bf"></span><span class="dot" style="background:#fb923c"></span><span class="dot" style="background:#a78bfa"></span><span class="dot" style="background:#a3e635"></span> — tỉnh kề nhau luôn khác màu<br>💡 Tỉnh càng nhiều điểm càng DÀY • Comment +1đ • 20 tim = 1đ • 1 xu = 5đ</div>
@@ -374,6 +388,13 @@ function fmtTime(ms) {
 const FULL_VB = { x: 240, y: 260, w: 815, h: 1300 };
 const MAP_W = 572, MAP_H = 1762;
 const MAP_ASPECT = MAP_W / MAP_H;
+// Bbox thật của 2 quần đảo (tính từ path trong islands.json):
+// Hoàng Sa x 865–1045, y 360–525; Trường Sa x 865–1045, y 700–805.
+const ISLAND_BBOX = { 6: { x: 865, y: 360, w: 180, h: 165 }, 18: { x: 865, y: 700, w: 180, h: 105 } };
+function unionBBox(a, b) {
+  const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
+  return { x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y };
+}
 let zoomBusy = false, zoomPending = null;
 function setVB(v) {
   svg.setAttribute('viewBox', `${v.x} ${v.y} ${v.w} ${v.h}`);
@@ -842,6 +863,13 @@ function render(s) {
   }
   if (hsLabel) hsLabel.classList.toggle('lit', !!(dn && dn.lit));
   if (tsLabel) tsLabel.classList.toggle('lit', !!(kh && kh.lit));
+  // Panel QUẦN ĐẢO ở cột phải: trạng thái 2 đảo theo tỉnh chủ quản.
+  const isHS = document.getElementById('isHoangSa'), isTS = document.getElementById('isTruongSa');
+  const isDotHS = document.getElementById('isDotHS'), isDotTS = document.getElementById('isDotTS');
+  if (isHS) isHS.textContent = (dn && dn.lit) ? 'đã sáng ✨' : 'chưa sáng';
+  if (isTS) isTS.textContent = (kh && kh.lit) ? 'đã sáng ✨' : 'chưa sáng';
+  if (isDotHS) isDotHS.style.background = (dn && dn.lit) ? FOUR[colorOf(6)].stroke : '#5b6b8c';
+  if (isDotTS) isDotTS.style.background = (kh && kh.lit) ? FOUR[colorOf(18)].stroke : '#5b6b8c';
   // Top tỉnh — LUÔN đủ 5 hàng, tỉnh chưa sáng hiện mờ 0đ.
   const maxP = Math.max(1, ...s.topProvinces.map(p => p.points));
   const MEDALS = ['🥇', '🥈', '🥉'];
@@ -872,10 +900,16 @@ function render(s) {
     document.getElementById('recentText').innerHTML =
       '✨ <b>' + escapeHtml(r.viewer) + '</b> vừa thắp sáng <b>' + escapeHtml(r.provinceName) + '</b>!';
     // Zoom tới tỉnh vừa thắp (chỉ khi mới xảy ra < 4s, không zoom lúc ăn mừng).
+    // Đà Nẵng/Khánh Hòa: zoom bao cả quần đảo của tỉnh để đảo vào khung
+    // (trước đây zoom chỉ tới tỉnh nên đảo biến mất khỏi khung — kiểm chứng
+    // live 19:48). Bbox hợp vẫn zoom ~1.9x nhờ targetVB clamp về 422x1300.
     if (r.t !== lastZoomRecentT && Date.now() - r.t < 4000 && s.phase === 'playing') {
       lastZoomRecentT = r.t;
       const p = provMeta.find(x => x.num === r.provinceNum);
-      if (p && p.bbox) flyTo(p.bbox);
+      if (p && p.bbox) {
+        const ib = ISLAND_BBOX[r.provinceNum];
+        flyTo(ib ? unionBBox(p.bbox, ib) : p.bbox);
+      }
     }
   } else {
     // Hết sự kiện gần đây (reset ván / restart server): trả lại dòng mặc định.
