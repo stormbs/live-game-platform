@@ -825,14 +825,20 @@ function render(s) {
   if (hs) {
     hs.classList.toggle('lit', !!(dn && dn.lit));
     hs.setAttribute('transform', 'translate(0,' + (-(provDepth.get(6) || 0)) + ')');
-    // Đảo nhỏ vài px nên tô MÀU ĐẶC của nhóm (stroke) thay vì gradient
-    // như tỉnh lớn — gradient trên chấm nhỏ không thấy mà còn nhạt.
-    hs.style.fill = (dn && dn.lit) ? FOUR[colorOf(6)].stroke : '#7d90b5';
+    // Đảo sáng CÙNG MÀU với tỉnh chủ quản: đúng gradient + đúng viền của tỉnh
+    // (bản cũ dùng màu đặc .stroke nên nhìn khác hẳn tỉnh — Chủ tịch yêu cầu
+    // cùng màu, 2026-11-13). Gradient objectBoundingBox co theo bbox đảo nên
+    // vẫn thấy rõ trên cụm đảo nhỏ.
+    const col6 = FOUR[colorOf(6)];
+    hs.style.fill = (dn && dn.lit) ? col6.lit : '#7d90b5';
+    hs.style.stroke = (dn && dn.lit) ? col6.stroke : '#aebdd8';
   }
   if (ts) {
     ts.classList.toggle('lit', !!(kh && kh.lit));
     ts.setAttribute('transform', 'translate(0,' + (-(provDepth.get(18) || 0)) + ')');
-    ts.style.fill = (kh && kh.lit) ? FOUR[colorOf(18)].stroke : '#7d90b5';
+    const col18 = FOUR[colorOf(18)];
+    ts.style.fill = (kh && kh.lit) ? col18.lit : '#7d90b5';
+    ts.style.stroke = (kh && kh.lit) ? col18.stroke : '#aebdd8';
   }
   if (hsLabel) hsLabel.classList.toggle('lit', !!(dn && dn.lit));
   if (tsLabel) tsLabel.classList.toggle('lit', !!(kh && kh.lit));
