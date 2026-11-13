@@ -296,7 +296,11 @@ function fillTfEventUrls() {
   // URL chung cho mọi game: cùng tác dụng, đổi game chỉ sửa game=/room=.
   var d = directParts();
   var common = document.getElementById('tf-url-common');
-  if (common) common.textContent = location.origin + '/api/webhook?game=' + d.game + '&room=' + d.username + '&event=<loại>';
+  // Ghép URL bằng biến — KHÔNG dùng literal '/api/...' vì lib/transform.js
+  // viết lại literal đó thành URL gắn prefix phòng
+  // ('/o/<game>/<room>/api/...'), làm URL chung thành URL phòng (lỗi đã gặp
+  // ở bản ebb6329, kiểm chứng 23:17).
+  if (common) common.textContent = location.origin + '/' + 'api' + '/webhook?game=' + d.game + '&room=' + d.username + '&event=<loại>';
 }
 function copyTfEventUrl(key) {
   var el = document.getElementById('tf-url-' + key);
