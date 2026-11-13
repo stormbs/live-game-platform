@@ -15,41 +15,41 @@
     background:
       radial-gradient(700px 400px at 50% 38%, rgba(255, 140, 40, .55), transparent 70%),
       linear-gradient(180deg, #3d1503 0%, #5c2204 34%, #7a2e06 68%, #3d1503 100%); }
-  h1 { font-size: 54px; text-align: center; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
-  .sub { text-align: center; font-size: 26px; color: #ffd9a0; margin-top: 6px; }
-  #demo-badge { position: absolute; top: 150px; right: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
+  h1 { font-size: 50px; text-align: center; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
+  .sub { text-align: center; font-size: 24px; color: #ffd9a0; margin-top: 4px; }
+  #demo-badge { position: absolute; top: 335px; right: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
   #demo-badge.on { display: block; }
-  .potzone { position: relative; height: 580px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
-  .steam { font-size: 64px; animation: steam 2.4s ease-in-out infinite; opacity: .85; }
+  .potzone { position: relative; height: 465px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+  .steam { font-size: 48px; animation: steam 2.4s ease-in-out infinite; opacity: .85; }
   @keyframes steam { 0%,100% { transform: translateY(14px) scale(1); opacity: .35; } 50% { transform: translateY(-16px) scale(1.12); opacity: .95; } }
-  .pot { font-size: 300px; line-height: 1; filter: drop-shadow(0 22px 18px rgba(0,0,0,.5)); position: relative; z-index: 1; }
+  .pot { font-size: 260px; line-height: 1; filter: drop-shadow(0 22px 18px rgba(0,0,0,.5)); position: relative; z-index: 1; }
   .pot.bubble { animation: bubble .55s ease-in-out infinite alternate; }
   @keyframes bubble { from { transform: scale(1); } to { transform: scale(1.03) translateY(-4px); } }
   .fire { font-size: 104px; margin-top: -30px; position: relative; z-index: 2; }
   .fire.big { animation: flame .35s ease-in-out infinite alternate; }
   @keyframes flame { from { transform: scale(1); } to { transform: scale(1.15) translateY(-6px); } }
-  .barWrap { margin-top: 22px; background: rgba(0,0,0,.45); border: 3px solid #ffd9a0; border-radius: 22px; padding: 14px 22px; }
-  .barTop { display: flex; justify-content: space-between; font-size: 28px; font-weight: 800; }
-  .bar { height: 30px; border-radius: 15px; background: rgba(255,255,255,.18); margin-top: 12px; overflow: hidden; }
+  .barWrap { margin-top: 14px; background: rgba(0,0,0,.45); border: 3px solid #ffd9a0; border-radius: 22px; padding: 12px 22px; }
+  .barTop { display: flex; justify-content: space-between; font-size: 26px; font-weight: 800; }
+  .bar { height: 26px; border-radius: 13px; background: rgba(255,255,255,.18); margin-top: 12px; overflow: hidden; }
   .bar > div { height: 100%; width: 0%; background: linear-gradient(90deg, #ff9a3d, #ff5e3a, #ffc53d); transition: width .5s; }
-  .counts { display: flex; gap: 18px; margin-top: 16px; }
-  .count { flex: 1; background: rgba(0,0,0,.4); border-radius: 18px; padding: 12px 10px; text-align: center; font-size: 28px; font-weight: 800; }
-  .count small { display: block; font-size: 20px; color: #ffd9a0; font-weight: 600; margin-top: 4px; }
-  .dishes { margin-top: 16px; background: rgba(0,0,0,.4); border-radius: 18px; padding: 14px 22px; }
-  .dishes h2 { font-size: 28px; margin-bottom: 12px; }
+  .counts { display: flex; gap: 18px; margin-top: 10px; }
+  .count { flex: 1; background: rgba(0,0,0,.4); border-radius: 18px; padding: 10px 10px; text-align: center; font-size: 28px; font-weight: 800; }
+  .count small { display: block; font-size: 20px; color: #ffd9a0; font-weight: 600; margin-top: 2px; }
+  .dishes { margin-top: 10px; background: rgba(0,0,0,.4); border-radius: 18px; padding: 12px 22px; }
+  .dishes h2 { font-size: 28px; margin-bottom: 8px; }
   .dishRow { display: flex; gap: 14px; }
-  .dish { flex: 1; text-align: center; padding: 10px 6px; border-radius: 14px; background: rgba(255,255,255,.08); font-size: 26px; font-weight: 700; opacity: .45; filter: grayscale(1); }
+  .dish { flex: 1; text-align: center; padding: 8px 6px; border-radius: 14px; background: rgba(255,255,255,.08); font-size: 26px; font-weight: 700; opacity: .45; filter: grayscale(1); }
   .dish.on { opacity: 1; filter: none; background: rgba(255, 197, 61, .25); border: 2px solid #ffc53d; }
-  .dish small { display: block; font-size: 20px; font-weight: 600; margin-top: 6px; }
-  .nextDish { margin-top: 10px; font-size: 24px; color: #ffe9c4; text-align: center; }
-  .top { margin-top: 16px; background: rgba(0,0,0,.4); border-radius: 18px; padding: 14px 22px; }
-  .top h2 { font-size: 28px; margin-bottom: 10px; }
+  .dish small { display: block; font-size: 20px; font-weight: 600; margin-top: 4px; }
+  .nextDish { margin-top: 6px; font-size: 24px; color: #ffe9c4; text-align: center; }
+  .top { margin-top: 10px; background: rgba(0,0,0,.4); border-radius: 18px; padding: 12px 22px; }
+  .top h2 { font-size: 28px; margin-bottom: 6px; }
   .topRow { display: flex; align-items: center; gap: 14px; font-size: 28px; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,.15); }
   .topRow:last-child { border-bottom: 0; }
   .topRow img, .ava { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; }
   .topRow b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ticker { margin-top: 16px; background: rgba(0,0,0,.55); border-radius: 16px; padding: 12px 20px; font-size: 25px; min-height: 64px; color: #ffe9c4; }
-  .banner { display: none; position: absolute; left: 40px; right: 40px; top: 640px; background: rgba(20, 8, 0, .92); border: 4px solid #ffc53d; border-radius: 26px; padding: 34px 30px; text-align: center; z-index: 5; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
+  .ticker { margin-top: 10px; background: rgba(0,0,0,.55); border-radius: 16px; padding: 10px 20px; font-size: 25px; min-height: 60px; color: #ffe9c4; }
+  .banner { display: none; position: absolute; left: 40px; right: 40px; top: 700px; background: rgba(20, 8, 0, .92); border: 4px solid #ffc53d; border-radius: 26px; padding: 34px 30px; text-align: center; z-index: 5; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
   .banner.show { display: block; }
   .banner h2 { font-size: 52px; margin-bottom: 10px; }
   .banner p { font-size: 30px; color: #ffe9c4; }
@@ -66,7 +66,7 @@
     border-radius: 50%; border: 6px solid rgba(255,140,40,0); pointer-events: none; z-index: 2; }
   .fire-ring.hot { border-color: rgba(255,140,40,.85); animation: ring-pulse 1s ease-in-out infinite alternate; }
   @keyframes ring-pulse { from { box-shadow: 0 0 24px rgba(255,107,0,.5), inset 0 0 18px rgba(255,107,0,.4); } to { box-shadow: 0 0 60px rgba(255,107,0,.95), inset 0 0 40px rgba(255,107,0,.8); } }
-  .bubbles { position: absolute; left: 50%; bottom: 300px; width: 0; height: 0; z-index: 3; pointer-events: none; }
+  .bubbles { position: absolute; left: 50%; bottom: 260px; width: 0; height: 0; z-index: 3; pointer-events: none; }
   .bubbles i { position: absolute; bottom: 0; width: 20px; height: 20px; border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.9), rgba(255,255,255,.25));
     opacity: 0; animation: bubble-up 1.2s ease-in infinite; }
@@ -96,29 +96,30 @@
   @keyframes smoke-up { 0% { transform: translateY(60px) scale(.8); opacity: 0; } 30% { opacity: .8; } 100% { transform: translateY(-460px) scale(1.5); opacity: 0; } }
   /* --- Đầu bếp quanh nồi (yêu cầu Chủ tịch 2026-11-13: nhân vật sống động + avatar/tên trên đầu) --- */
   /* Sprite nồi/lửa 2D Đợt B: /shared/assets/2d/bep-an-tap-the/curated/ (không bị transform chạm /shared/) */
-  .pot-sprite { display: none; width: 300px; height: 300px; object-fit: contain; }
+  .pot-sprite { display: none; width: 260px; height: 260px; object-fit: contain; }
   .pot-sprite.ok { display: block; }
-  .fire-sprite { display: none; width: 170px; height: 170px; margin: 0 auto;
+  .fire-sprite { display: none; width: 150px; height: 150px; margin: 0 auto;
     background-image: url('/shared/assets/2d/bep-an-tap-the/curated/bep-lua-sheet.png');
-    background-size: 680px 170px; background-repeat: no-repeat; animation: fire-burn .5s steps(4) infinite; }
+    background-size: 600px 150px; background-repeat: no-repeat; animation: fire-burn .5s steps(4) infinite; }
   .fire-sprite.on { display: block; }
-  #fire.big .fire-sprite { width: 210px; height: 210px; background-size: 840px 210px; animation: fire-burn-big .35s steps(4) infinite; }
-  @keyframes fire-burn { from { background-position: 0 0; } to { background-position: -680px 0; } }
-  @keyframes fire-burn-big { from { background-position: 0 0; } to { background-position: -840px 0; } }
-  .chefs { display: flex; justify-content: center; gap: 14px; margin-top: 14px; min-height: 178px; }
+  #fire.big .fire-sprite { width: 170px; height: 170px; background-size: 680px 170px; animation: fire-burn-big .35s steps(4) infinite; }
+  @keyframes fire-burn { from { background-position: 0 0; } to { background-position: -600px 0; } }
+  @keyframes fire-burn-big { from { background-position: 0 0; } to { background-position: -680px 0; } }
+  .chefs { display: flex; justify-content: center; gap: 14px; margin-top: 10px; min-height: 130px; }
   .chefs-empty { align-self: center; font-size: 24px; color: #ffd9a0; opacity: .8; }
   .chef { width: 120px; text-align: center; }
   .chef-head { display: flex; flex-direction: column; align-items: center; gap: 4px; }
   .chef-ava-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center;
-    width: 46px; height: 46px; border-radius: 50%; background: #ffb37a; color: #3d1503;
-    font-size: 24px; font-weight: 800; overflow: hidden; border: 2px solid #ffd9a0; }
+    width: 42px; height: 42px; border-radius: 50%; background: #ffb37a; color: #3d1503;
+    font-size: 22px; font-weight: 800; overflow: hidden; border: 2px solid #ffd9a0; }
   .chef-ava-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .chef-name { max-width: 116px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    font-size: 21px; font-weight: 800; color: #fff8ee;
+    font-size: 21px; font-weight: 800; color: #fff8ee; background: rgba(0,0,0,.55);
+    border-radius: 999px; padding: 2px 9px;
     text-shadow: 0 2px 4px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.9); }
   .chef-body { position: relative; margin-top: 2px; animation: chef-bob 1.2s ease-in-out infinite alternate; }
-  .chef-emoji { font-size: 64px; line-height: 1; filter: drop-shadow(0 6px 6px rgba(0,0,0,.45)); }
-  .chef-ladle { position: absolute; left: 50%; top: 34px; margin-left: 6px; font-size: 34px;
+  .chef-emoji { font-size: 56px; line-height: 1; filter: drop-shadow(0 6px 6px rgba(0,0,0,.45)); }
+  .chef-ladle { position: absolute; left: 50%; top: 30px; margin-left: 6px; font-size: 32px;
     display: inline-block; transform-origin: 50% 12%; animation: chef-stir 1.2s linear infinite; }
   @keyframes chef-stir { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   @keyframes chef-bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
@@ -128,6 +129,41 @@
   .chef.stir-burst .chef-body { animation: chef-bob-burst .8s ease-in-out; }
   @keyframes chef-stir-burst { from { transform: rotate(0deg) scale(1.25); } to { transform: rotate(720deg) scale(1.25); } }
   @keyframes chef-bob-burst { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.12); } }
+  /* --- Bảng hướng dẫn chơi (chuẩn chung đợt 2 — nguyên tắc 3): số thật từ engine.js,
+     JS renderHowto() cập nhật lại theo s.settings mỗi lần render, HTML tĩnh giữ số mặc định --- */
+  .howto { margin-top: 12px; background: rgba(0,0,0,.5); border: 2px solid #ffc53d; border-radius: 18px; padding: 10px 18px 10px; }
+  .howto-title { font-size: 22px; font-weight: 900; color: #ffd700; letter-spacing: 1px; text-align: center; }
+  .howto-line { font-size: 19px; line-height: 1.35; color: #ffe9c4; text-align: center; margin-top: 2px; }
+  .howto-line b { color: #fff; }
+  /* --- Bếp trưởng NPC (chuẩn chung đợt 2 — nguyên tắc 4): đứng cạnh bếp, to hơn đầu bếp
+     thường; nếm/đảo nhanh khi lửa cấp 3, vỗ tay khi mở món đặc biệt / cỗ chín --- */
+  .head-chef { position: absolute; right: 16px; bottom: 110px; width: 200px; text-align: center; z-index: 3; pointer-events: none; }
+  .head-chef-body { position: relative; animation: chef-bob 1.4s ease-in-out infinite alternate; }
+  .head-chef-emoji { font-size: 118px; line-height: 1; filter: drop-shadow(0 8px 8px rgba(0,0,0,.5)); }
+  .head-chef-ladle { position: absolute; left: 50%; top: 62px; margin-left: 18px; font-size: 44px;
+    display: inline-block; transform-origin: 50% 12%; animation: chef-stir 1.4s linear infinite; }
+  .head-chef-cheer { display: none; position: absolute; right: -6px; top: -8px; font-size: 44px; }
+  .head-chef-name { display: inline-block; margin-top: 2px; font-size: 20px; font-weight: 900; color: #ffe9c4; white-space: nowrap;
+    background: rgba(0,0,0,.55); border: 2px solid #ffc53d; border-radius: 999px; padding: 3px 12px;
+    text-shadow: 0 2px 4px rgba(0,0,0,.8); }
+  .head-chef-say { margin-top: 6px; font-size: 20px; font-weight: 700; color: #fff8ee; background: rgba(0,0,0,.45);
+    border-radius: 12px; padding: 5px 8px; line-height: 1.3; text-shadow: 0 2px 4px rgba(0,0,0,.8); min-height: 56px; }
+  .head-chef.tasting .head-chef-ladle { animation-duration: .5s; }
+  .head-chef.tasting .head-chef-body { animation-duration: .6s; }
+  .head-chef.tasting .head-chef-emoji { filter: drop-shadow(0 8px 8px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(255,140,40,.9)); }
+  .head-chef.cheering .head-chef-body { animation: chef-cheer .5s ease-in-out infinite alternate; }
+  .head-chef.cheering .head-chef-ladle { animation-duration: .5s; }
+  .head-chef.cheering .head-chef-cheer { display: block; }
+  @keyframes chef-cheer { from { transform: translateY(0) scale(1); } to { transform: translateY(-14px) scale(1.08); } }
+  /* Top 5 hàng: thu gọn để đủ 5 hàng + ticker trong 1920px (kiểm chứng bằng mắt:
+     trước đây hàng thứ 5 bị cắt nửa + ticker mất hẳn khi đủ 5 đầu bếp) */
+  .top .ui-row { padding: 4px 0; }
+  .top .ui-row .ui-ava { width: 48px; height: 48px; }
+  .top-ava-wrap { position: relative; flex: none; width: 48px; height: 48px; border-radius: 50%;
+    border: 3px solid var(--ui-accent); background: #ffb37a; color: #3d1503;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 800; overflow: hidden; }
+  .top-ava-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
   html { background: #000; }
 </style>
@@ -144,6 +180,14 @@
   <h1>🍲 BẾP ĂN TẬP THỂ 🍲</h1>
   <div class="sub">Bình luận thả nguyên liệu — 50 tim thổi lửa — Quà mở món đặc biệt</div>
 
+  <div class="howto" id="howto">
+    <div class="howto-title">📖 CÁCH CHƠI</div>
+    <div class="howto-line" id="howtoLine1">🥩 Thịt <b>+3</b> · 🥬 Rau <b>+2</b> · 🧂 Gia vị <b>+1</b> — lửa cấp 3: mỗi nguyên liệu <b>+1</b></div>
+    <div class="howto-line" id="howtoLine2">❤️ <b>50 tim</b> thổi lửa: nồi <b>+5</b>, lửa to <b>30 giây</b> · 20 tim = +1đ cá nhân</div>
+    <div class="howto-line" id="howtoLine3">🎁 1 xu = <b>+10đ</b> nấu — mở món: 🍗 100 · 🍙 300 · 🍖 500 · 🎉 1000 xu</div>
+    <div class="howto-line" id="howtoLine4">🎉 Đủ <b>120đ</b> cỗ chín → dọn cỗ 15 giây → bốc thăm <b>10</b> người may mắn · Follow +10đ · Share +5đ</div>
+  </div>
+
   <div class="potzone">
     <div class="steam" id="steam">♨️</div>
     <div class="pot bubble" id="pot"><span id="potEmoji">🍲</span><img id="potSprite" class="pot-sprite" src="/shared/assets/2d/bep-an-tap-the/curated/noi-sheet.png" alt="" onload="this.classList.add('ok');var e=document.getElementById('potEmoji');if(e)e.style.display='none'" onerror="this.remove()"></div>
@@ -151,6 +195,11 @@
     <div class="stove" id="stove"></div>
     <div class="fire-ring" id="fireRing"></div>
     <div class="bubbles"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="head-chef" id="headChef">
+      <div class="head-chef-body"><span class="head-chef-emoji">👨‍🍳</span><span class="head-chef-ladle">🥄</span><span class="head-chef-cheer">🎉</span></div>
+      <div class="head-chef-name">👨‍🍳 BẾP TRƯỞNG</div>
+      <div class="head-chef-say" id="headChefSay">Bếp trưởng đang trông nồi…</div>
+    </div>
   </div>
 
   <div class="chefs" id="chefs"></div>
@@ -226,8 +275,51 @@ window.addEventListener('resize', fit); fit();
     });
   }
   function avatarHtml(p) {
-    if (p.avatar) return '<img class="ui-ava" src="' + p.avatar + '" alt="">';
-    return '<span class="ava ui-ava">' + (p.name ? p.name.charAt(0).toUpperCase() : '🍲') + '</span>';
+    const initial = (p.name ? p.name.charAt(0).toUpperCase() : '🍲');
+    if (p.avatar) return '<span class="top-ava-wrap">' + esc(initial) + '<img class="ui-ava" src="' + p.avatar + '" alt="" onerror="this.remove()"></span>';
+    return '<span class="ava ui-ava">' + esc(initial) + '</span>';
+  }
+  // --- Bảng hướng dẫn chơi: số thật từ s.settings (mặc định = defaultSettings trong
+  // engine.js: CAT_POINTS thịt 3/rau 2/gia vị 1, fireBigBonus +1, tapPerBlow 50,
+  // blowPotPoints 5, fireBigS 30, tapPersonalPer 20, giftPointPerCoin 10,
+  // dishMilestones 100/300/500/1000 xu, potTarget 120, serveS 15, winnersCount 10,
+  // followPoints 10, sharePoints 5). Chỉ cập nhật khi settings đổi. ---
+  let howtoSig = '';
+  function renderHowto(s) {
+    const st = s.settings || {};
+    const num = (v, d) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+    const dm = (st.dishMilestones || []).map(d => esc(d.icon || '🍽️') + ' ' + num(d.coins, 0)).join(' · ');
+    const sig = [num(st.potTarget, 120), num(st.tapPerBlow, 50), num(st.blowPotPoints, 5), num(st.fireBigS, 30),
+      num(st.fireBigBonus, 1), num(st.giftPointPerCoin, 10), num(st.winnersCount, 10), num(st.serveS, 15),
+      num(st.followPoints, 10), num(st.sharePoints, 5), num(st.tapPersonalPer, 20), dm].join('|');
+    if (sig === howtoSig) return;
+    howtoSig = sig;
+    const g = (id) => document.getElementById(id);
+    const l1 = g('howtoLine1'), l2 = g('howtoLine2'), l3 = g('howtoLine3'), l4 = g('howtoLine4');
+    if (l1) l1.innerHTML = '🥩 Thịt <b>+3</b> · 🥬 Rau <b>+2</b> · 🧂 Gia vị <b>+1</b> — lửa cấp 3: mỗi nguyên liệu <b>+' + num(st.fireBigBonus, 1) + '</b>';
+    if (l2) l2.innerHTML = '❤️ <b>' + num(st.tapPerBlow, 50) + ' tim</b> thổi lửa: nồi <b>+' + num(st.blowPotPoints, 5) + '</b>, lửa to <b>' + num(st.fireBigS, 30) + ' giây</b> · ' + num(st.tapPersonalPer, 20) + ' tim = +1đ cá nhân';
+    if (l3) l3.innerHTML = '🎁 1 xu = <b>+' + num(st.giftPointPerCoin, 10) + 'đ</b> nấu — mở món: ' + (dm || '🍗 100 · 🍙 300 · 🍖 500 · 🎉 1000 xu');
+    if (l4) l4.innerHTML = '🎉 Đủ <b>' + num(st.potTarget, 120) + 'đ</b> cỗ chín → dọn cỗ ' + num(st.serveS, 15) + ' giây → bốc thăm <b>' + num(st.winnersCount, 10) + '</b> người may mắn · Follow +' + num(st.followPoints, 10) + 'đ · Share +' + num(st.sharePoints, 5) + 'đ';
+  }
+  // --- Bếp trưởng NPC: nếm/đảo nhanh khi lửa cấp 3, vỗ tay khi mở món đặc biệt (socket
+  // 'dish') hoặc cỗ chín (socket 'serving' / phase serving). Gắn sự kiện thật, không đứng yên. ---
+  let chefCheerUntil = 0, chefCheerMsg = '';
+  function applyChefState(s) {
+    const hc = $('headChef');
+    if (!hc) return;
+    const now = Date.now();
+    const cheering = now < chefCheerUntil || (s && s.phase === 'serving');
+    const tasting = !!s && s.fireLevel === 3 && !cheering;
+    hc.classList.toggle('tasting', tasting);
+    hc.classList.toggle('cheering', cheering);
+    const say = $('headChefSay');
+    if (say) say.textContent = cheering ? (now < chefCheerUntil ? chefCheerMsg : '🎉 Cỗ chín rồi — dọn cỗ thôi!') : tasting ? '😋 Lửa to rồi — nếm thử xem nào!' : 'Bếp trưởng đang trông nồi…';
+  }
+  function chefCheer(msg, ms) {
+    chefCheerMsg = msg;
+    chefCheerUntil = Date.now() + ms;
+    applyChefState(lastState);
+    setTimeout(() => applyChefState(lastState), ms + 100);
   }
   // --- Đầu bếp quanh nồi: top 5 thành figure, avatar + tên trên đầu, muôi đảo nồi ---
   const CHEF_EMOJI = ['👨‍🍳', '👩‍🍳', '🧑‍🍳'];
@@ -307,6 +399,8 @@ window.addEventListener('resize', fit); fit();
     $('fire').className = 'fire' + (s.fireLevel === 3 ? ' big' : '');
     $('fireEmoji').textContent = s.fireLevel === 3 ? '🔥🔥🔥' : '🔥';
     renderChefs(s);
+    renderHowto(s);
+    applyChefState(s);
     $('stove').classList.toggle('hot', s.fireLevel === 3);
     $('fireRing').classList.toggle('hot', s.fireLevel === 3);
     $('cThit').textContent = s.pot.counts.thit;
@@ -364,8 +458,8 @@ window.addEventListener('resize', fit); fit();
   const socket = io();
   socket.on('state-update', render);
   socket.on('ingredient', d => { if (d && d.name) burstChefByName(d.name); });
-  socket.on('serving', d => speak('Cỗ đã chín! Mời cả nhà ăn cỗ, sắp bốc thăm mười người may mắn!'));
-  socket.on('dish', d => { speak('Món đặc biệt đã mở: ' + (d.dish && d.dish.name)); if (window.StromUI) { StromUI.confetti(24); StromUI.sfx('gift'); } });
+  socket.on('serving', d => { chefCheer('🎉 Cỗ chín rồi — dọn cỗ thôi!', 6000); speak('Cỗ đã chín! Mời cả nhà ăn cỗ, sắp bốc thăm mười người may mắn!'); });
+  socket.on('dish', d => { chefCheer('👏 Món đặc biệt đã mở — ngon quá!', 4000); speak('Món đặc biệt đã mở: ' + (d.dish && d.dish.name)); if (window.StromUI) { StromUI.confetti(24); StromUI.sfx('gift'); } });
   socket.on('draw', d => speak('Chúc mừng mười người may mắn của nồi số ' + d.potNo + '!'));
 })();
 </script>
