@@ -1,0 +1,46 @@
+{
+  "version": 3,
+  "size": 512,
+  "faces": [
+    {
+      "id": "trollface",
+      "file": "trollface.png",
+      "source": "raw/trollface_a_clean2.png"
+    },
+    {
+      "id": "panda",
+      "file": "panda.png",
+      "source": "raw/panda_smug.png"
+    },
+    {
+      "id": "forever_alone",
+      "file": "forever_alone.png",
+      "source": "raw/forever_alone_clean2.png"
+    },
+    {
+      "id": "serious",
+      "file": "serious.png",
+      "source": "raw/trollface_b.png"
+    },
+    {
+      "id": "rage",
+      "file": "rage.png",
+      "source": "raw/rage_clean.png"
+    },
+    {
+      "id": "me_gusta",
+      "file": "me_gusta.png",
+      "source": "raw/me_gusta_b_clean.png"
+    },
+    {
+      "id": "yuno",
+      "file": "yuno.png",
+      "source": "raw/yuno_clean.png"
+    },
+    {
+      "id": "cereal",
+      "file": "cereal.png",
+      "source": "raw/cereal_clean.png"
+    }
+  ]
+}

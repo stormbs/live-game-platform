@@ -1,0 +1,14 @@
+/* Meme faces — nhân vật người chơi (ảnh gốc, nền trong suốt).
+   Mặt meme KHÔNG cắt tròn (mặt không phải hình tròn — trollface ngang,
+   cereal guy có bát) — hiển thị nguyên khung vuông, nền trong suốt. */
+.meme-face {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* bóng nhẹ để mặt nổi trên mọi nền game */
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45));
+  /* chống kéo ảnh khi chạm */
+  -webkit-user-drag: none;
+  user-select: none;
+}
