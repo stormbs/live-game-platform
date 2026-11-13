@@ -48,6 +48,13 @@
   .bar { height: 12px; background: #0b1a28; border-radius: 6px; overflow: hidden; margin-top: 4px; border: 1px solid #2c4a63; }
   .bar i { display: block; height: 100%; }
   .guide li { margin: 6px 0 6px 18px; font-size: 14px; }
+  .team-set { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 700px) { .team-set { grid-template-columns: 1fr; } }
+  .team-set .team-box { background: #0b1a28; border: 1px solid #33587a; border-radius: 10px; padding: 10px 12px; }
+  .team-set label { display: block; font-size: 12px; color: #9fc4e8; margin: 8px 0 4px; }
+  .team-set input[type=text], .team-set select { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #4a7396; background: #0b1a28; color: #e8f1fb; font-size: 14px; font-weight: 700; }
+  .team-set select { margin-top: 6px; }
+  .team-set input[type=color] { width: 64px; height: 34px; padding: 2px; border-radius: 6px; border: 1px solid #4a7396; background: #0b1a28; cursor: pointer; }
   .score { font-size: 34px; font-weight: 900; }
   .copy-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .copy-row code { flex: 1; min-width: 280px; }
@@ -68,9 +75,9 @@
       <button class="btn" id="btn-mode-live" onclick="modeLive()">🔴 LIVE (sự kiện thật)</button>
     </div>
     <div style="margin-top:10px" class="score">🔵 <span id="wins-xanh">0</span> – <span id="wins-do">0</span> 🔴 <span class="stat-label" id="phase-label">· Chờ đủ 2 đội</span></div>
-    <div style="margin-top:8px; font-size:14px;">🔵 Xanh: <b id="force-xanh">0</b> lực · <span id="cnt-xanh">0</span> người</div>
+    <div style="margin-top:8px; font-size:14px;">🔵 <span id="lbl-team-xanh">Xanh</span>: <b id="force-xanh">0</b> lực · <span id="cnt-xanh">0</span> người</div>
     <div class="bar"><i id="bar-xanh" style="width:0%; background:#1e90ff;"></i></div>
-    <div style="margin-top:6px; font-size:14px;">🔴 Đỏ: <b id="force-do">0</b> lực · <span id="cnt-do">0</span> người</div>
+    <div style="margin-top:6px; font-size:14px;">🔴 <span id="lbl-team-do">Đỏ</span>: <b id="force-do">0</b> lực · <span id="cnt-do">0</span> người</div>
     <div class="bar"><i id="bar-do" style="width:0%; background:#e63946;"></i></div>
     <div style="margin-top:8px; font-size:14px;">🚩 Cờ: <span id="flag-pos">giữa dây</span> · ⏱ <span id="timer">—</span></div>
     <div style="margin-top:6px; font-size:14px;">👀 <span id="st-online">0</span> đang xem · ❤️ <span id="st-taps">0</span> tim · 🎁 <span id="st-gifts">0</span> quà · 💬 <span id="st-comments">0</span> bình luận</div>
@@ -116,6 +123,62 @@
       <div><label class="switch"><input type="checkbox" id="set-voice" checked> Giọng đọc tiếng Việt</label></div>
       <div><button class="btn btn-gold" onclick="saveSettings()">💾 Lưu cài đặt</button></div>
     </div>
+    <h3 style="font-size:15px; color:#bcd9f5; margin:16px 0 4px;">⚙️ Tùy chỉnh đội</h3>
+    <div class="team-set">
+      <div class="team-box">
+        <b style="color:#7cc4ff;">🔵 Đội Xanh</b>
+        <label>Tên đội (tối đa 24 ký tự)</label>
+        <input type="text" id="set-teamxanh-name" value="Xanh" maxlength="24">
+        <label>Ảnh nền đội (URL ảnh hoặc chọn preset — để trống = không ảnh)</label>
+        <input type="text" id="set-teamxanh-bg" value="" placeholder="https://… hoặc /shared/bg/….webp">
+        <select id="set-teamxanh-bg-preset" onchange="presetBg('xanh', this.value)">
+          <option value="">— Chọn ảnh nền có sẵn —</option>
+          <option value="/shared/bg/keo-co.webp">Kéo co</option>
+          <option value="/shared/bg/bau-troi-phao-hoa.webp">Bầu trời pháo hoa</option>
+          <option value="/shared/bg/bep-an-tap-the.webp">Bếp ăn tập thể</option>
+          <option value="/shared/bg/buong-giam.webp">Buồng giam</option>
+          <option value="/shared/bg/chiem-co.webp">Chiếm cờ</option>
+          <option value="/shared/bg/dau-tri.webp">Đấu trí</option>
+          <option value="/shared/bg/dau-truong-sinh-ton.webp">Đấu trường sinh tồn</option>
+          <option value="/shared/bg/di-bar-online.webp">Đi bar online</option>
+          <option value="/shared/bg/dua-thuyen-rong.webp">Đua thuyền rồng</option>
+          <option value="/shared/bg/dua-xe-leo-nui.webp">Đua xe leo núi</option>
+          <option value="/shared/bg/thap-sang-ban-do.webp">Thắp sáng bản đồ</option>
+          <option value="/shared/bg/ve-avatar.webp">Vẽ avatar</option>
+          <option value="/shared/bg/vong-quay-may-man.webp">Vòng quay may mắn</option>
+          <option value="/shared/bg/vuon-hoa-mua-xuan.webp">Vườn hoa mùa xuân</option>
+        </select>
+        <label>Màu chủ đạo đội</label>
+        <input type="color" id="set-teamxanh-color" value="#1E90FF">
+      </div>
+      <div class="team-box">
+        <b style="color:#ff8a94;">🔴 Đội Đỏ</b>
+        <label>Tên đội (tối đa 24 ký tự)</label>
+        <input type="text" id="set-teamdo-name" value="Đỏ" maxlength="24">
+        <label>Ảnh nền đội (URL ảnh hoặc chọn preset — để trống = không ảnh)</label>
+        <input type="text" id="set-teamdo-bg" value="" placeholder="https://… hoặc /shared/bg/….webp">
+        <select id="set-teamdo-bg-preset" onchange="presetBg('do', this.value)">
+          <option value="">— Chọn ảnh nền có sẵn —</option>
+          <option value="/shared/bg/keo-co.webp">Kéo co</option>
+          <option value="/shared/bg/bau-troi-phao-hoa.webp">Bầu trời pháo hoa</option>
+          <option value="/shared/bg/bep-an-tap-the.webp">Bếp ăn tập thể</option>
+          <option value="/shared/bg/buong-giam.webp">Buồng giam</option>
+          <option value="/shared/bg/chiem-co.webp">Chiếm cờ</option>
+          <option value="/shared/bg/dau-tri.webp">Đấu trí</option>
+          <option value="/shared/bg/dau-truong-sinh-ton.webp">Đấu trường sinh tồn</option>
+          <option value="/shared/bg/di-bar-online.webp">Đi bar online</option>
+          <option value="/shared/bg/dua-thuyen-rong.webp">Đua thuyền rồng</option>
+          <option value="/shared/bg/dua-xe-leo-nui.webp">Đua xe leo núi</option>
+          <option value="/shared/bg/thap-sang-ban-do.webp">Thắp sáng bản đồ</option>
+          <option value="/shared/bg/ve-avatar.webp">Vẽ avatar</option>
+          <option value="/shared/bg/vong-quay-may-man.webp">Vòng quay may mắn</option>
+          <option value="/shared/bg/vuon-hoa-mua-xuan.webp">Vườn hoa mùa xuân</option>
+        </select>
+        <label>Màu chủ đạo đội</label>
+        <input type="color" id="set-teamdo-color" value="#E63946">
+      </div>
+    </div>
+    <div style="margin-top:6px; font-size:12px; color:#9fc4e8;">Tên hiển thị đổi ở overlay ngay sau khi lưu (không cần tải lại). Từ khóa tham gia đội vẫn là "xanh"/"đỏ" (hoặc "1"/"2"), không đổi.</div>
     <div style="margin-top:6px; font-size:12px; color:#9fc4e8;">Quà lạ không rõ số xu → chỉ log cảnh báo, 0 lực, không tưới. Không bao giờ mặc định +5. Đổi đội chỉ được giữa các hiệp.</div>
   </div>
   <div class="card">
@@ -169,6 +232,9 @@ const socket = io();
 let lastState = null;
 const $ = (id) => document.getElementById(id);
 function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function teamName(s, t) { return t === 'xanh' ? (s.settings.teamXanhName || 'Xanh') : (s.settings.teamDoName || 'Đỏ'); }
+function teamColor(s, t) { return t === 'xanh' ? (s.settings.teamXanhColor || '#1E90FF') : (s.settings.teamDoColor || '#E63946'); }
+function presetBg(team, v) { if (v) $(team === 'xanh' ? 'set-teamxanh-bg' : 'set-teamdo-bg').value = v; }
 async function api(path, body) {
   const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : '{}' });
   return r.json();
@@ -192,7 +258,11 @@ function render(s) {
   const total = Math.max(1, s.force.xanh + s.force.do);
   $('bar-xanh').style.width = (s.force.xanh / total * 100) + '%';
   $('bar-do').style.width = (s.force.do / total * 100) + '%';
-  $('flag-pos').textContent = s.flagPct <= -100 ? 'đã chạm vạch Xanh!' : s.flagPct >= 100 ? 'đã chạm vạch Đỏ!' : s.flagPct < -25 ? 'lệch về Xanh (' + s.flagPct + '%)' : s.flagPct > 25 ? 'lệch về Đỏ (+' + s.flagPct + '%)' : 'giữa dây (' + s.flagPct + '%)';
+  $('flag-pos').textContent = s.flagPct <= -100 ? 'đã chạm vạch ' + teamName(s, 'xanh') + '!' : s.flagPct >= 100 ? 'đã chạm vạch ' + teamName(s, 'do') + '!' : s.flagPct < -25 ? 'lệch về ' + teamName(s, 'xanh') + ' (' + s.flagPct + '%)' : s.flagPct > 25 ? 'lệch về ' + teamName(s, 'do') + ' (+' + s.flagPct + '%)' : 'giữa dây (' + s.flagPct + '%)';
+  $('lbl-team-xanh').textContent = teamName(s, 'xanh');
+  $('lbl-team-do').textContent = teamName(s, 'do');
+  $('bar-xanh').style.background = teamColor(s, 'xanh');
+  $('bar-do').style.background = teamColor(s, 'do');
   if (s.phaseEndsAt) {
     const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
     $('timer').textContent = s.phase === 'playing' ? 'còn ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0') : s.phase === 'roundEnd' ? 'nghỉ ' + left + 's' : s.phase === 'matchEnd' ? 'vinh danh ' + left + 's' : '—';
@@ -206,7 +276,7 @@ function render(s) {
   $('direct-line').textContent = 'Đã nhận ' + s.webhookCount + ' sự kiện webhook · ' + s.viewersOnline + ' người đang xem';
   $('avatar-warn').style.display = (s.avatarStats.total > 0 && s.avatarStats.withAvatar === 0) ? 'block' : 'none';
   $('top-body').innerHTML = s.top.length
-    ? s.top.map((t, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(t.name) + '</td><td>' + (t.team === 'xanh' ? '🔵 Xanh' : '🔴 Đỏ') + '</td><td>' + t.force + ' lực</td></tr>').join('')
+    ? s.top.map((t, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(t.name) + '</td><td>' + (t.team === 'xanh' ? '🔵 ' + esc(teamName(s, 'xanh')) : '🔴 ' + esc(teamName(s, 'do'))) + '</td><td>' + t.force + ' lực</td></tr>').join('')
     : '<tr><td colspan="4">Chưa có ai kéo…</td></tr>';
   $('logs').innerHTML = s.logs.slice(-80).reverse().map((l) => '<div>' + new Date(l.t).toLocaleTimeString('vi-VN') + ' ' + esc(l.text) + '</div>').join('');
   if (!render.filled) {
@@ -223,6 +293,12 @@ function render(s) {
     $('set-celebrate').value = s.settings.matchCelebrateS;
     $('set-spam').value = s.settings.commentSpamS;
     $('set-voice').checked = !!s.settings.voiceEnabled;
+    $('set-teamxanh-name').value = s.settings.teamXanhName || 'Xanh';
+    $('set-teamdo-name').value = s.settings.teamDoName || 'Đỏ';
+    $('set-teamxanh-bg').value = s.settings.teamXanhBg || '';
+    $('set-teamdo-bg').value = s.settings.teamDoBg || '';
+    $('set-teamxanh-color').value = s.settings.teamXanhColor || '#1E90FF';
+    $('set-teamdo-color').value = s.settings.teamDoColor || '#E63946';
   }
 }
 async function saveSettings() {
@@ -233,6 +309,9 @@ async function saveSettings() {
     winForce: +$('set-winforce').value, roundsToWin: +$('set-winrounds').value,
     roundBreakS: +$('set-break').value, matchCelebrateS: +$('set-celebrate').value,
     commentSpamS: +$('set-spam').value, voiceEnabled: $('set-voice').checked,
+    teamXanhName: $('set-teamxanh-name').value, teamDoName: $('set-teamdo-name').value,
+    teamXanhBg: $('set-teamxanh-bg').value, teamDoBg: $('set-teamdo-bg').value,
+    teamXanhColor: $('set-teamxanh-color').value, teamDoColor: $('set-teamdo-color').value,
   });
   $('test-result').textContent = r.success ? '✅ Đã lưu cài đặt.' : '❌ ' + (r.message || 'Lỗi.');
 }
@@ -273,7 +352,7 @@ async function loadTikfinity() {
   try {
     const r = await fetch('/api/tikfinity-actions');
     const d = await r.json();
-    if (d.webhookUrl) { $('webhook-url').textContent = d.webhookUrl.replace(location.origin, ''); $('webhook-full').textContent = d.webhookUrl; }
+    if (d.webhookUrl) { $('webhook-url').textContent = d.webhookUrl.replace(location.origin, ''); }
     if (Array.isArray(d.actions)) {
       tikUrls = {};
       d.actions.forEach((a) => { tikUrls[a.key] = a.url; });
