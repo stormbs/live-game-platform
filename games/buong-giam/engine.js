@@ -453,7 +453,7 @@ let lastAnnouncementTime = Date.now();
 
 
 // TỰ ĐỘNG KHÔI PHỤC TOÀN BỘ PHIÊN LIVE TỪ AUTOSAVE (BẢO TOÀN 100% ĐIỂM SỐ VÀ NGƯỜI CHƠI)
-const AUTOSAVE_FILE = path.join(__dirname, 'data', 'session_state_autosave.json');
+const AUTOSAVE_FILE = path.join(DATA_DIR, 'session_state_autosave.json');
 try {
   if (fs.existsSync(AUTOSAVE_FILE)) {
     const backup = JSON.parse(fs.readFileSync(AUTOSAVE_FILE, 'utf8'));
