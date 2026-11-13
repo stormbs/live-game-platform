@@ -6,20 +6,21 @@
 <title>Kéo Co — Overlay</title>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/shared/music.js"></script>
+<link rel="stylesheet" href="/shared/ui.css">
+<script src="/shared/ui.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --ui-accent: #1E90FF; --ui-accent-2: #E63946; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; }
   body {
-    font-family: "Segoe UI", Verdana, sans-serif; color: #fff;
+    font-family: 'Be Vietnam Pro', "Segoe UI", Verdana, sans-serif; color: #fff;
   }
-  .demo-badge { position: absolute; top: 14px; left: 14px; z-index: 30; background: #b8860b; color: #1c1c1c; font-weight: 900; font-size: 24px; padding: 8px 16px; border-radius: 10px; display: none; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
-  .demo-badge.on { display: block; }
   .demo-note { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 30; background: rgba(0,0,0,.75); color: #ffd94d; font-weight: 800; font-size: 22px; padding: 10px 18px; border-radius: 10px; display: none; text-align: center; width: 900px; }
   .demo-note.on { display: block; }
   header { position: relative; z-index: 5; text-align: center; padding: 30px 30px 0; }
-  h1 { font-size: 64px; text-shadow: 0 3px 0 #123, 0 6px 18px rgba(0,0,0,.4); letter-spacing: 2px; }
+  h1.ui-title { font-size: 64px; }
   .sub { font-size: 26px; text-shadow: 0 2px 6px rgba(0,0,0,.5); margin-top: 6px; }
-  .scoreboard { margin: 18px auto 0; width: 920px; background: rgba(0,0,0,.45); border-radius: 20px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .scoreboard { margin: 18px auto 0; width: 920px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
   .scoreboard .team { font-size: 40px; font-weight: 900; }
   .scoreboard .team small { font-size: 26px; display: block; font-weight: 700; opacity: .85; }
   .scoreboard .mid { text-align: center; }
@@ -54,13 +55,11 @@
   .puller .fc { font-size: 17px; font-weight: 700; color: #ffd94d; text-shadow: 0 1px 3px #000; }
   .bench { text-align: center; font-size: 22px; font-weight: 700; margin-top: 10px; color: #ffe9bd; text-shadow: 0 1px 3px #000; }
   .hint { position: absolute; top: 500px; left: 0; width: 1080px; text-align: center; font-size: 26px; font-weight: 800; color: #fff; text-shadow: 0 2px 6px #000; z-index: 5; }
-  .top5 { position: absolute; top: 1440px; left: 30px; width: 1020px; z-index: 6; background: rgba(0,0,0,.5); border-radius: 16px; padding: 14px 20px; }
+  .top5 { position: absolute; top: 1440px; left: 30px; width: 1020px; z-index: 6; padding: 14px 20px; }
   .top5 h3 { font-size: 26px; margin-bottom: 6px; }
   .top5 div { font-size: 23px; line-height: 1.35; }
   .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
   .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
-  .statusbar { position: absolute; left: 0; bottom: 0; width: 1080px; height: 140px; z-index: 5; background: #123a5c; color: #fff; display: flex; align-items: center; justify-content: space-around; font-size: 26px; font-weight: 800; padding: 0 30px; }
-  .statusbar .big { font-size: 34px; }
   .banner { position: absolute; left: 50%; top: 700px; transform: translateX(-50%); z-index: 20; width: 980px; text-align: center; background: rgba(255,255,255,.96); border: 6px solid #1e90ff; border-radius: 28px; padding: 34px 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4); display: none; }
   .banner.on { display: block; animation: pop .4s ease; }
   @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
@@ -72,12 +71,15 @@
 </head>
 <body>
 <div id="scaler">
-<div class="demo-badge" id="demo-badge">🧪 DEMO</div>
+<div class="ui-vignette"></div>
+<div class="ui-grain"></div>
+<div class="ui-toast" id="ui-toast"></div>
+<div class="ui-demo-badge" id="demo-badge">🧪 DEMO</div>
 <div class="demo-note" id="demo-note"></div>
 <header>
-  <h1>🪢 KÉO CO 🪢</h1>
-  <div class="sub" id="round-line">Bình luận "xanh" hoặc "đỏ" để chọn đội — tim +1, bình luận +5, 1 xu quà +10 lực</div>
-  <div class="scoreboard">
+  <h1 class="ui-title">🪢 KÉO CO 🪢</h1>
+  <div class="sub ui-sub" id="round-line">Bình luận "xanh" hoặc "đỏ" để chọn đội — tim +1, bình luận +5, 1 xu quà +10 lực</div>
+  <div class="scoreboard ui-panel">
     <div class="team" style="color:#7cc4ff;">🔵 XANH<small id="cnt-xanh">0 người</small></div>
     <div class="mid">
       <div class="score"><span id="wins-xanh">0</span> – <span id="wins-do">0</span></div>
@@ -112,9 +114,9 @@
   <div class="hint" id="hint">Kéo mạnh lên! Bên nào kéo cờ về vạch đích của mình thì thắng hiệp!</div>
 </div>
 
-<div class="top5" id="top5"><h3>🏆 Top kéo mạnh nhất trận</h3><div>Chưa có ai kéo…</div></div>
+<div class="top5 ui-panel" id="top5"><h3>🏆 Top kéo mạnh nhất trận</h3><div>Chưa có ai kéo…</div></div>
 <div class="ticker" id="ticker"></div>
-<div class="statusbar">
+<div class="ui-statusbar">
   <span>👀 <span class="big" id="st-online">0</span> đang xem</span>
   <span>❤️ <span class="big" id="st-taps">0</span> tim</span>
   <span>🎁 <span class="big" id="st-gifts">0</span> quà</span>
@@ -253,8 +255,8 @@ function updateTimer() {
 }
 
 socket.on('state-update', render);
-socket.on('round-win', (d) => { if (d && d.team) playTts('Đội ' + TEAM_NAME[d.team] + ' thắng hiệp ' + d.matchRound + '!'); });
-socket.on('match-win', (d) => { if (d && d.team) playTts('Đội ' + TEAM_NAME[d.team] + ' thắng trận! Chúc mừng cả đội!'); });
+socket.on('round-win', (d) => { if (d && d.team) { playTts('Đội ' + TEAM_NAME[d.team] + ' thắng hiệp ' + d.matchRound + '!'); if (window.StromUI) { StromUI.sfx('win'); StromUI.confetti(24); } } });
+socket.on('match-win', (d) => { if (d && d.team) { playTts('Đội ' + TEAM_NAME[d.team] + ' thắng trận! Chúc mừng cả đội!'); if (window.StromUI) { StromUI.flash('#FFD700'); StromUI.sfx('win'); StromUI.confetti(48); } } });
 socket.on('flag-warning', (d) => { if (d && d.team) playTts('Đội ' + TEAM_NAME[d.team] + ' sắp thắng! Kéo mạnh lên!'); });
 
 fetch('/api/state').then((r) => r.json()).then((s) => {

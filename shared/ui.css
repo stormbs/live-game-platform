@@ -1,0 +1,210 @@
+/* StromUI — hệ thiết kế dùng chung cho 14 overlay TikTok LIVE.
+   Nối vào overlay bằng 2 dòng trong <head> (TRƯỚC <style> của game):
+     <link rel="stylesheet" href="/shared/ui.css">
+     <script src="/shared/ui.js"></script>
+   Luật riêng của game load sau nên vẫn thắng khi cần ghi đè. */
+
+/* ===== 2.1. Font chữ — tự host, không phụ thuộc Google Fonts ===== */
+@font-face {
+  font-family: 'Baloo 2';
+  src: url('/shared/fonts/baloo2-800.woff2') format('woff2');
+  font-weight: 800; font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/shared/fonts/bevietnampro-400.woff2') format('woff2');
+  font-weight: 400; font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/shared/fonts/bevietnampro-700.woff2') format('woff2');
+  font-weight: 700; font-display: swap;
+}
+@font-face {
+  font-family: 'Be Vietnam Pro';
+  src: url('/shared/fonts/bevietnampro-900.woff2') format('woff2');
+  font-weight: 900; font-display: swap;
+}
+
+/* ===== 2.2. Bảng màu — biến CSS, mỗi game chỉ đổi 2 biến accent ===== */
+:root {
+  --ui-gold: #FFD700;
+  --ui-gold-2: #FF9D00;
+  --ui-ink: #0B1020;
+  --ui-glass: rgba(10, 18, 40, .55);
+  --ui-glass-strong: rgba(10, 18, 40, .82);
+  --ui-glass-border: rgba(255, 255, 255, .16);
+  --ui-glass-border-gold: rgba(255, 215, 0, .45);
+  --ui-text: #FFFFFF;
+  --ui-text-dim: rgba(255, 255, 255, .75);
+  --ui-red: #FF3B30;
+  --ui-green: #34D399;
+  --ui-blue: #38BDF8;
+  --ui-pink: #FF2D95;
+  --ui-shadow: 0 12px 32px rgba(0, 0, 0, .45);
+  /* Mỗi game ghi đè 2 biến này trong <style> của mình: */
+  --ui-accent: #FFD700;
+  --ui-accent-2: #FF9D00;
+}
+
+/* ===== 2.3a. Panel kính — thay hộp đen phẳng rgba(0,0,0,.4) ===== */
+.ui-panel {
+  background: var(--ui-glass);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--ui-glass-border);
+  border-radius: 22px;
+  box-shadow: var(--ui-shadow);
+}
+.ui-panel-gold {
+  border: 1px solid var(--ui-glass-border-gold);
+  box-shadow: var(--ui-shadow), 0 0 24px rgba(255, 215, 0, .18);
+}
+
+/* ===== 2.3b. Tiêu đề game — thay h1 + text-shadow cứng ===== */
+.ui-title {
+  font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+  font-weight: 800;
+  font-size: 62px;
+  letter-spacing: 2px;
+  background: linear-gradient(180deg, #FFFFFF 20%, var(--ui-accent) 75%, var(--ui-accent-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .55));
+}
+.ui-sub {
+  font-size: 26px;
+  color: var(--ui-text-dim);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, .6);
+}
+
+/* ===== 2.3c. Badge DEMO thống nhất (giữ nguyên id="demo-badge") ===== */
+.ui-demo-badge {
+  position: absolute; top: 18px; left: 18px; z-index: 60;
+  background: linear-gradient(135deg, #FFD700, #FF9D00);
+  color: #1C1C1C; font-size: 24px; font-weight: 900;
+  padding: 10px 18px; border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
+  display: none;
+}
+.ui-demo-badge.on { display: block; animation: ui-badge-in .3s ease; }
+@keyframes ui-badge-in { from { transform: translateY(-8px); opacity: 0; } }
+
+/* ===== 2.3d. Bảng xếp hạng chuẩn ===== */
+.ui-board h3 {
+  font-family: 'Baloo 2', sans-serif; font-size: 28px; font-weight: 800;
+  color: var(--ui-accent); margin-bottom: 8px;
+}
+.ui-row {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 26px; font-weight: 700; padding: 8px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, .15);
+}
+.ui-row:last-child { border-bottom: 0; }
+.ui-row .ui-rank {
+  width: 44px; height: 44px; flex: none; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 900; background: #3A4454; color: #EEE;
+}
+.ui-row.rank-1 .ui-rank { background: linear-gradient(135deg, #FFE98A, #FFB800); color: #231A00; box-shadow: 0 0 14px rgba(255, 215, 0, .8); }
+.ui-row.rank-2 .ui-rank { background: linear-gradient(135deg, #F2F2F2, #B9B9B9); color: #222; }
+.ui-row.rank-3 .ui-rank { background: linear-gradient(135deg, #F0A868, #8C4A12); color: #FFF; }
+.ui-row .ui-ava {
+  width: 56px; height: 56px; flex: none; border-radius: 50%; object-fit: cover;
+  border: 3px solid var(--ui-accent); background: #333;
+}
+.ui-row .ui-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ui-row .ui-pts { font-weight: 900; color: var(--ui-accent); }
+.ui-row .ui-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,.15); overflow: hidden; margin-top: 4px; }
+.ui-row .ui-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--ui-accent), var(--ui-accent-2)); transition: width .5s ease; }
+.ui-row-new { animation: ui-row-in .5s ease; }
+@keyframes ui-row-in { from { transform: translateX(30px); opacity: 0; background: rgba(255,215,0,.25); } }
+
+/* ===== 2.3e. Thanh tiến độ — vệt sáng chạy ===== */
+.ui-progress { height: 30px; border-radius: 999px; background: rgba(0,0,0,.45); overflow: hidden; position: relative; }
+.ui-progress > i {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--ui-accent), var(--ui-accent-2));
+  transition: width .5s ease; position: relative; overflow: hidden;
+}
+.ui-progress > i::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+  animation: ui-shine 1.8s linear infinite;
+}
+@keyframes ui-shine { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.ui-progress.hot > i { animation: ui-progress-pulse .8s ease-in-out infinite alternate; }
+@keyframes ui-progress-pulse { from { filter: brightness(1); } to { filter: brightness(1.35); } }
+
+/* ===== 2.3f. Toast sự kiện — dòng thông báo nổi ===== */
+.ui-toast {
+  position: absolute; left: 50%; top: 120px; transform: translateX(-50%);
+  z-index: 40; max-width: 940px; text-align: center;
+  background: var(--ui-glass-strong);
+  border: 1px solid var(--ui-glass-border-gold);
+  border-radius: 999px; padding: 14px 28px;
+  font-size: 28px; font-weight: 800; color: #FFE9A0;
+  box-shadow: var(--ui-shadow); display: none;
+}
+.ui-toast.show { display: block; animation: ui-toast-in .35s cubic-bezier(.18,.89,.32,1.28); }
+@keyframes ui-toast-in { from { transform: translateX(-50%) translateY(-16px) scale(.92); opacity: 0; } }
+
+/* ===== 2.3g. Banner chiến thắng ===== */
+.ui-banner {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  z-index: 30; width: 940px; text-align: center;
+  background: linear-gradient(135deg, rgba(20,10,0,.96), rgba(10,18,40,.96));
+  border: 3px solid var(--ui-accent); border-radius: 28px;
+  padding: 40px 32px; box-shadow: 0 20px 60px rgba(0,0,0,.6), 0 0 40px rgba(255,215,0,.25);
+  display: none;
+}
+.ui-banner.show { display: block; animation: ui-banner-in .45s cubic-bezier(.18,.89,.32,1.28); }
+@keyframes ui-banner-in { from { transform: translate(-50%,-50%) scale(.8); opacity: 0; } }
+.ui-banner h2 {
+  font-family: 'Baloo 2', sans-serif; font-size: 58px; font-weight: 800;
+  background: linear-gradient(180deg, #FFF, var(--ui-accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.ui-banner p { font-size: 30px; color: var(--ui-text-dim); margin-top: 12px; line-height: 1.5; }
+
+/* ===== 2.3h. Trạng thái trống ===== */
+.ui-empty { text-align: center; padding: 18px 10px; color: var(--ui-text-dim); font-size: 26px; font-weight: 700; }
+.ui-empty .ui-empty-ic { font-size: 56px; display: block; animation: ui-bob 1.6s ease-in-out infinite; }
+.ui-empty .ui-empty-cta { color: var(--ui-accent); animation: ui-blink-soft 1.2s ease-in-out infinite alternate; }
+@keyframes ui-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes ui-blink-soft { from { opacity: .6; } to { opacity: 1; } }
+
+/* ===== 2.3i. Thanh trạng thái cuối màn hình — pill kính ===== */
+.ui-statusbar {
+  position: absolute; left: 30px; right: 30px; bottom: 18px; height: 84px;
+  display: flex; align-items: center; justify-content: space-around;
+  background: var(--ui-glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid var(--ui-glass-border); border-radius: 999px;
+  font-size: 26px; font-weight: 800; box-shadow: var(--ui-shadow);
+}
+.ui-statusbar .big { font-size: 34px; color: var(--ui-accent); font-variant-numeric: tabular-nums; }
+
+/* ===== 2.3j. Lớp nền chiều sâu — dán ngay sau khi mở #scaler/#stage ===== */
+.ui-vignette {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background: radial-gradient(ellipse at 50% 42%, transparent 55%, rgba(0,0,0,.38) 100%);
+}
+.ui-grain {
+  position: absolute; inset: 0; pointer-events: none; z-index: 1; opacity: .05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+/* ===== 2.4. Hiệu ứng do ui.js tạo ra ===== */
+.ui-float-text {
+  position: absolute; z-index: 46; pointer-events: none;
+  font-size: 36px; font-weight: 900;
+  text-shadow: 0 2px 6px rgba(0,0,0,.7);
+  animation: ui-float-up 1.5s ease-out forwards;
+}
+@keyframes ui-float-up { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-90px); opacity: 0; } }
+.ui-confetti {
+  position: absolute; top: -20px; width: 14px; height: 22px; z-index: 48; pointer-events: none;
+  animation: ui-confetti-fall 2.8s ease-in forwards;
+}
+@keyframes ui-confetti-fall { to { transform: translateY(1980px) rotate(720deg); opacity: .9; } }

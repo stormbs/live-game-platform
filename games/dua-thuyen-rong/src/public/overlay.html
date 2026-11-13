@@ -4,11 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Đua Thuyền Rồng — LIVE Overlay</title>
+<link rel="stylesheet" href="/shared/ui.css">
+<script src="/shared/ui.js"></script>
 <style>
+  :root { --ui-accent: #FACC15; --ui-accent-2: #EF4444; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #fff; }
   #stage { position: relative; width: 1080px; height: 1920px; background: linear-gradient(180deg, #7dd3fc 0%, #38bdf8 30%, #0ea5e9 100%); }
-  .clouds { position: absolute; top: 0; left: 0; right: 0; height: 260px; background: radial-gradient(ellipse 30% 40% at 20% 40%, rgba(255,255,255,.9), transparent), radial-gradient(ellipse 25% 35% at 70% 60%, rgba(255,255,255,.8), transparent), radial-gradient(ellipse 20% 30% at 45% 20%, rgba(255,255,255,.7), transparent); }
+  .clouds { position: absolute; top: 0; left: -160px; right: -160px; height: 260px; background: radial-gradient(ellipse 30% 40% at 20% 40%, rgba(255,255,255,.9), transparent), radial-gradient(ellipse 25% 35% at 70% 60%, rgba(255,255,255,.8), transparent), radial-gradient(ellipse 20% 30% at 45% 20%, rgba(255,255,255,.7), transparent); animation: drift 40s linear infinite; }
+  @keyframes drift { from { transform: translateX(-120px); } to { transform: translateX(120px); } }
   header { position: absolute; top: 24px; left: 0; right: 0; text-align: center; z-index: 5; }
   header h1 { font-size: 62px; letter-spacing: 4px; text-shadow: 0 4px 0 rgba(0,0,0,.3); }
   header .sub { font-size: 26px; opacity: .95; margin-top: 6px; text-shadow: 0 2px 4px rgba(0,0,0,.3); }
@@ -21,27 +25,40 @@
   .team-box.do .tname { color: #fca5a5; }
   .team-box .meters { font-size: 64px; font-weight: 900; line-height: 1; }
   .team-box .meters small { font-size: 28px; }
-  .team-box .bar { height: 18px; border-radius: 9px; background: rgba(255,255,255,.25); margin-top: 10px; overflow: hidden; }
-  .team-box .bar i { display: block; height: 100%; }
-  .team-box.vang .bar i { background: #facc15; }
-  .team-box.do .bar i { background: #ef4444; }
+  .team-box .ui-progress { margin-top: 10px; }
+  .team-box.do .ui-progress > i { background: linear-gradient(90deg, #f87171, #ef4444); }
+  .team-box .remain { font-size: 24px; font-weight: 700; margin-top: 10px; text-shadow: 0 2px 4px rgba(0,0,0,.5); }
+  .team-box .remain .pct { font-size: 32px; font-weight: 900; }
+  .team-box.vang .remain .pct { color: #fde047; }
+  .team-box.do .remain .pct { color: #fca5a5; }
   #timer { position: absolute; top: 180px; left: 50%; transform: translateX(-50%); width: 180px; text-align: center; background: rgba(0,0,0,.55); border-radius: 20px; padding: 12px 6px; z-index: 6; }
   #timer .clock { font-size: 46px; font-weight: 900; }
   #timer .lbl { font-size: 20px; opacity: .85; }
   #river { position: absolute; top: 480px; left: 0; right: 0; bottom: 340px; }
-  .lane { position: relative; height: 46%; margin: 2% 0; background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.05)); border-top: 3px dashed rgba(255,255,255,.5); border-bottom: 3px dashed rgba(255,255,255,.5); overflow: hidden; }
+  .lane { position: relative; height: 46%; margin: 2% 0; background-image: repeating-radial-gradient(ellipse 90px 14px at 20% 50%, rgba(255,255,255,.16) 0 2px, transparent 3px), linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.05)); background-size: 240px 100%, 100% 100%; border-top: 3px dashed rgba(255,255,255,.5); border-bottom: 3px dashed rgba(255,255,255,.5); overflow: hidden; animation: waves 3s linear infinite; }
+  @keyframes waves { from { background-position-x: 0; } to { background-position-x: 240px; } }
   .lane .milestones { position: absolute; inset: 0; }
   .lane .ms { position: absolute; top: 0; bottom: 0; width: 2px; background: rgba(255,255,255,.55); }
   .lane .ms span { position: absolute; top: 6px; left: 4px; font-size: 20px; font-weight: 700; color: rgba(255,255,255,.9); text-shadow: 0 1px 3px rgba(0,0,0,.4); }
   .lane .finish { position: absolute; top: 0; bottom: 0; right: 8px; width: 10px; background: repeating-linear-gradient(180deg, #111 0 16px, #fff 16px 32px); }
   .lane .finish span { position: absolute; top: 6px; right: 16px; font-size: 22px; font-weight: 800; }
-  .boat { position: absolute; top: 50%; transform: translateY(-50%); font-size: 110px; line-height: 1; transition: left 0.6s ease; filter: drop-shadow(0 6px 6px rgba(0,0,0,.35)); white-space: nowrap; }
+  .boat { position: absolute; top: 50%; transform: translateY(-50%); font-size: 110px; line-height: 1; transition: left 0.6s ease; filter: drop-shadow(0 6px 6px rgba(0,0,0,.35)); white-space: nowrap; text-align: center; }
+  .boat .wake { position: absolute; right: 100%; top: 58%; transform: translateY(-50%); width: 120px; height: 30px; margin-right: 6px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.75)); border-radius: 50%; opacity: .55; filter: blur(2px); pointer-events: none; animation: wake-pulse 1.2s ease-in-out infinite alternate; }
+  @keyframes wake-pulse { from { opacity: .35; } to { opacity: .65; } }
+  .boat .oars { position: absolute; top: 46px; left: 50%; width: 0; height: 0; pointer-events: none; z-index: -1; }
+  .boat .oars i { position: absolute; top: 0; width: 10px; height: 120px; background: linear-gradient(#a06a35, #5d3a17); border-radius: 5px; transform-origin: top center; animation: row var(--row-dur, .6s) ease-in-out infinite alternate; }
+  .boat .oars i:nth-child(1) { left: -86px; animation-delay: 0s; }
+  .boat .oars i:nth-child(2) { left: -5px; animation-delay: .2s; }
+  .boat .oars i:nth-child(3) { left: 76px; animation-delay: .4s; }
+  @keyframes row { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
   .boat .crew { font-size: 30px; letter-spacing: 2px; }
-  .boat .bname { font-size: 24px; font-weight: 800; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,.5); }
+  .boat .bname { display: inline-block; font-size: 30px; font-weight: 800; text-align: center; text-shadow: 0 2px 6px rgba(0,0,0,.7); background: rgba(0,0,0,.45); border-radius: 999px; padding: 6px 18px; margin-top: 4px; }
   .boat.combo { animation: surge .5s ease 3; }
   @keyframes surge { 0% { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-58%) scale(1.08); } 100% { transform: translateY(-50%) scale(1); } }
   .lane-label { position: absolute; left: 12px; top: 8px; font-size: 26px; font-weight: 800; z-index: 3; text-shadow: 0 2px 4px rgba(0,0,0,.5); }
   #drum-flash { position: absolute; top: 480px; left: 0; right: 0; bottom: 340px; display: flex; align-items: center; justify-content: center; font-size: 90px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); opacity: 0; pointer-events: none; z-index: 8; }
+  #stage.shake { animation: shake .5s ease; }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
   #drum-flash.on { animation: flash 1.2s ease; }
   @keyframes flash { 0% { opacity: 0; transform: scale(.8); } 20% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: scale(1); } }
   #tops { position: absolute; left: 40px; right: 40px; bottom: 210px; display: flex; gap: 20px; z-index: 5; }
@@ -62,6 +79,9 @@
 <body>
 <div id="scaler">
 <div id="stage">
+  <div class="ui-vignette"></div>
+  <div class="ui-grain"></div>
+  <div class="ui-toast" id="ui-toast"></div>
   <div class="clouds"></div>
   <header>
     <h1>🐉 ĐUA THUYỀN RỒNG</h1>
@@ -69,8 +89,8 @@
   </header>
   <div id="demo-badge">🧪 DEMO</div>
   <div id="score">
-    <div class="team-box vang"><div class="tname">🟡 ĐỘI VÀNG</div><div class="meters"><span id="m-vang">0</span><small>m</small></div><div class="bar"><i id="bar-vang" style="width:0%"></i></div></div>
-    <div class="team-box do"><div class="tname">🔴 ĐỘI ĐỎ</div><div class="meters"><span id="m-do">0</span><small>m</small></div><div class="bar"><i id="bar-do" style="width:0%"></i></div></div>
+    <div class="team-box vang"><div class="tname">🟡 ĐỘI VÀNG</div><div class="meters"><span id="m-vang">0</span><small>m</small></div><div class="ui-progress" id="prog-vang"><i id="bar-vang" style="width:0%"></i></div><div class="remain"><span class="pct" id="pct-vang">0%</span> • còn <span id="remain-vang">500m</span> tới đích</div></div>
+    <div class="team-box do"><div class="tname">🔴 ĐỘI ĐỎ</div><div class="meters"><span id="m-do">0</span><small>m</small></div><div class="ui-progress" id="prog-do"><i id="bar-do" style="width:0%"></i></div><div class="remain"><span class="pct" id="pct-do">0%</span> • còn <span id="remain-do">500m</span> tới đích</div></div>
   </div>
   <div id="timer"><div class="clock" id="clock">5:00</div><div class="lbl" id="dist-label">Đích 500m</div></div>
   <div id="river">
@@ -78,13 +98,13 @@
       <div class="lane-label">🟡 Đội Vàng</div>
       <div class="milestones" id="ms-vang"></div>
       <div class="finish"><span>🏁</span></div>
-      <div class="boat" id="boat-vang" style="left:0px"><div>🐉🛶</div><div class="crew" id="crew-vang"></div><div class="bname">THUYỀN VÀNG</div></div>
+      <div class="boat" id="boat-vang" style="left:0px"><div class="wake"></div><div class="oars"><i></i><i></i><i></i></div><div>🐉🛶</div><div class="crew" id="crew-vang"></div><div class="bname">THUYỀN VÀNG</div></div>
     </div>
     <div class="lane" id="lane-do">
       <div class="lane-label">🔴 Đội Đỏ</div>
       <div class="milestones" id="ms-do"></div>
       <div class="finish"><span>🏁</span></div>
-      <div class="boat" id="boat-do" style="left:0px"><div>🐉🛶</div><div class="crew" id="crew-do"></div><div class="bname">THUYỀN ĐỎ</div></div>
+      <div class="boat" id="boat-do" style="left:0px"><div class="wake"></div><div class="oars"><i></i><i></i><i></i></div><div>🐉🛶</div><div class="crew" id="crew-do"></div><div class="bname">THUYỀN ĐỎ</div></div>
     </div>
   </div>
   <div id="drum-flash">🥁 TRỐNG DỒN!</div>
@@ -191,6 +211,14 @@ window.addEventListener('resize', fit); fit();
     document.getElementById('m-do').textContent = s.meters.do;
     document.getElementById('bar-vang').style.width = s.progress.vang + '%';
     document.getElementById('bar-do').style.width = s.progress.do + '%';
+    document.getElementById('prog-vang').classList.toggle('hot', s.progress.vang > 80);
+    document.getElementById('prog-do').classList.toggle('hot', s.progress.do > 80);
+    document.getElementById('pct-vang').textContent = Math.round(s.progress.vang) + '%';
+    document.getElementById('pct-do').textContent = Math.round(s.progress.do) + '%';
+    document.getElementById('remain-vang').textContent = Math.max(0, s.raceDistanceM - s.meters.vang) + 'm';
+    document.getElementById('remain-do').textContent = Math.max(0, s.raceDistanceM - s.meters.do) + 'm';
+    document.getElementById('boat-vang').style.setProperty('--row-dur', (s.combos.vang || 0) > 0 ? '.35s' : '.6s');
+    document.getElementById('boat-do').style.setProperty('--row-dur', (s.combos.do || 0) > 0 ? '.35s' : '.6s');
     document.getElementById('dist-label').textContent = 'Đích ' + s.raceDistanceM + 'm';
     document.getElementById('clock').textContent = s.phase === 'racing' && s.raceEndsAt ? fmtClock(s.raceEndsAt - Date.now()) : (s.phase === 'spotlight' ? '⏳' : '--:--');
     document.getElementById('race-label').textContent = 'Cuộc đua ' + s.raceNo + (s.phase === 'lobby' ? ' — chờ người chơi vào đội' : s.phase === 'racing' ? ' — đang diễn ra' : ' — vinh danh đội thắng');
@@ -229,6 +257,12 @@ window.addEventListener('resize', fit); fit();
     boat.classList.remove('combo');
     void boat.offsetWidth;
     boat.classList.add('combo');
+    const stage = document.getElementById('stage');
+    stage.classList.remove('shake');
+    void stage.offsetWidth;
+    stage.classList.add('shake');
+    setTimeout(() => stage.classList.remove('shake'), 500);
+    if (window.StromUI) { window.StromUI.sfx('gift'); window.StromUI.flash('rgba(250,204,21,.6)'); }
     playDrum();
   }
   async function poll() {
