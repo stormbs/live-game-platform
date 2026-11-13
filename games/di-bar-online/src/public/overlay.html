@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Đi Bar Online — Overlay LIVE</title>
+<link rel="stylesheet" href="/shared/ui.css">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; color: #fff; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif; color: #fff; }
   /* Khung 1080x1920, tự co vừa mọi cửa sổ/nguồn browser (giữ tỉ lệ dọc 9:16) */
   #stage { position: absolute; left: 50%; top: 50%; width: 1080px; height: 1920px; overflow: hidden; background: #0a0618; transform-origin: center center; }
   #room { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, #2a0a4a 0%, #12081f 55%, #0a0618 100%); }
@@ -41,14 +42,27 @@
   #floor { position: absolute; left: 30px; right: 30px; top: 480px; height: 960px; background: linear-gradient(180deg, rgba(255,45,149,.12), rgba(34,211,238,.10)); border: 2px solid rgba(255,255,255,.18); border-radius: 24px; padding: 16px; }
   #floor-title { font-size: 32px; font-weight: 800; color: #f9a8d4; margin-bottom: 12px; display: flex; justify-content: space-between; }
   #dancers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .dancer { position: relative; text-align: center; background: rgba(0,0,0,.35); border: 2px solid var(--c, #888); border-radius: 16px; padding: 12px 4px 10px; min-height: 210px; }
-  .dancer .em { font-size: 88px; display: block; animation: var(--mv, bounce) .9s ease-in-out infinite alternate; }
-  .dancer .nm { font-size: 26px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
-  .dancer .en { font-size: 28px; font-weight: 800; color: #fde047; display: block; }
-  .dancer .dr { font-size: 22px; color: #fda4af; }
-  .dancer.king { border-color: #facc15; box-shadow: 0 0 24px #facc15; }
+  .dancer { position: relative; text-align: center; background: rgba(0,0,0,.35); border: 2px solid var(--c, #888); border-radius: 16px; padding: 10px 4px 8px; min-height: 210px; }
+  /* Thứ tự từ trên xuống: tên → avatar → emoji nhảy → năng lượng/đồ uống */
+  .dancer .nm { font-size: 24px; font-weight: 800; font-family: 'Be Vietnam Pro', system-ui, sans-serif; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; text-shadow: 0 2px 4px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.8); }
+  .dancer .av-box { position: relative; display: block; width: 56px; height: 56px; margin: 2px auto; border: 3px solid var(--c, #888); border-radius: 50%; overflow: hidden; background: #222; box-shadow: 0 0 10px rgba(0,0,0,.6); }
+  .dancer .av { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%; }
+  .dancer .av-fb { display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #fff; background: var(--c, #888); text-shadow: 0 2px 4px rgba(0,0,0,.6); }
+  .dancer .av-img { object-fit: cover; }
+  .dancer .em { font-size: 72px; line-height: 1.05; display: block; animation: var(--mv, bounce) .9s ease-in-out infinite alternate; }
+  .dancer .en { font-size: 26px; font-weight: 800; line-height: 1.15; color: #fde047; display: block; text-shadow: 0 2px 4px rgba(0,0,0,.8); }
+  .dancer .dr { font-size: 20px; line-height: 1.2; color: #fda4af; text-shadow: 0 2px 4px rgba(0,0,0,.8); }
+  /* Nhịp nhảy riêng theo index (animation-delay inline trên .em) + theo năng lượng:
+     năng lượng thấp nhảy chậm/uể oải, cao nhảy nhanh + cả khung rung mạnh hơn. */
+  .dancer.en-lo .em { animation-duration: 1.35s; }
+  .dancer.en-hi .em { animation-duration: .55s; }
+  .dancer.en-hi { animation: hipulse 1.1s ease-in-out infinite alternate; }
+  @keyframes hipulse { from { transform: scale(1); } to { transform: scale(1.04); } }
+  .dancer.king { border-color: #facc15; box-shadow: 0 0 24px #facc15; padding-top: 28px; }
   .dancer.king::before { content: '👑'; position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 44px; }
-  .dancer .tbl { position: absolute; top: 6px; right: 8px; font-size: 24px; }
+  .dancer.king::after { content: '✨'; position: absolute; top: 118px; right: 12px; font-size: 30px; pointer-events: none; animation: king-spark 1s ease-in-out infinite alternate; }
+  @keyframes king-spark { from { opacity: .35; transform: scale(.75) rotate(-12deg); } to { opacity: 1; transform: scale(1.15) rotate(12deg); } }
+  .dancer .tbl { position: absolute; bottom: 6px; right: 8px; font-size: 24px; }
   @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-14px); } }
   @keyframes pop { from { transform: scale(1) rotate(-4deg); } to { transform: scale(1.15) rotate(4deg); } }
   @keyframes wave { from { transform: rotate(-10deg); } to { transform: rotate(10deg); } }
@@ -376,13 +390,19 @@ function render(s) {
   $('led-text').textContent = '🎧 ' + (last || 'ĐI BAR ONLINE — bình luận "vào bar" để lên sàn!') + kingTxt + ' 🎧';
   // Sàn nhảy.
   const box = $('dancers');
-  box.innerHTML = s.dancers.map((d) => {
+  box.innerHTML = s.dancers.map((d, i) => {
     const c = d.character || { emoji: '🕺', color: '#888', move: 'bounce', name: '' };
     const tbl = d.table === 'vang' ? '🟡' : d.table === 'do' ? '🔴' : '';
-    return `<div class="dancer${d.isKing ? ' king' : ''}" style="--c:${c.color};--mv:${MOVE_CSS[c.move] || 'bounce'}">
-      <span class="tbl">${tbl}</span><span class="em">${c.emoji}</span>
-      <span class="nm">${escapeHtml(d.name)}</span><span class="en">⚡${d.energy}</span>
-      <span class="dr">${d.drinks ? '🍹×' + d.drinks : ''}</span></div>`;
+    // Nhịp nhảy riêng: delay lệch theo index để không nhảy đồng bộ như robot.
+    const delay = (-(i % 8) * 0.11).toFixed(2);
+    // Mức năng lượng: <20 chậm/uể oải, >=100 nhanh + rung mạnh (xem .en-lo/.en-hi).
+    const enCls = (d.energy || 0) >= 100 ? ' en-hi' : (d.energy || 0) < 20 ? ' en-lo' : '';
+    // Avatar thật; lỗi tải thì <img> tự gỡ, lộ chữ cái đầu tên phía dưới.
+    const initial = escapeHtml(((d.name || '?').trim().charAt(0) || '?').toUpperCase());
+    const av = `<span class="av-box"><span class="av av-fb">${initial}</span>${d.avatarUrl ? `<img class="av av-img" src="${escapeHtml(d.avatarUrl)}" alt="" loading="lazy" onerror="this.remove()">` : ''}</span>`;
+    return `<div class="dancer${d.isKing ? ' king' : ''}${enCls}" style="--c:${c.color};--mv:${MOVE_CSS[c.move] || 'bounce'}">
+      <span class="tbl">${tbl}</span><span class="nm">${escapeHtml(d.name)}</span>${av}<span class="em" style="animation-delay:${delay}s">${c.emoji}</span>
+      <span class="en">⚡${d.energy}</span>${d.drinks ? `<span class="dr">🍹×${d.drinks}</span>` : ''}</div>`;
   }).join('') || '<div style="font-size:26px;color:#ddd;padding:20px">Chưa có dancer nào — bình luận "vào bar" để lên sàn!</div>';
   // Quầy chờ.
   $('waiting-names').textContent = s.waiting.length ? s.waiting.map((w) => w.name).join(' • ') : '—';
