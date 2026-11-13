@@ -20,6 +20,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { RoomManager } = require('./lib/rooms');
 const { transformText } = require('./lib/transform');
+const { createLoopWatchdog } = require('./lib/loop-watchdog');
 const { mountBuffRoutes } = require('./lib/buff-routes');
 const { mountTikHubRoutes } = require('./lib/tikhub-routes');
 
@@ -47,6 +48,11 @@ function createApp(opts = {}) {
     tiktokEnabled: opts.tiktokEnabled !== false,
   });
 
+  // Giám sát event loop (worker thread riêng): phát hiện app treo lặng rồi
+  // ép exit(1) để Railway restart. Chỉ start() mới chạy worker; createApp
+  // chỉ tạo handle để /healthz đọc được trạng thái.
+  const loopWatchdog = createLoopWatchdog();
+
   // ---- CORS cho API buff: website Strom (Cloudflare Pages) gọi API này
   // từ trình duyệt (cross-origin). Không có header này, trình duyệt chặn
   // mọi phản hồi dù curl vẫn đọc được — chatbot từng chết vì vậy (2026-11-12).
@@ -71,7 +77,14 @@ function createApp(opts = {}) {
   });
 
   app.get('/healthz', (req, res) => {
-    res.json({ ok: true, rooms: rooms.rooms.size, uptime: Math.round(process.uptime()) });
+    res.json({
+      ok: true,
+      rooms: rooms.rooms.size,
+      uptime: Math.round(process.uptime()),
+      eventLoopLagMs: loopWatchdog.getLagMs(),
+      eventLoopLagMaxMs: loopWatchdog.getMaxLagMs(),
+      watchdog: loopWatchdog.status,
+    });
   });
 
   app.get('/api/games', (req, res) => {
@@ -189,16 +202,18 @@ function createApp(opts = {}) {
     res.status(500).json({ error: 'internal error' });
   });
 
-  return { app, server, rooms };
+  return { app, server, rooms, loopWatchdog };
 }
 
 function start(port) {
-  const { app, server, rooms } = createApp();
-  const p = port || parseInt(process.env.PORT || '3000', 10);
+  const { app, server, rooms, loopWatchdog } = createApp();
+  const p = (port === undefined || port === null) ? parseInt(process.env.PORT || '3000', 10) : port;
   server.listen(p, () => {
     console.log(`live-game-platform chạy tại http://localhost:${p} (tối đa ${MAX_ROOMS} room, hủy room sau ${IDLE_MINUTES} phút không có người xem)`);
+    // Khởi động watchdog sau khi server đã lắng nghe (chạy 1 lần duy nhất).
+    loopWatchdog.start();
   });
-  return { app, server, rooms };
+  return { app, server, rooms, loopWatchdog };
 }
 
 if (require.main === module) start();
