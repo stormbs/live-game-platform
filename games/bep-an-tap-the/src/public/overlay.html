@@ -94,6 +94,40 @@
   .smoke.s1 { left: 40px; }
   .smoke.s2 { right: 40px; animation-delay: 4s; }
   @keyframes smoke-up { 0% { transform: translateY(60px) scale(.8); opacity: 0; } 30% { opacity: .8; } 100% { transform: translateY(-460px) scale(1.5); opacity: 0; } }
+  /* --- Đầu bếp quanh nồi (yêu cầu Chủ tịch 2026-11-13: nhân vật sống động + avatar/tên trên đầu) --- */
+  /* Sprite nồi/lửa 2D Đợt B: /shared/assets/2d/bep-an-tap-the/curated/ (không bị transform chạm /shared/) */
+  .pot-sprite { display: none; width: 300px; height: 300px; object-fit: contain; }
+  .pot-sprite.ok { display: block; }
+  .fire-sprite { display: none; width: 170px; height: 170px; margin: 0 auto;
+    background-image: url('/shared/assets/2d/bep-an-tap-the/curated/bep-lua-sheet.png');
+    background-size: 680px 170px; background-repeat: no-repeat; animation: fire-burn .5s steps(4) infinite; }
+  .fire-sprite.on { display: block; }
+  #fire.big .fire-sprite { width: 210px; height: 210px; background-size: 840px 210px; animation: fire-burn-big .35s steps(4) infinite; }
+  @keyframes fire-burn { from { background-position: 0 0; } to { background-position: -680px 0; } }
+  @keyframes fire-burn-big { from { background-position: 0 0; } to { background-position: -840px 0; } }
+  .chefs { display: flex; justify-content: center; gap: 14px; margin-top: 14px; min-height: 178px; }
+  .chefs-empty { align-self: center; font-size: 24px; color: #ffd9a0; opacity: .8; }
+  .chef { width: 120px; text-align: center; }
+  .chef-head { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chef-ava-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 46px; height: 46px; border-radius: 50%; background: #ffb37a; color: #3d1503;
+    font-size: 24px; font-weight: 800; overflow: hidden; border: 2px solid #ffd9a0; }
+  .chef-ava-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .chef-name { max-width: 116px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 21px; font-weight: 800; color: #fff8ee;
+    text-shadow: 0 2px 4px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.9); }
+  .chef-body { position: relative; margin-top: 2px; animation: chef-bob 1.2s ease-in-out infinite alternate; }
+  .chef-emoji { font-size: 64px; line-height: 1; filter: drop-shadow(0 6px 6px rgba(0,0,0,.45)); }
+  .chef-ladle { position: absolute; left: 50%; top: 34px; margin-left: 6px; font-size: 34px;
+    display: inline-block; transform-origin: 50% 12%; animation: chef-stir 1.2s linear infinite; }
+  @keyframes chef-stir { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes chef-bob { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+  .chefs.fl3 .chef-ladle { animation-duration: .6s; }
+  .chefs.fl3 .chef-body { animation-duration: .6s; }
+  .chef.stir-burst .chef-ladle { animation: chef-stir-burst .8s linear; }
+  .chef.stir-burst .chef-body { animation: chef-bob-burst .8s ease-in-out; }
+  @keyframes chef-stir-burst { from { transform: rotate(0deg) scale(1.25); } to { transform: rotate(720deg) scale(1.25); } }
+  @keyframes chef-bob-burst { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.12); } }
   #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
   html { background: #000; }
 </style>
@@ -112,12 +146,14 @@
 
   <div class="potzone">
     <div class="steam" id="steam">♨️</div>
-    <div class="pot bubble" id="pot">🍲</div>
-    <div class="fire" id="fire">🔥</div>
+    <div class="pot bubble" id="pot"><span id="potEmoji">🍲</span><img id="potSprite" class="pot-sprite" src="/shared/assets/2d/bep-an-tap-the/curated/noi-sheet.png" alt="" onload="this.classList.add('ok');var e=document.getElementById('potEmoji');if(e)e.style.display='none'" onerror="this.remove()"></div>
+    <div class="fire" id="fire"><span id="fireEmoji">🔥</span><div id="fireSprite" class="fire-sprite"></div></div>
     <div class="stove" id="stove"></div>
     <div class="fire-ring" id="fireRing"></div>
     <div class="bubbles"><i></i><i></i><i></i><i></i><i></i><i></i></div>
   </div>
+
+  <div class="chefs" id="chefs"></div>
 
   <div class="barWrap">
     <div class="barTop"><span id="potLabel">🍲 Cỗ đang nấu — Nồi #1</span><span id="potPct">0%</span></div>
@@ -164,6 +200,9 @@ window.addEventListener('resize', fit); fit();
 (function () {
   const $ = (id) => document.getElementById(id);
   let lastState = null;
+  let lastIngKey = '';
+  const burstUntil = {};
+  let chefsSig = '';
   let voiceOn = true, voiceQueue = [], speaking = false;
   function speak(text) {
     if (!voiceOn || !text) return;
@@ -190,6 +229,67 @@ window.addEventListener('resize', fit); fit();
     if (p.avatar) return '<img class="ui-ava" src="' + p.avatar + '" alt="">';
     return '<span class="ava ui-ava">' + (p.name ? p.name.charAt(0).toUpperCase() : '🍲') + '</span>';
   }
+  // --- Đầu bếp quanh nồi: top 5 thành figure, avatar + tên trên đầu, muôi đảo nồi ---
+  const CHEF_EMOJI = ['👨‍🍳', '👩‍🍳', '🧑‍🍳'];
+  function shortName(n) { n = String(n || ''); return n.length > 10 ? n.slice(0, 10) + '…' : n; }
+  function chefAvatarHtml(p) {
+    const initial = (p.name ? p.name.charAt(0).toUpperCase() : '🍲');
+    if (p.avatar) return '<span class="chef-ava-wrap">' + esc(initial) + '<img class="chef-ava" src="' + p.avatar + '" alt="" onerror="this.remove()"></span>';
+    return '<span class="chef-ava-wrap">' + esc(initial) + '</span>';
+  }
+  function renderChefs(s) {
+    const box = $('chefs');
+    if (!box) return;
+    const top = (s.top || []).slice(0, 5);
+    const sig = top.map(p => (p.uid || p.name) + '|' + p.name + '|' + (p.avatar || '') + '|' + (p.points || 0)).join(';') + '|fl' + s.fireLevel;
+    if (sig === chefsSig) return;
+    chefsSig = sig;
+    box.classList.toggle('fl3', s.fireLevel === 3);
+    if (!top.length) {
+      box.innerHTML = '<div class="chefs-empty">👨‍🍳 Các đầu bếp sẽ đứng quanh nồi khi có người thả nguyên liệu</div>';
+      return;
+    }
+    box.innerHTML = top.map((p, i) =>
+      '<div class="chef" data-name="' + esc(p.name) + '">' +
+        '<div class="chef-head">' + chefAvatarHtml(p) + '<span class="chef-name">' + esc(shortName(p.name)) + '</span></div>' +
+        '<div class="chef-body"><span class="chef-emoji">' + CHEF_EMOJI[i % CHEF_EMOJI.length] + '</span><span class="chef-ladle">🥄</span></div>' +
+      '</div>').join('');
+    reapplyBursts();
+  }
+  function reapplyBursts() {
+    const box = $('chefs');
+    if (!box) return;
+    const now = Date.now();
+    box.querySelectorAll('.chef').forEach(f => {
+      if (now < (burstUntil[f.getAttribute('data-name')] || 0)) f.classList.add('stir-burst');
+    });
+  }
+  function burstChefByName(name) {
+    if (!name) return;
+    burstUntil[name] = Date.now() + 800;
+    const box = $('chefs');
+    if (!box) return;
+    box.querySelectorAll('.chef').forEach(f => {
+      if (f.getAttribute('data-name') === name) {
+        f.classList.remove('stir-burst');
+        void f.offsetWidth;
+        f.classList.add('stir-burst');
+      }
+    });
+    setTimeout(() => {
+      const b = $('chefs');
+      if (!b) return;
+      b.querySelectorAll('.chef').forEach(f => {
+        if (f.getAttribute('data-name') === name && Date.now() >= (burstUntil[name] || 0)) f.classList.remove('stir-burst');
+      });
+    }, 850);
+  }
+  // Sprite lửa 2D (burn 4f): preload rồi mới hiện, lỗi thì giữ emoji 🔥.
+  (function () {
+    const im = new Image();
+    im.onload = () => { const el = $('fireSprite'); if (el) el.classList.add('on'); const em = $('fireEmoji'); if (em) em.style.display = 'none'; };
+    im.src = '/shared/assets/2d/bep-an-tap-the/curated/bep-lua-sheet.png';
+  })();
   function render(s) {
     lastState = s;
     // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
@@ -205,7 +305,8 @@ window.addEventListener('resize', fit); fit();
     $('potPts').textContent = s.pot.points + ' / ' + s.potTarget + ' điểm nấu';
     $('fireLabel').textContent = s.fireLevel === 3 ? '🔥🔥 Lửa TO cấp 3 — nguyên liệu +1!' : '🔥 Lửa cấp 2';
     $('fire').className = 'fire' + (s.fireLevel === 3 ? ' big' : '');
-    $('fire').textContent = s.fireLevel === 3 ? '🔥🔥🔥' : '🔥';
+    $('fireEmoji').textContent = s.fireLevel === 3 ? '🔥🔥🔥' : '🔥';
+    renderChefs(s);
     $('stove').classList.toggle('hot', s.fireLevel === 3);
     $('fireRing').classList.toggle('hot', s.fireLevel === 3);
     $('cThit').textContent = s.pot.counts.thit;
@@ -226,6 +327,14 @@ window.addEventListener('resize', fit); fit();
       || '<div style="font-size:26px;color:#ffd9a0">Chưa có đầu bếp nào — bình luận nguyên liệu để lên bảng!</div>';
     const last = (s.logs || []).slice(-1)[0];
     if (last) $('ticker').textContent = last.text;
+    if (last && last.kind === 'ingredient') {
+      const key = last.t + '|' + last.text;
+      if (key !== lastIngKey) {
+        lastIngKey = key;
+        const m = /\[([^\]]+)\]/.exec(last.text || '');
+        if (m) burstChefByName(m[1]);
+      }
+    }
     $('stPhase').textContent = 'Nồi #' + s.potNo + ' — ' + (s.phase === 'cooking' ? 'Đang nấu' : s.phase === 'serving' ? 'Dọn cỗ' : 'Kết quả');
     $('stViewers').textContent = '👥 ' + s.viewersOnline + ' người trong bếp';
     const banner = $('banner');
@@ -254,6 +363,7 @@ window.addEventListener('resize', fit); fit();
   }
   const socket = io();
   socket.on('state-update', render);
+  socket.on('ingredient', d => { if (d && d.name) burstChefByName(d.name); });
   socket.on('serving', d => speak('Cỗ đã chín! Mời cả nhà ăn cỗ, sắp bốc thăm mười người may mắn!'));
   socket.on('dish', d => { speak('Món đặc biệt đã mở: ' + (d.dish && d.dish.name)); if (window.StromUI) { StromUI.confetti(24); StromUI.sfx('gift'); } });
   socket.on('draw', d => speak('Chúc mừng mười người may mắn của nồi số ' + d.potNo + '!'));
