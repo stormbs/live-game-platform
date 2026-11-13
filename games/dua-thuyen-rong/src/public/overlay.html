@@ -6,6 +6,8 @@
 <title>Đua Thuyền Rồng — LIVE Overlay</title>
 <link rel="stylesheet" href="/shared/ui.css">
 <script src="/shared/ui.js"></script>
+<link rel="stylesheet" href="/shared/meme.css">
+<script src="/shared/meme.js"></script>
 <style>
   :root { --ui-accent: #FACC15; --ui-accent-2: #EF4444; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,11 +39,12 @@
   /* Dải lễ hội: dây cờ hội + lồng đèn + khán giả 2 bờ (SVG tĩnh, không che thuyền/bảng điểm). */
   #festival { position: absolute; top: 382px; left: 0; right: 0; height: 66px; z-index: 5; pointer-events: none; }
   #festival svg { display: block; width: 1080px; height: 66px; }
-  /* Bảng hướng dẫn chơi — số THẬT lấy từ settings engine (renderGuide), không dùng số ví dụ. */
-  #guide { position: absolute; top: 456px; left: 40px; right: 40px; height: 88px; z-index: 5; background: rgba(0,0,0,.55); border: 3px solid #facc15; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; font-size: 22px; font-weight: 700; line-height: 1.35; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  /* Bảng hướng dẫn chơi — số THẬT lấy từ settings engine (renderGuide), không dùng số ví dụ.
+     Font 23px / line-height 1.5 (chuẩn đợt 2: đọc rõ khi scale), 3 dòng gọn. */
+  #guide { position: absolute; top: 450px; left: 40px; right: 40px; height: auto; min-height: 88px; z-index: 5; background: rgba(0,0,0,.55); border: 3px solid #facc15; border-radius: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; font-size: 23px; font-weight: 700; line-height: 1.5; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,.6); padding: 10px 16px; }
   #guide .g-line b { color: #fde047; }
   #guide .g-line .g-team { color: #fff; }
-  #river { position: absolute; top: 556px; left: 0; right: 0; bottom: 348px; }
+  #river { position: absolute; top: 584px; left: 0; right: 0; bottom: 348px; }
   .lane { position: relative; height: 46%; margin: 2% 0; background-image: repeating-linear-gradient(115deg, rgba(255,255,255,.30) 0 8px, transparent 8px 70px), repeating-radial-gradient(ellipse 90px 14px at 20% 50%, rgba(255,255,255,.30) 0 3px, transparent 4px), linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.05)); background-size: 280px 100%, 280px 100%, 100% 100%; border-top: 3px dashed rgba(255,255,255,.5); border-bottom: 3px dashed rgba(255,255,255,.5); overflow: hidden; animation: waves 2.2s linear infinite; }
   @keyframes waves { from { background-position-x: 0; } to { background-position-x: 280px; } }
   .lane .milestones { position: absolute; inset: 0; }
@@ -73,15 +76,16 @@
   .hull-seat { stroke: rgba(0,0,0,.15); stroke-width: 2; }
   .hull-pole { stroke: #7c2d12; stroke-width: 2.5; }
   .hull-flag { stroke: rgba(0,0,0,.4); stroke-width: 1; }
-  /* Người chèo ngồi TRONG thuyền: avatar + tên trên đầu, thân người + mái chèo SVG. */
+  /* Người chèo ngồi TRONG thuyền: tên trên đầu + mặt meme làm ĐẦU (mẫu Kéo Co,
+     mỗi người 1 mặt khác nhau toàn game qua faceImgIn) + thân người + mái chèo SVG. */
   .boat .crew { position: absolute; top: 40px; left: 196px; right: 56px; height: 260px; display: flex; z-index: 2; }
   .boat .rower { display: flex; flex-direction: column; align-items: center; flex: 1 1 0; min-width: 0; }
   .boat .r-tag { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; height: 66px; }
-  .boat .r-av-wrap { position: relative; width: 26px; height: 26px; border-radius: 50%; overflow: hidden; border: 2px solid var(--team-color, #facc15); background: #0f172a; flex: 0 0 auto; }
-  .boat .r-av-fb { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; background: var(--team-color, #facc15); color: #111; }
-  .boat .r-av { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .boat .r-name { font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 12px; font-weight: 800; line-height: 1.15; max-width: 46px; text-align: center; word-break: break-word; background: rgba(0,0,0,.45); border-radius: 999px; padding: 1px 4px; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
-  .boat .r-fig { width: 48px; height: 210px; overflow: visible; margin-top: 2px; }
+  /* Mặt meme làm ĐẦU người chèo: khung vuông bo nhẹ, viền màu đội (KHÔNG cắt tròn). */
+  .boat .r-meme { width: 44px; height: 44px; border-radius: 12px; border: 3px solid var(--team-color, #facc15); background: rgba(0,0,0,.25); flex: 0 0 auto; }
+  .boat .r-name { font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 13px; font-weight: 800; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 -6px 2px; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
+  .boat .rower-more { align-self: center; flex: 0 0 auto; font-size: 20px; font-weight: 900; background: rgba(0,0,0,.45); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+  .boat .r-fig { width: 48px; height: 190px; overflow: visible; margin-top: 2px; }
   .skin { fill: #f6c89f; stroke: #8a5a2b; stroke-width: 1.2; }
   .skin-stroke { stroke: #f6c89f; stroke-width: 5; stroke-linecap: round; fill: none; }
   .team-fill { fill: var(--team-color, #facc15); stroke: rgba(0,0,0,.45); stroke-width: 1.2; }
@@ -106,7 +110,7 @@
   .boat.combo { animation: surge .5s ease 3; }
   @keyframes surge { 0% { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-58%) scale(1.08); } 100% { transform: translateY(-50%) scale(1); } }
   .lane-label { position: absolute; left: 12px; top: 8px; font-size: 26px; font-weight: 800; z-index: 3; text-shadow: 0 2px 4px rgba(0,0,0,.5); }
-  #drum-flash { position: absolute; top: 556px; left: 0; right: 0; bottom: 348px; display: flex; align-items: center; justify-content: center; font-size: 90px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); opacity: 0; pointer-events: none; z-index: 8; }
+  #drum-flash { position: absolute; top: 584px; left: 0; right: 0; bottom: 348px; display: flex; align-items: center; justify-content: center; font-size: 90px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); opacity: 0; pointer-events: none; z-index: 8; }
   #stage.shake { animation: shake .5s ease; }
   @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
   #drum-flash.on { animation: flash 1.2s ease; }
@@ -177,7 +181,8 @@
   </div>
   <div id="guide">
     <div class="g-line">❤️ <b id="g-tap">1 tim +1m</b> &nbsp;•&nbsp; 💬 <b id="g-comment">1 bình luận +5m</b> &nbsp;•&nbsp; 🎁 <b id="g-coin">1 xu quà +5m</b> &nbsp;•&nbsp; ➕ <b id="g-follow">Follow +20m (1 lần/đua)</b></div>
-    <div class="g-line">Cmt <b>"1" / "vàng" → <span class="g-team" id="g-team-vang">Đội Vàng</span></b> &nbsp;•&nbsp; <b>"2" / "đỏ" → <span class="g-team" id="g-team-do">Đội Đỏ</span></b> &nbsp;•&nbsp; <b id="g-spam">1 bình luận / 5s</b> &nbsp;•&nbsp; 🥁 <b id="g-combo">10 tim / 2s = trống dồn +10m</b> &nbsp;•&nbsp; 🏁 <b id="g-dist">Đích 500m</b></div>
+    <div class="g-line">Cmt <b>"1" / "vàng" → <span class="g-team" id="g-team-vang">Đội Vàng</span></b> &nbsp;•&nbsp; <b>"2" / "đỏ" → <span class="g-team" id="g-team-do">Đội Đỏ</span></b> &nbsp;•&nbsp; <b id="g-spam">1 bình luận / 5s</b></div>
+    <div class="g-line">🥁 <b id="g-combo">10 tim / 2s = trống dồn +10m</b> &nbsp;•&nbsp; 🏁 <b id="g-dist">Đích 500m</b></div>
   </div>
   <div id="river">
     <div class="lane" id="lane-vang">
@@ -399,13 +404,11 @@ window.addEventListener('resize', fit); fit();
     const img = p.avatarUrl ? `<img class="${imgCls}" src="${escapeHtml(p.avatarUrl)}" alt="" onerror="this.remove()">` : '';
     return `<span class="${wrapCls}"><span class="${fbCls}">${letter}</span>${img}</span>`;
   }
-  // Người chèo: tối đa 12 figure ngồi TRONG thuyền — avatar + tên trên đầu,
-  // thân người SVG (khăn đóng + áo màu đội) + mái chèo khua theo --row-dur.
-  // Chỉ rebuild khi danh sách đổi (không reset animation).
-  const ROWER_SVG = `<svg class="r-fig" viewBox="0 0 48 210" aria-hidden="true"><g class="fig-bob">` +
-    `<circle cx="24" cy="14" r="9" class="skin"/>` +
-    `<path d="M15,12 Q24,3 33,12 L33,8 Q24,0 15,8 Z" class="team-fill"/>` +
-    `<circle cx="33" cy="6" r="3.5" class="team-fill"/>` +
+  // Người chèo: tối đa 10 figure ngồi TRONG thuyền — tên + mặt meme làm ĐẦU,
+  // thân người SVG (khăn đóng + áo màu đội, KHÔNG vẽ đầu — đầu là mặt meme)
+  // + mái chèo khua theo --row-dur. Chỉ rebuild khi danh sách đổi
+  // (không reset animation).
+  const ROWER_SVG = `<svg class="r-fig" viewBox="0 20 48 190" aria-hidden="true"><g class="fig-bob">` +
     `<path d="M16,26 Q24,22 32,26 L36,58 L12,58 Z" class="team-fill"/>` +
     `<path d="M32,26 L36,58 L28,58 Z" class="shade"/>` +
     `<path d="M21,34 L25,52" class="skin-stroke"/><path d="M28,34 L25,52" class="skin-stroke"/>` +
@@ -413,14 +416,21 @@ window.addEventListener('resize', fit); fit();
     `<g class="oar-g"><path d="M24,52 L42,190" class="oar-shaft"/>` +
     `<ellipse cx="43" cy="196" rx="6" ry="11" transform="rotate(18 43 196)" class="oar-blade"/></g></svg>`;
   const lastCrewSig = { vang: '', do: '' };
-  function renderCrew(team, rowers) {
-    const list = (rowers || []).slice(0, 12);
-    const sig = list.map((p) => (p.uid || '') + '|' + p.name + '|' + (p.avatarUrl || '')).join(';');
+  // Tối đa 10 người/thuyền (engine gửi tối đa 12 — xem rowers trong
+  // statePayload; 10 vừa khung thuyền với mặt meme 44px + tên 13px).
+  // Mặt meme khác nhau toàn game: gán theo danh sách chung cả 2 thuyền.
+  function renderCrew(team, rowers, allRowers) {
+    const list = (rowers || []).slice(0, 10);
+    const sig = list.map((p) => (p.uid || '') + '|' + p.name).join(';');
     if (sig === lastCrewSig[team]) return;
     lastCrewSig[team] = sig;
-    document.getElementById('crew-' + team).innerHTML = list.map((p) =>
-      `<div class="rower" title="${escapeHtml(p.name)}"><div class="r-tag">${avatarHtml(p, 'r-av-wrap', 'r-av', 'r-av-fb')}<span class="r-name">${escapeHtml(shortName(p.name))}</span></div>${ROWER_SVG}</div>`
-    ).join('');
+    const extra = (rowers || []).length - list.length;
+    document.getElementById('crew-' + team).innerHTML = list.map((p) => {
+      const face = (window.MemeFaces
+        ? window.MemeFaces.faceImgIn(p, allRowers || list, 'meme-face')
+        : '<span>' + escapeHtml((p.name || '?')[0].toUpperCase()) + '</span>');
+      return `<div class="rower" title="${escapeHtml(p.name)}"><div class="r-tag"><span class="r-name">${escapeHtml(shortName(p.name))}</span><span class="r-meme">${face}</span></div>${ROWER_SVG}</div>`;
+    }).join('') + (extra > 0 ? `<div class="rower-more">+${extra}</div>` : '');
   }
   function renderTop(team, list) {
     return (list || []).map((p, i) =>
@@ -521,8 +531,10 @@ window.addEventListener('resize', fit); fit();
     const BOAT_TRAVEL = 1080 - 800 - 40;
     document.getElementById('boat-vang').style.left = (20 + Math.round((s.progress.vang / 100) * BOAT_TRAVEL)) + 'px';
     document.getElementById('boat-do').style.left = (20 + Math.round((s.progress.do / 100) * BOAT_TRAVEL)) + 'px';
-    renderCrew('vang', s.rowers.vang);
-    renderCrew('do', s.rowers.do);
+    // Mặt meme khác nhau toàn game: danh sách chung cả 2 thuyền.
+    const allRowers = (s.rowers.vang || []).concat(s.rowers.do || []);
+    renderCrew('vang', s.rowers.vang, allRowers);
+    renderCrew('do', s.rowers.do, allRowers);
     document.getElementById('top-vang').innerHTML = renderTop('vang', s.top.vang);
     document.getElementById('top-do').innerHTML = renderTop('do', s.top.do);
     document.getElementById('phase-label').textContent =

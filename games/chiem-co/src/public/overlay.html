@@ -6,6 +6,8 @@
 <title>Chiếm Cờ — LIVE Overlay</title>
 <link rel="stylesheet" href="/shared/ui.css">
 <script src="/shared/ui.js"></script>
+<link rel="stylesheet" href="/shared/meme.css">
+<script src="/shared/meme.js"></script>
 <style>
   :root { --ui-accent: #0284C7; --ui-accent-2: #DC2626; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -36,7 +38,7 @@
   #timer { position: absolute; top: 170px; left: 50%; transform: translateX(-50%); width: 190px; text-align: center; background: rgba(0,0,0,.55); border-radius: 20px; padding: 14px 6px; }
   #timer .clock { font-size: 52px; font-weight: 900; }
   #timer .win { font-size: 22px; opacity: .85; }
-  #field { position: absolute; top: 470px; left: 0; right: 0; bottom: 520px; display: flex; justify-content: space-around; align-items: flex-end; padding: 0 30px 30px; }
+  #field { position: absolute; top: 516px; left: 0; right: 0; bottom: 520px; display: flex; justify-content: space-around; align-items: flex-end; padding: 0 30px 30px; }
   .flag { width: 300px; text-align: center; transition: transform .6s ease; transform-origin: 50% 100%; position: relative; }
   .flag .pole { position: relative; height: 560px; margin: 0 auto; width: 14px; background: #d6d3d1; border-radius: 7px; box-shadow: 2px 2px 0 rgba(0,0,0,.3); }
   .flag .cloth { position: absolute; top: 0; left: 14px; width: 190px; height: 120px; clip-path: polygon(0 0, 100% 15%, 88% 50%, 100% 85%, 0 100%); display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.5); transition: background .4s; animation: flag-wave 1.2s ease-in-out infinite; }
@@ -62,19 +64,22 @@
   #mid-flag .flag-sprite.do { background-position: -3.8px -94.8px; }
   #mid-flag .flag-sprite.neutral { background-position: -3.8px -117.8px; }
   .flag.sprite-on .cloth { display: none; }
-  /* Cầu thủ đại diện người xem: 1 mỗi bên cột cờ, đứng 2 bên, cao hơn mặt sân
-     (bottom 205px — trên tên cờ/capbar nên không che capbar). Chỉ animate
+  /* Cầu thủ trong sân: tối đa 2 mỗi đội ở mỗi cờ (12 người/sân — engine gửi
+     tới 72 players trong state, không phải giới hạn top 6). Tên trên đầu,
+     mặt meme làm ĐẦU (mẫu Kéo Co, mỗi người 1 mặt khác nhau toàn game),
+     thân là khối màu đội + emoji chạy. 4 người xếp 1 hàng ngang qua cột cờ,
+     kẹp trong khung cờ 300px nên tên không tràn mép. Chỉ animate
      transform/opacity. */
-  .pfig { position: absolute; bottom: 205px; width: 96px; text-align: center; z-index: 3; animation: run-bob .7s ease-in-out infinite; }
-  .pfig-xanh { left: 2px; }
-  .pfig-do { right: 2px; }
-  .pfig .pname { font-size: 16px; font-weight: 800; max-width: 116px; margin-left: -10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 3px rgba(0,0,0,.9), 0 0 6px rgba(0,0,0,.8); }
-  .pfig .pavatar { width: 44px; height: 44px; margin: 3px auto 0; border-radius: 50%; border: 3px solid #fff; overflow: hidden; position: relative; background: #334155; display: flex; align-items: center; justify-content: center; }
-  .pfig-xanh .pavatar { border-color: #38bdf8; background: #0284c7; }
-  .pfig-do .pavatar { border-color: #f87171; background: #dc2626; }
-  .pfig .pavatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .pfig .pletter { font-size: 24px; font-weight: 900; color: #fff; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-  .pfig .pbody { font-size: 38px; line-height: 1.1; margin-top: 2px; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
+  .pfig { position: absolute; bottom: 205px; width: 70px; text-align: center; z-index: 3; animation: run-bob .7s ease-in-out infinite; }
+  .pfig-xanh-0 { left: 0; }
+  .pfig-xanh-1 { left: 72px; }
+  .pfig-do-1 { right: 72px; }
+  .pfig-do-0 { right: 0; }
+  .pfig .pname { font-size: 14px; font-weight: 800; max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 3px rgba(0,0,0,.9), 0 0 6px rgba(0,0,0,.8); }
+  /* Mặt meme làm ĐẦU cầu thủ: khung vuông bo nhẹ, viền màu đội (KHÔNG cắt tròn). */
+  .pfig .pmeme { width: 46px; height: 46px; margin: 3px auto 0; border-radius: 12px; border: 3px solid #fff; background: rgba(0,0,0,.25); }
+  /* Thân màu đội: khối áo đội + emoji chạy/cắm cờ. */
+  .pfig .pbody { width: 52px; height: 30px; margin: 4px auto 0; border-radius: 10px; font-size: 24px; line-height: 30px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
   .pfig .pflag { position: absolute; top: -10px; right: 2px; font-size: 26px; opacity: 0; transition: opacity .2s; }
   .pfig.leading { animation-duration: .45s; }
   .pfig.trailing { animation-duration: 1.3s; opacity: .8; }
@@ -108,7 +113,7 @@
   .top-list.xanh h3 { color: #7dd3fc; }
   .top-list.do h3 { color: #fca5a5; }
   .top-list .row { font-size: 24px; padding: 3px 0; display: flex; justify-content: space-between; }
-  #ticker { position: absolute; left: 0; right: 0; bottom: 130px; height: 64px; background: rgba(0,0,0,.55); display: flex; align-items: center; padding: 0 24px; font-size: 28px; white-space: nowrap; overflow: hidden; }
+  #ticker { position: absolute; left: 40px; right: 40px; bottom: 130px; height: 64px; background: rgba(0,0,0,.55); border-radius: 14px; display: flex; align-items: center; padding: 0 20px; font-size: 28px; white-space: nowrap; overflow: hidden; }
   #ticker-text.scroll { animation: ticker-scroll 22s linear infinite; }
   @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   #statusbar { position: absolute; left: 0; right: 0; bottom: 56px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 26px; background: rgba(0,0,0,.4); }
@@ -117,8 +122,10 @@
   #hint { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 22px; opacity: .75; }
   /* Bảng hướng dẫn chơi (Đợt 2, chuẩn chung #3): dải 4 dòng gọn giữa bảng
      điểm và sân cờ — số lấy từ settings (JS cập nhật theo s.settings),
-     HTML tĩnh giữ đúng số mặc định của engine.js. Không che sân/capbar. */
-  #howto { position: absolute; top: 350px; left: 40px; right: 40px; background: rgba(0,0,0,.45); border: 2px solid rgba(255,255,255,.25); border-radius: 16px; padding: 6px 16px; font-size: 19px; line-height: 1.3; z-index: 5; }
+     HTML tĩnh giữ đúng số mặc định của engine.js. Không che sân/capbar.
+     Font 24px / line-height 1.5 (chuẩn đợt 2: đọc rõ khi scale); nội dung
+     rút gọn cho vừa 1 dòng mỗi hàng ở cỡ chữ mới. */
+  #howto { position: absolute; top: 352px; left: 40px; right: 40px; background: rgba(0,0,0,.45); border: 2px solid rgba(255,255,255,.25); border-radius: 16px; padding: 8px 16px; font-size: 24px; line-height: 1.5; z-index: 5; }
   #howto .howto-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* Trọng tài NPC (Đợt 2, chuẩn chung #4): đứng giữa sân trước cột cờ Giữa
      (vòng tròn giữa sân), áo sọc + còi sprite coi-sheet.png (frame 9,258,
@@ -160,10 +167,10 @@
   </div>
   <div id="timer"><div class="clock" id="clock">10:00</div><div class="win" id="win-label">Cửa sổ: 30s</div></div>
   <div id="howto">
-    <div class="howto-line" id="howto-1">📋 Vào đội: bình luận “xanh” / “đỏ” • Chọn cờ: “cờ trái / giữa / phải” — mặc định cờ Giữa</div>
-    <div class="howto-line" id="howto-2">💪 1 tim +1 lực • 1 bình luận +5 lực (1/5s) • 1 xu +20 lực • Follow +30 • Share +15 (1 lần/trận)</div>
-    <div class="howto-line" id="howto-3">🏁 Cửa sổ 30s: đội nhiều lực hơn chiếm cờ (hòa giữ nguyên) • Giữ cờ +1 điểm/s, cờ Giữa ×2</div>
-    <div class="howto-line" id="howto-4">🏆 Trận 10 phút: nhiều điểm thắng • Hòa điểm → xét số cờ • Vẫn hòa → đội chiếm cờ cuối thắng</div>
+    <div class="howto-line" id="howto-1">📋 Cmt “xanh”/“đỏ” vào đội • “cờ trái/giữa/phải” chọn cờ — mặc định Giữa</div>
+    <div class="howto-line" id="howto-2">💪 1 tim +1 • 1 cmt +5 (1/5s) • 1 xu +20 • Follow +30 • Share +15 (1 lần/trận)</div>
+    <div class="howto-line" id="howto-3">🏁 Cửa sổ 30s: nhiều lực hơn chiếm cờ (hòa giữ nguyên) • Giữ cờ +1đ/s, Giữa ×2</div>
+    <div class="howto-line" id="howto-4">🏆 Trận 10 phút: nhiều điểm thắng • Hòa → xét số cờ → đội chiếm cờ cuối</div>
   </div>
   <div id="field">
     <div class="pitch-lines"></div>
@@ -174,8 +181,10 @@
       <div class="rate">+1 điểm/giây</div>
       <div class="capwrap"><div class="capbar"><div class="bx" id="capbx-left" style="width:50%"></div><div class="bd" id="capbd-left" style="width:50%"></div><span class="lbl" id="caplbl-left"></span></div></div>
       <div class="capnum" id="capnum-left">0 — 0</div>
-      <div class="pfig pfig-xanh" id="pfig-left-xanh" style="display:none"><div class="pname"></div><div class="pavatar"><span class="pletter">?</span><img alt=""></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-do" id="pfig-left-do" style="display:none"><div class="pname"></div><div class="pavatar"><span class="pletter">?</span><img alt=""></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-xanh-0" id="pfig-left-xanh-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-xanh-1" id="pfig-left-xanh-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-do-1" id="pfig-left-do-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-do-0" id="pfig-left-do-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
     </div>
     <div class="flag" id="mid-flag">
       <div class="pole"><div class="flag-sprite neutral" id="sprite-mid"></div><div class="cloth neutral" id="cloth-mid">🏳️</div></div>
@@ -184,8 +193,10 @@
       <div class="rate">+2 điểm/giây (điểm nóng)</div>
       <div class="capwrap"><div class="capbar"><div class="bx" id="capbx-mid" style="width:50%"></div><div class="bd" id="capbd-mid" style="width:50%"></div><span class="lbl" id="caplbl-mid"></span></div></div>
       <div class="capnum" id="capnum-mid">0 — 0</div>
-      <div class="pfig pfig-xanh" id="pfig-mid-xanh" style="display:none"><div class="pname"></div><div class="pavatar"><span class="pletter">?</span><img alt=""></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-do" id="pfig-mid-do" style="display:none"><div class="pname"></div><div class="pavatar"><span class="pletter">?</span><img alt=""></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-xanh-0" id="pfig-mid-xanh-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-xanh-1" id="pfig-mid-xanh-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-do-1" id="pfig-mid-do-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-do-0" id="pfig-mid-do-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
     </div>
     <div class="flag" id="flag-right">
       <div class="pole"><div class="flag-sprite neutral" id="sprite-right"></div><div class="cloth neutral" id="cloth-right">🏳️</div></div>
@@ -194,8 +205,10 @@
       <div class="rate">+1 điểm/giây</div>
       <div class="capwrap"><div class="capbar"><div class="bx" id="capbx-right" style="width:50%"></div><div class="bd" id="capbd-right" style="width:50%"></div><span class="lbl" id="caplbl-right"></span></div></div>
       <div class="capnum" id="capnum-right">0 — 0</div>
-      <div class="pfig pfig-xanh" id="pfig-right-xanh" style="display:none"><div class="pname"></div><div class="pavatar"><span class="pletter">?</span><img alt=""></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-do" id="pfig-right-do" style="display:none"><div class="pname"></div><div class="pavatar"><span class="pletter">?</span><img alt=""></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-xanh-0" id="pfig-right-xanh-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-xanh-1" id="pfig-right-xanh-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-do-1" id="pfig-right-do-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-do-0" id="pfig-right-do-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
     </div>
     <div id="referee" title="Trọng tài">
       <div class="ref-bob">
@@ -287,10 +300,10 @@ window.addEventListener('resize', fit); fit();
     const dur = num(st.matchDurationS, 600);
     const durText = dur % 60 === 0 ? (dur / 60) + ' phút' : dur + ' giây';
     const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
-    setText('howto-1', '📋 Vào đội: bình luận “xanh” / “đỏ” • Chọn cờ: “cờ trái / giữa / phải” — mặc định cờ Giữa');
-    setText('howto-2', '💪 1 tim +' + tap + ' lực • 1 bình luận +' + cmt + ' lực (1/' + spam + 's) • 1 xu +' + coin + ' lực • Follow +' + fol + ' • Share +' + shr + ' (1 lần/trận)');
-    setText('howto-3', '🏁 Cửa sổ ' + windowS + 's: đội nhiều lực hơn chiếm cờ (hòa giữ nguyên) • Giữ cờ +' + pps + ' điểm/s, cờ Giữa ×' + mid);
-    setText('howto-4', '🏆 Trận ' + durText + ': nhiều điểm thắng • Hòa điểm → xét số cờ • Vẫn hòa → đội chiếm cờ cuối thắng');
+    setText('howto-1', '📋 Cmt “xanh”/“đỏ” vào đội • “cờ trái/giữa/phải” chọn cờ — mặc định Giữa');
+    setText('howto-2', '💪 1 tim +' + tap + ' • 1 cmt +' + cmt + ' (1/' + spam + 's) • 1 xu +' + coin + ' • Follow +' + fol + ' • Share +' + shr + ' (1 lần/trận)');
+    setText('howto-3', '🏁 Cửa sổ ' + windowS + 's: nhiều lực hơn chiếm cờ (hòa giữ nguyên) • Giữ cờ +' + pps + 'đ/s, Giữa ×' + mid);
+    setText('howto-4', '🏆 Trận ' + durText + ': nhiều điểm thắng • Hòa → xét số cờ → đội chiếm cờ cuối');
   }
   function teamCfg(s) {
     const st = (s && s.settings) || {};
@@ -307,45 +320,46 @@ window.addEventListener('resize', fit); fit();
     const t = String(name || '?');
     return t.length > 10 ? t.slice(0, 10) + '…' : t;
   }
-  // Cầu thủ tiêu biểu của 1 đội ở 1 cờ: top lực trong số người đang đánh cờ đó
-  // (s.players có focus); nếu không ai đánh cờ đó thì lấy top lực của đội.
-  function repPlayer(s, flagId, team) {
+  // Cầu thủ tiêu biểu của 1 đội ở 1 cờ: top 2 lực trong số người đang đánh cờ
+  // đó (s.players có focus); thiếu thì bù bằng top lực của đội. Tối đa 2/đội/cờ
+  // = 12 người trong sân (engine gửi tới 72 players trong state, không phải top 6).
+  function repPlayers(s, flagId, team) {
     const cands = (s.players || []).filter((p) => p.team === team && !p.left && (p.focus || 'mid') === flagId)
       .sort((a, b) => (b.force || 0) - (a.force || 0));
-    if (cands.length) return cands[0];
-    const top = (s.top && s.top[team]) || [];
-    return top.length ? top[0] : null;
+    const out = cands.slice(0, 2);
+    if (out.length < 2) {
+      const top = (s.top && s.top[team]) || [];
+      for (const t of top) {
+        if (out.length >= 2) break;
+        if (!out.some((p) => p.uid === t.uid)) out.push(t);
+      }
+    }
+    return out;
   }
-  function renderFig(flagId, team, player, leading, color) {
-    const el = document.getElementById('pfig-' + flagId + '-' + team);
+  // Mặt meme làm ĐẦU cầu thủ (mẫu Kéo Co): faceImgIn với danh sách chung toàn
+  // game để không ai trùng mặt; thân là khối màu đội.
+  function renderFig(flagId, team, slot, player, leading, color, allPlayers) {
+    const el = document.getElementById('pfig-' + flagId + '-' + team + '-' + slot);
     if (!el) return;
     if (!player) { el.style.display = 'none'; el._uid = null; return; }
     el.style.display = 'block';
     el.classList.toggle('leading', !!leading);
     el.classList.toggle('trailing', !leading);
-    el.querySelector('.pbody').textContent = leading ? '🏃' : '🚶';
+    const body = el.querySelector('.pbody');
+    body.textContent = leading ? '🏃' : '🚶';
+    body.style.background = color;
+    const meme = el.querySelector('.pmeme');
+    meme.style.borderColor = color;
     if (el._uid !== player.uid) {
       el._uid = player.uid;
       el.querySelector('.pname').textContent = shortName(player.name);
-      const av = el.querySelector('.pavatar');
-      av.style.borderColor = color;
-      const img = el.querySelector('img');
-      const letter = el.querySelector('.pletter');
-      if (player.avatarUrl) {
-        if (img.dataset.src !== player.avatarUrl) { img.dataset.src = player.avatarUrl; img.src = player.avatarUrl; }
-        img.style.display = 'block';
-        letter.style.display = 'none';
-      } else {
-        img.removeAttribute('src');
-        img.dataset.src = '';
-        img.style.display = 'none';
-        letter.style.display = 'flex';
-        letter.textContent = firstLetter(player.name);
-      }
+      meme.innerHTML = (window.MemeFaces
+        ? window.MemeFaces.faceImgIn(player, allPlayers || [player], 'meme-face')
+        : escapeHtml(firstLetter(player.name)));
     }
   }
   function plantFig(flagId, team) {
-    const el = document.getElementById('pfig-' + flagId + '-' + team);
+    const el = document.getElementById('pfig-' + flagId + '-' + team + '-0');
     if (!el || el.style.display === 'none') return;
     el.classList.remove('planting');
     void el.offsetWidth; // ép chạy lại animation cắm cờ 0.8s
@@ -431,6 +445,8 @@ window.addEventListener('resize', fit); fit();
     document.getElementById('clock').textContent = s.phase === 'playing' && s.matchEndsAt ? fmtClock(s.matchEndsAt - now) : (s.phase === 'spotlight' ? '⏳' : '--:--');
     document.getElementById('win-label').textContent = s.phase === 'playing' && s.windowEndsAt ? ('Cửa sổ ' + s.windowNo + ': ' + Math.max(0, Math.ceil((s.windowEndsAt - now) / 1000)) + 's') : '—';
     document.getElementById('match-label').textContent = 'Trận ' + s.matchNo + (s.phase === 'lobby' ? ' — chờ người chơi vào đội' : s.phase === 'playing' ? ' — đang diễn ra' : ' — vinh danh đội thắng');
+    // Mặt meme khác nhau toàn game: danh sách chung cả 2 đội.
+    const allPlayers = s.players || [];
     for (const id of ['left', 'mid', 'right']) {
       const fl = s.flags[id];
       const cloth = document.getElementById('cloth-' + id);
@@ -449,10 +465,15 @@ window.addEventListener('resize', fit); fit();
       document.getElementById('owner-' + id).textContent = fl.owner === 'xanh' ? '🔵 Đội ' + cfg.xanh.name + ' giữ' : fl.owner === 'do' ? '🔴 Đội ' + cfg.do.name + ' giữ' : '— trống —';
       const fx = fl.force.xanh, fd = fl.force.do, tot = fx + fd;
       const px = tot ? Math.round((fx / tot) * 100) : 50;
-      // Cầu thủ tiêu biểu mỗi bên cờ: đội dẫn lực chạy nhanh (🏃), đội bị dẫn
-      // chạy chậm (🚶); cắm cờ khi vừa đổi chủ sang đội mình hoặc lực >60%.
-      renderFig(id, 'xanh', repPlayer(s, id, 'xanh'), fx >= fd, cfg.xanh.color);
-      renderFig(id, 'do', repPlayer(s, id, 'do'), fd >= fx, cfg.do.color);
+      // Cầu thủ tiêu biểu mỗi bên cờ (tối đa 2/đội/cờ): đội dẫn lực chạy nhanh
+      // (🏃), đội bị dẫn chạy chậm (🚶); cắm cờ khi vừa đổi chủ sang đội mình
+      // hoặc lực >60%.
+      const rx = repPlayers(s, id, 'xanh');
+      const rd = repPlayers(s, id, 'do');
+      renderFig(id, 'xanh', 0, rx[0], fx >= fd, cfg.xanh.color, allPlayers);
+      renderFig(id, 'xanh', 1, rx[1], fx >= fd, cfg.xanh.color, allPlayers);
+      renderFig(id, 'do', 0, rd[0], fd >= fx, cfg.do.color, allPlayers);
+      renderFig(id, 'do', 1, rd[1], fd >= fx, cfg.do.color, allPlayers);
       if (fl.owner && prevOwners[id] !== undefined && fl.owner !== prevOwners[id]) plantFig(id, fl.owner);
       for (const t of ['xanh', 'do']) {
         const share = tot ? (t === 'xanh' ? fx : fd) / tot : 0;
@@ -525,15 +546,6 @@ window.addEventListener('resize', fit); fit();
     setTimeout(poll, 1500);
   }
   function boot() {
-    // Avatar cầu thủ lỗi tải -> ẩn img, hiện chữ cái đầu (demo: avatarUrl null
-    // nên luôn hiện chữ cái trên nền màu đội).
-    document.querySelectorAll('.pfig img').forEach((img) => {
-      img.onerror = () => {
-        img.style.display = 'none';
-        const letter = img.parentElement.querySelector('.pletter');
-        if (letter) letter.style.display = 'flex';
-      };
-    });
     try {
       const socket = io();
       socket.on('state-update', (s) => render(s));
