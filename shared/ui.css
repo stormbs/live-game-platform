@@ -67,7 +67,7 @@
   font-weight: 800;
   font-size: 62px;
   letter-spacing: 2px;
-  background: linear-gradient(180deg, #FFFFFF 15%, var(--ui-accent) 50%, var(--ui-accent-2) 90%);
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 20%, var(--ui-accent) 20%, var(--ui-accent) 50%, var(--ui-accent-2) 55%, var(--ui-accent-2) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

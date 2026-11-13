@@ -16,7 +16,9 @@
     font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif; color: #2d1a0e;
   }
   .sun { position: absolute; top: 40px; right: 60px; font-size: 90px; filter: drop-shadow(0 0 24px #ffd94d); }
-  #demo-badge { position: absolute; top: 18px; left: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
+  #demo-badge { position: absolute; top: 300px; left: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
+  /* Dời xuống dưới hàng tiêu đề (header kết thúc ~284px, vườn bắt đầu 400px):
+     góc trên-trái cũ che tiêu đề, góc trên-phải đã có mặt trời. */
   #demo-badge.on { display: block; }
   .cloud { position: absolute; font-size: 64px; opacity: .85; animation: drift 26s linear infinite; }
   @keyframes drift { from { transform: translateX(-140px); } to { transform: translateX(1180px); } }
@@ -28,6 +30,16 @@
   .progress { margin: 16px auto 0; width: 880px; background: rgba(255,255,255,.85); border-radius: 999px; padding: 10px 18px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
   .progress .label { font-size: 26px; font-weight: 800; color: #2e7d32; display: flex; justify-content: space-between; }
   .progress .ui-progress { margin-top: 6px; }
+  /* Ghi đè cục bộ vệt sáng thanh tiến độ (KHÔNG sửa shared/ui.css):
+     shared dùng ::after inset:0 (rộng bằng cả thanh) + trắng .55 + 1.8s nên
+     trông như gradient tĩnh. Dải sáng hẹp lại (45% bề rộng thanh), lõi trắng
+     đặc, chạy nhanh gấp đôi và quét hết chiều dài thanh. */
+  .progress .ui-progress > i::after {
+    left: 0; right: auto; width: 45%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.95) 42%, #ffffff 50%, rgba(255,255,255,.95) 58%, transparent);
+    animation: ui-shine-local .9s linear infinite;
+  }
+  @keyframes ui-shine-local { from { transform: translateX(-110%); } to { transform: translateX(240%); } }
   .milestones { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
   .ms { display: inline-block; font-size: 22px; font-weight: 800; background: rgba(255,255,255,.75); color: #6b4a12; padding: 6px 14px; border-radius: 999px; }
   .ms.hit { background: #ffd94d; color: #4a2f00; }
@@ -84,7 +96,7 @@
 <div class="ui-grain"></div>
 <div class="ui-toast" id="ui-toast"></div>
 <div id="petals"></div>
-<div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
+<div id="demo-badge" class="ui-demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
 <div class="sun">☀️</div>
 <div class="cloud" style="top:90px; animation-delay:-6s;">☁️</div>
 <div class="cloud" style="top:190px; animation-delay:-18s; font-size:48px;">☁️</div>

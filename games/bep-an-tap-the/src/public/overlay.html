@@ -11,44 +11,44 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; color: #fff8ee;
     font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { position: relative; width: 1080px; height: 1920px; padding: 34px 40px 0;
+  .wrap { position: relative; width: 1080px; height: 1920px; padding: 28px 40px 0;
     background:
       radial-gradient(700px 400px at 50% 38%, rgba(255, 140, 40, .55), transparent 70%),
       linear-gradient(180deg, #3d1503 0%, #5c2204 34%, #7a2e06 68%, #3d1503 100%); }
-  h1 { font-size: 58px; text-align: center; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
-  .sub { text-align: center; font-size: 28px; color: #ffd9a0; margin-top: 6px; }
-  #demo-badge { position: absolute; top: 18px; left: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
+  h1 { font-size: 54px; text-align: center; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
+  .sub { text-align: center; font-size: 26px; color: #ffd9a0; margin-top: 6px; }
+  #demo-badge { position: absolute; top: 150px; right: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
   #demo-badge.on { display: block; }
-  .potzone { position: relative; height: 660px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
-  .steam { font-size: 74px; animation: steam 2.4s ease-in-out infinite; opacity: .85; }
+  .potzone { position: relative; height: 580px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+  .steam { font-size: 64px; animation: steam 2.4s ease-in-out infinite; opacity: .85; }
   @keyframes steam { 0%,100% { transform: translateY(14px) scale(1); opacity: .35; } 50% { transform: translateY(-16px) scale(1.12); opacity: .95; } }
-  .pot { font-size: 330px; line-height: 1; filter: drop-shadow(0 22px 18px rgba(0,0,0,.5)); position: relative; z-index: 1; }
+  .pot { font-size: 300px; line-height: 1; filter: drop-shadow(0 22px 18px rgba(0,0,0,.5)); position: relative; z-index: 1; }
   .pot.bubble { animation: bubble .55s ease-in-out infinite alternate; }
   @keyframes bubble { from { transform: scale(1); } to { transform: scale(1.03) translateY(-4px); } }
-  .fire { font-size: 120px; margin-top: -30px; position: relative; z-index: 2; }
+  .fire { font-size: 104px; margin-top: -30px; position: relative; z-index: 2; }
   .fire.big { animation: flame .35s ease-in-out infinite alternate; }
   @keyframes flame { from { transform: scale(1); } to { transform: scale(1.15) translateY(-6px); } }
-  .barWrap { margin-top: 26px; background: rgba(0,0,0,.45); border: 3px solid #ffd9a0; border-radius: 22px; padding: 18px 22px; }
-  .barTop { display: flex; justify-content: space-between; font-size: 30px; font-weight: 800; }
-  .bar { height: 34px; border-radius: 17px; background: rgba(255,255,255,.18); margin-top: 12px; overflow: hidden; }
+  .barWrap { margin-top: 22px; background: rgba(0,0,0,.45); border: 3px solid #ffd9a0; border-radius: 22px; padding: 14px 22px; }
+  .barTop { display: flex; justify-content: space-between; font-size: 28px; font-weight: 800; }
+  .bar { height: 30px; border-radius: 15px; background: rgba(255,255,255,.18); margin-top: 12px; overflow: hidden; }
   .bar > div { height: 100%; width: 0%; background: linear-gradient(90deg, #ff9a3d, #ff5e3a, #ffc53d); transition: width .5s; }
-  .counts { display: flex; gap: 18px; margin-top: 22px; }
-  .count { flex: 1; background: rgba(0,0,0,.4); border-radius: 18px; padding: 16px 10px; text-align: center; font-size: 30px; font-weight: 800; }
-  .count small { display: block; font-size: 22px; color: #ffd9a0; font-weight: 600; margin-top: 4px; }
-  .dishes { margin-top: 22px; background: rgba(0,0,0,.4); border-radius: 18px; padding: 18px 22px; }
-  .dishes h2 { font-size: 30px; margin-bottom: 12px; }
+  .counts { display: flex; gap: 18px; margin-top: 16px; }
+  .count { flex: 1; background: rgba(0,0,0,.4); border-radius: 18px; padding: 12px 10px; text-align: center; font-size: 28px; font-weight: 800; }
+  .count small { display: block; font-size: 20px; color: #ffd9a0; font-weight: 600; margin-top: 4px; }
+  .dishes { margin-top: 16px; background: rgba(0,0,0,.4); border-radius: 18px; padding: 14px 22px; }
+  .dishes h2 { font-size: 28px; margin-bottom: 12px; }
   .dishRow { display: flex; gap: 14px; }
-  .dish { flex: 1; text-align: center; padding: 14px 6px; border-radius: 14px; background: rgba(255,255,255,.08); font-size: 26px; font-weight: 700; opacity: .45; filter: grayscale(1); }
+  .dish { flex: 1; text-align: center; padding: 10px 6px; border-radius: 14px; background: rgba(255,255,255,.08); font-size: 26px; font-weight: 700; opacity: .45; filter: grayscale(1); }
   .dish.on { opacity: 1; filter: none; background: rgba(255, 197, 61, .25); border: 2px solid #ffc53d; }
   .dish small { display: block; font-size: 20px; font-weight: 600; margin-top: 6px; }
-  .nextDish { margin-top: 14px; font-size: 26px; color: #ffe9c4; text-align: center; }
-  .top { margin-top: 22px; background: rgba(0,0,0,.4); border-radius: 18px; padding: 18px 22px; }
-  .top h2 { font-size: 30px; margin-bottom: 10px; }
-  .topRow { display: flex; align-items: center; gap: 14px; font-size: 28px; padding: 8px 0; border-bottom: 1px dashed rgba(255,255,255,.15); }
+  .nextDish { margin-top: 10px; font-size: 24px; color: #ffe9c4; text-align: center; }
+  .top { margin-top: 16px; background: rgba(0,0,0,.4); border-radius: 18px; padding: 14px 22px; }
+  .top h2 { font-size: 28px; margin-bottom: 10px; }
+  .topRow { display: flex; align-items: center; gap: 14px; font-size: 28px; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,.15); }
   .topRow:last-child { border-bottom: 0; }
-  .topRow img, .ava { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; }
+  .topRow img, .ava { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; }
   .topRow b { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .ticker { margin-top: 22px; background: rgba(0,0,0,.55); border-radius: 16px; padding: 16px 20px; font-size: 27px; min-height: 76px; color: #ffe9c4; }
+  .ticker { margin-top: 16px; background: rgba(0,0,0,.55); border-radius: 16px; padding: 12px 20px; font-size: 25px; min-height: 64px; color: #ffe9c4; }
   .banner { display: none; position: absolute; left: 40px; right: 40px; top: 640px; background: rgba(20, 8, 0, .92); border: 4px solid #ffc53d; border-radius: 26px; padding: 34px 30px; text-align: center; z-index: 5; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
   .banner.show { display: block; }
   .banner h2 { font-size: 52px; margin-bottom: 10px; }
@@ -66,7 +66,7 @@
     border-radius: 50%; border: 6px solid rgba(255,140,40,0); pointer-events: none; z-index: 2; }
   .fire-ring.hot { border-color: rgba(255,140,40,.85); animation: ring-pulse 1s ease-in-out infinite alternate; }
   @keyframes ring-pulse { from { box-shadow: 0 0 24px rgba(255,107,0,.5), inset 0 0 18px rgba(255,107,0,.4); } to { box-shadow: 0 0 60px rgba(255,107,0,.95), inset 0 0 40px rgba(255,107,0,.8); } }
-  .bubbles { position: absolute; left: 50%; bottom: 360px; width: 0; height: 0; z-index: 3; pointer-events: none; }
+  .bubbles { position: absolute; left: 50%; bottom: 300px; width: 0; height: 0; z-index: 3; pointer-events: none; }
   .bubbles i { position: absolute; bottom: 0; width: 20px; height: 20px; border-radius: 50%;
     background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.9), rgba(255,255,255,.25));
     opacity: 0; animation: bubble-up 1.2s ease-in infinite; }
@@ -81,11 +81,11 @@
   .dish.almost { opacity: .8; border: 2px solid #FFD700; animation: almost-blink 1s ease-in-out infinite alternate; }
   @keyframes almost-blink { from { box-shadow: 0 0 4px rgba(255,215,0,.35); } to { box-shadow: 0 0 22px rgba(255,215,0,.95); } }
   /* (3) Nhãn SẮP CHÍN! nhấp nháy khi thanh nấu > 80% */
-  .almost-done { display: none; text-align: center; font-size: 30px; font-weight: 900; color: #FFD700; margin-top: 12px;
+  .almost-done { display: none; text-align: center; font-size: 28px; font-weight: 900; color: #FFD700; margin-top: 8px;
     text-shadow: 0 2px 8px rgba(0,0,0,.6); animation: ui-blink-soft 1s ease-in-out infinite alternate; }
   .almost-done.show { display: block; }
   /* (4) Top đầu bếp chuẩn .ui-board: avatar 64px */
-  .ui-row .ui-ava { width: 64px; height: 64px; }
+  .ui-row .ui-ava { width: 56px; height: 56px; }
   .ui-row .ui-name { line-height: 1.25; }
   /* (5) Nền có chiều sâu: khói mờ bay lên */
   .smoke { position: absolute; bottom: 180px; width: 320px; height: 130px; border-radius: 50%; z-index: 1; pointer-events: none;
