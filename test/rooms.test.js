@@ -83,6 +83,33 @@ test('thap-sang-ban-do: chat vào room A không xuất hiện ở room B', async
   }
 });
 
+test('hủy room không được giết HTTP server chung: / và /healthz vẫn 200, tạo room mới được', async () => {
+  const t = await startTestServer();
+  try {
+    const room = await t.rooms.getOrCreate('thap-sang-ban-do', 'destroy_test');
+    assert.ok(room.io.engine, 'room phải có engine socket riêng');
+    t.rooms.destroy(room);
+    assert.equal(t.rooms.rooms.size, 0);
+
+    // Regression 2026-11-13: destroy() cũ gọi room.io.close() -> đóng luôn
+    // httpServer chung, toàn bộ route chết lặng (502) dù process còn sống.
+    const h = await fetchJson(t.base, '/healthz');
+    assert.equal(h.status, 200, '/healthz phải còn trả 200 sau khi hủy room');
+    assert.equal(h.json.ok, true);
+    const home = await fetch(t.base + '/');
+    assert.equal(home.status, 200, 'trang chính phải còn trả 200 sau khi hủy room');
+
+    // Tạo room mới sau khi hủy vẫn được.
+    const room2 = await t.rooms.getOrCreate('thap-sang-ban-do', 'destroy_test_2');
+    assert.ok(room2);
+    const h2 = await fetchJson(t.base, '/healthz');
+    assert.equal(h2.status, 200);
+    assert.equal(h2.json.rooms, 1);
+  } finally {
+    await stopTestServer(t);
+  }
+});
+
 test('getOrCreate cùng key trả đúng 1 room; username chuẩn hóa (bỏ @, chữ thường)', async () => {
   const t = await startTestServer();
   try {
