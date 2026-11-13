@@ -19,7 +19,6 @@
   .demo-note.on { display: block; }
   header { position: relative; z-index: 5; text-align: center; padding: 30px 30px 0; }
   h1.ui-title { font-size: 64px; }
-  .sub { font-size: 26px; text-shadow: 0 2px 6px rgba(0,0,0,.5); margin-top: 6px; }
   .scoreboard { margin: 18px auto 0; width: 920px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
   .scoreboard .team { font-size: 40px; font-weight: 900; }
   .scoreboard .team small { font-size: 26px; display: block; font-weight: 700; opacity: .85; }
@@ -34,50 +33,79 @@
   .forcebars .bar i { display: block; height: 100%; transition: width .5s; }
   .forcebars .val { width: 110px; font-size: 26px; font-weight: 900; }
   .field { position: absolute; top: 560px; left: 0; width: 1080px; height: 900px; z-index: 4; }
-  .ground { position: absolute; top: 330px; left: 0; width: 1080px; height: 570px; background: linear-gradient(180deg, #a9743f, #7a4e22); border-top: 6px solid #c89b5e; }
-  .centerline { position: absolute; top: 320px; left: 50%; transform: translateX(-50%); width: 10px; height: 130px; background: #fff; opacity: .9; border-radius: 4px; }
-  .centerline::after { content: "VẠCH GIỮA"; position: absolute; top: 134px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; color: #fff; white-space: nowrap; text-shadow: 0 2px 4px #000; }
-  .finish { position: absolute; top: 320px; width: 8px; height: 130px; border-radius: 4px; }
+  .ground { position: absolute; top: 300px; left: 0; width: 1080px; height: 600px; background: linear-gradient(180deg, #a9743f, #7a4e22); border-top: 6px solid #c89b5e; }
+  .centerline { position: absolute; top: 300px; left: 50%; transform: translateX(-50%); width: 10px; height: 150px; background: #fff; opacity: .9; border-radius: 4px; }
+  .centerline::after { content: "VẠCH GIỮA"; position: absolute; top: 154px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; color: #fff; white-space: nowrap; text-shadow: 0 2px 4px #000; }
+  .finish { position: absolute; top: 300px; width: 8px; height: 150px; border-radius: 4px; }
   .finish.left { left: 70px; background: #1e90ff; }
   .finish.right { right: 70px; background: #e63946; }
-  .finish span { position: absolute; top: 136px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; white-space: nowrap; text-shadow: 0 2px 4px #000; }
-  .rope { position: absolute; top: 360px; left: 60px; width: 960px; height: 22px; background: repeating-linear-gradient(90deg, #d9a066 0 26px, #b57e42 26px 52px); border-radius: 11px; box-shadow: 0 4px 8px rgba(0,0,0,.4); }
-  .flag { position: absolute; top: 300px; left: 50%; transform: translateX(-50%); font-size: 72px; z-index: 6; transition: left .5s ease; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
-  .team-side { position: absolute; top: 60px; width: 470px; }
+  .finish span { position: absolute; top: 154px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; white-space: nowrap; text-shadow: 0 2px 4px #000; }
+  /* DÂY KÉO TO, RÕ: dày 34px, vân thừng xoắn, bóng đổ — chạy ngang sân qua tay người kéo. */
+  .rope { position: absolute; top: 352px; left: 40px; width: 1000px; height: 34px; z-index: 5;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.35) 0 22%, rgba(0,0,0,0) 22% 70%, rgba(0,0,0,.35) 70% 100%),
+      repeating-linear-gradient(115deg, #eec184 0 12px, #c98f4e 12px 22px, #8a5a28 22px 27px, #d9a066 27px 38px);
+    border-radius: 17px; box-shadow: 0 6px 10px rgba(0,0,0,.5), 0 2px 0 rgba(0,0,0,.3); }
+  /* Dây rung/lắc mạnh khi lực tăng đột biến (chỉ transform). */
+  .rope.rope-surge { animation: rope-shake .55s ease; }
+  @keyframes rope-shake { 0%, 100% { transform: translateY(0) rotate(0deg); } 20% { transform: translateY(-5px) rotate(-.5deg); } 40% { transform: translateY(4px) rotate(.5deg); } 60% { transform: translateY(-4px) rotate(-.4deg); } 80% { transform: translateY(3px) rotate(.3deg); } }
+  /* Cờ BUỘC VÀO DÂY: chân cờ chạm đúng mặt dây (top 288 + 64px ≈ mặt dây 352). */
+  .flag { position: absolute; top: 288px; left: 50%; transform: translateX(-50%); font-size: 64px; z-index: 6; transition: left .5s ease; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+  /* NGƯỜI KÉO ĐỨNG TRÊN SÂN, DỌC DÂY: Xanh trái vạch giữa, Đỏ phải vạch giữa.
+     Hàng người nằm TRÊN đường dây (dây 352–386 chạy ngang qua thân người). */
+  .team-side { position: absolute; top: 225px; width: 480px; z-index: 6; }
   .team-side.left { left: 30px; }
   .team-side.right { right: 30px; }
-  .team-side h2 { font-size: 32px; text-shadow: 0 2px 6px rgba(0,0,0,.5); text-align: center; margin-bottom: 12px; }
-  .pullers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  .puller { text-align: center; }
-  .puller .av { width: 96px; height: 96px; border-radius: 50%; border: 4px solid #fff; margin: 0 auto; overflow: hidden; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 900; position: relative; }
+  .team-side h2 { font-size: 28px; text-shadow: 0 2px 6px rgba(0,0,0,.5); text-align: center; margin-bottom: 6px; }
+  .pullers { display: flex; gap: 4px; }
+  .puller { flex: 1; min-width: 0; text-align: center; }
+  .puller .av { width: 56px; height: 56px; border-radius: 50%; border: 3px solid #fff; margin: 0 auto; overflow: hidden; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 900; position: relative; }
   .puller .av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .puller .nm { font-size: 19px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; }
-  .puller .body { font-size: 40px; line-height: 1.1; margin-top: 2px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
-  .puller .fc { font-size: 17px; font-weight: 700; color: #ffd94d; text-shadow: 0 1px 3px #000; }
-  /* Nhân vật kéo dây: nghiêng người về phía đội mình, giật lùi theo nhịp. */
+  .puller .nm { font-size: 14px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+  .puller .body { font-size: 42px; line-height: 1.1; margin-top: 2px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); transform-origin: 50% 100%; }
+  .puller .fc { font-size: 15px; font-weight: 700; color: #ffd94d; text-shadow: 0 1px 3px #000; }
+  .pullers .empty { width: 100%; font-size: 20px; text-align: center; padding: 8px 0; }
+  /* Nhân vật kéo dây: nghiêng người về phía đội mình (ra sau, bám dây), giật lùi theo nhịp. */
   .team-side.left .puller .av, .team-side.left .puller .body { animation: tug-left 1.4s ease-in-out infinite; }
   .team-side.right .puller .av, .team-side.right .puller .body { animation: tug-right 1.4s ease-in-out infinite; }
-  @keyframes tug-left { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(-7px) rotate(-4deg); } 60% { transform: translateX(-3px) rotate(-2deg); } }
-  @keyframes tug-right { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(7px) rotate(4deg); } 60% { transform: translateX(3px) rotate(2deg); } }
+  @keyframes tug-left { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(-8px) rotate(-9deg); } 60% { transform: translateX(-3px) rotate(-4deg); } }
+  @keyframes tug-right { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(8px) rotate(9deg); } 60% { transform: translateX(3px) rotate(4deg); } }
   /* Đội đang dẫn lực: kéo nhanh + mạnh hơn. */
   .lead-xanh .team-side.left .puller .av, .lead-xanh .team-side.left .puller .body { animation: tug-left-hard .7s ease-in-out infinite; }
   .lead-do .team-side.right .puller .av, .lead-do .team-side.right .puller .body { animation: tug-right-hard .7s ease-in-out infinite; }
-  @keyframes tug-left-hard { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(-14px) rotate(-8deg); } 60% { transform: translateX(-6px) rotate(-4deg); } }
-  @keyframes tug-right-hard { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(14px) rotate(8deg); } 60% { transform: translateX(6px) rotate(4deg); } }
+  @keyframes tug-left-hard { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(-15px) rotate(-14deg); } 60% { transform: translateX(-6px) rotate(-7deg); } }
+  @keyframes tug-right-hard { 0%, 100% { transform: translateX(0) rotate(0deg); } 30% { transform: translateX(15px) rotate(14deg); } 60% { transform: translateX(6px) rotate(7deg); } }
   /* Giật mạnh 1 nhịp khi lực đội tăng (JS thêm .pull-burst vào .pullers). */
   .team-side.left .pullers.pull-burst .puller { animation: burst-left .45s ease; }
   .team-side.right .pullers.pull-burst .puller { animation: burst-right .45s ease; }
   @keyframes burst-left { 0% { transform: translateX(0); } 35% { transform: translateX(-16px); } 100% { transform: translateX(0); } }
   @keyframes burst-right { 0% { transform: translateX(0); } 35% { transform: translateX(16px); } 100% { transform: translateX(0); } }
+  /* Thắng hiệp/trận: đội thắng HÒ REO (nhảy lên), đội thua NGÃ/CHÙNG xuống. Chỉ transform/opacity. */
+  .celebrate-xanh .team-side.left .puller { animation: cheer-jump .6s ease infinite; }
+  .celebrate-do .team-side.right .puller { animation: cheer-jump .6s ease infinite; }
+  @keyframes cheer-jump { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-22px); } }
+  .celebrate-xanh .team-side.right .puller { animation: slump .8s ease forwards; }
+  .celebrate-do .team-side.left .puller { animation: slump .8s ease forwards; }
+  @keyframes slump { to { transform: rotate(16deg) translateY(12px); opacity: .55; } }
+  .celebrate-xanh .team-side.left h2::after { content: " 🎉"; }
+  .celebrate-do .team-side.right h2::after { content: " 🎉"; }
+  /* Trống dồn khi giằng co: chữ nổi giữa sân, chỉ transform/opacity. */
+  .drum-flash { position: absolute; top: 540px; left: 0; width: 1080px; text-align: center; font-size: 38px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); opacity: 0; pointer-events: none; z-index: 8; }
+  .drum-flash.on { animation: drum-pop 1.2s ease; }
+  @keyframes drum-pop { 0% { opacity: 0; transform: scale(.8); } 20% { opacity: 1; transform: scale(1.05); } 70% { opacity: 1; } 100% { opacity: 0; transform: scale(1); } }
   .team-side.has-bg { border-radius: 18px; padding: 14px 10px; }
   .bench { text-align: center; font-size: 22px; font-weight: 700; margin-top: 10px; color: #ffe9bd; text-shadow: 0 1px 3px #000; }
+  /* BẢNG HƯỚNG DẪN (số thật từ engine, JS điền từ s.settings): nằm trong header, không che sân/scoreboard. */
+  .guide-board { margin: 14px auto 0; width: 920px; padding: 12px 16px; background: rgba(0,0,0,.55); border: 2px solid #ffd94d; border-radius: 14px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; font-size: 23px; font-weight: 800; text-shadow: 0 2px 4px #000; }
+  .guide-board .chip { white-space: nowrap; }
+  .guide-board .chip b { color: #ffd94d; }
   .hint { position: absolute; top: 500px; left: 0; width: 1080px; text-align: center; font-size: 26px; font-weight: 800; color: #fff; text-shadow: 0 2px 6px #000; z-index: 5; }
   .top5 { position: absolute; top: 1440px; left: 30px; width: 1020px; z-index: 6; padding: 14px 20px; }
   .top5 h3 { font-size: 26px; margin-bottom: 6px; }
   .top5 div { font-size: 23px; line-height: 1.35; }
   .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
   .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
-  .banner { position: absolute; left: 50%; top: 700px; transform: translateX(-50%); z-index: 20; width: 980px; text-align: center; background: rgba(255,255,255,.96); border: 6px solid #1e90ff; border-radius: 28px; padding: 34px 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4); display: none; }
+  .banner { position: absolute; left: 50%; top: 1250px; transform: translateX(-50%); z-index: 20; width: 980px; text-align: center; background: rgba(255,255,255,.96); border: 6px solid #1e90ff; border-radius: 28px; padding: 34px 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4); display: none; }
   .banner.on { display: block; animation: pop .4s ease; }
   @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
   .banner h2 { font-size: 54px; color: #123a5c; }
@@ -95,7 +123,7 @@
 <div class="demo-note" id="demo-note"></div>
 <header>
   <h1 class="ui-title">🪢 KÉO CO 🪢</h1>
-  <div class="sub ui-sub" id="round-line">Bình luận "xanh" hoặc "đỏ" để chọn đội — tim +1, bình luận +5, 1 xu quà +10 lực</div>
+  <div class="guide-board" id="round-line"><span class="chip">📣 Bình luận “xanh” / “đỏ” để chọn đội</span><span class="chip">❤️ 1 tim = <b>+<span id="g-tap">1</span> lực</b></span><span class="chip">💬 1 bình luận = <b>+<span id="g-comment">5</span> lực</b></span><span class="chip">🎁 1 xu quà = <b>+<span id="g-coin">10</span> lực</b></span><span class="chip">➕ Follow = <b>+<span id="g-follow">20</span> lực</b> (1 lần/hiệp)</span></div>
   <div class="scoreboard ui-panel">
     <div class="team" id="sb-team-xanh" style="color:#7cc4ff;"><span id="sb-name-xanh">🔵 XANH</span><small id="cnt-xanh">0 người</small></div>
     <div class="mid">
@@ -116,8 +144,9 @@
   <div class="centerline"></div>
   <div class="finish left"><span id="finish-xanh">ĐÍCH XANH</span></div>
   <div class="finish right"><span id="finish-do">ĐÍCH ĐỎ</span></div>
-  <div class="rope"></div>
+  <div class="rope" id="rope"></div>
   <div class="flag" id="flag">🚩</div>
+  <div class="drum-flash" id="drum-flash">🥁 TRỐNG DỒN — GIẰNG CO! 🥁</div>
   <div class="team-side left" id="side-xanh">
     <h2 id="h2-xanh">🔵 ĐỘI XANH</h2>
     <div class="pullers" id="pullers-xanh"></div>
@@ -165,15 +194,85 @@ function teamColor(t) { const st = teamSettings(); return t === 'xanh' ? (st.tea
 function teamBg(t) { const st = teamSettings(); return t === 'xanh' ? (st.teamXanhBg || '') : (st.teamDoBg || ''); }
 // Lực đội trước đó — để phát hiện lực tăng và giật mạnh 1 nhịp (.pull-burst).
 const prevForce = { xanh: 0, do: 0 };
-function burstIfIncreased(team, force) {
-  if (force > prevForce[team]) {
-    const box = document.getElementById(team === 'xanh' ? 'pullers-xanh' : 'pullers-do');
-    box.classList.remove('pull-burst');
-    void box.offsetWidth; // chạy lại animation
-    box.classList.add('pull-burst');
-    setTimeout(() => box.classList.remove('pull-burst'), 500);
+function burst(team) {
+  const box = document.getElementById(team === 'xanh' ? 'pullers-xanh' : 'pullers-do');
+  box.classList.remove('pull-burst');
+  void box.offsetWidth; // chạy lại animation
+  box.classList.add('pull-burst');
+  setTimeout(() => box.classList.remove('pull-burst'), 500);
+}
+// --- Tiếng hò reo / trống dồn: WebAudio tự tổng hợp (không file nhạc mới) ---
+let fxCtx = null;
+let lastCheerAt = 0, lastDrumAt = 0, ropeSurgeTimer = null;
+function fxAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!fxCtx) fxCtx = new AC();
+    if (fxCtx.state === 'suspended') fxCtx.resume();
+    return fxCtx;
+  } catch (e) { return null; }
+}
+function fxTone(ctx, freq, at, dur, vol, type) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type || 'sine'; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol || 0.25, ctx.currentTime + at);
+  g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + at + dur);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(ctx.currentTime + at); o.stop(ctx.currentTime + at + dur + 0.02);
+}
+// Hò reo: hợp âm vút lên (4 nốt) — khi lực tăng mạnh, cờ chạm đích, thắng hiệp/trận.
+function cheerSound() {
+  const now = Date.now();
+  if (now - lastCheerAt < 2500) return; // chống spam khi tim dồn dập
+  lastCheerAt = now;
+  const ctx = fxAudio();
+  if (!ctx) return;
+  [523, 659, 784, 1046].forEach((f, i) => fxTone(ctx, f, i * 0.09, 0.32, 0.28));
+  fxTone(ctx, 1318, 0.36, 0.4, 0.22);
+}
+// Trống dồn: 6 nhịp trống cái (kick trầm, kiểu trống đua thuyền) — khi 2 đội giằng co.
+function drumSound() {
+  const now = Date.now();
+  if (now - lastDrumAt < 3000) return;
+  lastDrumAt = now;
+  const ctx = fxAudio();
+  if (!ctx) return;
+  for (let i = 0; i < 6; i++) {
+    const t = ctx.currentTime + i * 0.2;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.frequency.setValueAtTime(150, t);
+    o.frequency.exponentialRampToValueAtTime(40, t + 0.12);
+    g.gain.setValueAtTime(0.5, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + 0.3);
   }
-  prevForce[team] = force;
+  const el = document.getElementById('drum-flash');
+  el.classList.remove('on');
+  void el.offsetWidth;
+  el.classList.add('on');
+}
+function surgeRope() {
+  const rope = document.getElementById('rope');
+  rope.classList.remove('rope-surge');
+  void rope.offsetWidth;
+  rope.classList.add('rope-surge');
+  clearTimeout(ropeSurgeTimer);
+  ropeSurgeTimer = setTimeout(() => rope.classList.remove('rope-surge'), 600);
+}
+// Hiệu ứng theo delta lực mỗi lần state về: giật dây, rung dây, hò reo, trống dồn.
+function forceFx(s) {
+  const dx = s.force.xanh - prevForce.xanh, dd = s.force.do - prevForce.do;
+  prevForce.xanh = s.force.xanh;
+  prevForce.do = s.force.do;
+  if (dx > 0) burst('xanh');
+  if (dd > 0) burst('do');
+  const big = Math.max(dx, dd);
+  if (big >= 15) surgeRope(); // lực tăng đột biến (quà/bình luận dồn) → dây rung mạnh
+  if (big >= 30) cheerSound(); // lực tăng rất mạnh → hò reo
+  // Giằng co: cả 2 đội cùng đang tăng lực, chênh lệch nhỏ → trống dồn.
+  if (dx > 0 && dd > 0 && Math.abs(s.force.xanh - s.force.do) <= 100) drumSound();
 }
 function applyTeamBg(team) {
   const el = document.getElementById(team === 'xanh' ? 'side-xanh' : 'side-do');
@@ -226,8 +325,8 @@ function pullerHtml(p, color, team) {
   const av = p.avatarUrl
     ? '<span>' + letter + '</span><img src="' + escapeHtml(p.avatarUrl) + '" alt="" onerror="this.remove()">'
     : '<span>' + letter + '</span>';
-  return '<div class="puller"><div class="av" style="border-color:' + color + '">' + av + '</div>' +
-    '<div class="nm">' + escapeHtml(p.name) + '</div>' +
+  return '<div class="puller"><div class="nm">' + escapeHtml(p.name) + '</div>' +
+    '<div class="av" style="border-color:' + color + '">' + av + '</div>' +
     '<div class="body" title="đang kéo">🧍‍♂️💪</div>' +
     '<div class="fc">' + p.force + ' lực</div></div>';
 }
@@ -259,12 +358,22 @@ function render(s) {
   document.getElementById('finish-do').textContent = 'ĐÍCH ' + nd.toUpperCase();
   applyTeamBg('xanh');
   applyTeamBg('do');
-  // Đội đang dẫn lực kéo nhanh + mạnh hơn; lực tăng thì giật mạnh 1 nhịp.
+  // Đội đang dẫn lực kéo nhanh + mạnh hơn; delta lực → giật dây / rung dây / hò reo / trống dồn.
   const sc = document.getElementById('scaler');
   sc.classList.toggle('lead-xanh', s.force.xanh > s.force.do);
   sc.classList.toggle('lead-do', s.force.do > s.force.xanh);
-  burstIfIncreased('xanh', s.force.xanh);
-  burstIfIncreased('do', s.force.do);
+  forceFx(s);
+  // Thắng hiệp/trận: đội thắng hò reo nhảy lên, đội thua ngã/chùng xuống.
+  const celebWinner = s.phase === 'matchEnd' ? (s.results && s.results.winner) : (s.phase === 'roundEnd' ? s.lastRoundWinner : null);
+  sc.classList.toggle('celebrate-xanh', celebWinner === 'xanh');
+  sc.classList.toggle('celebrate-do', celebWinner === 'do');
+  // Bảng hướng dẫn: số THẬT từ engine (settings có thể đổi ở dashboard).
+  if (s.settings) {
+    document.getElementById('g-tap').textContent = s.settings.tapForce;
+    document.getElementById('g-comment').textContent = s.settings.commentForce;
+    document.getElementById('g-coin').textContent = s.settings.coinToForce;
+    document.getElementById('g-follow').textContent = s.settings.followForce;
+  }
   document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
   document.getElementById('wins-xanh').textContent = s.wins.xanh;
   document.getElementById('wins-do').textContent = s.wins.do;
@@ -277,14 +386,16 @@ function render(s) {
   document.getElementById('bar-xanh').style.width = (s.force.xanh / total * 100) + '%';
   document.getElementById('bar-do').style.width = (s.force.do / total * 100) + '%';
 
-  // Cờ: flagPct -100 (vạch Xanh) .. +100 (vạch Đỏ); dây dài 960px từ x=60.
+  // Cờ: flagPct -100 (vạch Xanh) .. +100 (vạch Đỏ); dây dài 1000px từ x=40, cờ buộc trên dây.
   const flag = document.getElementById('flag');
-  flag.style.left = (60 + (s.flagPct + 100) / 200 * 960) + 'px';
+  const flagLeft = (40 + (s.flagPct + 100) / 200 * 1000);
+  if (Math.abs(s.flagPct) >= 95) cheerSound(); // cờ chạm vạch đích → hò reo
+  flag.style.left = flagLeft + 'px';
 
   document.getElementById('pullers-xanh').innerHTML = s.teams.xanh.pullers.slice(0, 8).map((p) => pullerHtml(p, cx, 'xanh')).join('') ||
-    '<div style="grid-column:1/5; font-size:22px; color:#cfe6ff;">Chưa có ai — bình luận "xanh" để vào đội!</div>';
+    '<div class="empty" style="color:#cfe6ff;">Chưa có ai — bình luận "xanh" để vào đội!</div>';
   document.getElementById('pullers-do').innerHTML = s.teams.do.pullers.slice(0, 8).map((p) => pullerHtml(p, cd, 'do')).join('') ||
-    '<div style="grid-column:1/5; font-size:22px; color:#ffd3d6;">Chưa có ai — bình luận "đỏ" để vào đội!</div>';
+    '<div class="empty" style="color:#ffd3d6;">Chưa có ai — bình luận "đỏ" để vào đội!</div>';
   const extraX = s.teams.xanh.total - s.teams.xanh.pullers.slice(0, 8).length;
   document.getElementById('bench-xanh').textContent =
     (s.teams.xanh.bench > 0 ? '🎪 Khán đài: ' + s.teams.xanh.bench + ' người chờ kéo' : '') +
@@ -332,9 +443,9 @@ function updateTimer() {
 }
 
 socket.on('state-update', render);
-socket.on('round-win', (d) => { if (d && d.team) { playTts('Đội ' + teamName(d.team) + ' thắng hiệp ' + d.matchRound + '!'); if (window.StromUI) { StromUI.sfx('win'); StromUI.confetti(24); } } });
-socket.on('match-win', (d) => { if (d && d.team) { playTts('Đội ' + teamName(d.team) + ' thắng trận! Chúc mừng cả đội!'); if (window.StromUI) { StromUI.flash('#FFD700'); StromUI.sfx('win'); StromUI.confetti(48); } } });
-socket.on('flag-warning', (d) => { if (d && d.team) playTts('Đội ' + teamName(d.team) + ' sắp thắng! Kéo mạnh lên!'); });
+socket.on('round-win', (d) => { if (d && d.team) { playTts('Đội ' + teamName(d.team) + ' thắng hiệp ' + d.matchRound + '!'); cheerSound(); if (window.StromUI) { StromUI.sfx('win'); StromUI.confetti(24); } } });
+socket.on('match-win', (d) => { if (d && d.team) { playTts('Đội ' + teamName(d.team) + ' thắng trận! Chúc mừng cả đội!'); cheerSound(); if (window.StromUI) { StromUI.flash('#FFD700'); StromUI.sfx('win'); StromUI.confetti(48); } } });
+socket.on('flag-warning', (d) => { if (d && d.team) { cheerSound(); playTts('Đội ' + teamName(d.team) + ' sắp thắng! Kéo mạnh lên!'); } });
 
 fetch('/api/state').then((r) => r.json()).then((s) => {
   render(s);
