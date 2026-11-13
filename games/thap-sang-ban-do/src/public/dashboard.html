@@ -81,6 +81,7 @@
     <div>🔗 Chia sẻ — Action “Thap Sang Ban Do Viet Nam - Share”<br><code id="tf-url-share" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('share')">📋 Sao chép URL</button></div>
     <div>🚪 Vào phòng — Action “Thap Sang Ban Do Viet Nam - Vao phong”<br><code id="tf-url-join" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('join')">📋 Sao chép URL</button></div>
   </div>
+  <p style="font-size:13px;line-height:1.7"><b>Mẹo — URL chung cho mọi game:</b> thay vì URL riêng của phòng, bạn có thể dùng URL chung <code id="tf-url-common" style="word-break:break-all;">…</code> — cùng tác dụng, đổi game chỉ cần sửa <code>game=</code> và <code>room=</code> trong URL. Vẫn cần <b>1 Action cho mỗi loại sự kiện</b> (mỗi Action 1 <code>event=</code> riêng) vì TikFinity không gửi loại sự kiện trong body — URL gốc không có <code>event=</code> thì Follow/Vào phòng bị bỏ qua, Thả tim bị nhận nhầm thành Quà.</p>
   <p style="font-size:13px;line-height:1.7">Tên biến ($userId, $nickname, $uniqueId, $comment…) tùy phiên bản TikFinity — bấm nút chèn biến (insert variable) của TikFinity để lấy đúng tên. Nếu không có $uniqueId thì dùng biến tên TikTok mà TikFinity gợi ý, hoặc bỏ trường uniqueId (engine tự dùng nickname thay thế). Số xu chỉ lấy $diamondCount thật, không bịa.</p>
 </div>
 
@@ -292,6 +293,10 @@ function fillTfEventUrls() {
   var base = tfWebhookUrl();
   var urls = { gift: base + '?event=gift', chat: base + '?event=chat', like: base + '?event=like', follow: base + '?event=follow', share: base + '?event=share', join: base + '?event=join' };
   for (var k in urls) { var el = document.getElementById('tf-url-' + k); if (el) el.textContent = urls[k]; }
+  // URL chung cho mọi game: cùng tác dụng, đổi game chỉ sửa game=/room=.
+  var d = directParts();
+  var common = document.getElementById('tf-url-common');
+  if (common) common.textContent = location.origin + '/api/webhook?game=' + d.game + '&room=' + d.username + '&event=<loại>';
 }
 function copyTfEventUrl(key) {
   var el = document.getElementById('tf-url-' + key);
