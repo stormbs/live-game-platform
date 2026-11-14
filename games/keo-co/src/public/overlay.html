@@ -12,170 +12,1131 @@
 <script src="/shared/meme.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  :root { --ui-accent: #1E90FF; --ui-accent-2: #E63946; }
-  html, body { width: 1080px; height: 1920px; overflow: hidden; }
-  body {
-    font-family: 'Be Vietnam Pro', "Segoe UI", Verdana, sans-serif; color: #fff;
+  :root {
+    --ui-accent: #1E90FF;
+    --ui-accent-2: #E63946;
+    --blue: #1E90FF;
+    --red: #E63946;
+    --gold: #ffe08a;
+    --ink: #071528;
   }
-  .demo-note { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 30; background: rgba(0,0,0,.75); color: #ffd94d; font-weight: 800; font-size: 22px; padding: 10px 18px; border-radius: 10px; display: none; text-align: center; width: 900px; }
-  .demo-note.on { display: block; }
-  header { position: relative; z-index: 5; text-align: center; padding: 30px 30px 0; }
-  h1.ui-title { font-size: 64px; }
-  .scoreboard { margin: 18px auto 0; width: 920px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
-  .scoreboard .team { font-size: 40px; font-weight: 900; }
-  .scoreboard .team small { font-size: 26px; display: block; font-weight: 700; opacity: .85; }
-  .scoreboard .mid { text-align: center; }
-  .scoreboard .mid .score { font-size: 52px; font-weight: 900; }
-  .scoreboard .mid .round { font-size: 24px; font-weight: 700; }
-  .timer { font-size: 30px; font-weight: 900; color: #ffd94d; }
-  .forcebars { margin: 16px auto 0; width: 920px; }
-  .forcebars .row { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
-  .forcebars .lbl { width: 130px; font-size: 26px; font-weight: 900; text-align: right; }
-  .forcebars .bar { flex: 1; height: 26px; background: rgba(0,0,0,.4); border-radius: 999px; overflow: hidden; }
-  .forcebars .bar i { display: block; height: 100%; transition: width .5s; }
-  .forcebars .val { width: 110px; font-size: 26px; font-weight: 900; }
-  .field { position: absolute; top: 560px; left: 0; width: 1080px; height: 900px; z-index: 4; }
-  .ground { position: absolute; top: 300px; left: 0; width: 1080px; height: 600px; background: linear-gradient(180deg, #a9743f, #7a4e22); border-top: 6px solid #c89b5e; }
-  .centerline { position: absolute; top: 300px; left: 50%; transform: translateX(-50%); width: 10px; height: 150px; background: #fff; opacity: .9; border-radius: 4px; }
-  .centerline::after { content: "VẠCH GIỮA"; position: absolute; top: 154px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; color: #fff; white-space: nowrap; text-shadow: 0 2px 4px #000; }
-  .finish { position: absolute; top: 300px; width: 8px; height: 150px; border-radius: 4px; }
-  .finish.left { left: 70px; background: #1e90ff; }
-  .finish.right { right: 70px; background: #e63946; }
-  .finish span { position: absolute; top: 154px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 900; white-space: nowrap; text-shadow: 0 2px 4px #000; }
-  /* DÂY KÉO TO, RÕ: dày 34px, vân thừng xoắn, bóng đổ — chạy ngang sân qua tay người kéo. */
-  .rope { position: absolute; top: 352px; left: 40px; width: 1000px; height: 34px; z-index: 5;
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  html { background: #020611; }
+  body {
+    color: #fff;
+    font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+  #scaler {
+    position: absolute;
+    width: 1080px;
+    height: 1920px;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    isolation: isolate;
+    transform-origin: top left;
+    visibility: hidden;
     background:
-      linear-gradient(180deg, rgba(255,255,255,.35) 0 22%, rgba(0,0,0,0) 22% 70%, rgba(0,0,0,.35) 70% 100%),
-      repeating-linear-gradient(115deg, #eec184 0 12px, #c98f4e 12px 22px, #8a5a28 22px 27px, #d9a066 27px 38px);
-    border-radius: 17px; box-shadow: 0 6px 10px rgba(0,0,0,.5), 0 2px 0 rgba(0,0,0,.3); }
-  /* Dây rung/lắc mạnh khi lực tăng đột biến (chỉ transform). */
+      radial-gradient(ellipse at 50% 43%, #24597a 0, transparent 48%),
+      linear-gradient(#071326, #102a48 48%, #11263a 75%, #061321);
+  }
+  #scaler::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(115deg, transparent 16%, #84cfff08 16.1%, transparent 32%),
+      linear-gradient(245deg, transparent 16%, #84cfff08 16.1%, transparent 32%);
+  }
+  .ui-vignette, .ui-grain { pointer-events: none; }
+  #scaler > .ui-vignette { z-index: 15; opacity: .28; }
+  #scaler > .ui-grain { z-index: 16; opacity: .035; }
+  #ui-toast { z-index: 60; }
+  #demo-badge {
+    position: absolute;
+    top: 32px;
+    right: 30px;
+    left: auto;
+    z-index: 45;
+    font-size: 22px;
+  }
+  .demo-note {
+    position: absolute;
+    top: 113px;
+    left: 45px;
+    width: 990px;
+    z-index: 46;
+    padding: 8px 16px;
+    color: #ffe08a;
+    background: #192334f5;
+    border: 1px solid #ffe08a77;
+    border-radius: 12px;
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+    display: none;
+  }
+  .demo-note.on { display: block; }
+
+  header { position: relative; z-index: 6; }
+  .masthead {
+    position: absolute;
+    top: 25px;
+    left: 34px;
+    right: 34px;
+    height: 117px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    border-bottom: 1px solid #8ac9ff30;
+  }
+  .title-emblem {
+    width: 76px;
+    height: 76px;
+    display: grid;
+    place-items: center;
+    font-size: 42px;
+    border: 2px solid #f4d28b;
+    border-radius: 23px;
+    transform: rotate(-8deg);
+    background: linear-gradient(135deg, #a77230, #f2d38d 40%, #865525);
+    box-shadow: 0 5px 0 #4e321d, 0 0 35px #ffdc7430;
+  }
+  h1.ui-title {
+    font-size: 65px;
+    line-height: 1;
+    letter-spacing: 4px;
+    color: #fff4d5;
+    text-shadow: 0 4px 0 #473425, 0 0 28px #ffc87545;
+  }
+  .title-kicker {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 9px;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: #adcbe0;
+  }
+  .live-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ff5263;
+    box-shadow: 0 0 14px #ff5263;
+    animation: live-pulse 1.7s ease-in-out infinite;
+  }
+  @keyframes live-pulse { 50% { opacity: .45; } }
+
+  .scoreboard {
+    position: absolute;
+    top: 166px;
+    left: 34px;
+    width: 1012px;
+    min-height: 184px;
+    padding: 21px 24px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 296px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #9bc7ed40;
+    border-radius: 26px;
+    background:
+      linear-gradient(90deg, #1e90ff25, transparent 40%, transparent 60%, #e6394625),
+      linear-gradient(#1c334c, #0c1c30);
+    box-shadow: 0 10px 0 #020b16, inset 0 1px 0 #ffffff20, 0 16px 40px #0005;
+  }
+  .scoreboard .team {
+    min-width: 0;
+    text-align: center;
+    font-size: 37px;
+    line-height: 1.15;
+    font-weight: 950;
+    overflow-wrap: anywhere;
+    text-shadow: 0 2px 8px #000;
+  }
+  .scoreboard .team small {
+    display: block;
+    margin-top: 13px;
+    font-size: 23px;
+    color: #e6f0fa;
+    font-weight: 700;
+  }
+  .scoreboard .mid {
+    text-align: center;
+    align-self: stretch;
+    border-left: 1px solid #ffffff16;
+    border-right: 1px solid #ffffff16;
+  }
+  .scoreboard .score {
+    font-size: 61px;
+    font-weight: 950;
+    line-height: 1.06;
+    color: #fff5db;
+    text-shadow: 0 3px 0 #0008;
+  }
+  .score-divider { color: #6b849e; padding: 0 10px; }
+  .round { margin-top: 6px; font-size: 21px; color: #b9d0e5; font-weight: 700; }
+  .timer { margin-top: 5px; font-size: 29px; font-weight: 900; color: #ffe08a; }
+  .timer.urgent { color: #ff8585; animation: urgent .6s ease-in-out infinite alternate; }
+  @keyframes urgent { to { text-shadow: 0 0 20px #ff5263; } }
+
+  .forcebars {
+    position: absolute;
+    top: 376px;
+    left: 38px;
+    width: 1004px;
+  }
+  .force-caption {
+    display: flex;
+    justify-content: space-between;
+    color: #9ebad3;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+  .force-caption span:last-child { color: #e6c881; letter-spacing: 0; }
+  .forcebars .row {
+    display: grid;
+    grid-template-columns: 177px minmax(0, 1fr) 171px;
+    align-items: center;
+    gap: 16px;
+    margin-top: 10px;
+    min-height: 35px;
+  }
+  .forcebars .lbl {
+    font-size: 25px;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
+  }
+  .forcebars .bar {
+    height: 25px;
+    background: #020b18;
+    border: 1px solid #ffffff20;
+    border-radius: 8px;
+    padding: 3px;
+    box-shadow: inset 0 3px 6px #0008;
+  }
+  .forcebars .bar i {
+    display: block;
+    position: relative;
+    height: 100%;
+    min-width: 0;
+    border-radius: 4px;
+    transition: width .4s ease;
+    box-shadow: 0 0 14px currentColor;
+  }
+  .forcebars .bar i::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(#ffffff70, transparent 55%, #0003);
+  }
+  .forcebars .val {
+    font-size: 26px;
+    text-align: right;
+    font-weight: 900;
+    color: #f3f7ff;
+  }
+
+  .guide-board {
+    position: absolute;
+    top: 516px;
+    left: 34px;
+    width: 1012px;
+    padding: 17px 18px 15px;
+    border: 1px solid #eac77b66;
+    border-radius: 22px;
+    background: linear-gradient(130deg, #233344, #101e30);
+    box-shadow: 0 7px 0 #040c18, inset 0 1px #ffffff16;
+  }
+  .join-line {
+    text-align: center;
+    font-size: 28px;
+    line-height: 1.3;
+    font-weight: 900;
+    color: #fff6de;
+    margin-bottom: 14px;
+  }
+  .join-word {
+    display: inline-block;
+    padding: 2px 12px 4px;
+    border-radius: 8px;
+    background: #1e90ff30;
+    color: #a6dcff;
+    border-bottom: 2px solid var(--blue);
+  }
+  .join-word.red { background: #e6394628; color: #ffb0b0; border-color: var(--red); }
+  .guide-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .chip {
+    min-width: 0;
+    padding: 9px 3px;
+    border-radius: 12px;
+    text-align: center;
+    background: #06111f8c;
+    border: 1px solid #ffffff0d;
+    font-size: 22px;
+    font-weight: 750;
+    line-height: 1.35;
+  }
+  .chip .icon { display: block; font-size: 29px; margin-bottom: 2px; }
+  .chip b { display: block; font-size: 25px; color: #ffe08a; }
+  .guide-limits {
+    margin-top: 12px;
+    font-size: 20px;
+    color: #bfcee0;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  .field {
+    position: absolute;
+    top: 807px;
+    left: 0;
+    width: 1080px;
+    height: 628px;
+    z-index: 4;
+    overflow: hidden;
+    border-top: 1px solid #8bc6ed30;
+    border-bottom: 2px solid #d6a56155;
+    background:
+      radial-gradient(ellipse at 50% 18%, #a4dbeb25, transparent 54%),
+      linear-gradient(#163b59, #3c6c7d 47%, #c38b50 48%, #705033);
+    box-shadow: 0 12px 38px #0006;
+  }
+  .field::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      linear-gradient(110deg, transparent 8%, #d6f3ff12 8.3%, #d6f3ff02 32%, transparent 32.4%),
+      linear-gradient(250deg, transparent 8%, #d6f3ff12 8.3%, #d6f3ff02 32%, transparent 32.4%);
+  }
+  .arena-art { position: absolute; inset: 0; width: 1080px; height: 628px; pointer-events: none; }
+  .arena-label {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #e6f3ff;
+    background: #081829c9;
+    border: 1px solid #8cc6eb55;
+    padding: 7px 22px;
+    border-radius: 999px;
+    font-size: 19px;
+    letter-spacing: 3px;
+    font-weight: 900;
+    z-index: 3;
+    white-space: nowrap;
+  }
+  .ground {
+    position: absolute;
+    top: 290px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+      radial-gradient(ellipse at 50% 20%, #e9b86b55, transparent 60%),
+      repeating-linear-gradient(175deg, transparent 0 31px, #40251212 32px 34px),
+      linear-gradient(#bc8a50, #9c683c 62%, #674129);
+    border-top: 6px solid #edc37b;
+    box-shadow: inset 0 25px 35px #61381933;
+  }
+  .ground::after {
+    content: "";
+    position: absolute;
+    top: 23px;
+    left: 30px;
+    width: 1020px;
+    height: 215px;
+    border: 3px solid #fff2c944;
+    border-radius: 50%;
+    transform: perspective(600px) rotateX(35deg);
+  }
+  .centerline, .finish {
+    position: absolute;
+    top: 301px;
+    height: 218px;
+    width: 8px;
+    z-index: 2;
+    border-radius: 3px;
+    transform: skewY(-12deg);
+  }
+  .centerline {
+    left: 536px;
+    background: repeating-linear-gradient(#fff8db 0 19px, #fff8db33 19px 29px);
+    box-shadow: 0 0 17px #ffe9a555;
+  }
+  .finish.left { left: 70px; background: var(--blue); box-shadow: 0 0 22px var(--blue); }
+  .finish.right { left: 1002px; background: var(--red); box-shadow: 0 0 22px var(--red); }
+  .finish::before {
+    content: "";
+    position: absolute;
+    width: 24px;
+    height: 36px;
+    left: -8px;
+    top: -38px;
+    border-radius: 4px 4px 2px 2px;
+    background: repeating-conic-gradient(#fff6dc 0 25%, #182b3b 0 50%) 0 0 / 12px 12px;
+    border: 2px solid #fff4;
+    box-shadow: 0 3px 5px #0006;
+  }
+  .finish span {
+    position: absolute;
+    top: 221px;
+    width: 183px;
+    left: 50%;
+    transform: translateX(-50%) skewY(12deg);
+    text-align: center;
+    font-size: 19px;
+    line-height: 1.15;
+    font-weight: 900;
+    color: #fff4dc;
+    text-shadow: 0 2px 4px #000;
+    overflow-wrap: anywhere;
+  }
+  .finish.left span { left: 48px; }
+  .finish.right span { left: -40px; }
+
+  .rope {
+    position: absolute;
+    top: 340px;
+    left: 20px;
+    width: 1040px;
+    height: 25px;
+    z-index: 7;
+    border-radius: 15px;
+    border-top: 2px solid #ffdfa4;
+    border-bottom: 3px solid #6a3d1b;
+    background:
+      linear-gradient(#fff3 0 20%, transparent 20% 55%, #41260855 100%),
+      repeating-linear-gradient(118deg, #edc185 0 9px, #c18a46 9px 17px, #815022 17px 21px, #dbac68 21px 29px);
+    box-shadow: 0 7px 7px #29170a88, 0 1px 0 #ffe2a8;
+  }
+  .rope::before, .rope::after {
+    content: "";
+    position: absolute;
+    top: -5px;
+    width: 22px;
+    height: 33px;
+    border-radius: 9px;
+    background: repeating-linear-gradient(90deg, #ab7136 0 3px, #f1cf91 3px 6px);
+    box-shadow: 2px 3px 4px #0006;
+  }
+  .rope::before { left: 4px; }
+  .rope::after { right: 4px; }
   .rope.rope-surge { animation: rope-shake .55s ease; }
-  @keyframes rope-shake { 0%, 100% { transform: translateY(0) rotate(0deg); } 20% { transform: translateY(-5px) rotate(-.5deg); } 40% { transform: translateY(4px) rotate(.5deg); } 60% { transform: translateY(-4px) rotate(-.4deg); } 80% { transform: translateY(3px) rotate(.3deg); } }
-  /* Cờ BUỘC VÀO DÂY: chân cờ chạm đúng mặt dây (top 288 + 64px ≈ mặt dây 352). */
-  .flag { position: absolute; top: 288px; left: 50%; transform: translateX(-50%); font-size: 64px; z-index: 6; transition: left .5s ease; filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
-  /* NGƯỜI KÉO ĐỨNG TRÊN SÂN, DỌC DÂY: Xanh trái vạch giữa, Đỏ phải vạch giữa.
-     Hàng người nằm TRÊN đường dây (dây 352–386 chạy ngang qua thân người). */
-  .team-side { position: absolute; top: 225px; width: 480px; z-index: 6; }
+  @keyframes rope-shake {
+    0%, 100% { transform: translateY(0); }
+    20%, 60% { transform: translateY(-5px); }
+    40%, 80% { transform: translateY(4px); }
+  }
+  .flag {
+    position: absolute;
+    left: 540px;
+    top: 328px;
+    width: 32px;
+    height: 105px;
+    z-index: 10;
+    transform: translateX(-50%);
+    transition: left .45s cubic-bezier(.2,.7,.3,1);
+    filter: drop-shadow(0 4px 3px #0008);
+  }
+  .flag::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 0;
+    width: 28px;
+    height: 40px;
+    border: 5px solid #fff4cc;
+    border-radius: 50%;
+    box-shadow: inset 0 0 3px #422e0e;
+    background: #d9a84a44;
+  }
+  .flag::after {
+    content: "";
+    position: absolute;
+    top: 28px;
+    left: 5px;
+    width: 34px;
+    height: 77px;
+    background: linear-gradient(90deg, #c12635, #ff6971 50%, #ed394b);
+    clip-path: polygon(0 0, 100% 0, 92% 100%, 47% 77%, 0 100%);
+    transform-origin: 50% 0;
+    animation: ribbon 1.3s ease-in-out infinite alternate;
+  }
+  @keyframes ribbon { to { transform: skewX(-9deg) scaleY(.96); } }
+  .flag-glow {
+    position: absolute;
+    top: 301px;
+    left: 50%;
+    width: 115px;
+    height: 115px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(#ffe09b44, transparent 70%);
+    z-index: 3;
+    pointer-events: none;
+    transition: left .45s ease;
+  }
+
+  .team-side {
+    position: absolute;
+    top: 85px;
+    width: 446px;
+    height: 450px;
+    z-index: 6;
+    --team-color: #1E90FF;
+    --lean: -17deg;
+    --head-shift: -19px;
+    --body-shift: -10px;
+    --hand-side: 1;
+  }
   .team-side.left { left: 30px; }
-  .team-side.right { right: 30px; }
-  .team-side h2 { font-size: 28px; text-shadow: 0 2px 6px rgba(0,0,0,.5); text-align: center; margin-bottom: 6px; }
-  .pullers { display: flex; gap: 4px; }
-  .puller { flex: 1; min-width: 0; text-align: center; }
-  /* Nhân vật MEME: mặt meme làm ĐẦU nhân vật (76px, khung vuông bo nhẹ,
-     viền màu đội) — không cắt tròn để mặt meme hiện trọn vẹn. */
-  .puller .av { width: 76px; height: 76px; border-radius: 16px; border: 3px solid #fff; margin: 0 auto; background: transparent; display: flex; align-items: center; justify-content: center; position: relative; }
-  .puller .av img { width: 100%; height: 100%; object-fit: contain; }
-  /* Tên vừa khung người kéo (13px + margin âm 6px): đủ chỗ, không chạm tên bên cạnh. */
-  .puller .nm { font-size: 13px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0 -6px 2px; }
-  /* Thân người kéo: khối áo màu đội (màu set inline), nghiêng theo animation tug. */
-  .puller .body { width: 54px; height: 32px; margin: 4px auto 0; border-radius: 16px 16px 8px 8px; background: #888; box-shadow: inset 0 -7px 0 rgba(0,0,0,.28), 0 2px 3px rgba(0,0,0,.5); transform-origin: 50% 100%; }
-  .puller .fc { font-size: 15px; font-weight: 700; color: #ffd94d; text-shadow: 0 1px 3px #000; }
-  .pullers .empty { width: 100%; font-size: 20px; text-align: center; padding: 8px 0; }
-  /* Nhân vật kéo dây: nghiêng người về phía đội mình (ra sau, bám dây), giật lùi theo nhịp. */
-  .team-side.left .puller .av, .team-side.left .puller .body { animation: tug-left 1.4s ease-in-out infinite; }
-  .team-side.right .puller .av, .team-side.right .puller .body { animation: tug-right 1.4s ease-in-out infinite; }
-  @keyframes tug-left { 0%, 100% { transform: translateX(-4px) rotate(-11deg); } 30% { transform: translateX(-11px) rotate(-19deg); } 60% { transform: translateX(-6px) rotate(-14deg); } }
-  @keyframes tug-right { 0%, 100% { transform: translateX(4px) rotate(11deg); } 30% { transform: translateX(11px) rotate(19deg); } 60% { transform: translateX(6px) rotate(14deg); } }
-  /* Đội đang dẫn lực: kéo nhanh + mạnh hơn. */
-  .lead-xanh .team-side.left .puller .av, .lead-xanh .team-side.left .puller .body { animation: tug-left-hard .7s ease-in-out infinite; }
-  .lead-do .team-side.right .puller .av, .lead-do .team-side.right .puller .body { animation: tug-right-hard .7s ease-in-out infinite; }
-  @keyframes tug-left-hard { 0%, 100% { transform: translateX(-8px) rotate(-16deg); } 30% { transform: translateX(-18px) rotate(-24deg); } 60% { transform: translateX(-10px) rotate(-19deg); } }
-  @keyframes tug-right-hard { 0%, 100% { transform: translateX(8px) rotate(16deg); } 30% { transform: translateX(18px) rotate(24deg); } 60% { transform: translateX(10px) rotate(19deg); } }
-  /* Giật mạnh 1 nhịp khi lực đội tăng (JS thêm .pull-burst vào .pullers). */
-  .team-side.left .pullers.pull-burst .puller { animation: burst-left .45s ease; }
-  .team-side.right .pullers.pull-burst .puller { animation: burst-right .45s ease; }
-  @keyframes burst-left { 0% { transform: translateX(0); } 35% { transform: translateX(-16px); } 100% { transform: translateX(0); } }
-  @keyframes burst-right { 0% { transform: translateX(0); } 35% { transform: translateX(16px); } 100% { transform: translateX(0); } }
-  /* Thắng hiệp/trận: đội thắng HÒ REO (nhảy lên), đội thua NGÃ/CHÙNG xuống. Chỉ transform/opacity. */
-  .celebrate-xanh .team-side.left .puller { animation: cheer-jump .6s ease infinite; }
-  .celebrate-do .team-side.right .puller { animation: cheer-jump .6s ease infinite; }
-  @keyframes cheer-jump { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-22px); } }
-  .celebrate-xanh .team-side.right .puller { animation: slump .8s ease forwards; }
-  .celebrate-do .team-side.left .puller { animation: slump .8s ease forwards; }
-  @keyframes slump { to { transform: rotate(16deg) translateY(12px); opacity: .55; } }
-  .celebrate-xanh .team-side.left h2::after { content: " 🎉"; }
-  .celebrate-do .team-side.right h2::after { content: " 🎉"; }
-  /* Trống dồn khi giằng co: chữ nổi giữa sân, chỉ transform/opacity. */
-  .drum-flash { position: absolute; top: 540px; left: 0; width: 1080px; text-align: center; font-size: 38px; font-weight: 900; color: #fde047; text-shadow: 0 4px 0 rgba(0,0,0,.5); opacity: 0; pointer-events: none; z-index: 8; }
-  .drum-flash.on { animation: drum-pop 1.2s ease; }
-  @keyframes drum-pop { 0% { opacity: 0; transform: scale(.8); } 20% { opacity: 1; transform: scale(1.05); } 70% { opacity: 1; } 100% { opacity: 0; transform: scale(1); } }
-  .team-side.has-bg { border-radius: 18px; padding: 14px 10px; }
-  .bench { text-align: center; font-size: 22px; font-weight: 700; margin-top: 10px; color: #ffe9bd; text-shadow: 0 1px 3px #000; }
-  /* BẢNG HƯỚNG DẪN (số thật từ engine, JS điền từ s.settings): nằm trong header, không che sân/scoreboard. */
-  .guide-board { margin: 14px auto 0; width: 920px; padding: 12px 16px; background: rgba(0,0,0,.55); border: 2px solid #ffd94d; border-radius: 14px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; font-size: 23px; font-weight: 800; text-shadow: 0 2px 4px #000; }
-  .guide-board .chip { white-space: nowrap; }
-  .guide-board .chip b { color: #ffd94d; }
-  .hint { position: absolute; top: 500px; left: 0; width: 1080px; text-align: center; font-size: 26px; font-weight: 800; color: #fff; text-shadow: 0 2px 6px #000; z-index: 5; }
-  .top5 { position: absolute; top: 1440px; left: 30px; width: 1020px; z-index: 6; padding: 14px 20px; }
-  .top5 h3 { font-size: 26px; margin-bottom: 6px; }
-  .top5 div { font-size: 23px; line-height: 1.35; }
-  .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
-  .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
-  .banner { position: absolute; left: 50%; top: 1250px; transform: translateX(-50%); z-index: 20; width: 980px; text-align: center; background: rgba(255,255,255,.96); border: 6px solid #1e90ff; border-radius: 28px; padding: 34px 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4); display: none; }
-  .banner.on { display: block; animation: pop .4s ease; }
-  @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
-  .banner h2 { font-size: 54px; color: #123a5c; }
-  .banner p { font-size: 30px; margin-top: 10px; line-height: 1.4; color: #333; }
-  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; background: linear-gradient(180deg, #1b4d8a 0%, #3a7bd5 30%, #8a5a2b 62%, #6b4423 100%); visibility: hidden; }
-  html { background: #000; }
+  .team-side.right {
+    right: 30px;
+    --team-color: #E63946;
+    --lean: 17deg;
+    --head-shift: 19px;
+    --body-shift: 10px;
+    --hand-side: -1;
+  }
+  .team-side.has-bg {
+    background-size: cover;
+    background-position: center;
+    border-radius: 24px;
+  }
+  .team-side h2 {
+    position: absolute;
+    top: -23px;
+    left: 0;
+    width: 100%;
+    min-height: 39px;
+    padding: 5px 10px;
+    color: #fff;
+    background: linear-gradient(90deg, transparent, #041020aa, transparent);
+    text-align: center;
+    font-size: 25px;
+    line-height: 1.2;
+    font-weight: 900;
+    text-shadow: 0 2px 4px #000;
+    overflow-wrap: anywhere;
+  }
+  .pullers {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    width: 100%;
+    height: 330px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    align-items: start;
+  }
+  .puller {
+    position: relative;
+    width: 100%;
+    height: 329px;
+    min-width: 0;
+    text-align: center;
+    --beat: 1.35s;
+  }
+  .puller[hidden] { display: none !important; }
+  .puller .nm {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-height: 40px;
+    max-height: 86px;
+    padding: 5px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: #061323df;
+    border: 1px solid #b4daff55;
+    border-bottom: 3px solid var(--team-color);
+    border-radius: 9px;
+    font-size: 25px;
+    line-height: 1.12;
+    font-weight: 850;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    text-shadow: 0 2px 2px #000;
+    z-index: 12;
+  }
+  .athlete {
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    width: 130px;
+    height: 231px;
+    margin-left: -65px;
+    animation: pull-rhythm var(--beat) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+  @keyframes pull-rhythm {
+    0%, 100% { transform: translateY(0); }
+    35% { transform: translateY(-3px); }
+    65% { transform: translateY(1px); }
+  }
+  .athlete .shadow {
+    position: absolute;
+    top: 211px;
+    left: 7px;
+    width: 121px;
+    height: 20px;
+    border-radius: 50%;
+    background: #36210e7a;
+    filter: blur(3px);
+  }
+  .puller .av {
+    position: absolute;
+    top: 0;
+    left: 27px;
+    width: 78px;
+    height: 78px;
+    background: #fff7de;
+    border: 3px solid #fff2cf;
+    border-radius: 21px;
+    box-shadow: 0 4px 0 #0005, 0 0 0 3px var(--team-color);
+    transform: translateX(var(--head-shift)) rotate(var(--lean));
+    transition: transform .45s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+  }
+  .puller .av img, .puller .av .meme-face {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 17px;
+    object-fit: contain;
+  }
+  .puller .av > span { color: #10243b; font-size: 37px; font-weight: 900; }
+  .puller .body {
+    position: absolute;
+    top: 71px;
+    left: 38px;
+    width: 59px;
+    height: 85px;
+    border-radius: 23px 23px 14px 14px;
+    background: var(--team-color);
+    background-image: linear-gradient(100deg, #ffffff2e, transparent 45%, #0005);
+    border: 2px solid #07152488;
+    transform: translateX(var(--body-shift)) rotate(var(--lean));
+    transform-origin: 50% 95%;
+    transition: transform .45s;
+    box-shadow: inset 0 -11px #0003, 4px 4px 5px #0003;
+    z-index: 3;
+  }
+  .puller .body::before {
+    content: "";
+    position: absolute;
+    top: 10px;
+    left: 24px;
+    width: 7px;
+    height: 49px;
+    border-radius: 3px;
+    background: #fff9;
+  }
+  .puller .body::after {
+    content: "";
+    position: absolute;
+    top: 9px;
+    left: 15px;
+    width: 25px;
+    height: 10px;
+    border-radius: 0 0 12px 12px;
+    background: #07152499;
+    border-top: 3px solid #fff8;
+  }
+  .arm {
+    position: absolute;
+    height: 17px;
+    border: 2px solid #754b32;
+    border-radius: 12px;
+    background: linear-gradient(#ffdfad, #d99462);
+    box-shadow: 0 2px 2px #0004;
+    z-index: 6;
+  }
+  .arm.back { top: 106px; left: 48px; width: 66px; transform: rotate(17deg); }
+  .arm.front { top: 116px; left: 43px; width: 76px; transform: rotate(-2deg); }
+  .right .arm.back { left: 16px; transform: rotate(-17deg); }
+  .right .arm.front { left: 10px; transform: rotate(2deg); }
+  .grip {
+    position: absolute;
+    top: 113px;
+    left: 100px;
+    width: 23px;
+    height: 28px;
+    z-index: 9;
+    border: 2px solid #815036;
+    border-radius: 9px;
+    background: repeating-linear-gradient(0deg, #ebb17b 0 5px, #b4794f 5px 6px);
+    box-shadow: 0 2px 2px #0005;
+  }
+  .right .grip { left: 7px; }
+  .shorts {
+    position: absolute;
+    top: 144px;
+    left: 42px;
+    width: 58px;
+    height: 29px;
+    border: 2px solid #06131f;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #24394b, #10202f);
+    transform: rotate(-5deg);
+    z-index: 4;
+  }
+  .right .shorts { left: 31px; transform: rotate(5deg); }
+  .leg {
+    position: absolute;
+    top: 163px;
+    width: 22px;
+    height: 48px;
+    background: linear-gradient(90deg, #e7ac77, #bd7d50);
+    border: 2px solid #815738;
+    border-radius: 8px;
+    transform-origin: 50% 0;
+    z-index: 2;
+  }
+  .leg.back { left: 45px; transform: rotate(30deg); }
+  .leg.front { left: 78px; transform: rotate(-28deg); }
+  .right .leg.back { left: 32px; transform: rotate(28deg); }
+  .right .leg.front { left: 65px; transform: rotate(-30deg); }
+  .leg::before {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: -2px;
+    width: 22px;
+    height: 16px;
+    background: #f0f1de;
+    border-top: 4px solid var(--team-color);
+  }
+  .leg::after {
+    content: "";
+    position: absolute;
+    bottom: -10px;
+    left: -13px;
+    width: 39px;
+    height: 17px;
+    background: linear-gradient(#253846, #101c27);
+    border-bottom: 4px solid #e5d5b0;
+    border-radius: 12px 5px 4px 4px;
+    box-shadow: 0 3px 2px #0004;
+  }
+  .puller .fc {
+    position: absolute;
+    top: 323px;
+    left: 0;
+    width: 100%;
+    color: #ffecb1;
+    font-weight: 900;
+    font-size: 21px;
+    line-height: 1.1;
+    text-shadow: 0 2px 3px #301908;
+  }
+  .pullers .empty {
+    grid-column: 1 / -1;
+    align-self: center;
+    padding: 27px 18px;
+    margin-top: 70px;
+    color: #f4f5e9;
+    background: #081a2bca;
+    border: 1px dashed #ffffff55;
+    border-radius: 18px;
+    text-align: center;
+    font-size: 27px;
+    line-height: 1.45;
+    font-weight: 800;
+  }
+  .bench {
+    position: absolute;
+    top: 414px;
+    left: 0;
+    width: 100%;
+    min-height: 34px;
+    font-size: 20px;
+    line-height: 1.3;
+    font-weight: 800;
+    text-align: center;
+    color: #fff0ce;
+    text-shadow: 0 2px 4px #000;
+  }
+  .lead-xanh .left { --lean: -29deg; --head-shift: -30px; --body-shift: -16px; }
+  .lead-xanh .right { --lean: -4deg; --head-shift: -8px; --body-shift: -5px; }
+  .lead-do .right { --lean: 29deg; --head-shift: 30px; --body-shift: 16px; }
+  .lead-do .left { --lean: 4deg; --head-shift: 8px; --body-shift: 5px; }
+  .lead-xanh .left .puller, .lead-do .right .puller { --beat: .85s; }
+  .left .pull-burst .puller { animation: burst-left .38s ease; }
+  .right .pull-burst .puller { animation: burst-right .38s ease; }
+  @keyframes burst-left { 40% { transform: translateX(-8px) translateY(-3px); } }
+  @keyframes burst-right { 40% { transform: translateX(8px) translateY(-3px); } }
+  .puller.joined .nm { animation: joined .8s ease; }
+  @keyframes joined {
+    30% { background: #fff2bd; color: #14283b; box-shadow: 0 0 26px #ffdb7b; }
+  }
+  .celebrate-xanh .left .puller, .celebrate-do .right .puller { animation: cheer-jump .65s ease infinite; }
+  .celebrate-xanh .right .athlete, .celebrate-do .left .athlete { animation: slump .7s ease forwards; }
+  @keyframes cheer-jump { 40% { transform: translateY(-20px); } }
+  @keyframes slump { to { transform: translateY(9px) rotate(10deg); opacity: .65; } }
+
+  .field-feedback {
+    position: absolute;
+    top: 44px;
+    left: 330px;
+    width: 420px;
+    height: 58px;
+    z-index: 14;
+    pointer-events: none;
+    text-align: center;
+  }
+  .force-pop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 9px 15px;
+    border: 1px solid #fff7;
+    border-radius: 14px;
+    background: #061525ef;
+    color: #ffe5a2;
+    font-size: 27px;
+    line-height: 1.2;
+    font-weight: 950;
+    text-shadow: 0 2px 2px #000;
+    animation: force-pop .95s ease forwards;
+  }
+  @keyframes force-pop {
+    0% { opacity: 0; transform: translateY(12px) scale(.9); }
+    20%, 65% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-18px); }
+  }
+  .drum-flash {
+    position: absolute;
+    top: 548px;
+    left: 75px;
+    width: 930px;
+    padding: 10px;
+    z-index: 13;
+    text-align: center;
+    border-radius: 14px;
+    background: #192335ed;
+    color: #ffe08a;
+    border: 1px solid #ffe08a88;
+    font-size: 27px;
+    font-weight: 950;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .drum-flash.on { animation: drum-pop 1.5s ease; }
+  @keyframes drum-pop {
+    0% { opacity: 0; transform: scale(.92); }
+    15%, 80% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; }
+  }
+  .hint {
+    position: absolute;
+    top: 564px;
+    left: 30px;
+    width: 1020px;
+    z-index: 5;
+    text-align: center;
+    color: #fff1cf;
+    font-size: 23px;
+    font-weight: 850;
+    line-height: 1.35;
+    text-shadow: 0 2px 4px #321c0c;
+  }
+  .field.warning { box-shadow: inset 0 0 65px #ffcb4c55, 0 12px 38px #0006; }
+  .field.warning .flag { filter: drop-shadow(0 0 14px #ffe08a); }
+
+  .top5 {
+    position: absolute;
+    top: 1454px;
+    left: 34px;
+    width: 1012px;
+    height: 283px;
+    padding: 16px 22px;
+    z-index: 6;
+    background: linear-gradient(125deg, #1e3347, #0b192b);
+    border: 1px solid #7faac43d;
+    border-radius: 23px;
+    box-shadow: inset 0 1px #ffffff13, 0 8px 0 #020b16;
+  }
+  .top5 h3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 11px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #ffffff17;
+    color: #ffe3a1;
+    font-size: 25px;
+    letter-spacing: .5px;
+    font-weight: 900;
+  }
+  .top5 h3 small { font-size: 18px; color: #8eabc4; letter-spacing: 0; }
+  .top-row {
+    display: grid;
+    grid-template-columns: 39px minmax(0, 1fr) 180px;
+    gap: 12px;
+    align-items: center;
+    min-height: 37px;
+    padding: 3px 8px;
+    border-radius: 7px;
+    font-size: 23px;
+    line-height: 1.18;
+  }
+  .top-row:nth-child(even) { background: #ffffff04; }
+  .top-rank { color: #8aa4bb; font-weight: 900; }
+  .top-name { min-width: 0; overflow-wrap: anywhere; font-weight: 750; }
+  .team-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 9px;
+    border-radius: 50%;
+    background: var(--dot);
+    box-shadow: 0 0 8px var(--dot);
+  }
+  .top-force { text-align: right; color: #ffe2a0; font-size: 23px; font-weight: 900; }
+  .top-empty { padding: 34px 14px; color: #adc4d9; font-size: 26px; text-align: center; }
+  .ticker {
+    position: absolute;
+    left: 34px;
+    top: 1756px;
+    width: 1012px;
+    height: 89px;
+    padding: 10px 17px;
+    z-index: 6;
+    border-left: 4px solid #d4b777;
+    border-radius: 4px 13px 13px 4px;
+    background: #071421db;
+    color: #d5e5f3;
+    display: grid;
+    align-content: center;
+    gap: 6px;
+  }
+  .ticker div {
+    font-size: 23px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .ticker div::before { content: "›"; color: #ffe08a; margin-right: 10px; font-weight: 900; }
+  #scaler > .ui-statusbar {
+    position: absolute;
+    bottom: 18px;
+    left: 34px;
+    right: auto;
+    width: 1012px;
+    height: 51px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 6;
+    border: 0;
+    border-top: 1px solid #8bb3d42b;
+    border-radius: 0;
+    padding: 9px 0 0;
+    background: transparent;
+    color: #a8c1d6;
+    font-size: 22px;
+    box-shadow: none;
+  }
+  .ui-statusbar .big { font-size: 27px; font-weight: 900; color: #fff1cf; }
+
+  .banner {
+    position: absolute;
+    left: 50%;
+    top: 1227px;
+    width: 972px;
+    min-height: 190px;
+    padding: 23px 25px;
+    transform: translateX(-50%);
+    z-index: 35;
+    display: none;
+    border: 3px solid #ffe4a2;
+    border-radius: 25px;
+    background:
+      radial-gradient(ellipse at 50% 0, #87643d55, transparent 70%),
+      linear-gradient(#22354a, #09182b);
+    box-shadow: 0 12px 38px #0009, inset 0 0 0 5px #ffe4a213;
+    text-align: center;
+  }
+  .banner.on { display: block; animation: banner-pop .4s ease; }
+  @keyframes banner-pop {
+    from { transform: translateX(-50%) scale(.85); opacity: 0; }
+    to { transform: translateX(-50%) scale(1); opacity: 1; }
+  }
+  .banner h2 { color: #ffe7a9; font-size: 40px; line-height: 1.2; overflow-wrap: anywhere; }
+  .banner p { color: #e4edf6; margin-top: 12px; font-size: 25px; line-height: 1.4; }
 </style>
 </head>
 <body>
 <div id="scaler">
-<div class="ui-vignette"></div>
-<div class="ui-grain"></div>
-<div class="ui-toast" id="ui-toast"></div>
-<div class="ui-demo-badge" id="demo-badge">🧪 DEMO</div>
-<div class="demo-note" id="demo-note"></div>
-<header>
-  <h1 class="ui-title">🪢 KÉO CO 🪢</h1>
-  <div class="guide-board" id="round-line"><span class="chip">📣 Bình luận “xanh” / “đỏ” để chọn đội</span><span class="chip">❤️ 1 tim = <b>+<span id="g-tap">1</span> lực</b></span><span class="chip">💬 1 bình luận = <b>+<span id="g-comment">5</span> lực</b></span><span class="chip">🎁 1 xu quà = <b>+<span id="g-coin">10</span> lực</b></span><span class="chip">➕ Follow = <b>+<span id="g-follow">20</span> lực</b> (1 lần/hiệp)</span></div>
-  <div class="scoreboard ui-panel">
-    <div class="team" id="sb-team-xanh" style="color:#7cc4ff;"><span id="sb-name-xanh">🔵 XANH</span><small id="cnt-xanh">0 người</small></div>
-    <div class="mid">
-      <div class="score"><span id="wins-xanh">0</span> – <span id="wins-do">0</span></div>
-      <div class="round" id="round-label">Trận 1 · Hiệp 1/5</div>
-      <div class="timer" id="timer"></div>
+  <div class="ui-vignette"></div>
+  <div class="ui-grain"></div>
+  <div class="ui-toast" id="ui-toast"></div>
+  <div class="ui-demo-badge" id="demo-badge">🧪 DEMO</div>
+  <div class="demo-note" id="demo-note"></div>
+
+  <header>
+    <div class="masthead">
+      <div class="title-emblem" aria-hidden="true">🪢</div>
+      <div>
+        <h1 class="ui-title">KÉO CO</h1>
+        <div class="title-kicker"><span class="live-dot"></span> ĐẤU TRƯỜNG TRỰC TIẾP</div>
+      </div>
     </div>
-    <div class="team" id="sb-team-do" style="color:#ff8a94;"><span id="sb-name-do">ĐỎ 🔴</span><small id="cnt-do">0 người</small></div>
-  </div>
-  <div class="forcebars">
-    <div class="row"><div class="lbl" id="fb-lbl-xanh" style="color:#7cc4ff;">🔵 Xanh</div><div class="bar"><i id="bar-xanh" style="width:0%; background:#1e90ff;"></i></div><div class="val" id="force-xanh">0</div></div>
-    <div class="row"><div class="lbl" id="fb-lbl-do" style="color:#ff8a94;">🔴 Đỏ</div><div class="bar"><i id="bar-do" style="width:0%; background:#e63946;"></i></div><div class="val" id="force-do">0</div></div>
-  </div>
-</header>
 
-<div class="field">
-  <div class="ground"></div>
-  <div class="centerline"></div>
-  <div class="finish left"><span id="finish-xanh">ĐÍCH XANH</span></div>
-  <div class="finish right"><span id="finish-do">ĐÍCH ĐỎ</span></div>
-  <div class="rope" id="rope"></div>
-  <div class="flag" id="flag">🚩</div>
-  <div class="drum-flash" id="drum-flash">🥁 TRỐNG DỒN — GIẰNG CO! 🥁</div>
-  <div class="team-side left" id="side-xanh">
-    <h2 id="h2-xanh">🔵 ĐỘI XANH</h2>
-    <div class="pullers" id="pullers-xanh"></div>
-    <div class="bench" id="bench-xanh"></div>
+    <div class="scoreboard ui-panel">
+      <div class="team" id="sb-team-xanh" style="color:#7cc4ff">
+        <span id="sb-name-xanh">🔵 XANH</span>
+        <small id="cnt-xanh">0 người</small>
+      </div>
+      <div class="mid">
+        <div class="score"><span id="wins-xanh">0</span><span class="score-divider">:</span><span id="wins-do">0</span></div>
+        <div class="round" id="round-label">Trận 1 · Hiệp 1/5</div>
+        <div class="timer" id="timer"></div>
+      </div>
+      <div class="team" id="sb-team-do" style="color:#ff8a94">
+        <span id="sb-name-do">ĐỎ 🔴</span>
+        <small id="cnt-do">0 người</small>
+      </div>
+    </div>
+
+    <div class="forcebars">
+      <div class="force-caption"><span>LỰC KÉO HAI ĐỘI</span><span>Thắng 3 hiệp → thắng trận</span></div>
+      <div class="row">
+        <div class="lbl" id="fb-lbl-xanh" style="color:#7cc4ff">🔵 Xanh</div>
+        <div class="bar"><i id="bar-xanh" style="width:0%;background:#1e90ff;color:#1e90ff"></i></div>
+        <div class="val" id="force-xanh">0 lực</div>
+      </div>
+      <div class="row">
+        <div class="lbl" id="fb-lbl-do" style="color:#ff8a94">🔴 Đỏ</div>
+        <div class="bar"><i id="bar-do" style="width:0%;background:#e63946;color:#e63946"></i></div>
+        <div class="val" id="force-do">0 lực</div>
+      </div>
+    </div>
+
+    <div class="guide-board" id="round-line">
+      <div class="join-line">Bình luận <span class="join-word">“xanh”</span> hoặc <span class="join-word red">“đỏ”</span> để vào đội</div>
+      <div class="guide-grid">
+        <div class="chip"><span class="icon">❤️</span>1 tim<b>+<span id="g-tap">1</span> lực</b></div>
+        <div class="chip"><span class="icon">💬</span>Bình luận<b>+<span id="g-comment">5</span> lực</b></div>
+        <div class="chip"><span class="icon">🎁</span>1 xu quà<b>+<span id="g-coin">10</span> lực</b></div>
+        <div class="chip"><span class="icon">➕</span>Follow<b>+<span id="g-follow">20</span> lực</b></div>
+        <div class="chip"><span class="icon">↗️</span>Share<b>+<span class="g-share">10</span> lực</b></div>
+      </div>
+      <div class="guide-limits">Bình luận: tối đa 1 lần tính lực / 5 giây / người<br>Follow &amp; share: mỗi loại 1 lần / người / hiệp</div>
+    </div>
+  </header>
+
+  <div class="field">
+    <svg class="arena-art" viewBox="0 0 1080 628" aria-hidden="true">
+      <defs>
+        <linearGradient id="stand-shade" x2="0" y2="1">
+          <stop stop-color="#162c42"/>
+          <stop offset="1" stop-color="#071b2a"/>
+        </linearGradient>
+        <linearGradient id="mountain-shade" x2="0" y2="1">
+          <stop stop-color="#608b97"/>
+          <stop offset="1" stop-color="#254858"/>
+        </linearGradient>
+        <radialGradient id="lamp-halo">
+          <stop stop-color="#efffff" stop-opacity=".85"/>
+          <stop offset=".2" stop-color="#cef2ff" stop-opacity=".3"/>
+          <stop offset="1" stop-color="#c0eaff" stop-opacity="0"/>
+        </radialGradient>
+        <pattern id="audience" width="49" height="32" patternUnits="userSpaceOnUse">
+          <circle cx="12" cy="8" r="6" fill="#d9b788"/>
+          <path d="M3 29Q2 13 12 14Q22 13 22 29" fill="#3c98c4"/>
+          <circle cx="37" cy="14" r="5" fill="#e4b39c"/>
+          <path d="M29 32Q29 19 37 19Q46 19 46 32" fill="#cd635e"/>
+        </pattern>
+      </defs>
+      <circle cx="540" cy="62" r="138" fill="#c3e9f4" opacity=".035"/>
+      <path d="M0 178L95 102L181 170L282 94L371 175L498 99L623 174L758 97L902 177L1009 106L1080 154V290H0Z"
+        fill="url(#mountain-shade)" opacity=".48"/>
+      <path d="M0 211L174 167L342 212L520 162L711 215L911 164L1080 211V291H0Z" fill="#173a4b" opacity=".8"/>
+      <path d="M0 173L266 195L266 288H0ZM814 195L1080 173V288H814Z" fill="url(#stand-shade)"/>
+      <path d="M0 183L266 205V281H0ZM814 205L1080 183V281H814Z" fill="url(#audience)" opacity=".72"/>
+      <path d="M0 216L266 232M0 247L266 260M814 232L1080 216M814 260L1080 247" stroke="#8cb2c0" stroke-width="4" opacity=".4"/>
+      <path d="M0 283H1080" stroke="#d4b57e" stroke-width="14"/>
+      <path d="M0 276H1080" stroke="#21445a" stroke-width="15"/>
+      <path d="M24 277V314M126 277V308M230 277V307M850 277V307M954 277V308M1056 277V314"
+        stroke="#112c3b" stroke-width="8"/>
+      <path d="M64 281V66M1016 281V66" stroke="#22384c" stroke-width="13"/>
+      <path d="M59 281V66M1011 281V66" stroke="#8db2c3" stroke-width="3" opacity=".65"/>
+      <g fill="#f3fcff" stroke="#718c9b" stroke-width="4">
+        <rect x="18" y="46" width="94" height="29" rx="6"/>
+        <rect x="969" y="46" width="94" height="29" rx="6"/>
+      </g>
+      <g stroke="#6f8d9f" stroke-width="3">
+        <path d="M42 47V75M65 47V75M88 47V75M993 47V75M1016 47V75M1039 47V75"/>
+      </g>
+      <ellipse cx="64" cy="60" rx="125" ry="77" fill="url(#lamp-halo)"/>
+      <ellipse cx="1016" cy="60" rx="125" ry="77" fill="url(#lamp-halo)"/>
+      <path d="M408 269L426 226H654L672 269" fill="#142d40" stroke="#73939f" stroke-width="2"/>
+      <path d="M430 238H650M424 252H656" stroke="#c2d9df" stroke-width="3" opacity=".25"/>
+    </svg>
+    <div class="arena-label">GIỮ CHẶT DÂY · KÉO HẾT MÌNH</div>
+    <div class="ground"></div>
+    <div class="centerline"></div>
+    <div class="finish left"><span id="finish-xanh">ĐÍCH XANH</span></div>
+    <div class="finish right"><span id="finish-do">ĐÍCH ĐỎ</span></div>
+    <div class="flag-glow" aria-hidden="true"></div>
+    <div class="rope" id="rope"></div>
+    <div class="flag" id="flag" role="img" aria-label="Cờ buộc giữa dây kéo"></div>
+    <div class="field-feedback" aria-live="polite"></div>
+    <div class="drum-flash" id="drum-flash">🥁 GIẰNG CO! CÙNG KÉO NÀO!</div>
+
+    <div class="team-side left" id="side-xanh">
+      <h2 id="h2-xanh">🔵 ĐỘI XANH</h2>
+      <div class="pullers" id="pullers-xanh"></div>
+      <div class="bench" id="bench-xanh"></div>
+    </div>
+    <div class="team-side right" id="side-do">
+      <h2 id="h2-do">🔴 ĐỘI ĐỎ</h2>
+      <div class="pullers" id="pullers-do"></div>
+      <div class="bench" id="bench-do"></div>
+    </div>
+    <div class="hint" id="hint">Chênh 500 lực → thắng hiệp · Tối đa 180 giây / hiệp</div>
   </div>
-  <div class="team-side right" id="side-do">
-    <h2 id="h2-do">🔴 ĐỘI ĐỎ</h2>
-    <div class="pullers" id="pullers-do"></div>
-    <div class="bench" id="bench-do"></div>
+
+  <div class="top5 ui-panel" id="top5">
+    <h3>🏆 TOP 5 NGƯỜI KÉO MẠNH NHẤT <small>TRONG TRẬN</small></h3>
+    <div class="top-empty">Bình luận chọn đội để bắt đầu kéo!</div>
   </div>
-  <div class="hint" id="hint">Kéo mạnh lên! Bên nào kéo cờ về vạch đích của mình thì thắng hiệp!</div>
+  <div class="ticker" id="ticker"></div>
+  <div class="ui-statusbar">
+    <span>👀 <span class="big" id="st-online">0</span> đang xem</span>
+    <span>❤️ <span class="big" id="st-taps">0</span> tim</span>
+    <span>🎁 <span class="big" id="st-gifts">0</span> quà</span>
+  </div>
+  <div class="banner" id="banner">
+    <h2 id="banner-title"></h2>
+    <p id="banner-text"></p>
+  </div>
 </div>
 
-<div class="top5 ui-panel" id="top5"><h3>🏆 Top kéo mạnh nhất trận</h3><div>Chưa có ai kéo…</div></div>
-<div class="ticker" id="ticker"></div>
-<div class="ui-statusbar">
-  <span>👀 <span class="big" id="st-online">0</span> đang xem</span>
-  <span>❤️ <span class="big" id="st-taps">0</span> tim</span>
-  <span>🎁 <span class="big" id="st-gifts">0</span> quà</span>
-</div>
-<div class="banner" id="banner"><h2 id="banner-title"></h2><p id="banner-text"></p></div>
-
-</div>
 <script>
 var scaler = document.getElementById('scaler');
 function fit() {
@@ -183,78 +1144,139 @@ function fit() {
   scaler.style.transform = 'scale(' + s + ')';
   scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
   scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
-  scaler.style.visibility = 'visible'; // hiện khung chỉ khi đã co đúng tỉ lệ (tránh chớp khung chưa co lúc mới tải)
+  scaler.style.visibility = 'visible';
 }
-window.addEventListener('resize', fit); fit();
-setTimeout(() => { scaler.style.visibility = 'visible'; }, 500); // an toàn nếu fit() lỗi
+window.addEventListener('resize', fit);
+fit();
+setTimeout(() => { scaler.style.visibility = 'visible'; }, 500);
+
 const socket = io();
 let lastState = null;
 let voiceOn = true;
 const ttsQueue = [];
 let ttsPlaying = false;
-// Tên/màu/nền đội lấy từ settings (dashboard tùy chỉnh) — key đội 'xanh'/'do'
-// và từ khóa tham gia 'xanh'/'đỏ' KHÔNG đổi, chỉ đổi tên hiển thị.
+
 function teamSettings() { return (lastState && lastState.settings) || {}; }
-function teamName(t) { const st = teamSettings(); return t === 'xanh' ? (st.teamXanhName || 'Xanh') : (st.teamDoName || 'Đỏ'); }
-function teamColor(t) { const st = teamSettings(); return t === 'xanh' ? (st.teamXanhColor || '#1E90FF') : (st.teamDoColor || '#E63946'); }
-function teamBg(t) { const st = teamSettings(); return t === 'xanh' ? (st.teamXanhBg || '') : (st.teamDoBg || ''); }
-// Lực đội trước đó — để phát hiện lực tăng và giật mạnh 1 nhịp (.pull-burst).
-const prevForce = { xanh: 0, do: 0 };
-function burst(team) {
-  const box = document.getElementById(team === 'xanh' ? 'pullers-xanh' : 'pullers-do');
-  box.classList.remove('pull-burst');
-  void box.offsetWidth; // chạy lại animation
-  box.classList.add('pull-burst');
-  setTimeout(() => box.classList.remove('pull-burst'), 500);
+function teamName(t) {
+  const st = teamSettings();
+  return t === 'xanh' ? (st.teamXanhName || 'Xanh') : (st.teamDoName || 'Đỏ');
 }
-// --- Tiếng hò reo / trống dồn: WebAudio tự tổng hợp (không file nhạc mới) ---
+function teamColor(t) {
+  const st = teamSettings();
+  return t === 'xanh' ? (st.teamXanhColor || '#1E90FF') : (st.teamDoColor || '#E63946');
+}
+function teamBg(t) {
+  const st = teamSettings();
+  return t === 'xanh' ? (st.teamXanhBg || '') : (st.teamDoBg || '');
+}
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+function playerKey(p) {
+  return String(p.userId ?? p.uniqueId ?? p.id ?? p.name ?? '');
+}
+
+const prevForce = { xanh: 0, do: 0 };
+const prevRoster = { xanh: new Set(), do: new Set() };
+const rosterCache = { xanh: '', do: '' };
+const burstTimers = { xanh: null, do: null };
+const rosterStartAt = Date.now();
+let hasRendered = false;
+let feedbackTimer = null;
+let lastFeedbackAt = 0;
+let lastTickSecond = null;
+let warningTimer = null;
+
+function burst(team) {
+  const box = document.getElementById('pullers-' + team);
+  box.classList.remove('pull-burst');
+  void box.offsetWidth;
+  box.classList.add('pull-burst');
+  clearTimeout(burstTimers[team]);
+  burstTimers[team] = setTimeout(() => box.classList.remove('pull-burst'), 450);
+}
+function fieldFeedback(text, color, priority) {
+  const now = Date.now();
+  if (!priority && now - lastFeedbackAt < 300) return;
+  lastFeedbackAt = now;
+  const box = document.querySelector('.field-feedback');
+  box.replaceChildren();
+  const label = document.createElement('div');
+  label.className = 'force-pop';
+  label.textContent = text;
+  if (color) label.style.borderColor = color;
+  box.appendChild(label);
+  clearTimeout(feedbackTimer);
+  feedbackTimer = setTimeout(() => box.replaceChildren(), 1000);
+}
+
+// Âm thanh tổng hợp tại chỗ, không tải thêm tài nguyên.
 let fxCtx = null;
 let lastCheerAt = 0, lastDrumAt = 0, ropeSurgeTimer = null;
+let lastPullSoundAt = 0;
 function fxAudio() {
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return null;
     if (!fxCtx) fxCtx = new AC();
-    if (fxCtx.state === 'suspended') fxCtx.resume();
+    if (fxCtx.state === 'suspended') fxCtx.resume().catch(() => {});
     return fxCtx;
   } catch (e) { return null; }
 }
 function fxTone(ctx, freq, at, dur, vol, type) {
   const o = ctx.createOscillator(), g = ctx.createGain();
-  o.type = type || 'sine'; o.frequency.value = freq;
+  o.type = type || 'sine';
+  o.frequency.value = freq;
   g.gain.setValueAtTime(vol || 0.25, ctx.currentTime + at);
   g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + at + dur);
-  o.connect(g); g.connect(ctx.destination);
-  o.start(ctx.currentTime + at); o.stop(ctx.currentTime + at + dur + 0.02);
+  o.connect(g);
+  g.connect(ctx.destination);
+  o.start(ctx.currentTime + at);
+  o.stop(ctx.currentTime + at + dur + 0.02);
 }
-// Hò reo: hợp âm vút lên (4 nốt) — khi lực tăng mạnh, cờ chạm đích, thắng hiệp/trận.
+function pullSound(amount, team) {
+  const now = Date.now();
+  if (now - lastPullSoundAt < 180) return;
+  lastPullSoundAt = now;
+  const ctx = fxAudio();
+  if (!ctx) return;
+  const base = team === 'xanh' ? 220 : 262;
+  fxTone(ctx, base, 0, .11, .055, 'triangle');
+  if (amount >= 5) fxTone(ctx, base * 1.5, .045, .13, .045, 'triangle');
+  if (amount >= 20) fxTone(ctx, base * 2, .09, .17, .06, 'sine');
+}
 function cheerSound() {
   const now = Date.now();
-  if (now - lastCheerAt < 2500) return; // chống spam khi tim dồn dập
+  if (now - lastCheerAt < 2500) return;
   lastCheerAt = now;
   const ctx = fxAudio();
   if (!ctx) return;
-  [523, 659, 784, 1046].forEach((f, i) => fxTone(ctx, f, i * 0.09, 0.32, 0.28));
-  fxTone(ctx, 1318, 0.36, 0.4, 0.22);
+  [523, 659, 784, 1046].forEach((f, i) => fxTone(ctx, f, i * .09, .32, .18));
+  fxTone(ctx, 1318, .36, .4, .15);
 }
-// Trống dồn: 6 nhịp trống cái (kick trầm, kiểu trống đua thuyền) — khi 2 đội giằng co.
 function drumSound() {
   const now = Date.now();
   if (now - lastDrumAt < 3000) return;
   lastDrumAt = now;
   const ctx = fxAudio();
-  if (!ctx) return;
-  for (let i = 0; i < 6; i++) {
-    const t = ctx.currentTime + i * 0.2;
-    const o = ctx.createOscillator(), g = ctx.createGain();
-    o.frequency.setValueAtTime(150, t);
-    o.frequency.exponentialRampToValueAtTime(40, t + 0.12);
-    g.gain.setValueAtTime(0.5, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
-    o.connect(g); g.connect(ctx.destination);
-    o.start(t); o.stop(t + 0.3);
+  if (ctx) {
+    for (let i = 0; i < 6; i++) {
+      const t = ctx.currentTime + i * .2;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.setValueAtTime(150, t);
+      o.frequency.exponentialRampToValueAtTime(40, t + .12);
+      g.gain.setValueAtTime(.3, t);
+      g.gain.exponentialRampToValueAtTime(.001, t + .25);
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.start(t);
+      o.stop(t + .3);
+    }
   }
   const el = document.getElementById('drum-flash');
+  el.textContent = '🥁 GIẰNG CO! CÙNG KÉO NÀO!';
   el.classList.remove('on');
   void el.offsetWidth;
   el.classList.add('on');
@@ -267,25 +1289,38 @@ function surgeRope() {
   clearTimeout(ropeSurgeTimer);
   ropeSurgeTimer = setTimeout(() => rope.classList.remove('rope-surge'), 600);
 }
-// Hiệu ứng theo delta lực mỗi lần state về: giật dây, rung dây, hò reo, trống dồn.
 function forceFx(s) {
-  const dx = s.force.xanh - prevForce.xanh, dd = s.force.do - prevForce.do;
+  const dx = s.force.xanh - prevForce.xanh;
+  const dd = s.force.do - prevForce.do;
   prevForce.xanh = s.force.xanh;
   prevForce.do = s.force.do;
+  if (!hasRendered) return;
+
   if (dx > 0) burst('xanh');
   if (dd > 0) burst('do');
   const big = Math.max(dx, dd);
-  if (big >= 15) surgeRope(); // lực tăng đột biến (quà/bình luận dồn) → dây rung mạnh
-  if (big >= 30) cheerSound(); // lực tăng rất mạnh → hò reo
-  // Giằng co: cả 2 đội cùng đang tăng lực, chênh lệch nhỏ → trống dồn.
+  if (big > 0) {
+    const t = dx >= dd ? 'xanh' : 'do';
+    pullSound(big, t);
+    if (dx > 0 && dd > 0) {
+      fieldFeedback('+' + dx + '  ⚔  +' + dd + ' lực', '#ffe08a');
+    } else {
+      fieldFeedback(teamName(t) + '  +' + big + ' lực', teamColor(t));
+    }
+  }
+  if (big >= 15) surgeRope();
+  if (big >= 30) cheerSound();
   if (dx > 0 && dd > 0 && Math.abs(s.force.xanh - s.force.do) <= 100) drumSound();
 }
+document.addEventListener('pointerdown', () => { fxAudio(); }, { passive: true });
+document.addEventListener('keydown', () => { fxAudio(); });
+
 function applyTeamBg(team) {
-  const el = document.getElementById(team === 'xanh' ? 'side-xanh' : 'side-do');
+  const el = document.getElementById('side-' + team);
   const bg = teamBg(team);
   if (bg) {
-    // bg đã validate ở server (chỉ http(s):// hoặc /shared/..., không nháy/ngoặc).
-    el.style.backgroundImage = 'linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url("' + bg + '")';
+    // Nền đội do dashboard cấu hình; giữ luồng cấu hình hiện có.
+    el.style.backgroundImage = 'linear-gradient(rgba(4,16,30,.78),rgba(4,16,30,.82)),url("' + bg + '")';
     el.style.backgroundSize = 'cover';
     el.style.backgroundPosition = 'center';
     el.classList.add('has-bg');
@@ -311,6 +1346,7 @@ function nextTts() {
       const u = new SpeechSynthesisUtterance(text);
       u.lang = 'vi-VN';
       u.onend = () => { ttsPlaying = false; nextTts(); };
+      u.onerror = () => { ttsPlaying = false; nextTts(); };
       speechSynthesis.speak(u);
     } catch (e) { ttsPlaying = false; nextTts(); }
   };
@@ -325,29 +1361,165 @@ function showBanner(title, text, ms) {
   if (ms) setTimeout(() => b.classList.remove('on'), ms);
 }
 
-function pullerHtml(p, color, team, allPlayers) {
-  // Nhân vật MEME: mặt meme làm ĐẦU nhân vật (mỗi người 1 mặt khác nhau
-  // trong toàn game qua faceImgIn — tránh trùng mặt) + thân là khối áo màu đội.
-  var av = (window.MemeFaces
-    ? window.MemeFaces.faceImgIn(p, allPlayers || [p], 'meme-face')
-    : '<span>' + escapeHtml((p.name || '?')[0].toUpperCase()) + '</span>');
-  return '<div class="puller"><div class="nm">' + escapeHtml(p.name) + '</div>' +
-    '<div class="av" style="border-color:' + color + '">' + av + '</div>' +
-    '<div class="body" style="background:' + color + '" title="đang kéo"></div>' +
-    '<div class="fc">' + p.force + ' lực</div></div>';
+function pullerHtml(p, color, team, allPlayers, index) {
+  const av = window.MemeFaces
+    ? window.MemeFaces.faceImgIn(p, allPlayers, 'meme-face')
+    : '<span>' + escapeHtml(Array.from(p.name || '?')[0].toUpperCase()) + '</span>';
+  return '<div class="puller" data-player="' + escapeHtml(playerKey(p)) + '" style="--delay:-' + ((index % 3) * .17) + 's">' +
+    '<div class="nm">' + escapeHtml(p.name || 'Người chơi') + '</div>' +
+    '<div class="athlete" aria-hidden="true">' +
+      '<div class="shadow"></div>' +
+      '<div class="leg back"></div><div class="leg front"></div>' +
+      '<div class="shorts"></div>' +
+      '<div class="body" title="Đang kéo dây"></div>' +
+      '<div class="av">' + av + '</div>' +
+      '<div class="arm back"></div><div class="arm front"></div>' +
+    '</div>' +
+    '<div class="fc">' + escapeHtml(p.force ?? 0) + ' lực</div>' +
+  '</div>';
 }
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Dây ở lớp trước thân; bàn tay ở lớp trên dây, giữ đúng vị trí nắm.
+function mountGrips(box) {
+  box.querySelectorAll('.puller').forEach((el) => {
+    const grip = document.createElement('div');
+    grip.className = 'grip';
+    grip.setAttribute('aria-hidden', 'true');
+    // Tọa độ bàn tay tính từ cùng gốc với .athlete.
+    grip.style.top = '203px';
+    grip.style.left = 'calc(50% + ' + (box.id === 'pullers-xanh' ? 35 : -58) + 'px)';
+    el.appendChild(grip);
+  });
+}
+
+// Chỉ đưa ba người mỗi đội lên tiền cảnh cùng lúc để tên đọc được.
+// Toàn bộ người kéo do engine trả về đều có nhân vật và dùng chung tập mặt.
+// Các nhóm luân phiên mỗi sáu giây, không tự chuyển người sang ghế dự bị.
+function paintRoster(team, people, color, allPlayers, facesKey) {
+  const box = document.getElementById('pullers-' + team);
+  const signature = JSON.stringify([color, facesKey, people]);
+  const changed = rosterCache[team] !== signature;
+  const oldKeys = prevRoster[team];
+  const newKeys = new Set(people.map(playerKey));
+
+  if (changed) {
+    rosterCache[team] = signature;
+    box.innerHTML = people.map((p, i) => pullerHtml(p, color, team, allPlayers, i)).join('') ||
+      '<div class="empty">Chưa có người kéo<br>Bình luận “' + (team === 'xanh' ? 'xanh' : 'đỏ') + '” để vào đội</div>';
+    mountGrips(box);
+    if (hasRendered) {
+      let joined = false;
+      box.querySelectorAll('.puller').forEach((el) => {
+        if (!oldKeys.has(el.dataset.player)) {
+          el.classList.add('joined');
+          joined = true;
+          setTimeout(() => el.classList.remove('joined'), 900);
+        }
+      });
+      if (joined) {
+        burst(team);
+        const ctx = fxAudio();
+        if (ctx) {
+          fxTone(ctx, 440, 0, .12, .06, 'triangle');
+          fxTone(ctx, 660, .08, .16, .06, 'triangle');
+        }
+      }
+    }
+  }
+  prevRoster[team] = newKeys;
+
+  const pages = Math.max(1, Math.ceil(people.length / 3));
+  const page = Math.floor((Date.now() - rosterStartAt) / 6000) % pages;
+  const start = page * 3;
+  box.querySelectorAll('.puller').forEach((el, i) => {
+    el.hidden = i < start || i >= start + 3;
+  });
+  fitNames(box);
+  return { start: start, end: Math.min(start + 3, people.length), count: people.length };
+}
+
+function fitNames(box) {
+  box.querySelectorAll('.puller:not([hidden]) .nm').forEach((el) => {
+    el.style.fontSize = '25px';
+    let size = 25;
+    while (el.scrollHeight > 86 && size > 19) {
+      size--;
+      el.style.fontSize = size + 'px';
+    }
+    // Với tên đặc biệt dài, nới bảng tên lên trên thay vì cắt nội dung.
+    if (el.scrollHeight > 86) {
+      el.style.maxHeight = 'none';
+      el.style.height = 'auto';
+      const height = el.scrollHeight;
+      el.style.top = Math.min(0, 86 - height) + 'px';
+    } else {
+      el.style.maxHeight = '86px';
+      el.style.height = '';
+      el.style.top = '0';
+    }
+  });
+}
+
+function benchText(team, view) {
+  const data = lastState.teams[team];
+  const lines = [];
+  if (view.count > 3) {
+    lines.push('Tiền cảnh ' + (view.start + 1) + '–' + view.end + '/' + view.count + ' người kéo · luân phiên');
+  } else if (view.count) {
+    lines.push(view.count + ' người đang kéo dây');
+  }
+  if (data.bench > 0) lines.push('Ghế dự bị: ' + data.bench + ' người chờ');
+  document.getElementById('bench-' + team).textContent = lines.join(' · ');
+}
+
+function renderTop(s, nx, nd) {
+  const top = document.getElementById('top5');
+  const html = '<h3>🏆 TOP 5 NGƯỜI KÉO MẠNH NHẤT <small>TRONG TRẬN</small></h3>' +
+    (s.top.length ? s.top.slice(0, 5).map((t, i) => {
+      const color = teamColor(t.team);
+      const name = t.team === 'xanh' ? nx : nd;
+      return '<div class="top-row">' +
+        '<span class="top-rank">' + ['🥇', '🥈', '🥉', '04', '05'][i] + '</span>' +
+        '<span class="top-name" title="' + escapeHtml(name) + '">' +
+          '<span class="team-dot" style="--dot:' + escapeHtml(color) + '"></span>' +
+          escapeHtml(t.name) +
+        '</span>' +
+        '<span class="top-force">' + escapeHtml(t.force) + ' lực</span>' +
+      '</div>';
+    }).join('') : '<div class="top-empty">Bình luận chọn đội để bắt đầu kéo!</div>');
+  if (top.innerHTML !== html) top.innerHTML = html;
+
+  // Nới vùng Top theo nội dung thực, luôn giữ tên nguyên vẹn.
+  const rows = Array.from(top.querySelectorAll('.top-row'));
+  rows.forEach((row) => { row.style.fontSize = '23px'; });
+  if (top.scrollHeight > top.clientHeight) {
+    rows.forEach((row) => {
+      row.style.fontSize = '20px';
+      row.style.lineHeight = '1.1';
+    });
+  }
 }
 
 function render(s) {
   lastState = s;
-  // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
-  if (window.StromMusic) window.StromMusic.sync({ mood: 'battle', enabled: true, volume: 50, energy: (Math.abs(s.flagPct || 0) > 80 || (s.force.xanh + s.force.do) > 300) ? 2 : ((s.teams.xanh.total + s.teams.do.total) > 0 || s.demoActive ? 1 : 0) });
+  if (window.StromMusic) {
+    window.StromMusic.sync({
+      mood: 'battle',
+      enabled: true,
+      volume: 50,
+      energy: (Math.abs(s.flagPct || 0) > 80 || (s.force.xanh + s.force.do) > 300)
+        ? 2 : ((s.teams.xanh.total + s.teams.do.total) > 0 || s.demoActive ? 1 : 0)
+    });
+  }
   voiceOn = s.settings.voiceEnabled !== false;
-  // Tên/màu/nền đội (tùy chỉnh từ dashboard) ở MỌI chỗ hiển thị tên đội.
+
   const nx = teamName('xanh'), nd = teamName('do');
   const cx = teamColor('xanh'), cd = teamColor('do');
+  scaler.style.setProperty('--blue', cx);
+  scaler.style.setProperty('--red', cd);
+  document.getElementById('side-xanh').style.setProperty('--team-color', cx);
+  document.getElementById('side-do').style.setProperty('--team-color', cd);
+
   document.getElementById('sb-name-xanh').textContent = '🔵 ' + nx.toUpperCase();
   document.getElementById('sb-name-do').textContent = nd.toUpperCase() + ' 🔴';
   document.getElementById('sb-team-xanh').style.color = cx;
@@ -358,106 +1530,182 @@ function render(s) {
   document.getElementById('fb-lbl-do').style.color = cd;
   document.getElementById('bar-xanh').style.background = cx;
   document.getElementById('bar-do').style.background = cd;
+  document.getElementById('bar-xanh').style.color = cx;
+  document.getElementById('bar-do').style.color = cd;
   document.getElementById('h2-xanh').textContent = '🔵 ĐỘI ' + nx.toUpperCase();
   document.getElementById('h2-do').textContent = '🔴 ĐỘI ' + nd.toUpperCase();
   document.getElementById('finish-xanh').textContent = 'ĐÍCH ' + nx.toUpperCase();
   document.getElementById('finish-do').textContent = 'ĐÍCH ' + nd.toUpperCase();
   applyTeamBg('xanh');
   applyTeamBg('do');
-  // Đội đang dẫn lực kéo nhanh + mạnh hơn; delta lực → giật dây / rung dây / hò reo / trống dồn.
-  const sc = document.getElementById('scaler');
-  sc.classList.toggle('lead-xanh', s.force.xanh > s.force.do);
-  sc.classList.toggle('lead-do', s.force.do > s.force.xanh);
-  forceFx(s);
-  // Thắng hiệp/trận: đội thắng hò reo nhảy lên, đội thua ngã/chùng xuống.
-  const celebWinner = s.phase === 'matchEnd' ? (s.results && s.results.winner) : (s.phase === 'roundEnd' ? s.lastRoundWinner : null);
-  sc.classList.toggle('celebrate-xanh', celebWinner === 'xanh');
-  sc.classList.toggle('celebrate-do', celebWinner === 'do');
-  // Bảng hướng dẫn: số THẬT từ engine (settings có thể đổi ở dashboard).
+
+  scaler.classList.toggle('lead-xanh', s.force.xanh > s.force.do);
+  scaler.classList.toggle('lead-do', s.force.do > s.force.xanh);
+
+  const celebWinner = s.phase === 'matchEnd'
+    ? (s.results && s.results.winner)
+    : (s.phase === 'roundEnd' ? s.lastRoundWinner : null);
+  scaler.classList.toggle('celebrate-xanh', celebWinner === 'xanh');
+  scaler.classList.toggle('celebrate-do', celebWinner === 'do');
+
   if (s.settings) {
-    document.getElementById('g-tap').textContent = s.settings.tapForce;
-    document.getElementById('g-comment').textContent = s.settings.commentForce;
-    document.getElementById('g-coin').textContent = s.settings.coinToForce;
-    document.getElementById('g-follow').textContent = s.settings.followForce;
+    document.getElementById('g-tap').textContent = s.settings.tapForce ?? 1;
+    document.getElementById('g-comment').textContent = s.settings.commentForce ?? 5;
+    document.getElementById('g-coin').textContent = s.settings.coinToForce ?? 10;
+    document.getElementById('g-follow').textContent = s.settings.followForce ?? 20;
+    document.querySelector('.g-share').textContent = s.settings.shareForce ?? 10;
   }
   document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
   document.getElementById('wins-xanh').textContent = s.wins.xanh;
   document.getElementById('wins-do').textContent = s.wins.do;
-  document.getElementById('round-label').textContent = 'Trận ' + s.matchNo + ' · Hiệp ' + s.matchRound + '/' + s.maxRounds;
+  document.getElementById('round-label').textContent =
+    'Trận ' + s.matchNo + ' · Hiệp ' + s.matchRound + '/' + s.maxRounds;
   document.getElementById('cnt-xanh').textContent = s.teams.xanh.total + ' người';
   document.getElementById('cnt-do').textContent = s.teams.do.total + ' người';
   document.getElementById('force-xanh').textContent = s.force.xanh + ' lực';
   document.getElementById('force-do').textContent = s.force.do + ' lực';
+
   const total = Math.max(1, s.force.xanh + s.force.do);
   document.getElementById('bar-xanh').style.width = (s.force.xanh / total * 100) + '%';
   document.getElementById('bar-do').style.width = (s.force.do / total * 100) + '%';
 
-  // Cờ: flagPct -100 (vạch Xanh) .. +100 (vạch Đỏ); dây dài 1000px từ x=40, cờ buộc trên dây.
+  // -100 và +100 khớp chính xác tâm hai vạch đích.
   const flag = document.getElementById('flag');
-  const flagLeft = (40 + (s.flagPct + 100) / 200 * 1000);
-  if (Math.abs(s.flagPct) >= 95) cheerSound(); // cờ chạm vạch đích → hò reo
+  const flagPct = Math.max(-100, Math.min(100, Number(s.flagPct) || 0));
+  const flagLeft = 74 + (flagPct + 100) / 200 * 932;
   flag.style.left = flagLeft + 'px';
+  document.querySelector('.flag-glow').style.left = flagLeft + 'px';
+  flag.setAttribute('aria-label', 'Cờ kéo: ' + Math.round(flagPct) + '%');
+  if (Math.abs(flagPct) >= 95 && hasRendered) cheerSound();
 
-  // Mặt meme khác nhau toàn game: gán theo danh sách chung cả 2 đội.
+  // Danh sách chung gồm toàn bộ người kéo của cả hai đội, không lấy riêng từng người.
   const allPullers = (s.teams.xanh.pullers || []).concat(s.teams.do.pullers || []);
-  document.getElementById('pullers-xanh').innerHTML = s.teams.xanh.pullers.slice(0, 8).map((p) => pullerHtml(p, cx, 'xanh', allPullers)).join('') ||
-    '<div class="empty" style="color:#cfe6ff;">Chưa có ai — bình luận "xanh" để vào đội!</div>';
-  document.getElementById('pullers-do').innerHTML = s.teams.do.pullers.slice(0, 8).map((p) => pullerHtml(p, cd, 'do', allPullers)).join('') ||
-    '<div class="empty" style="color:#ffd3d6;">Chưa có ai — bình luận "đỏ" để vào đội!</div>';
-  const extraX = s.teams.xanh.total - s.teams.xanh.pullers.slice(0, 8).length;
-  document.getElementById('bench-xanh').textContent =
-    (s.teams.xanh.bench > 0 ? '🎪 Khán đài: ' + s.teams.xanh.bench + ' người chờ kéo' : '') +
-    (extraX > 0 && s.teams.xanh.bench === 0 ? 'và ' + extraX + ' người nữa cũng đang kéo' : '');
-  document.getElementById('bench-do').textContent =
-    (s.teams.do.bench > 0 ? '🎪 Khán đài: ' + s.teams.do.bench + ' người chờ kéo' : '') +
-    (s.teams.do.total - s.teams.do.pullers.slice(0, 8).length > 0 && s.teams.do.bench === 0 ? 'và ' + (s.teams.do.total - s.teams.do.pullers.slice(0, 8).length) + ' người nữa cũng đang kéo' : '');
+  const facesKey = JSON.stringify(allPullers.map(playerKey));
+  const viewX = paintRoster('xanh', s.teams.xanh.pullers || [], cx, allPullers, facesKey);
+  const viewD = paintRoster('do', s.teams.do.pullers || [], cd, allPullers, facesKey);
+  benchText('xanh', viewX);
+  benchText('do', viewD);
 
-  const top = document.getElementById('top5');
-  top.innerHTML = '<h3>🏆 Top kéo mạnh nhất trận</h3>' + (s.top.length
-    ? s.top.map((t, i) => '<div>' + ['🥇','🥈','🥉','4.','5.'][i] + ' ' + escapeHtml(t.name) + ' (' + (t.team === 'xanh' ? '🔵 ' + nx : '🔴 ' + nd) + ') — ' + t.force + ' lực</div>').join('')
-    : '<div>Chưa có ai kéo…</div>');
+  // Chạy sau khi dựng nhân vật để phản hồi lực không bị thay DOM xóa mất.
+  forceFx(s);
+  renderTop(s, nx, nd);
 
   document.getElementById('st-online').textContent = s.viewersOnline;
   document.getElementById('st-taps').textContent = s.stats.taps;
   document.getElementById('st-gifts').textContent = s.stats.gifts;
-  document.getElementById('ticker').innerHTML = s.logs.slice(-2).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
+  const ticker = document.getElementById('ticker');
+  const tickerHtml = s.logs.slice(-2).reverse().map((l) =>
+    '<div>' + escapeHtml(l.text) + '</div>'
+  ).join('');
+  if (ticker.innerHTML !== tickerHtml) ticker.innerHTML = tickerHtml;
 
   if (s.phase === 'matchEnd' && s.results) {
     const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
     const w = s.results.winner;
-    showBanner(w ? '🎉 ĐỘI ' + teamName(w).toUpperCase() + ' THẮNG TRẬN! 🎉' : '🤝 TRẬN HÒA!',
-      w ? 'Tỉ số hiệp ' + s.results.wins.xanh + '–' + s.results.wins.do + '. Trận mới sau ' + left + 's…' : 'Tỉ số hiệp ' + s.results.wins.xanh + '–' + s.results.wins.do + '. Trận mới sau ' + left + 's…');
+    showBanner(
+      w ? '🎉 ĐỘI ' + teamName(w).toUpperCase() + ' THẮNG TRẬN!' : '🤝 TRẬN HÒA!',
+      'Tỉ số hiệp ' + s.results.wins.xanh + '–' + s.results.wins.do +
+      '. Trận mới sau ' + left + 's…'
+    );
   } else if (s.phase === 'roundEnd' && s.lastRoundWinner) {
     const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
-    showBanner('🏆 ĐỘI ' + teamName(s.lastRoundWinner).toUpperCase() + ' THẮNG HIỆP ' + s.matchRound + '!',
-      'Tỉ số ' + s.wins.xanh + '–' + s.wins.do + ' · ' + (s.lastRoundReason || '') + '. Hiệp sau sau ' + left + 's…');
+    showBanner(
+      '🏆 ĐỘI ' + teamName(s.lastRoundWinner).toUpperCase() + ' THẮNG HIỆP ' + s.matchRound + '!',
+      'Tỉ số ' + s.wins.xanh + '–' + s.wins.do +
+      (s.lastRoundReason ? ' · ' + s.lastRoundReason : '') +
+      '. Hiệp tiếp theo sau ' + left + 's…'
+    );
   } else if (s.phase === 'roundEnd') {
     const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
-    showBanner('🤝 HIỆP HÒA!', 'Hiệp sau sau ' + left + 's…');
+    showBanner('🤝 HIỆP HÒA!', 'Hiệp tiếp theo sau ' + left + 's…');
   } else {
     document.getElementById('banner').classList.remove('on');
   }
+
+  if (hasRendered && lastTickSecond && lastTickSecond.phase !== s.phase && s.phase === 'playing') {
+    surgeRope();
+    fieldFeedback('VÀO HIỆP! KÉO NÀO!', '#ffe08a', true);
+    const ctx = fxAudio();
+    if (ctx) {
+      fxTone(ctx, 440, 0, .16, .1, 'triangle');
+      fxTone(ctx, 880, .17, .25, .12, 'triangle');
+    }
+  }
   updateTimer();
+  hasRendered = true;
 }
+
 function updateTimer() {
   const s = lastState;
   const el = document.getElementById('timer');
-  if (!s || !s.phaseEndsAt) { el.textContent = ''; return; }
+  if (!s || !s.phaseEndsAt) {
+    el.textContent = '';
+    el.classList.remove('urgent');
+    return;
+  }
   const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
-  if (s.phase === 'playing') el.textContent = '⏱ ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
-  else if (s.phase === 'roundEnd') el.textContent = '⏸ Nghỉ ' + left + 's';
-  else if (s.phase === 'matchEnd') el.textContent = '🎉 Vinh danh ' + left + 's';
-  else el.textContent = '';
+  el.classList.toggle('urgent', s.phase === 'playing' && left <= 10 && left > 0);
+  if (s.phase === 'playing') {
+    el.textContent = '⏱ ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
+    if (left > 0 && left <= 10 && hasRendered &&
+        (!lastTickSecond || lastTickSecond.phase !== s.phase || lastTickSecond.left !== left)) {
+      const ctx = fxAudio();
+      if (ctx) fxTone(ctx, left <= 3 ? 880 : 660, 0, .07, .055, 'triangle');
+    }
+  } else if (s.phase === 'roundEnd') {
+    el.textContent = '⏸ Nghỉ ' + left + 's';
+  } else if (s.phase === 'matchEnd') {
+    el.textContent = '🎉 Vinh danh ' + left + 's';
+  } else {
+    el.textContent = '';
+  }
+  lastTickSecond = { phase: s.phase, left: left };
 }
 
 socket.on('state-update', render);
-socket.on('round-win', (d) => { if (d && d.team) { playTts('Đội ' + teamName(d.team) + ' thắng hiệp ' + d.matchRound + '!'); cheerSound(); if (window.StromUI) { StromUI.sfx('win'); StromUI.confetti(24); } } });
-socket.on('match-win', (d) => { if (d && d.team) { playTts('Đội ' + teamName(d.team) + ' thắng trận! Chúc mừng cả đội!'); cheerSound(); if (window.StromUI) { StromUI.flash('#FFD700'); StromUI.sfx('win'); StromUI.confetti(48); } } });
-socket.on('flag-warning', (d) => { if (d && d.team) { cheerSound(); playTts('Đội ' + teamName(d.team) + ' sắp thắng! Kéo mạnh lên!'); } });
+socket.on('round-win', (d) => {
+  if (d && d.team) {
+    playTts('Đội ' + teamName(d.team) + ' thắng hiệp ' + d.matchRound + '!');
+    cheerSound();
+    surgeRope();
+    if (window.StromUI) {
+      StromUI.sfx('win');
+      StromUI.confetti(24);
+    }
+  }
+});
+socket.on('match-win', (d) => {
+  if (d && d.team) {
+    playTts('Đội ' + teamName(d.team) + ' thắng trận! Chúc mừng cả đội!');
+    cheerSound();
+    surgeRope();
+    if (window.StromUI) {
+      StromUI.flash('#FFD700');
+      StromUI.sfx('win');
+      StromUI.confetti(48);
+    }
+  }
+});
+socket.on('flag-warning', (d) => {
+  if (d && d.team) {
+    cheerSound();
+    surgeRope();
+    playTts('Đội ' + teamName(d.team) + ' sắp thắng! Kéo mạnh lên!');
+    const field = document.querySelector('.field');
+    field.classList.add('warning');
+    clearTimeout(warningTimer);
+    warningTimer = setTimeout(() => field.classList.remove('warning'), 2600);
+    fieldFeedback(teamName(d.team) + ' SẮP CHẠM ĐÍCH!', teamColor(d.team), true);
+    const flash = document.getElementById('drum-flash');
+    flash.textContent = '⚑ CỜ GẦN ĐÍCH! TĂNG LỰC KÉO NÀO!';
+    flash.classList.remove('on');
+    void flash.offsetWidth;
+    flash.classList.add('on');
+  }
+});
 
 fetch('/api/state').then((r) => r.json()).then((s) => {
   render(s);
-  // ?demo=1: tự chạy demo khi phòng chưa có event thật (theo demo-mode-contract).
   const params = new URLSearchParams(location.search);
   if (params.get('demo') === '1') {
     if (s.webhookCount > 0) {
@@ -466,12 +1714,21 @@ fetch('/api/state').then((r) => r.json()).then((s) => {
       n.classList.add('on');
       return;
     }
-    fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
-      .then(() => fetch('/api/test/demo-start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }))
+    fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ demoMode: true })
+    })
+      .then(() => fetch('/api/test/demo-start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
+      }))
       .catch(() => {});
   }
 }).catch(() => {});
-setInterval(() => { if (lastState) { render(lastState); } }, 1000);
+
+setInterval(() => { if (lastState) render(lastState); }, 1000);
 </script>
 </body>
 </html>
