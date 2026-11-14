@@ -530,7 +530,7 @@ h1.ui-title{
 }
 .puller .tile-text{
   position:absolute;top:-8px;left:50%;transform:translateX(-50%);
-  width:auto;max-width:64px;height:24px;
+  width:auto;max-width:72px;height:24px;
   display:flex;align-items:center;justify-content:center;
   padding:2px 6px;border:1px solid #bbdcff66;
   border-bottom:2px solid var(--team-color);
@@ -538,8 +538,8 @@ h1.ui-title{
   z-index:15;pointer-events:none;white-space:nowrap
 }
 .puller .nm{
-  flex:0 1 auto;min-width:0;max-width:52px;
-  color:#fff;font-size:13px;font-weight:850;line-height:1;
+  flex:0 1 auto;min-width:0;max-width:60px;
+  color:#fff;font-size:12px;font-weight:850;line-height:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   text-shadow:0 1px #0005
 }
@@ -1554,7 +1554,7 @@ function paintRoster(team, people) {
     element.style.left = (fieldX - baseX - 65) + 'px';
     element.style.top = (126 + (index % 2 ? 8 : 0)) + 'px';
     element.style.zIndex = String(30 - index);
-    fitText(element.querySelector('.nm'),13,7);
+    fitText(element.querySelector('.nm'),12,7);
   });
 
   for (const [uid,element] of nodes) {
@@ -2393,20 +2393,67 @@ function updateReferee(s) {
   referee.classList.remove('ref-blow', 'ref-point-xanh', 'ref-point-do');
 
   if (phase === 'playing' && prev !== 'playing') {
-    // Bắt đầu hiệp/trận: còi 2 tiếng + giơ còi (pose thổi) ~1.6s rồi về tay thường.
+    // Bắt đầu hiệp/trận: còi 2 tiếng + giơ còi (pose thổi) ~3s rồi về tay thường.
+    lastRoundStartAt = Date.now();
     playWhistle('start');
-    referee.classList.add('ref-blow');
-    refBlowTimer = setTimeout(() => referee.classList.remove('ref-blow'), 3000);
+    setRefereeArms('blow');
+    refBlowTimer = setTimeout(() => setRefereeArms('neutral'), 3000);
   } else if (phase === 'roundEnd' && s.lastRoundWinner) {
     // Kết thúc hiệp: còi + chỉ tay về đội thắng hiệp (giữ suốt roundEnd).
     playWhistle('end');
-    referee.classList.add('ref-point-' + s.lastRoundWinner);
+    setRefereeArms('point-' + s.lastRoundWinner);
   } else if (phase === 'matchEnd' && s.results?.winner) {
     // Kết thúc trận: còi 3 tiếng + chỉ tay về đội thắng trận (giữ suốt matchEnd).
     playWhistle('end');
-    referee.classList.add('ref-point-' + s.results.winner);
+    setRefereeArms('point-' + s.results.winner);
   }
 }
+
+// v17: đồng bộ pose trọng tài từ lastState, chạy mỗi 500ms để TỰ CHỮA
+// nếu event/phase-tracking nào bị lỡ. Đặt transform tay bằng INLINE STYLE
+// (bypass mọi selector CSS) + giữ class để CSS khác vẫn ăn.
+let lastRoundStartAt = 0;
+function setRefereeArms(pose) {
+  const referee = $('referee');
+  if (!referee) return;
+  const armA = referee.querySelector('.ref-arm.a');
+  const armB = referee.querySelector('.ref-arm.b');
+  const poses = {
+    neutral: ['rotate(18deg)', 'rotate(-18deg)'],
+    blow: ['rotate(-155deg)', 'rotate(-18deg)'],
+    'point-xanh': ['rotate(-85deg)', 'rotate(18deg)'],
+    'point-do': ['rotate(-18deg)', 'rotate(85deg)']
+  };
+  const [a, b] = poses[pose] || poses.neutral;
+  if (armA) armA.style.transform = a;
+  if (armB) armB.style.transform = b;
+  referee.classList.remove('ref-blow', 'ref-point-xanh', 'ref-point-do');
+  if (pose === 'blow') referee.classList.add('ref-blow');
+  else if (pose === 'point-xanh') referee.classList.add('ref-point-xanh');
+  else if (pose === 'point-do') referee.classList.add('ref-point-do');
+}
+let syncPrevPhase = '';
+function syncRefereePose() {
+  const s = lastState;
+  if (!s) return;
+  const phase = s.phase || '';
+  // Tự phát hiện bắt đầu hiệp (không dựa vào updateReferee).
+  if (phase === 'playing' && syncPrevPhase !== 'playing') {
+    lastRoundStartAt = Date.now();
+  }
+  syncPrevPhase = phase;
+  if (phase === 'playing') {
+    if (Date.now() - lastRoundStartAt < 3000) setRefereeArms('blow');
+    else setRefereeArms('neutral');
+  } else if (phase === 'roundEnd' && s.lastRoundWinner) {
+    setRefereeArms('point-' + s.lastRoundWinner);
+  } else if (phase === 'matchEnd' && s.results?.winner) {
+    setRefereeArms('point-' + s.results.winner);
+  } else {
+    setRefereeArms('neutral');
+  }
+}
+setInterval(syncRefereePose, 500);
 
 function voiceTransitions(s, oldState) {
   const waiting = !!s.waitingForMatch;
@@ -2631,12 +2678,8 @@ socket.on('state-update', s => {
 });
 socket.on('round-win', d => {
   if (!d?.team) return;
-  // v16: trọng tài chỉ tay về đội thắng hiệp (dự phòng cho phase-tracking).
-  const referee = $('referee');
-  if (referee) {
-    referee.classList.remove('ref-blow', 'ref-point-xanh', 'ref-point-do');
-    referee.classList.add('ref-point-' + d.team);
-  }
+  // v16/v17: trọng tài chỉ tay về đội thắng hiệp.
+  setRefereeArms('point-' + d.team);
   enqueueVoiceFile(
     d.team === 'xanh' ? 'round-win-xanh' : 'round-win-do',
     8
@@ -2652,12 +2695,8 @@ socket.on('round-win', d => {
 
 socket.on('match-win', d => {
   if (!d?.team) return;
-  // v16: trọng tài chỉ tay về đội thắng trận (dự phòng cho phase-tracking).
-  const referee = $('referee');
-  if (referee) {
-    referee.classList.remove('ref-blow', 'ref-point-xanh', 'ref-point-do');
-    referee.classList.add('ref-point-' + d.team);
-  }
+  // v16/v17: trọng tài chỉ tay về đội thắng trận.
+  setRefereeArms('point-' + d.team);
   for (let index = voiceQueue.length - 1; index >= 0; index--) {
     if (voiceQueue[index].priority < 8) voiceQueue.splice(index,1);
   }
