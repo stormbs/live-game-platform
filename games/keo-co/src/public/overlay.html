@@ -528,7 +528,7 @@ h1.ui-title{
   position:absolute;width:130px;height:230px;
   text-align:center;overflow:visible
 }
-.puller.alt .tile-text{top:-32px}
+.puller.alt .tile-text{top:-36px}
 .puller .tile-text{
   position:absolute;top:-8px;left:50%;transform:translateX(-50%);
   width:auto;max-width:72px;height:24px;
@@ -687,10 +687,10 @@ h1.ui-title{
 }
 #referee.ref-blow .ref-arm.a{transform:rotate(-155deg)}
 #referee.ref-blow .ref-arm.b{transform:rotate(-18deg)}
-#referee.ref-point-xanh .ref-arm.a{transform:rotate(-85deg)}
+#referee.ref-point-xanh .ref-arm.a{transform:rotate(90deg)}
 #referee.ref-point-xanh .ref-arm.b{transform:rotate(18deg)}
 #referee.ref-point-do .ref-arm.a{transform:rotate(-18deg)}
-#referee.ref-point-do .ref-arm.b{transform:rotate(85deg)}
+#referee.ref-point-do .ref-arm.b{transform:rotate(-90deg)}
 .ui-panel,.scoreboard,.guide-board,.top5,.ticker,#scaler>.ui-statusbar{
   border-color:#b9e1ff55;
   box-shadow:0 8px 0 #030c18,0 12px 30px #0006,inset 0 1px #ffffff2b
@@ -2426,8 +2426,8 @@ function setRefereeArms(pose) {
   const poses = {
     neutral: ['rotate(18deg)', 'rotate(-18deg)', 68, 68, 'rotate(0deg)'],
     blow: ['rotate(-155deg)', 'rotate(-18deg)', 68, 68, 'rotate(0deg)'],
-    'point-xanh': ['rotate(-90deg)', 'rotate(18deg)', 104, 68, 'rotate(-8deg)'],
-    'point-do': ['rotate(-18deg)', 'rotate(90deg)', 68, 104, 'rotate(8deg)']
+    'point-xanh': ['rotate(90deg)', 'rotate(18deg)', 104, 68, 'rotate(-15deg)'],
+    'point-do': ['rotate(-18deg)', 'rotate(-90deg)', 68, 104, 'rotate(15deg)']
   };
   const [a, b, hA, hB, lean] = poses[pose] || poses.neutral;
   if (armA) { armA.style.transform = a; armA.style.height = hA + 'px'; }
