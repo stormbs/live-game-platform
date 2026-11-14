@@ -798,7 +798,7 @@ h1.ui-title{
 
 const $ = id => document.getElementById(id);
 const scaler = $('scaler');
-const API_ROOT = '/' + 'api';
+const API_ROOT = location.pathname.replace(/\/$/, '') + '/' + 'api';
 const endpoint = path => API_ROOT + '/' + path;
 
 function fit() {
