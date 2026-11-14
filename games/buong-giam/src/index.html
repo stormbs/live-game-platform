@@ -954,24 +954,16 @@
               <div class="card-title">🎯 Cài đặt TikFinity (đường sự kiện chính)</div>
             </div>
             <div style="font-size:14px; line-height:1.8; padding:4px 2px;">Game nhận sự kiện live (bình luận, quà, tim, follow, share, vào phòng) qua <b>TikFinity</b> chạy trên máy Windows của bạn. TikFinity gửi sự kiện về máy chủ qua webhook bên dưới. Thẻ “Kết nối trực tiếp” ở trên cũng đếm mọi sự kiện này — khi số sự kiện &gt; 0 là TikFinity đã nối đúng.</div>
-            <div style="font-size:14px; line-height:1.8; padding:4px 2px;">📖 <b>Bài hướng dẫn đầy đủ từng bước</b> (lấy link webhook riêng, tạo 6 Action, gắn 6 sự kiện, thứ tự lên live, cách kiểm chứng): <a id="tf-guide-link" href="/huong-dan-tikfinity" target="_blank">Mở hướng dẫn cài đặt TikFinity ↗</a><br>Nhớ thứ tự lên live: <b>Go LIVE</b> trong TikTok LIVE Studio TRƯỚC, rồi mới bấm <b>Connect</b> trong TikFinity.</div>
+            <div style="font-size:14px; line-height:1.8; padding:4px 2px;">📖 <b>Bài hướng dẫn đầy đủ từng bước</b> (lấy link webhook riêng, tạo 1 Action duy nhất, gắn các sự kiện vào Action đó, thứ tự lên live, cách kiểm chứng): <a id="tf-guide-link" href="/huong-dan-tikfinity" target="_blank">Mở hướng dẫn cài đặt TikFinity ↗</a><br>Nhớ thứ tự lên live: <b>Go LIVE</b> trong TikTok LIVE Studio TRƯỚC, rồi mới bấm <b>Connect</b> trong TikFinity.</div>
 
             <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin:14px 0 6px;">Webhook của phòng này</h4>
             <div style="font-size:14px;"><code id="tf-webhook-url" style="word-break:break-all;">…</code> <button onclick="copyTfWebhook()" class="btn btn-gold" style="white-space:nowrap;">📋 Sao chép</button> <span id="tf-copy-msg"></span></div>
-            <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin:14px 0 6px;">2. Tạo 6 Action webhook — mỗi sự kiện 1 URL riêng</h4>
+            <h4 style="color:#ffd700; font-size:15px; font-weight:800; margin:14px 0 6px;">Tạo 1 Action webhook duy nhất</h4>
             <ol>
-              <li>Tạo 6 Action riêng trong TikFinity, mỗi Action cho 1 sự kiện: loại <b>Webhook</b> (Trigger WebHook), Method <b>POST</b>, URL = URL của đúng sự kiện đó bên dưới. Tên Action theo mẫu “&lt;Tên game&gt; - &lt;Sự kiện&gt;”.</li>
-              <li><b>Không cần nhập body:</b> action webhook của TikFinity chỉ có ô URL — TikFinity tự gửi sẵn nội dung sự kiện, máy chủ phân biệt loại sự kiện bằng <code>?event=…</code> trên URL.</li>
-              <li>Tạo 6 Event, mỗi Event chọn đúng trigger (Quà = “Sending a gift with min. coins value”, min 1; Bình luận = “Chat (any comment)”; Tim = “Sending likes (taps)”; Follow = “Follow”; Share = “Share”; Vào phòng = “Join”), rồi ở ô “Trigger all of these actions” chọn đúng Action của nó.</li>
+              <li>Tạo <b>1 Action duy nhất</b> trong TikFinity: loại <b>Webhook</b> (Trigger WebHook), Method <b>POST</b>, URL = URL webhook của phòng này ở trên (không thêm <code>?event=</code>). Tên Action theo mẫu “&lt;Tên game&gt;” (vd “Buong Giam”).</li>
+              <li><b>Không cần nhập body:</b> action webhook của TikFinity chỉ có ô URL — TikFinity tự gửi sẵn nội dung sự kiện KÈM loại sự kiện, máy chủ tự phân biệt loại sự kiện từ body nên 1 Action xử lý được mọi sự kiện.</li>
+              <li>Tạo các Event (Quà = “Sending a gift with min. coins value”, min 1; Bình luận = “Chat (any comment)”; Tim = “Sending likes (taps)”; Follow = “Follow”; Share = “Share”; Vào phòng = “Join”), rồi ở ô “Trigger all of these actions” đều chọn <b>Action duy nhất</b> vừa tạo. Không cần tạo Action riêng cho từng sự kiện.</li>
             </ol>
-            <div style="font-size:14px;line-height:1.9">
-              <div>🎁 Quà tặng — Action “Buong Giam - Qua”<br><code id="tf-url-gift" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('gift')">📋 Sao chép URL</button></div>
-              <div>💬 Bình luận — Action “Buong Giam - Binh luan”<br><code id="tf-url-chat" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('chat')">📋 Sao chép URL</button></div>
-              <div>❤️ Thả tim — Action “Buong Giam - Tim”<br><code id="tf-url-like" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('like')">📋 Sao chép URL</button></div>
-              <div>➕ Theo dõi — Action “Buong Giam - Follow”<br><code id="tf-url-follow" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('follow')">📋 Sao chép URL</button></div>
-              <div>🔗 Chia sẻ — Action “Buong Giam - Share”<br><code id="tf-url-share" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('share')">📋 Sao chép URL</button></div>
-              <div>🚪 Vào phòng — Action “Buong Giam - Vao phong”<br><code id="tf-url-join" style="word-break:break-all;">…</code> <button onclick="copyTfEventUrl('join')">📋 Sao chép URL</button></div>
-            </div>
             <div style="font-size:13px; line-height:1.8; margin-top:8px;">Tên biến ($userId, $nickname, $uniqueId, $comment…) tùy phiên bản TikFinity — bấm nút chèn biến (insert variable) của TikFinity để lấy đúng tên. Nếu không có $uniqueId thì dùng biến tên TikTok mà TikFinity gợi ý, hoặc bỏ trường uniqueId (engine tự dùng nickname thay thế). Số xu chỉ lấy $diamondCount thật, không bịa.</div>
           </div>
         </section>
@@ -1373,20 +1365,6 @@
       else { const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(t); done(); }
     }
     fillTfWebhook();
-    // 6 URL webhook theo sự kiện (cơ chế TikFinity mới: ?event=... trên URL, không body).
-    function fillTfEventUrls() {
-      var base = tfWebhookUrlBG();
-      var urls = { gift: base + '?event=gift', chat: base + '?event=chat', like: base + '?event=like', follow: base + '?event=follow', share: base + '?event=share', join: base + '?event=join' };
-      for (var k in urls) { var el = document.getElementById('tf-url-' + k); if (el) el.textContent = urls[k]; }
-    }
-    function copyTfEventUrl(key) {
-      var el = document.getElementById('tf-url-' + key);
-      var url = el ? el.textContent : '';
-      var done = function () { var m = document.getElementById('tf-copy-msg'); if (m) m.textContent = '✅ Đã sao chép!'; };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);
-      else { var t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(t); done(); }
-    }
-    fillTfEventUrls();
 
     function cleanIdleUsers() {
       const min = parseInt(document.getElementById('idle-minutes-input')?.value || 10);

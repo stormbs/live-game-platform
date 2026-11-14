@@ -87,9 +87,13 @@
     <p style="font-size:13px;color:#a78bfa">Demo mô phỏng liên tục qua đúng đường xử lý sự kiện thật. Demo tự dừng khi có sự kiện thật từ LIVE và từ chối chạy khi phòng đã có sự kiện thật.</p>
   </div>
   <div class="card"><h2>🎯 Cài đặt TikFinity</h2>
-    <p style="font-size:14px;line-height:1.6">Tạo <b>6 Action webhook</b>, mỗi action dán <b>1 URL riêng</b> theo sự kiện dưới đây (copy từ bảng). Rồi tạo <b>6 Event</b>, mỗi event chọn đúng trigger và chọn đúng action của nó ở mục <b>"Trigger all of these actions"</b>. Xem bài hướng dẫn đầy đủ: <a id="guide-link" href="#" style="color:#a5f3fc">Hướng dẫn TikFinity</a>. <b>Không có body</b> — TikFinity tự gửi body cố định, phân biệt sự kiện bằng URL.</p>
-    <div class="row"><span>Link webhook của phòng:</span><span class="mono" id="webhook-url">…</span><button id="btn-copy-webhook" class="secondary">📋 Sao chép</button></div>
-    <table style="margin-top:10px"><thead><tr><th>Action</th><th>Trigger (loại sự kiện)</th><th>URL riêng</th><th></th></tr></thead><tbody id="actions-body"><tr><td colspan="4">Đang tải…</td></tr></tbody></table>
+    <p style="font-size:14px;line-height:1.6">Game nhận sự kiện live qua <b>TikFinity</b>. TikFinity gửi kèm loại sự kiện trong body nên <b>chỉ cần 1 Action duy nhất</b> với link webhook của phòng (không thêm <code>?event=</code>) — mọi Event đều trỏ vào Action đó. Xem bài hướng dẫn đầy đủ: <a id="tf-guide-link" href="#" style="color:#a5f3fc">Hướng dẫn TikFinity</a>. <b>Không có body</b> — TikFinity tự gửi body cố định KÈM loại sự kiện.</p>
+    <div class="row"><span>Link webhook của phòng:</span><span class="mono" id="tf-webhook-url">…</span><button id="btn-copy-webhook" class="secondary">📋 Sao chép</button> <span id="tf-copy-msg"></span></div>
+    <h3 style="margin-top:12px">Tạo 1 Action webhook duy nhất</h3>
+    <ol style="font-size:14px;line-height:1.7;margin-top:10px">
+      <li>Tạo <b>1 Action duy nhất</b> trong TikFinity: loại <b>Webhook</b> (Trigger WebHook), Method <b>POST</b>, URL = link webhook của phòng ở trên (không thêm <code>?event=</code>). Tên Action theo mẫu “&lt;Tên game&gt;” (vd “Di Bar Online”).</li>
+      <li>Tạo các Event (Quà = “Sending a gift with min. coins value”, min 1; Bình luận = “Chat (any comment)”; Tim = “Sending likes (taps)”; Follow = “Follow”; Share = “Share”; Vào phòng = “Join”), rồi ở ô “Trigger all of these actions” đều chọn <b>Action duy nhất</b> vừa tạo. Không cần tạo Action riêng cho từng sự kiện. <b>Go LIVE trước rồi mới Connect TikFinity.</b></li>
+    </ol>
   </div>
 </main>
 <script src="/socket.io/socket.io.js"></script>
@@ -99,7 +103,7 @@ const $ = (id) => document.getElementById(id);
 const pathParts = location.pathname.split('/').filter(Boolean);
 const username = pathParts[pathParts.length - 1] || 'live';
 $('overlay-link').innerHTML = '<a href="/o/di-bar-online/' + username + '" target="_blank" style="color:#fde047">/o/di-bar-online/' + username + '</a>';
-$('guide-link').href = '/huong-dan-tikfinity?game=di-bar-online&username=' + username;
+$('tf-guide-link').href = '/huong-dan-tikfinity?game=di-bar-online&username=' + username;
 async function api(path, opts) {
   const r = await fetch(path, opts);
   return r.json().catch(() => ({}));
@@ -151,14 +155,19 @@ $('btn-t-comment').onclick = () => api('/api/test/comment', { method: 'POST', he
 $('btn-t-gift').onclick = () => api('/api/test/gift', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: $('t-name').value || 'Người thử', coins: 50 }) }).then(refresh);
 $('btn-t-follow').onclick = () => api('/api/test/follow', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: $('t-name').value || 'Người thử' }) }).then(refresh);
 $('btn-t-bulk').onclick = () => api('/api/test/bulk-join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ count: 100 }) }).then(refresh);
-$('btn-copy-webhook').onclick = () => navigator.clipboard.writeText($('webhook-url').textContent).then(() => alert('Đã sao chép link webhook.'));
+$('btn-copy-webhook').onclick = copyTfWebhook;
 function refresh() { fetch('/api/state').then((r) => r.json()).then(render).catch(() => {}); }
 socket.on('state-update', render);
 refresh();
-fetch('/api/tikfinity-actions').then((r) => r.json()).then((d) => {
-  $('webhook-url').textContent = d.webhookUrl || '—';
-  $('actions-body').innerHTML = (d.actions || []).map((a) => `<tr><td>${esc(a.actionName)}</td><td>${esc(a.triggerLabel)}</td><td class="mono">${esc(a.url)}</td><td><button class="secondary" onclick="navigator.clipboard.writeText('${esc(a.url)}')">📋</button></td></tr>`).join('');
-}).catch(() => { $('actions-body').innerHTML = '<tr><td colspan="4">Không tải được danh sách action.</td></tr>'; });
+// --- TikFinity 1 Action: URL webhook của phòng (ghép bằng join để transform.js không viết lại).
+function tfWebhookUrl() { return location.origin + ['', 'o', 'di-bar-online', username, 'api', 'webhook'].join('/'); }
+function copyTfWebhook() {
+  var url = tfWebhookUrl();
+  var done = function () { var m = document.getElementById('tf-copy-msg'); if (m) m.textContent = '✅ Đã sao chép!'; };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);
+  else { var t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(t); done(); }
+}
+$('tf-webhook-url').textContent = tfWebhookUrl();
 </script>
 </body>
 </html>

@@ -214,12 +214,16 @@
 </div>
 
 <div class="card" style="margin-top:14px;">
-  <h2>🎯 Cài đặt TikFinity (6 Action riêng — mỗi Action 1 URL riêng theo sự kiện)</h2>
-  <div style="font-size:14px; margin-bottom:10px;">⚠️ TikFinity thật: Action "Trigger WebHook" <b>chỉ có ô URL, KHÔNG có ô body</b> — TikFinity tự gửi body dạng form cố định, mình không nhập body. Phân biệt sự kiện bằng <b>URL riêng</b>: tạo <b>6 Action webhook</b>, mỗi action dán 1 URL riêng dưới đây, rồi tạo <b>6 Event</b>, mỗi event chọn đúng Action của nó ở <b>"Trigger all of these actions"</b>. <b>Go LIVE trước rồi mới Connect TikFinity.</b> Xem chi tiết trong <a href="/huong-dan-tikfinity" id="guide-link" style="color:#ffd94d;">bài hướng dẫn TikFinity đầy đủ</a> (đã điền sẵn link phòng này).</div>
-  <h3 style="font-size:15px; color:#bcd9f5; margin:10px 0 6px;">Bước 1 — Tạo 6 Action webhook (mỗi action dán đúng URL riêng của nó)</h3>
-  <table><thead><tr><th>Tên Action</th><th>URL riêng (dán vào ô URL của Action)</th><th></th></tr></thead><tbody id="tikfinity-actions"><tr><td colspan="3">Đang tải…</td></tr></tbody></table>
-  <h3 style="font-size:15px; color:#bcd9f5; margin:14px 0 6px;">Bước 2 — Tạo 6 Event (mỗi event chọn đúng Action ở "Trigger all of these actions")</h3>
-  <table><thead><tr><th>Loại trigger trong TikFinity (Event)</th><th>Action chọn ở "Trigger all of these actions"</th></tr></thead><tbody id="tikfinity-events"><tr><td colspan="2">Đang tải…</td></tr></tbody></table>
+  <h2>🎯 Cài đặt TikFinity (đường sự kiện chính)</h2>
+  <div style="font-size:14px; margin-bottom:10px;">Game nhận sự kiện live (bình luận, quà, tim, follow, share, vào phòng) qua <b>TikFinity</b> chạy trên máy Windows của bạn. TikFinity gửi sự kiện về máy chủ qua webhook bên dưới. ⚠️ Action “Trigger WebHook” <b>chỉ có ô URL, KHÔNG có ô body</b> — TikFinity tự gửi sẵn nội dung sự kiện KÈM loại sự kiện, máy chủ tự phân biệt nên <b>chỉ cần 1 Action duy nhất</b> cho mọi sự kiện. <b>Go LIVE trước rồi mới Connect TikFinity.</b> Xem chi tiết trong <a href="/huong-dan-tikfinity" id="tf-guide-link" style="color:#ffd94d;">bài hướng dẫn TikFinity đầy đủ</a> (đã điền sẵn link phòng này).</div>
+  <h3 style="font-size:15px; color:#bcd9f5; margin:10px 0 6px;">Webhook của phòng này</h3>
+  <div style="font-size:14px;"><code id="tf-webhook-url" style="word-break:break-all;">…</code> <button class="btn btn-gold" onclick="copyTfWebhook()">📋 Sao chép</button> <span id="tf-copy-msg"></span></div>
+  <h3 style="font-size:15px; color:#bcd9f5; margin:14px 0 6px;">Tạo 1 Action webhook duy nhất</h3>
+  <ol style="font-size:14px; line-height:1.7;">
+    <li>Tạo <b>1 Action duy nhất</b> trong TikFinity: loại <b>Webhook</b> (Trigger WebHook), Method <b>POST</b>, URL = URL webhook của phòng này ở trên (không thêm <code>?event=</code>). Tên Action theo mẫu “&lt;Tên game&gt;” (vd “Keo Co”).</li>
+    <li><b>Không cần nhập body:</b> action webhook của TikFinity chỉ có ô URL — TikFinity tự gửi sẵn nội dung sự kiện KÈM loại sự kiện, máy chủ tự phân biệt loại sự kiện từ body nên 1 Action xử lý được mọi sự kiện.</li>
+    <li>Tạo các Event (Quà = “Sending a gift with min. coins value”, min 1; Bình luận = “Chat (any comment)”; Tim = “Sending likes (taps)”; Follow = “Follow”; Share = “Share”; Vào phòng = “Join”), rồi ở ô “Trigger all of these actions” đều chọn <b>Action duy nhất</b> vừa tạo. Không cần tạo Action riêng cho từng sự kiện.</li>
+  </ol>
 </div>
 
 <div class="card" style="margin-top:14px;">
@@ -342,41 +346,29 @@ async function modeLive() {
   await api('/api/test/demo-stop', {});
   await api('/api/settings', { demoMode: false });
 }
-let tikUrls = {};
-function copyUrl(key) {
-  const t = tikUrls[key] || '';
-  if (!t) return;
-  if (navigator.clipboard) navigator.clipboard.writeText(t).then(() => { $('test-result').textContent = '✅ Đã sao chép URL của action "' + key + '". Dán vào ô URL trong TikFinity.'; });
+// --- TikFinity 1 Action: URL webhook của phòng (ghép bằng join để lib/transform.js không viết lại).
+function tfWebhookUrl() { var u = location.pathname.split('/')[3] || ''; return location.origin + ['', 'o', 'keo-co', u, 'api', 'webhook'].join('/'); }
+function fillTfWebhook() {
+  var url = tfWebhookUrl();
+  var el = document.getElementById('tf-webhook-url'); if (el) el.textContent = url;
+  var w = document.getElementById('webhook-url'); if (w) w.textContent = url.replace(location.origin, '');
 }
-async function loadTikfinity() {
-  try {
-    const r = await fetch('/api/tikfinity-actions');
-    const d = await r.json();
-    if (d.webhookUrl) { $('webhook-url').textContent = d.webhookUrl.replace(location.origin, ''); }
-    if (Array.isArray(d.actions)) {
-      tikUrls = {};
-      d.actions.forEach((a) => { tikUrls[a.key] = a.url; });
-      $('tikfinity-actions').innerHTML = d.actions.map((a) =>
-        '<tr><td><b>' + esc(a.actionName) + '</b></td>' +
-        '<td><code style="display:block; max-width:520px; overflow-x:auto; white-space:pre; font-size:12px;">' + esc(a.url) + '</code></td>' +
-        '<td><button class="btn btn-gold" onclick="copyUrl(\'' + a.key + '\')">📋 Sao chép URL</button></td></tr>').join('');
-      $('tikfinity-events').innerHTML = d.actions.map((a) =>
-        '<tr><td>' + esc(a.triggerLabel) + '</td><td><b>' + esc(a.actionName) + '</b></td></tr>').join('');
-    }
-  } catch (e) {
-    $('tikfinity-actions').innerHTML = '<tr><td colspan="3">Không tải được bảng URL — mở bài hướng dẫn TikFinity để xem.</td></tr>';
-  }
+function copyTfWebhook() {
+  var url = tfWebhookUrl();
+  var done = function () { var m = document.getElementById('tf-copy-msg'); if (m) m.textContent = '✅ Đã sao chép!'; };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);
+  else { var t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(t); done(); }
 }
+fillTfWebhook();
 $('demo-toggle').addEventListener('change', async (e) => {
   await api('/api/settings', { demoMode: e.target.checked });
 });
 const roomPath = location.pathname.replace(/\/index\.html$/, '');
 const overlayPath = roomPath.replace(/^\/room\//, '/o/');
 $('overlay-url').textContent = overlayPath;
-$('guide-link').href = '/huong-dan-tikfinity?game=keo-co&username=' + encodeURIComponent(location.pathname.split('/')[3] || '');
+$('tf-guide-link').href = '/huong-dan-tikfinity?game=keo-co&username=' + encodeURIComponent(location.pathname.split('/')[3] || '');
 socket.on('state-update', render);
 fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
-loadTikfinity();
 </script>
 </body>
 </html>

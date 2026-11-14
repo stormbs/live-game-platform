@@ -22,11 +22,13 @@ function createEngine(ctx) {
   const { webhookUrl, publicBaseUrl } = require('../../lib/webhook-bodies');
   // TikFinity thật (xác minh từ log live thật 2026-11-13): action "Trigger
   // WebHook" CHỈ có ô URL, KHÔNG có ô body — TikFinity tự gửi body dạng
-  // form cố định (value1/value2/value3/content/avatar_url). KHÔNG CÓ BODY.
-  // Cơ chế đúng: 6 Action webhook, MỖI ACTION 1 URL RIÊNG phân biệt bằng
-  // query ?event=<loại> + 6 Event, mỗi event chọn đúng action của nó ở
-  // "Trigger all of these actions". (Parser đọc form do CEO sửa ở
-  // lib/game-common.js — engine này không chạm file đó.)
+  // form cố định (value1/value2/value3/content/avatar_url) KÈM trường event.
+  // Cơ chế đúng (1-Action, Chủ tịch chốt 2026-11-13): 1 Action webhook duy
+  // nhất với URL gốc của phòng (không ?event=), mọi Event đều trỏ vào Action
+  // đó; máy chủ đọc loại sự kiện từ trường event trong body. Đường dự phòng:
+  // 6 URL ?event=<loại> + 6 Action riêng (chỉ dùng khi TikFinity không gửi
+  // trường event). (Parser đọc form do CEO sửa ở lib/game-common.js —
+  // engine này không chạm file đó.)
   const GAME = 'dua-thuyen-rong';
   const GAME_NAME_VI = 'Đua Thuyền Rồng';
   const TIKFINITY_ACTIONS = [

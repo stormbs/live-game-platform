@@ -20,17 +20,23 @@
 - Dashboard: `https://live-game-platform-production.up.railway.app/o/chiem-co/<tiktok-username>/`
 - Overlay demo: `.../overlay?demo=1`
 
-## Cài đặt TikFinity (6 Action, mỗi action 1 URL riêng `?event=`, KHÔNG body)
-Lấy URL từ dashboard (mục "🎯 Cài đặt TikFinity") hoặc route
-`GET /o/chiem-co/<username>/api/tikfinity-actions`. Tạo 6 Action webhook:
-- `Chiếm Cờ - Qua` — trigger "Sending a gift with min. coins value" (min 1)
-- `Chiếm Cờ - Binh luan` — trigger "Chat (any comment)"
-- `Chiếm Cờ - Tim` — trigger "Sending likes (taps)"
-- `Chiếm Cờ - Follow` — trigger "Follow"
-- `Chiếm Cờ - Share` — trigger "Share"
-- `Chiếm Cờ - Vao phong` — trigger "Join"
-Rồi tạo 6 Event, mỗi event chọn đúng action ở "Trigger all of these actions".
+## Cài đặt TikFinity (1 Action duy nhất, KHÔNG body)
+Chỉ cần 1 Action webhook duy nhất với URL gốc của phòng (lấy từ dashboard,
+mục "🎯 Cài đặt TikFinity"; không thêm `?event=`), tên Action theo mẫu
+"Chiếm Cờ", loại Webhook, Method POST. Rồi tạo 6 Event, mỗi event đều chọn
+Action duy nhất vừa tạo ở "Trigger all of these actions":
+- Quà — trigger "Sending a gift with min. coins value" (min 1)
+- Bình luận — trigger "Chat (any comment)"
+- Tim — trigger "Sending likes (taps)"
+- Follow — trigger "Follow"
+- Share — trigger "Share"
+- Vào phòng — trigger "Join"
 Hướng dẫn đầy đủ: `/huong-dan-tikfinity`.
+Dự phòng (chỉ dùng khi TikFinity không gửi trường event trong body): 6 URL
+riêng `?event=gift|chat|like|follow|share|join` + 6 tên Action
+`Chiếm Cờ - Qua`, `Chiếm Cờ - Binh luan`, `Chiếm Cờ - Tim`,
+`Chiếm Cờ - Follow`, `Chiếm Cờ - Share`, `Chiếm Cờ - Vao phong` (lấy từ
+route `GET /o/chiem-co/<username>/api/tikfinity-actions`).
 
 ## Checklist test thủ công (Agent Windows / live thật)
 - [ ] T01. Mở overlay: thấy 3 cột cờ + bảng điểm 2 đội + đồng hồ trận.

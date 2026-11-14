@@ -29,9 +29,9 @@ Deploy: Railway (project unique-empathy), **auto-deploy TẮT** — deploy tay s
    KHÔNG add, KHÔNG commit thay. Khi commit chỉ add đúng file mình sửa.
 
 5. **Test trước khi push:** `npm test` (`node --test test/*.test.js`).
-   Full suite có 2 fail có từ trước ở `test/tikfinity.test.js` (guide 6 URL /
-   dashboard 6 Action — test chưa cập nhật theo hướng 1-Action), không do game
-   gây ra, không chặn deploy. Fail mới ngoài 2 cái đó thì phải sửa.
+   Full suite phải xanh hết trước khi push. Fail mới thì phải sửa.
+   (Từ 2026-11-14: test đã cập nhật theo hướng TikFinity 1-Action, 2 fail cũ
+   ở `test/tikfinity.test.js` đã hết.)
 
 6. **Không bịa số liệu, không xác nhận suông.** Chỉ báo xong khi có bằng chứng
    kiểm chứng được: test chạy, link live mở được, screenshot đã tự xem.
@@ -67,8 +67,10 @@ Deploy: Railway (project unique-empathy), **auto-deploy TẮT** — deploy tay s
   drop-shadow nhẹ, KHÔNG cắt tròn).
 - Nguồn + rủi ro bản quyền: `shared/assets/2d/meme/SOURCES.md`.
   (Chủ tịch đã nghe rủi ro bản quyền trollface và vẫn chốt dùng ảnh gốc.)
-- Mẫu chuẩn: game Kéo Co (`games/keo-co/`) — mặt meme làm đầu, thân áo màu đội,
-  tên 13px, nghiêng kéo luôn tối thiểu 11° (không về 0°).
+- Mẫu chuẩn: game Đua Xe Leo Núi (`games/dua-xe-leo-nui/`) — đầu meme ngồi trong
+  ghế lái, xe chạy theo tiến độ, tên + số mét đầy đủ không cắt. (Kéo Co từng là
+  mẫu nhưng đã bị Chủ tịch bác ngày 14/11 vì "trông chán lắm, sai hết rồi" —
+  đang chờ Codex làm lại, KHÔNG lấy làm mẫu.)
 
 ## Chuẩn kiểm chứng — bằng mắt, không bằng test xanh
 

@@ -157,12 +157,14 @@
 
   <div class="card">
     <h2>🎯 Cài đặt TikFinity</h2>
-    <p class="muted">Tạo <strong>6 Action webhook</strong>, mỗi action dán 1 URL riêng dưới đây (copy từ bảng). Sau đó tạo <strong>6 Event</strong>, mỗi event chọn đúng trigger + đúng action ở mục "Trigger all of these actions". Xem bài hướng dẫn đầy đủ: <a href="/huong-dan-tikfinity" target="_blank">/huong-dan-tikfinity</a></p>
-    <table>
-      <thead><tr><th>Sự kiện</th><th>Tên Action</th><th>Trigger (chọn trong TikFinity)</th><th>URL webhook (riêng từng sự kiện)</th><th></th></tr></thead>
-      <tbody id="actions-body"><tr><td colspan="5">Đang tải…</td></tr></tbody>
-    </table>
-    <p class="muted">Webhook chung của phòng: <code id="webhook-url"></code></p>
+    <p class="muted">Game nhận sự kiện live qua <b>TikFinity</b> chạy trên máy Windows của bạn. TikFinity gửi kèm loại sự kiện trong body nên <b>chỉ cần 1 Action duy nhất</b> với URL webhook của phòng (không thêm <code>?event=</code>) — mọi Event đều trỏ vào Action đó. Xem bài hướng dẫn đầy đủ: <a id="tf-guide-link" href="/huong-dan-tikfinity" target="_blank">/huong-dan-tikfinity</a></p>
+    <p class="muted">Webhook của phòng: <code id="tf-webhook-url"></code> <button class="copy-btn" onclick="copyTfWebhook()">📋 Sao chép</button> <span id="tf-copy-msg"></span></p>
+    <h3>Tạo 1 Action webhook duy nhất</h3>
+    <ol class="muted">
+      <li>Tạo <b>1 Action duy nhất</b> trong TikFinity: loại <b>Webhook</b> (Trigger WebHook), Method <b>POST</b>, URL = URL webhook của phòng này ở trên (không thêm <code>?event=</code>). Tên Action theo mẫu “&lt;Tên game&gt;” (vd “Dua Thuyen Rong”).</li>
+      <li><b>Không cần nhập body:</b> action webhook của TikFinity chỉ có ô URL — TikFinity tự gửi sẵn nội dung sự kiện KÈM loại sự kiện, máy chủ tự phân biệt loại sự kiện từ body nên 1 Action xử lý được mọi sự kiện.</li>
+      <li>Tạo các Event (Quà = “Sending a gift with min. coins value”, min 1; Bình luận = “Chat (any comment)”; Tim = “Sending likes (taps)”; Follow = “Follow”; Share = “Share”; Vào phòng = “Join”), rồi ở ô “Trigger all of these actions” đều chọn <b>Action duy nhất</b> vừa tạo. Không cần tạo Action riêng cho từng sự kiện. <b>Go LIVE trước rồi mới Connect TikFinity.</b></li>
+    </ol>
   </div>
 
   <div class="card">
@@ -256,18 +258,18 @@
     } catch (e) {}
     setTimeout(poll, 2000);
   }
-  async function loadActions() {
-    try {
-      const r = await fetch('/api/tikfinity-actions');
-      const d = await r.json();
-      document.getElementById('webhook-url').textContent = d.webhookUrl;
-      document.getElementById('actions-body').innerHTML = d.actions.map((a, i) => `<tr><td>${a.key}</td><td>${esc(a.actionName)}</td><td>${esc(a.triggerLabel)}</td><td class="url-cell">${esc(a.url)}</td><td><button class="copy-btn" data-url="${esc(a.url)}">Sao chép</button></td></tr>`).join('');
-      document.querySelectorAll('.copy-btn').forEach((b) => b.addEventListener('click', () => {
-        navigator.clipboard.writeText(b.getAttribute('data-url')).then(() => { b.textContent = 'Đã sao chép ✓'; setTimeout(() => { b.textContent = 'Sao chép'; }, 1500); });
-      }));
-    } catch (e) {
-      document.getElementById('actions-body').innerHTML = '<tr><td colspan="5">Không tải được danh sách action.</td></tr>';
-    }
+  // --- TikFinity 1 Action: URL webhook của phòng (ghép bằng join để lib/transform.js không viết lại).
+  function tfWebhookUrl() { return location.origin + ['', 'o', 'dua-thuyen-rong', username, 'api', 'webhook'].join('/'); }
+  function copyTfWebhook() {
+    var url = tfWebhookUrl();
+    var done = function () { var m = document.getElementById('tf-copy-msg'); if (m) m.textContent = '✅ Đã sao chép!'; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);
+    else { var t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(t); done(); }
+  }
+  function loadActions() {
+    document.getElementById('tf-webhook-url').textContent = tfWebhookUrl();
+    var gl = document.getElementById('tf-guide-link');
+    if (gl) gl.href = '/huong-dan-tikfinity?game=dua-thuyen-rong&username=' + encodeURIComponent(username);
   }
   document.getElementById('btn-reset').addEventListener('click', async () => { await api('/api/race/reset'); poll(); });
   document.getElementById('btn-save').addEventListener('click', async () => {

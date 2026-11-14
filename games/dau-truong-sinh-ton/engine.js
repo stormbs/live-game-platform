@@ -8,7 +8,9 @@
 // -> người nhiều HP nhất thắng. Còn đúng 1 người -> spotlight 30s -> trận mới.
 // Demo theo ~/workspace/overlay-moi/demo-mode-contract.md.
 // TikFinity thật (xác minh từ log live thật): action WebHook CHỈ có ô URL,
-// KHÔNG có body — 6 Action, mỗi action 1 URL riêng ?event=<loại>.
+// KHÔNG có body — 1 Action duy nhất với URL gốc của phòng (không ?event=),
+// máy chủ đọc loại sự kiện từ trường event trong body; 6 URL ?event=<loại>
+// chỉ là đường dự phòng (endpoint /api/tikfinity-actions).
 'use strict';
 
 function createEngine(ctx) {

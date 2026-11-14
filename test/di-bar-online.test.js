@@ -7,7 +7,7 @@
 // mới làm mới bar; drop: tim x2 trong 15s; điểm bàn = tổng live (không có
 // thắng vòng / bao bar); tối đa 24 dancer trên sàn, người thứ 25 chờ ở quầy;
 // demo start/stop + từ chối khi đã có event thật; ?demo=1 -> demoActive: true.
-// TikFinity thật: 6 Action, MỖI ACTION 1 URL RIÊNG ?event=<loại>, KHÔNG body.
+// TikFinity thật (1-Action, Chủ tịch chốt 2026-11-13): 1 Action duy nhất với URL gốc của phòng, KHÔNG body; 6 URL riêng ?event=<loại> chỉ là đường dự phòng (endpoint /api/tikfinity-actions).
 'use strict';
 
 const test = require('node:test');

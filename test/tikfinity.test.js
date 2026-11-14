@@ -1,19 +1,21 @@
-// test/tikfinity.test.js — Hợp đồng URL mới của TikFinity (KHÔNG còn body).
-// Cơ chế thật đã xác minh 2026-11-13 (từ ảnh TikFinity thật + log live thật
-// của game bản đồ): action "Trigger WebHook" chỉ có ô URL, KHÔNG có ô body.
-// TikFinity tự gửi body cố định dạng form-urlencoded (value1=tên tài khoản,
-// value2=nội dung/tên quà, value3=số xu, content=bình luận, avatar_url).
-// Loại sự kiện phân biệt bằng query trên URL:
-//   .../api/webhook?event=gift|chat|like|follow|share|join
-// - Guide (GET /huong-dan-tikfinity) hiện đúng 6 URL theo sự kiện, mỗi URL
-//   1 nút "Sao chép URL", KHÔNG có thẻ <pre>, KHÔNG có body/triggerTypeId.
-// - Dashboard 3 game cũ: link bài hướng dẫn + 6 URL webhook + thẻ trạng thái.
+// test/tikfinity.test.js — Hợp đồng TikFinity 1 ACTION DUY NHẤT (Chủ tịch chốt 2026-11-13).
+// Cơ chế thật đã xác minh (từ ảnh TikFinity thật + log live thật của game
+// bản đồ): action "Trigger WebHook" chỉ có ô URL, KHÔNG có ô body.
+// TikFinity tự gửi body KÈM loại sự kiện (trường event), máy chủ đọc loại
+// từ body nên 1 Action với URL gốc của phòng (không ?event=) xử lý được
+// mọi sự kiện — tạo 1 Action duy nhất, các Event đều trỏ vào Action đó.
+// - Guide (GET /huong-dan-tikfinity): Bước 1 lấy 1 URL webhook duy nhất,
+//   Bước 2 tạo 1 Action duy nhất, Bước 3 các Event đều trỏ vào Action đó;
+//   mục "Dự phòng — Tách riêng từng sự kiện" giữ 6 URL ?event= + 6 tên
+//   Action riêng, CHỈ dùng khi TikFinity không gửi loại sự kiện trong body.
+// - Dashboard cả 14 game: hướng dẫn 1 Action duy nhất, KHÔNG còn bảng
+//   6 URL theo sự kiện, KHÔNG còn ?event= trong dashboard.
 // - Route /o/<game>/<username>/tikfinity.tfc phải 404 (đã gỡ).
 // - Link webhook KHÔNG dùng chung, thứ tự Go LIVE trước rồi Connect, kiểm
 //   chứng bằng số sự kiện > 0 trên dashboard.
-// - POST form + ?event= tới webhook 8 game cũ đều được engine nhận đúng loại;
-//   quà form phải đọc đúng xu từ value3 (ve-avatar vipTop, buong-giam points),
-//   chat "Hà Nội" phải thắp sáng bản đồ.
+// - POST form + ?event= tới webhook 8 game cũ đều được engine nhận đúng loại
+//   (đường dự phòng vẫn chạy); quà form phải đọc đúng xu từ value3
+//   (ve-avatar vipTop, buong-giam points), chat "Hà Nội" phải thắp sáng bản đồ.
 // LƯU Ý: test này KHÔNG kiểm chứng được việc bấm nút trong TikFinity thật
 // (chỉ user làm được trên máy Windows) — chỉ kiểm chứng nội dung hướng dẫn
 // + URL + route + engine nhận event trên máy chủ.
@@ -57,7 +59,7 @@ test('EVENTS: đúng 6 sự kiện theo thứ tự; GAME_NAMES: đủ 6 game m�
   );
 });
 
-test('buildGuideHtml: trang chung giải thích link KHÔNG dùng chung + 6 URL dạng mẫu + thứ tự Go LIVE, KHÔNG có <pre>/body', () => {
+test('buildGuideHtml: trang chung giải thích link KHÔNG dùng chung + 1 Action duy nhất + 6 URL dạng mẫu ở mục dự phòng + thứ tự Go LIVE, KHÔNG có <pre>/body', () => {
   const html = buildGuideHtml({});
   assert.ok(html.includes('KHÔNG dùng chung'), 'thiếu cảnh báo link webhook không dùng chung');
   assert.ok(html.includes('mỗi người 1 link riêng') || html.includes('link riêng'), 'thiếu giải thích link riêng theo người');
@@ -75,19 +77,31 @@ test('buildGuideHtml: trang chung giải thích link KHÔNG dùng chung + 6 URL 
   assert.ok(!html.includes('Body JSON'), 'trang hướng dẫn còn nhắc Body JSON');
   assert.ok(!html.includes('Sao chép body'), 'trang hướng dẫn còn nút Sao chép body');
   assert.ok(html.includes('Không cần nhập body'), 'thiếu giải thích action webhook không có ô body');
+  assert.ok(html.includes('Tạo 1 Action webhook duy nhất'), 'trang chung thiếu mục tạo 1 Action duy nhất');
+  assert.ok(html.includes('Chỉ cần 1 Action duy nhất'), 'trang chung thiếu câu chỉ cần 1 Action duy nhất');
+  assert.ok(html.includes('Tách riêng từng sự kiện'), 'trang chung thiếu mục dự phòng tách riêng từng sự kiện');
 });
 
-test('buildGuideHtml: cá nhân hóa theo ?game=&username= hiện đúng 6 URL webhook theo sự kiện + tên Action', () => {
+test('buildGuideHtml: cá nhân hóa theo ?game=&username= hiện 1 URL webhook duy nhất + 1 Action duy nhất, mục dự phòng giữ 6 URL theo sự kiện', () => {
   const html = buildGuideHtml({ game: 'buong-giam', username: 'phongtest', baseUrl: 'https://example.com' });
+  // Cách chính: 1 URL webhook duy nhất (không ?event=) + 1 Action duy nhất tên game.
+  assert.ok(html.includes('id="guide-webhook-url"'), 'thiếu ô URL webhook duy nhất của phòng');
+  assert.ok(
+    html.includes('https://example.com/o/buong-giam/phongtest/api/webhook</code>'),
+    'URL webhook chính phải là URL gốc của phòng, không thêm ?event=',
+  );
+  assert.ok(html.includes('Tạo 1 Action webhook duy nhất'), 'thiếu mục tạo 1 Action duy nhất');
+  assert.ok(html.includes('(Action duy nhất)'), 'thiếu ghi chú các Event đều trỏ vào Action duy nhất');
+  // Mục dự phòng: vẫn đủ 6 URL theo sự kiện + 6 tên Action riêng + 6 nút sao chép.
   for (const key of EVENT_KEYS) {
     assert.ok(
       html.includes(`https://example.com/o/buong-giam/phongtest/api/webhook?event=${key}`),
-      `thiếu URL webhook đúng phòng cho sự kiện ${key}`,
+      `mục dự phòng thiếu URL webhook đúng phòng cho sự kiện ${key}`,
     );
   }
-  assert.equal((html.match(/Sao chép URL/g) || []).length, 6, 'mỗi sự kiện phải có đúng 1 nút Sao chép URL');
+  assert.equal((html.match(/Sao chép URL/g) || []).length, 7, 'phải có 7 nút Sao chép URL (1 chính + 6 dự phòng)');
   for (const name of ['Buong Giam - Qua', 'Buong Giam - Binh luan', 'Buong Giam - Tim', 'Buong Giam - Follow', 'Buong Giam - Share', 'Buong Giam - Vao phong']) {
-    assert.ok(html.includes(name), `thiếu tên Action ${name}`);
+    assert.ok(html.includes(name), `mục dự phòng thiếu tên Action ${name}`);
   }
   assert.ok(html.includes('@phongtest'), 'thiếu username của phòng');
   assert.ok(!PRE_TAG.test(html), 'trang cá nhân hóa còn thẻ <pre>');
@@ -101,14 +115,17 @@ test('route GET /huong-dan-tikfinity trả trang hướng dẫn (chung + cá nh�
     assert.equal(generic.status, 200, 'trang hướng dẫn phải trả 200');
     assert.match(generic.res.headers.get('content-type') || '', /text\/html/);
     assert.ok(generic.text.includes('KHÔNG dùng chung'), 'trang chung thiếu cảnh báo link không dùng chung');
+    assert.ok(generic.text.includes('Tạo 1 Action webhook duy nhất'), 'trang chung thiếu mục tạo 1 Action duy nhất');
     for (const key of EVENT_KEYS) {
-      assert.ok(generic.text.includes(`?event=${key}`), `trang chung thiếu URL ?event=${key}`);
+      assert.ok(generic.text.includes(`?event=${key}`), `mục dự phòng trang chung thiếu URL ?event=${key}`);
     }
     assert.ok(!PRE_TAG.test(generic.text), 'trang chung còn thẻ <pre>');
     const personal = await fetchJson(t.base, '/huong-dan-tikfinity?game=ve-avatar&username=phongtest');
     assert.equal(personal.status, 200);
+    assert.ok(personal.text.includes(`${t.base}/o/ve-avatar/phongtest/api/webhook</code>`), 'trang cá nhân hóa thiếu URL webhook duy nhất (không ?event=)');
+    assert.ok(personal.text.includes('Tạo 1 Action webhook duy nhất'), 'trang cá nhân hóa thiếu mục tạo 1 Action duy nhất');
     for (const key of EVENT_KEYS) {
-      assert.ok(personal.text.includes(`${t.base}/o/ve-avatar/phongtest/api/webhook?event=${key}`), `trang cá nhân hóa thiếu URL ?event=${key}`);
+      assert.ok(personal.text.includes(`${t.base}/o/ve-avatar/phongtest/api/webhook?event=${key}`), `mục dự phòng trang cá nhân hóa thiếu URL ?event=${key}`);
     }
     const badGame = await fetchJson(t.base, '/huong-dan-tikfinity?game=game-la&username=x');
     assert.equal(badGame.status, 200, 'game lạ phải trả trang chung, không crash');
@@ -130,7 +147,7 @@ test('route .tfc đã gỡ: GET /o/.../tikfinity.tfc và /room/.../tikfinity.tfc
   }
 });
 
-const DASHBOARDS = [
+const DASHBOARDS_FULL = [
   'games/ve-avatar/src/index.html',
   'games/ve-avatar/src/public/index.html',
   'games/buong-giam/src/index.html',
@@ -138,8 +155,59 @@ const DASHBOARDS = [
   'games/thap-sang-ban-do/src/public/dashboard.html',
 ];
 
-test('dashboard 3 game: KHÔNG còn .tfc/body/<pre>, có link bài hướng dẫn + 6 URL webhook + thẻ trạng thái', () => {
-  for (const rel of DASHBOARDS) {
+const DASHBOARDS_GROUP_B = [
+  'games/keo-co/src/index.html',
+  'games/keo-co/src/public/index.html',
+  'games/dau-truong-sinh-ton/src/index.html',
+  'games/dau-truong-sinh-ton/src/public/index.html',
+  'games/chiem-co/src/index.html',
+  'games/chiem-co/src/public/index.html',
+  'games/dau-tri/src/index.html',
+  'games/dau-tri/src/public/index.html',
+  'games/dua-thuyen-rong/src/index.html',
+  'games/dua-thuyen-rong/src/public/index.html',
+  'games/di-bar-online/src/index.html',
+  'games/di-bar-online/src/public/index.html',
+];
+
+const DASHBOARDS_GROUP_C = [
+  'games/vuon-hoa-mua-xuan/src/index.html',
+  'games/vuon-hoa-mua-xuan/src/public/index.html',
+  'games/bep-an-tap-the/src/index.html',
+  'games/bep-an-tap-the/src/public/index.html',
+  'games/dua-xe-leo-nui/src/index.html',
+  'games/dua-xe-leo-nui/src/public/index.html',
+  'games/vong-quay-may-man/src/index.html',
+  'games/vong-quay-may-man/src/public/index.html',
+  'games/bau-troi-phao-hoa/src/index.html',
+  'games/bau-troi-phao-hoa/src/public/index.html',
+];
+
+const DASHBOARDS_ALL = [...DASHBOARDS_FULL, ...DASHBOARDS_GROUP_B, ...DASHBOARDS_GROUP_C];
+
+test('dashboard 14 game: hướng dẫn 1 Action duy nhất, KHÔNG còn 6 Action / URL theo sự kiện', () => {
+  for (const rel of DASHBOARDS_ALL) {
+    const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    // Không còn dấu vết cách 6 Action.
+    assert.ok(!text.includes('Tạo 6 Action'), `${rel}: còn mục tạo 6 Action`);
+    assert.ok(!text.includes('6 Action webhook'), `${rel}: còn nhắc 6 Action webhook`);
+    assert.ok(!text.includes('mỗi sự kiện 1 URL riêng'), `${rel}: còn câu mỗi sự kiện 1 URL riêng`);
+    assert.ok(!text.includes('copyTfEventUrl'), `${rel}: còn hàm sao chép URL theo sự kiện`);
+    assert.ok(!text.includes('tikfinity-actions'), `${rel}: còn gọi endpoint bảng 6 Action`);
+    assert.ok(!text.includes('actions-body'), `${rel}: còn bảng actions-body 6 Action`);
+    for (const key of EVENT_KEYS) {
+      assert.ok(!text.includes(`?event=${key}`), `${rel}: còn URL ?event=${key} theo sự kiện`);
+      assert.ok(!text.includes(`id="tf-url-${key}"`), `${rel}: còn ô URL sự kiện ${key}`);
+    }
+    // Cách 1 Action duy nhất phải hiện rõ + link hướng dẫn + thứ tự Go LIVE.
+    assert.ok(text.includes('1 Action duy nhất'), `${rel}: thiếu câu chỉ cần 1 Action duy nhất`);
+    assert.ok(text.includes('huong-dan-tikfinity'), `${rel}: thiếu link bài hướng dẫn TikFinity`);
+    assert.ok(text.includes('Go LIVE'), `${rel}: thiếu thứ tự Go LIVE trước rồi Connect`);
+  }
+});
+
+test('dashboard 3 game cũ (mục đầy đủ): KHÔNG còn .tfc/body/<pre>, có link hướng dẫn + 1 URL webhook duy nhất + thẻ trạng thái', () => {
+  for (const rel of DASHBOARDS_FULL) {
     const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
     assert.ok(!text.includes('.tfc'), `${rel}: còn nhắc file .tfc`);
     assert.ok(!text.includes('Tải file TikFinity'), `${rel}: còn nút tải file .tfc`);
@@ -154,18 +222,22 @@ test('dashboard 3 game: KHÔNG còn .tfc/body/<pre>, có link bài hướng dẫ
     assert.ok(text.includes('huong-dan-tikfinity?game='), `${rel}: link hướng dẫn không điền game+username của phòng`);
     assert.ok(text.includes('id="tf-webhook-url"'), `${rel}: thiếu ô hiển thị webhook URL`);
     assert.ok(text.includes('copyTfWebhook'), `${rel}: thiếu nút sao chép webhook URL`);
-    assert.ok(text.includes('Go LIVE'), `${rel}: thiếu thứ tự Go LIVE trước rồi Connect`);
-    assert.ok(text.includes('Tạo 6 Action'), `${rel}: thiếu mục tạo 6 Action`);
+    assert.ok(text.includes('Tạo 1 Action webhook duy nhất'), `${rel}: thiếu mục tạo 1 Action duy nhất`);
     assert.ok(!text.includes('không cần cài gì thêm'), `${rel}: còn câu "không cần cài gì thêm" của luật cũ`);
     assert.ok(!text.includes('không cần cài đặt gì'), `${rel}: còn câu "không cần cài đặt gì" của luật cũ`);
-    // 6 URL webhook theo sự kiện (ô hiển thị + JS điền URL).
-    for (const key of EVENT_KEYS) {
-      assert.ok(text.includes(`?event=${key}`), `${rel}: thiếu URL ?event=${key}`);
-      assert.ok(text.includes(`id="tf-url-${key}"`), `${rel}: thiếu ô URL sự kiện ${key}`);
-    }
-    assert.ok(text.includes('copyTfEventUrl'), `${rel}: thiếu nút sao chép URL theo sự kiện`);
     // Thẻ trạng thái kết nối trực tiếp vẫn còn (đếm event TikFinity).
     assert.ok(text.includes('direct-box') || text.includes('directBox'), `${rel}: mất thẻ trạng thái kết nối trực tiếp`);
+  }
+});
+
+test('dashboard 6 game nhóm B: có link hướng dẫn + ô webhook duy nhất + nút sao chép', () => {
+  for (const rel of DASHBOARDS_GROUP_B) {
+    const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+    assert.ok(text.includes('id="tf-guide-link"'), `${rel}: thiếu link bài hướng dẫn`);
+    assert.ok(text.includes('huong-dan-tikfinity?game='), `${rel}: link hướng dẫn không điền game+username của phòng`);
+    assert.ok(text.includes('id="tf-webhook-url"'), `${rel}: thiếu ô hiển thị webhook URL`);
+    assert.ok(text.includes('copyTfWebhook'), `${rel}: thiếu nút sao chép webhook URL`);
+    assert.ok(text.includes('Tạo 1 Action webhook duy nhất'), `${rel}: thiếu mục tạo 1 Action duy nhất`);
   }
 });
 
@@ -179,13 +251,14 @@ test('landing: nhắc TikFinity + link bài hướng dẫn, KHÔNG còn .tfc/bod
   assert.ok(text.includes('/api/rooms/'), 'landing phải còn kiểm tra trạng thái LIVE của room');
 });
 
-test('ve-avatar và buong-giam: bản src và bản public đều có link hướng dẫn + 6 URL (đồng bộ)', () => {
-  for (const game of ['ve-avatar', 'buong-giam']) {
+test('13 game: bản src và bản public đều hướng dẫn 1 Action duy nhất (đồng bộ)', () => {
+  for (const game of ['ve-avatar', 'buong-giam', 'keo-co', 'dau-truong-sinh-ton', 'chiem-co', 'dau-tri', 'dua-thuyen-rong', 'di-bar-online', 'vuon-hoa-mua-xuan', 'bep-an-tap-the', 'dua-xe-leo-nui', 'vong-quay-may-man', 'bau-troi-phao-hoa']) {
     const a = fs.readFileSync(path.join(ROOT, 'games', game, 'src', 'index.html'), 'utf8');
     const b = fs.readFileSync(path.join(ROOT, 'games', game, 'src', 'public', 'index.html'), 'utf8');
-    for (const needle of ['tf-guide-link', 'tf-webhook-url', 'Tạo 6 Action', 'tf-url-gift']) {
+    for (const needle of ['1 Action duy nhất', 'huong-dan-tikfinity', 'Go LIVE']) {
       assert.ok(a.includes(needle) && b.includes(needle), `${game}: ${needle} thiếu ở 1 trong 2 bản`);
     }
+    assert.ok(!a.includes('Tạo 6 Action') && !b.includes('Tạo 6 Action'), `${game}: còn mục tạo 6 Action ở 1 trong 2 bản`);
   }
 });
 

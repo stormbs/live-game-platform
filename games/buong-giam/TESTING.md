@@ -11,6 +11,6 @@
 - An toàn: từ chối bật khi phòng đã có event thật; event thật đầu tiên tới thì
   demo tự dừng. Dừng demo không xóa tù nhân đang trong buồng.
 
-## TikFinity — cơ chế mới (không body, 6 URL riêng)
-- Mỗi sự kiện 1 Action webhook riêng, URL `.../api/webhook?event=gift|chat|like|follow|share|join` (xem bài hướng dẫn `/huong-dan-tikfinity?game=buong-giam`). Action chỉ có ô URL, không nhập body.
+## TikFinity — cơ chế 1 Action duy nhất (không body)
+- Chỉ cần 1 Action webhook duy nhất với URL gốc của phòng `.../api/webhook` (không thêm `?event=`) — mọi Event đều trỏ vào Action đó (xem bài hướng dẫn `/huong-dan-tikfinity?game=buong-giam`). Action chỉ có ô URL, không nhập body. Đường dự phòng: 6 URL `.../api/webhook?event=gift|chat|like|follow|share|join` (chỉ dùng khi TikFinity không gửi trường event trong body).
 - Engine đọc form TikFinity: `value1` = tên tài khoản, `value2` = tên quà, `value3` = số xu (10 xu = 50đ). Quà lạ/không rõ xu → fallback danh mục, không mặc định +5.

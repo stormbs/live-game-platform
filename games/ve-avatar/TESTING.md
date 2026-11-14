@@ -11,6 +11,6 @@
   demo tự dừng; dừng demo không xóa hàng đợi đang vẽ. Người xem demo không
   tính vào thống kê avatar (không gây cảnh báo avatar giả).
 
-## TikFinity — cơ chế mới (không body, 6 URL riêng)
-- Mỗi sự kiện 1 Action webhook riêng, URL `.../api/webhook?event=gift|chat|like|follow|share|join` (xem bài hướng dẫn `/huong-dan-tikfinity?game=ve-avatar`). Action chỉ có ô URL, không nhập body.
+## TikFinity — cơ chế 1 Action duy nhất (không body)
+- Chỉ cần 1 Action webhook duy nhất với URL gốc của phòng `.../api/webhook` (không thêm `?event=`) — mọi Event đều trỏ vào Action đó (xem bài hướng dẫn `/huong-dan-tikfinity?game=ve-avatar`). Action chỉ có ô URL, không nhập body. Đường dự phòng: 6 URL `.../api/webhook?event=gift|chat|like|follow|share|join` (chỉ dùng khi TikFinity không gửi trường event trong body).
 - Engine đọc form TikFinity: `value1` = tên tài khoản (uid/tên), `value2` = tên quà, `value3` = số xu. Quà không rõ xu → chỉ log, không vào hàng đợi.

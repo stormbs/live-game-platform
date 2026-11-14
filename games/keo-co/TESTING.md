@@ -15,33 +15,26 @@ Cơ chế lấy từ `~/workspace/overlay-moi/prompt-agent-keo-co.md`.
 ⚠️ Action "Trigger WebHook" của TikFinity **chỉ có ô URL, KHÔNG có ô body**
 — TikFinity tự gửi body dạng form cố định
 (`value1=<tên tài khoản>&value2=<nội dung chính / tên quà>&value3=<số xu>&content=<bình luận>&avatar_url=<avatar>`).
-**KHÔNG CÓ BODY — không nhập body ở đâu cả.** Phân biệt sự kiện bằng
-**URL riêng**: tạo **6 Action webhook**, mỗi action dán 1 URL riêng dưới đây,
-rồi tạo **6 Event**, mỗi event chọn đúng Action của nó ở
-"Trigger all of these actions".
+**KHÔNG CÓ BODY — không nhập body ở đâu cả.** TikFinity gửi KÈM loại sự kiện
+trong body (trường `event`) nên **chỉ cần 1 Action duy nhất** với URL gốc của
+phòng (`<webhook>`, không thêm `?event=`); mọi Event đều trỏ vào Action đó.
 
-**Bước 1 — Tạo 6 Action webhook** (URL lấy từ nút "Sao chép URL" trong mục
+**Bước 1 — Tạo 1 Action webhook duy nhất** (URL lấy từ nút "Sao chép URL" trong mục
 "🎯 Cài đặt TikFinity" ở dashboard; `<webhook>` = link webhook của phòng):
+tên Action theo mẫu "Keo Co", loại Webhook, Method POST, URL = `<webhook>`.
 
-| Tên Action | URL riêng |
-|---|---|
-| `Keo Co - Qua` | `<webhook>?event=gift` |
-| `Keo Co - Binh luan` | `<webhook>?event=chat` |
-| `Keo Co - Tim` | `<webhook>?event=like` |
-| `Keo Co - Follow` | `<webhook>?event=follow` |
-| `Keo Co - Share` | `<webhook>?event=share` |
-| `Keo Co - Vao phong` | `<webhook>?event=join` |
-
-**Bước 2 — Tạo 6 Event** (mỗi event chọn đúng Action ở "Trigger all of these actions"):
+**Bước 2 — Tạo 6 Event** (mỗi event đều chọn Action duy nhất vừa tạo ở "Trigger all of these actions"):
 
 | Loại trigger trong TikFinity (Event) | Action chọn |
 |---|---|
-| Sending a gift with min. coins value (min coins = 1) | `Keo Co - Qua` |
-| Chat (any comment) | `Keo Co - Binh luan` |
-| Sending likes (taps) | `Keo Co - Tim` |
-| Follow | `Keo Co - Follow` |
-| Share | `Keo Co - Share` |
-| Join | `Keo Co - Vao phong` |
+| Sending a gift with min. coins value (min coins = 1) | `Keo Co` |
+| Chat (any comment) | `Keo Co` |
+| Sending likes (taps) | `Keo Co` |
+| Follow | `Keo Co` |
+| Share | `Keo Co` |
+| Join | `Keo Co` |
+
+**Dự phòng — Tách riêng từng sự kiện** (chỉ dùng khi TikFinity không gửi trường event trong body): 6 URL `<webhook>?event=gift|chat|like|follow|share|join` + 6 tên Action `Keo Co - Qua`, `Keo Co - Binh luan`, `Keo Co - Tim`, `Keo Co - Follow`, `Keo Co - Share`, `Keo Co - Vao phong` (dữ liệu lấy từ endpoint `/api/tikfinity-actions`).
 
 **Go LIVE trước rồi mới Connect TikFinity.**
 
@@ -79,5 +72,5 @@ thắng; quà 10 xu = +100 lực; quà lạ = 0 + WARN; tap delta baseline; ch�
 spam + hòa lực; cờ chạm đích + thắng trận + trận mới; đổi đội giữa hiệp bị
 chặn + "đồ" không nhầm "đỏ"; follow/share 1 lần/hiệp; demo start/stop +
 tăng lực; demo từ chối khi đã có event thật; test 1 lượt + bulk-join 100;
-`/api/tikfinity-actions` đủ 6 Action với URL riêng `?event=` (không body);
+`/api/tikfinity-actions` trả đủ 6 URL dự phòng `?event=` (không body);
 settings clamp + room isolation.

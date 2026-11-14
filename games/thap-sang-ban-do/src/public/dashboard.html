@@ -280,12 +280,8 @@ function copyTfWebhook() {
   else { const t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(t); done(); }
 }
 fillTfWebhook();
-// 6 URL webhook theo sự kiện (cơ chế TikFinity mới: ?event=... trên URL, không body).
-function fillTfEventUrls() {
-  var base = tfWebhookUrl();
-  var urls = { gift: base + '?event=gift', chat: base + '?event=chat', like: base + '?event=like', follow: base + '?event=follow', share: base + '?event=share', join: base + '?event=join' };
-  for (var k in urls) { var el = document.getElementById('tf-url-' + k); if (el) el.textContent = urls[k]; }
-  // URL chung cho mọi game: cùng tác dụng, đổi game chỉ sửa game=/room=.
+// URL chung cho mọi game: cùng tác dụng, đổi game chỉ sửa game=/room=.
+function fillTfCommonUrl() {
   var d = directParts();
   var common = document.getElementById('tf-url-common');
   // Ghép URL bằng biến — KHÔNG dùng literal '/api/...' vì lib/transform.js
@@ -294,14 +290,7 @@ function fillTfEventUrls() {
   // ở bản ebb6329, kiểm chứng 23:17).
   if (common) common.textContent = location.origin + '/' + 'api' + '/webhook?game=' + d.game + '&room=' + d.username;
 }
-function copyTfEventUrl(key) {
-  var el = document.getElementById('tf-url-' + key);
-  var url = el ? el.textContent : '';
-  var done = function () { var m = document.getElementById('tf-copy-msg'); if (m) m.textContent = '✅ Đã sao chép!'; };
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);
-  else { var t = document.createElement('textarea'); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(t); done(); }
-}
-fillTfEventUrls();
+fillTfCommonUrl();
 (function () { var d = directParts(); var a = document.getElementById('tf-guide-link'); if (a && d.game && d.username) a.href = '/huong-dan-tikfinity?game=' + encodeURIComponent(d.game) + '&username=' + encodeURIComponent(d.username); })();
 function escapeHtml(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function fmtAgo(sec){ if(sec==null) return '—'; if(sec<60) return sec+' giây'; const m=Math.floor(sec/60); return m+' phút'+(sec%60?' '+(sec%60)+' giây':''); }
