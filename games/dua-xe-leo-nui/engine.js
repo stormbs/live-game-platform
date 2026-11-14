@@ -118,7 +118,7 @@ function createEngine(ctx) {
       .slice(0, settings.topN);
   }
   function carStandings() {
-    const cars = [{ type: 'streamer', uid: null, name: 'STREAMER', meters: session.streamer.meters, bestAt: session.streamer.bestAt || 0, avatar: settings.demoMode ? demoAvatar(0) : '' }];
+    const cars = [{ type: 'streamer', uid: null, name: 'STREAMER', meters: session.streamer.meters, bestAt: session.streamer.bestAt || 0, avatar: settings.demoMode ? 'https://i.pravatar.cc/150?img=5' : '' }];
     for (const r of topRacers()) {
       cars.push({ type: 'racer', uid: r.uid, name: r.name, meters: r.carMeters, bestAt: r.bestAt || 0, avatar: r.avatar || '' });
     }
