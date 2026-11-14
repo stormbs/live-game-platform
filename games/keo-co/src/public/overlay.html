@@ -504,7 +504,8 @@ h1.ui-title{
 /* v13-fix2: vòng vàng quanh avatar + hào quang thân — box-shadow chắc
    chắn hơn filter trên cả tile, thấy rõ ngay cả khi zoom. */
 .puller.buffed .avatar,.spectator.buffed .avatar{
-  box-shadow:0 0 0 4px #ffd94d,0 0 24px 10px rgba(255,180,0,.95)
+  border:4px solid #ffd94d;
+  box-shadow:0 0 0 6px rgba(255,191,0,.9),0 0 30px 14px rgba(255,170,0,.95)
 }
 .puller.buffed .figure,.spectator.buffed .figure{
   filter:drop-shadow(0 0 18px rgba(255,200,0,1)) drop-shadow(0 0 48px rgba(255,150,0,.85))
@@ -513,14 +514,14 @@ h1.ui-title{
 .puller .buff-badge,.spectator .buff-badge{
   position:absolute;left:50%;top:96px;transform:translateX(-50%);
   background:linear-gradient(180deg,#ffe066,#ff9d00);color:#3a2400;
-  font-weight:900;font-size:17px;line-height:1.2;padding:4px 12px;
+  font-weight:900;font-size:19px;line-height:1.2;padding:5px 14px;
   border-radius:999px;border:2px solid #fff8;white-space:nowrap;z-index:30;
-  animation:buff-float 3s ease-out forwards;pointer-events:none
+  animation:buff-float 6s ease-out forwards;pointer-events:none
 }
 @keyframes buff-float{
   0%{opacity:0;transform:translate(-50%,10px) scale(.8)}
-  12%{opacity:1;transform:translate(-50%,0) scale(1.08)}
-  70%{opacity:1;transform:translate(-50%,-20px) scale(1)}
+  8%{opacity:1;transform:translate(-50%,0) scale(1.08)}
+  85%{opacity:1;transform:translate(-50%,-20px) scale(1)}
   100%{opacity:0;transform:translate(-50%,-44px) scale(1)}
 }
 .puller{
