@@ -202,7 +202,7 @@ h1.ui-title{
 .light-beam.a{left:-100px;transform:rotate(-19deg)}
 .light-beam.b{right:-100px;transform:rotate(19deg)}
 #stands{
-  position:absolute;top:62px;left:37px;right:37px;height:185px;
+  position:absolute;top:62px;left:37px;right:37px;height:210px;
   z-index:3;border:1px solid #a7d4ee40;border-radius:16px 16px 8px 8px;
   background:
     repeating-linear-gradient(0deg,#0c2439 0 4px,#25445a 4px 8px,#16344b 8px 78px);
@@ -218,7 +218,7 @@ h1.ui-title{
 #spectators{
   display:grid;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-auto-rows:78px;
+  grid-auto-rows:92px;
   grid-auto-flow:row;
   gap:2px 5px;
   padding-top:5px;
@@ -240,47 +240,56 @@ h1.ui-title{
 }
 .spectator-figure{
   position:relative;
-  width:64px;
-  height:64px;
-  margin:0 auto
+  width:56px;
+  height:78px;
+  margin:0 auto;
+  animation:cheer 1.1s ease-in-out infinite;
+  animation-delay:var(--delay,0s)
 }
+@keyframes cheer{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 .spectator .avatar{
   position:absolute;
   left:10px;
   top:0;
   z-index:2;
-  width:44px;
-  height:44px;
+  width:36px;
+  height:36px;
   border-width:2px;
   box-shadow:0 2px #0005,0 0 0 1px var(--team-color,#9ed4e8)
 }
 .spectator-body{
   position:absolute;
-  left:15px;
-  top:36px;
-  width:34px;
-  height:30px;
+  left:14px;
+  top:30px;
+  width:28px;
+  height:26px;
   z-index:1;
   border:2px solid #071929;
   border-radius:9px 9px 5px 5px;
   background:var(--shirt,#1e90ff);
-  box-shadow:
-    -7px 11px 0 -4px var(--pants,#174e8c),
-    7px 11px 0 -4px var(--pants,#174e8c)
+  box-shadow:0 2px 3px #0006
+}
+.spectator-legs{
+  position:absolute;left:14px;top:56px;width:28px;height:16px;
+  display:flex;justify-content:space-between
+}
+.spectator-legs i{
+  width:7px;height:16px;background:var(--pants,#174e8c);
+  border:1px solid #071929;border-radius:3px
 }
 .spectator-body::before,
 .spectator-body::after{
   content:"";
   position:absolute;
-  top:7px;
-  width:7px;
-  height:15px;
+  top:-6px;
+  width:6px;
+  height:18px;
   border-radius:5px;
   background:var(--skin,#f0b58b);
   border:1px solid #754933
 }
-.spectator-body::before{left:-7px;transform:rotate(28deg)}
-.spectator-body::after{right:-7px;transform:rotate(-28deg)}
+.spectator-body::before{left:-5px;transform:rotate(-32deg)}
+.spectator-body::after{right:-5px;transform:rotate(32deg)}
 .spectator-name{
   display:block;
   width:100%;
@@ -403,8 +412,8 @@ h1.ui-title{
   color:#89abc3
 }
 
-.spectator .default-face::before{box-shadow:20px 0 #49342e}
-.spectator .default-face b{font-size:13px}
+.spectator .default-face::before{box-shadow:16px 0 #49342e}
+.spectator .default-face b{font-size:11px}
 .spectator .default-face::after{border-bottom-width:2px}
 
 #stands.cheering .spectator{animation:audience-cheer .45s ease-in-out 3}
@@ -481,12 +490,13 @@ h1.ui-title{
 .pullers{
   position:absolute;
   top:40px;
-  left:0;
-  width:100%;
+  left:6px;
+  right:6px;
+  width:auto;
   height:350px;
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  grid-template-rows:44px 44px 158px 44px 44px;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-rows:repeat(3,114px);
   grid-auto-flow:row;
   gap:4px 7px;
   align-content:start
@@ -499,78 +509,19 @@ h1.ui-title{
   text-align:center
 }
 
-/* v6: hàng trước 3 nhân vật đầy đủ đúng tầm dây; các ô còn lại là thẻ gọn. */
-.frontline{
-  grid-column:1/-1;
-  grid-row:3;
-  display:flex;
-  justify-content:space-evenly;
-  align-items:stretch;
-  min-width:0
+/* v7: lưới 5 cột x 3 hàng, đủ 15 nhân vật đầy đủ; 5 mạnh nhất ở hàng giữa ôm dây. */
+.puller .tile-text{
+  position:absolute;top:0;left:0;right:0;height:16px;
+  display:flex;align-items:center;gap:4px;padding:0 2px
 }
-.frontline .puller{
-  flex:1 1 0;
-  min-width:0;
-  width:auto
+.puller .nm{
+  position:static;flex:1;min-width:0;height:auto;padding:0;
+  border:none;background:transparent;font-size:12px;text-align:left
 }
-.frontline .athlete{top:36px}
-.frontline .arms{top:36px}
-.puller.tile{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  padding:3px 6px;
-  background:#07182deb;
-  border:1px solid #bbdcff66;
-  border-radius:8px;
-  text-align:left
+.puller .fc{
+  position:static;width:auto;height:auto;font-size:11px;
+  text-align:right;flex-shrink:0
 }
-.puller.tile .tile-avatar{
-  flex:0 0 34px;
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  overflow:hidden;
-  border:2px solid #ffffff2e;
-  box-shadow:0 1px 3px #0008;
-  order:1
-}
-.puller.tile .tile-avatar img,
-.puller.tile .tile-avatar .default-face{
-  width:100%;height:100%;object-fit:cover;display:block
-}
-.puller.tile .tile-avatar .default-face::before{box-shadow:15px 0 #49342e}
-.puller.tile .tile-avatar .default-face b{font-size:12px}
-.puller.tile .tile-avatar .default-face::after{border-bottom-width:2px}
-.puller.tile .tile-text{
-  flex:1;
-  min-width:0;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  gap:1px;
-  order:2
-}
-.puller.tile .nm{
-  position:static;
-  width:auto;
-  height:auto;
-  padding:0;
-  border:none;
-  background:transparent;
-  font-size:13px;
-  text-align:left
-}
-.puller.tile .fc{
-  position:static;
-  width:auto;
-  height:auto;
-  font-size:11px;
-  text-align:left
-}
-.puller.tile .athlete,
-.puller.tile .arms{display:none}
-.puller.front .tile-avatar{display:none}
 .puller[hidden]{display:none!important}
 .nm{
   position:absolute;
@@ -598,21 +549,21 @@ h1.ui-title{
 }
 .athlete{
   position:absolute;
-  top:25px;
+  top:22px;
   left:50%;
   margin-left:-65px;
   width:130px;
   height:230px;
   z-index:5;
-  transform:scale(calc(.53 * var(--figure-scale, 1)));
+  transform:scale(calc(.36 * var(--figure-scale, 1)));
   transform-origin:50% 0;
   animation:pull-rhythm var(--beat) ease-in-out infinite;
   animation-delay:var(--delay,0s)
 }
 @keyframes pull-rhythm{
-  0%,100%{transform:scale(calc(.53 * var(--figure-scale, 1))) translateY(0)}
-  35%{transform:scale(calc(.53 * var(--figure-scale, 1))) translate(-2px,-3px)}
-  70%{transform:scale(calc(.53 * var(--figure-scale, 1))) translate(1px,1px)}
+  0%,100%{transform:scale(calc(.36 * var(--figure-scale, 1))) translateY(0)}
+  35%{transform:scale(calc(.36 * var(--figure-scale, 1))) translate(-2px,-3px)}
+  70%{transform:scale(calc(.36 * var(--figure-scale, 1))) translate(1px,1px)}
 }
 .figure{
   position:absolute;inset:0;transform:scaleX(var(--direction))
@@ -623,23 +574,33 @@ h1.ui-title{
   transition:transform .5s ease
 }
 .figure .avatar{
-  position:absolute;top:0;left:10px;
+  position:absolute;top:0;left:34px;
+  width:62px;height:62px;
+  border-radius:50%;overflow:hidden;
+  border:2px solid #ffffff55;box-shadow:0 1px 3px #0008;
   transform:translateX(var(--head-shift)) rotate(var(--lean));
   transition:transform .5s ease
 }
+.figure .avatar img,
+.figure .avatar .default-face{
+  width:100%;height:100%;object-fit:cover;display:block
+}
+.figure .avatar .default-face::before{box-shadow:23px 0 #49342e}
+.figure .avatar .default-face b{font-size:20px}
+.figure .avatar .default-face::after{border-bottom-width:3px}
 .figure .avatar>.face-content{
   display:block;width:100%;height:100%;transform:scaleX(var(--direction))
 }
 .arms{
   position:absolute;
-  top:25px;
+  top:22px;
   left:50%;
   margin-left:-65px;
   width:130px;
   height:230px;
   z-index:12;
   pointer-events:none;
-  transform:scale(calc(.53 * var(--figure-scale, 1))) scaleX(var(--direction));
+  transform:scale(calc(.36 * var(--figure-scale, 1))) scaleX(var(--direction));
   transform-origin:50% 0
 }
 .arms svg{
@@ -667,7 +628,6 @@ h1.ui-title{
 .puller.arriving .arms,
 .puller.arriving .nm,
 .puller.arriving .fc,
-.puller.arriving .tile-avatar,
 .puller.arriving .tile-text{
   visibility:hidden
 }
@@ -718,15 +678,15 @@ h1.ui-title{
 }
 .team-side.boost .athlete{filter:drop-shadow(0 0 9px var(--team-color))}
 .rope{
-  position:absolute;top:542px;left:12px;width:1002px;height:24px;z-index:8;
-  border-radius:15px;border-top:2px solid #ffe7b4;border-bottom:3px solid #69401e;
+  position:absolute;top:547px;left:12px;width:1002px;height:14px;z-index:8;
+  border-radius:8px;border-top:1px solid #ffe7b4;border-bottom:2px solid #69401e;
   background:
     linear-gradient(#fff5,transparent 45%,#43250866),
     repeating-linear-gradient(118deg,#f1ce8f 0 8px,#c28c49 8px 16px,#805322 16px 20px,#dfb16c 20px 27px);
   box-shadow:0 6px 6px #301b0b88
 }
 .rope::before,.rope::after{
-  content:"";position:absolute;top:-4px;width:21px;height:31px;
+  content:"";position:absolute;top:-3px;width:14px;height:20px;
   border-radius:7px;background:repeating-linear-gradient(90deg,#e4bb78 0 3px,#98602d 3px 6px)
 }
 .rope::before{left:4px}.rope::after{right:4px}
@@ -1059,12 +1019,12 @@ h1.ui-title{
 
     <div class="team-side left" id="side-xanh">
       <h2 id="h2-xanh">1 · ĐỘI XANH</h2>
-      <div class="pullers" id="pullers-xanh"><div class="frontline" id="frontline-xanh"></div></div>
+      <div class="pullers" id="pullers-xanh"></div>
       <div class="bench" id="bench-xanh"></div>
     </div>
     <div class="team-side right" id="side-do">
       <h2 id="h2-do">2 · ĐỘI ĐỎ</h2>
-      <div class="pullers" id="pullers-do"><div class="frontline" id="frontline-do"></div></div>
+      <div class="pullers" id="pullers-do"></div>
       <div class="bench" id="bench-do"></div>
     </div>
     <div class="hint" id="hint">Chênh 500 lực → thắng hiệp · Tối đa 180 giây / hiệp</div>
@@ -1288,10 +1248,9 @@ function bodyArt() {
     <g class="torso">
       <path d="M46 64Q63 56 78 69L91 137Q65 151 42 135L31 84Z"
         fill="var(--shirt)" stroke="#092338" stroke-width="3"/>
-      <path d="M43 80L51 128" stroke="#fff" stroke-opacity=".95" stroke-width="7"/>
-      <path d="M73 79L82 131" stroke="#fff" stroke-opacity=".8" stroke-width="7"/>
-      <path d="M48 65Q60 80 73 69" fill="none" stroke="#fff0cf" stroke-width="5"/>
-      <path d="M54 91L60 120" stroke="#fff5d9" stroke-width="5" stroke-linecap="round"/>
+      <path d="M43 80L51 128" stroke="#fff" stroke-opacity=".5" stroke-width="4"/>
+      <path d="M73 79L82 131" stroke="#fff" stroke-opacity=".45" stroke-width="4"/>
+      <path d="M48 65Q60 80 73 69" fill="none" stroke="#fff0cf" stroke-width="4"/>
       <path d="M41 132Q65 145 87 135" fill="none" stroke="#081f32" stroke-opacity=".45" stroke-width="8"/>
     </g>
   </svg>`;
@@ -1372,7 +1331,6 @@ function createPuller(p) {
   element.dataset.player = playerKey(p);
   element.innerHTML =
     '<div class="tile-text"><div class="nm"></div><div class="fc"></div></div>' +
-    '<div class="tile-avatar"></div>' +
     '<div class="athlete" aria-hidden="true"><div class="figure">' +
     bodyArt() + '<div class="avatar"></div></div></div>' +
     '<div class="arms" aria-hidden="true">' + armsArt() + '</div>';
@@ -1380,7 +1338,8 @@ function createPuller(p) {
 }
 
 
-function updatePuller(element, p, index, team, isFront) {
+
+function updatePuller(element, p, index, team) {
   const name = playerName(p);
   const nameElement = element.querySelector('.nm');
 
@@ -1389,15 +1348,10 @@ function updatePuller(element, p, index, team, isFront) {
   }
 
   element.title = name;
-  element.classList.toggle('front', !!isFront);
-  element.classList.toggle('tile', !isFront);
   element.style.setProperty('--delay', '-' + ((index % 5) * .13) + 's');
 
   const appearance = applyAppearance(element, p, team, index);
-  const avatarBox = isFront
-    ? element.querySelector('.figure .avatar')
-    : element.querySelector('.tile-avatar');
-  setAvatar(avatarBox, p, appearance);
+  setAvatar(element.querySelector('.figure .avatar'), p, appearance);
 
   const forceElement = element.querySelector('.fc');
   const forceText = format(p.force) + ' lực';
@@ -1406,6 +1360,7 @@ function updatePuller(element, p, index, team, isFront) {
     forceElement.textContent = forceText;
   }
 }
+
 
 
 
@@ -1422,10 +1377,7 @@ function capturePlayers() {
   for (const team of ['xanh', 'do']) {
     for (const [uid, item] of rosterNodes[team]) {
       if (!item.hidden) {
-        const avatarBox = item.classList.contains('front')
-          ? item.querySelector('.figure .avatar')
-          : item.querySelector('.tile-avatar');
-        const rect = localRect(avatarBox);
+        const rect = localRect(item.querySelector('.figure .avatar'));
         if (rect) result.set(uid, rect);
       }
     }
@@ -1454,6 +1406,7 @@ function paintSpectators(people) {
         '<div class="spectator-figure">' +
           '<div class="avatar"></div>' +
           '<div class="spectator-body"></div>' +
+          '<div class="spectator-legs"><i></i><i></i></div>' +
         '</div>' +
         '<span class="spectator-name"></span>';
       spectatorNodes.set(uid, element);
@@ -1503,9 +1456,8 @@ function paintSpectators(people) {
 
 function paintRoster(team, people) {
   const box = $('pullers-' + team);
-  const frontBox = $('frontline-' + team);
   const nodes = rosterNodes[team];
-  // 3 người mạnh nhất đứng hàng trước kéo dây, còn lại hiện thẻ gọn.
+  // Đủ 15 nhân vật/đội (5 cột x 3 hàng); 5 mạnh nhất ở hàng giữa ôm dây.
   const sorted = [...people].sort((a, b) => number(b.force) - number(a.force));
   const keys = new Set(sorted.map(playerKey));
   const joined = hasRendered
@@ -1525,36 +1477,29 @@ function paintRoster(team, people) {
       nodes.set(uid, element);
     }
 
-    // Chỉ hiện tối đa 15 người/đội (3 hàng trước + 12 thẻ); thừa thì ẩn.
+    // Chỉ hiện tối đa 15 người/đội; thừa thì ẩn.
     if (index >= 15) {
       element.hidden = true;
       return;
     }
 
-    const isFront = index < 3;
-    updatePuller(element, p, index, team, isFront);
+    updatePuller(element, p, index, team);
     element.hidden = false;
 
-    if (isFront) {
-      element.style.gridRow = '';
-      element.style.gridColumn = '';
-      element.style.order = index;
-      if (element.parentNode !== frontBox) {
-        frontBox.appendChild(element);
-      }
-    } else {
-      const tileIndex = index - 3;
-      const tileRow = [1, 1, 1, 2, 2, 2, 4, 4, 4, 5, 5, 5][tileIndex];
-      element.style.gridRow = tileRow;
-      element.style.gridColumn = (tileIndex % 3) + 1;
-      element.style.order = '';
-      if (element.parentNode !== box) {
-        box.appendChild(element);
-      }
+    // 5 mạnh nhất -> hàng giữa (row 2, ôm dây); 5 tiếp -> hàng trên;
+    // 5 cuối -> hàng dưới.
+    const group = index < 5 ? 2 : (index < 10 ? 1 : 3);
+    const colInGroup = index % 5;
+    element.style.gridRow = group;
+    element.style.gridColumn = colInGroup + 1;
+    element.style.order = index;
+
+    if (element.parentNode !== box) {
+      box.appendChild(element);
     }
 
-    fitText(element.querySelector('.nm'), 15, 7);
-    fitText(element.querySelector('.fc'), 12, 7);
+    fitText(element.querySelector('.nm'), 12, 7);
+    fitText(element.querySelector('.fc'), 11, 7);
   });
 
   for (const [uid, element] of nodes) {
@@ -1593,6 +1538,7 @@ function paintRoster(team, people) {
 
   return joined;
 }
+
 
 
 

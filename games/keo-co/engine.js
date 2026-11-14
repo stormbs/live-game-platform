@@ -486,15 +486,16 @@ function createEngine(ctx) {
       return { success: false, message: 'Bật chế độ thử trước rồi mới chạy demo.' };
     }
     if (session.demoActive) return { success: true, demoActive: true, message: 'Demo đang chạy.' };
-    // Demo v4 — đủ luồng, dàn theo đợt để người xem thấy từng khoảnh khắc:
-    // Đợt 0: cả 24 người demo vào khán đài (ở đó ~5s).
+    // Demo v7 — dàn CHẬM để mắt kịp thấy từng khoảnh khắc:
+    // Đợt 0: cả 24 người demo vào khán đài, đứng xem ~10s.
     // Đợt 1: 6 người đội Xanh nhập đội — chỉ 1 đội có người nên banner
-    //   "Chờ ghép trận" hiện (~5s).
+    //   "Chờ ghép trận" hiện ~10s.
     // Đợt 2: 6 người đội Đỏ nhập đội — đủ 2 đội, hiệp tự bắt đầu.
-    // Đợt 3: 12 người còn lại nhập đội (6 Xanh + 6 Đỏ) — mỗi đội 12 người.
-    // Sau đó cứ vài bước lại có khách mới đến khán đài rồi nhập đội
-    // (tối đa ~30 người online, mỗi đội ~15 người) + tặng quà định kỳ
-    // để thấy hiệu ứng quà.
+    // Đợt 3: 6 người tiếp theo nhập đội sau ~5s (sóng 1 của đợt cuối).
+    // Đợt 4: 6 người cuối nhập đội sau ~5s (sóng 2 của đợt cuối).
+    // Sau đó cứ vài bước lại có khách mới đến khán đài, đứng xem ~10s
+    // rồi mới nhập đội (tối đa 3 khách cùng chờ, ~30 người online,
+    // mỗi đội ~15 người) + tặng quà định kỳ để thấy hiệu ứng quà.
     DEMO_NAMES.forEach((name, i) => {
       handleIntake({ kind: 'join', uid: demoUid(name), name: `Demo ${name}`, avatarUrl: demoAvatar(i) });
       // Đặt baseline tap = 0 cho mỗi người demo để bước tap sau luôn có delta thật.
@@ -504,7 +505,7 @@ function createEngine(ctx) {
     let stageSteps = 0; // số bước đã chạy trong stage hiện tại
     let demoStepNo = 0;
     let trickleNo = 0;
-    let pendingJoin = null; // { uid, name, team } — khách mới đang chờ nhập đội ở bước sau
+    let pendingJoins = []; // [{ uid, name, team, dueStep }] — khách mới đang chờ ở khán đài, nhập đội sau ~10s
     const joinTeam = (uid, name, team) => {
       handleIntake({ kind: 'comment', uid, name, text: team === 'xanh' ? '1' : '2' });
     };
@@ -514,40 +515,53 @@ function createEngine(ctx) {
       if (!session.demoActive) return;
       demoStepNo += 1;
       stageSteps += 1;
-      // Đợt 0: ở khán đài ~5s (2 bước) để thấy đám đông khán giả.
+      // Đợt 0: ở khán đài ~10s (4 bước) để thấy đám đông khán giả.
       if (demoStage === 0) {
-        if (stageSteps >= 2) {
+        if (stageSteps >= 4) {
           demoStage = 1; stageSteps = 0;
           DEMO_NAMES.slice(0, 6).forEach((name) => joinTeam(demoUid(name), `Demo ${name}`, 'xanh'));
         }
         return;
       }
-      // Đợt 1: chỉ đội Xanh có người (~5s) — banner "Chờ ghép trận" hiện.
+      // Đợt 1: chỉ đội Xanh có người (~10s) — banner "Chờ ghép trận" hiện.
       if (demoStage === 1) {
-        if (stageSteps >= 2) {
+        if (stageSteps >= 4) {
           demoStage = 2; stageSteps = 0;
           DEMO_NAMES.slice(6, 12).forEach((name) => joinTeam(demoUid(name), `Demo ${name}`, 'do'));
         }
         return;
       }
-      // Đợt 2: đội Đỏ vào — đủ 2 đội, hiệp tự bắt đầu.
+      // Đợt 2: đội Đỏ vào — đủ 2 đội, hiệp tự bắt đầu. Đợt cuối chia
+      // thành 2 sóng (6 + 6) để thấy rõ từng lượt đi xuống.
       if (demoStage === 2) {
         demoStage = 3; stageSteps = 0;
-        DEMO_NAMES.slice(12).forEach((name, i) => joinTeam(demoUid(name), `Demo ${name}`, i % 2 === 0 ? 'xanh' : 'do'));
+        DEMO_NAMES.slice(12, 18).forEach((name, i) => joinTeam(demoUid(name), `Demo ${name}`, i % 2 === 0 ? 'xanh' : 'do'));
         return;
       }
-      if (pendingJoin) {
-        const pj = pendingJoin; pendingJoin = null;
-        joinTeam(pj.uid, pj.name, pj.team);
+      // Đợt 3: 6 người cuối nhập đội sau ~5s (sóng 2 của đợt cuối).
+      if (demoStage === 3) {
+        if (stageSteps >= 2) {
+          demoStage = 4; stageSteps = 0;
+          DEMO_NAMES.slice(18).forEach((name, i) => joinTeam(demoUid(name), `Demo ${name}`, i % 2 === 0 ? 'xanh' : 'do'));
+        }
         return;
       }
-      // Cứ 4 bước lại có 1 khách mới đến khán đài (tối đa ~30 người online, mỗi đội ~15).
-      if (demoStepNo % 4 === 0 && onlinePlayers().length < 30) {
+      // Khách mới ở khán đài ~10s (4 bước) rồi mới nhập đội — để thấy
+      // khán đài luôn có người đứng xem và thấy rõ lượt đi xuống.
+      const dueJoins = pendingJoins.filter((pj) => demoStepNo >= pj.dueStep);
+      if (dueJoins.length) {
+        pendingJoins = pendingJoins.filter((pj) => demoStepNo < pj.dueStep);
+        dueJoins.forEach((pj) => joinTeam(pj.uid, pj.name, pj.team));
+        return;
+      }
+      // Cứ 4 bước lại có 1 khách mới đến khán đài (tối đa ~30 người online,
+      // mỗi đội ~15; tối đa 3 khách cùng chờ ở khán đài để luôn có người xem).
+      if (demoStepNo % 4 === 0 && onlinePlayers().length < 30 && pendingJoins.length < 3) {
         trickleNo += 1;
         const uid = `demo_khach_${trickleNo}`;
         const name = `Khách ${trickleNo}`;
         handleIntake({ kind: 'join', uid, name, avatarUrl: demoAvatar(30 + trickleNo) });
-        pendingJoin = { uid, name, team: trickleNo % 2 === 1 ? 'xanh' : 'do' };
+        pendingJoins.push({ uid, name, team: trickleNo % 2 === 1 ? 'xanh' : 'do', dueStep: demoStepNo + 4 });
         return;
       }
       // Cứ 6 bước lại tặng 1 món quà (định kỳ, tối đa 20 xu = 200 lực) để thấy hiệu ứng quà.

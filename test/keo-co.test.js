@@ -210,9 +210,9 @@ test('keo-co: demo start -> lực 2 đội tăng; stop -> dừng; từ chối kh
     assert.equal(start.status, 200);
     assert.equal(start.json.success, true);
     // Demo cho 24 người vào 2 đội theo đợt (mỗi người +5 lực từ comment chọn đội).
-    // Demo v5 dàn theo đợt: khán đài ~5s, chỉ Xanh ~5s (chờ ghép), Đỏ vào ở ~10s —
-    // chờ tới 15s cho đủ 30 lực/đội.
-    let st = await waitFor(t, user, (s) => s.demoActive === true && s.force.xanh >= 30 && s.force.do >= 30, 30, 500);
+    // Demo v7 dàn chậm: khán đài ~10s, chỉ Xanh ~10s (chờ ghép), Đỏ vào ở ~20s,
+    // đợt cuối chia 2 sóng xong ở ~30s — chờ tới 40s cho đủ 30 lực/đội.
+    let st = await waitFor(t, user, (s) => s.demoActive === true && s.force.xanh >= 30 && s.force.do >= 30, 80, 500);
     assert.equal(st.demoActive, true);
     assert.ok(st.force.xanh >= 30 && st.force.do >= 30, 'demo vào đội đã cộng lực 2 bên');
     const f1 = { x: st.force.xanh, d: st.force.do };
@@ -384,7 +384,7 @@ test('keo-co: /api/test/demo rẽ action start/stop/once đúng hàm (hồi quy 
     // start qua action: demo chạy, lực 2 đội tăng.
     const start = await call({ action: 'start' });
     assert.equal(start.json.demoActive, true, 'start qua action phải chạy demo');
-    st = await waitFor(t, user, (s) => s.demoActive === true && s.force.xanh > 0 && s.force.do > 0, 30, 500);
+    st = await waitFor(t, user, (s) => s.demoActive === true && s.force.xanh > 0 && s.force.do > 0, 80, 500);
     assert.equal(st.demoActive, true);
     // stop qua action: demo dừng hẳn, lực đứng yên (không bơm thêm lượt mẫu).
     const stop = await call({ action: 'stop' });
