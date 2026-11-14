@@ -181,7 +181,7 @@
     margin-left: -60px;
     margin-top: -20px;
     text-align: center;
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 900;
     color: #fff;
     text-shadow: 0 2px 3px rgba(0,0,0,.85);
@@ -582,7 +582,7 @@ fit();
   }
 
   // Tên ngắn cho nhãn vòng quay (tên đầy đủ vẫn dùng ở banner/lịch sử).
-  const SHORT_NAMES = {1:'Vua',2:'Pháo Hoa',3:'Nhảy Múa',4:'Hát 1 Câu',5:'Sao May',6:'Đổi Màu',7:'Xướng Tên',8:'Kim Cương',9:'Cỏ 4 Lá',10:'Quay Thêm',11:'Biệt Danh',12:'Nhạc Chúc',13:'Top May',14:'Hào Quang',15:'Đổi Trang',16:'Lời Chúc',17:'Huy Chương',18:'Múa Lân',19:'May mắn lần sau',20:'May mắn lần sau'};
+  const SHORT_NAMES = {1:'Vua',2:'Pháo Hoa',3:'Nhảy Múa',4:'Hát 1 Câu',5:'Sao May',6:'Đổi Màu',7:'Xướng Tên',8:'Kim',9:'Cỏ 4 Lá',10:'Quay Thêm',11:'Biệt Danh',12:'Nhạc Chúc',13:'Top May',14:'Hào Quang',15:'Đổi Trang',16:'Lời Chúc',17:'Huy',18:'Múa Lân',19:'May mắn lần sau',20:'May mắn lần sau'};
   function buildWheel(segments) {
     const safeSegments = Array.isArray(segments) ? segments : [];
     const stops = [];
@@ -604,12 +604,12 @@ fit();
       const center = angle + width / 2;
       // Nhãn co theo độ rộng cung tại bán kính 410px: cung hẹp thì cắt tên ngắn,
       // quá hẹp thì chỉ hiện icon (tránh chữ tràn sang ô bên cạnh).
-      const arcW = 2 * Math.PI * 410 * (width / 360);
-      const maxChars = Math.max(0, Math.floor((arcW - 30) / 9));
+      const arcW = 2 * Math.PI * 395 * (width / 360);
+      const maxChars = Math.max(0, Math.floor((arcW - 12) / 8));
       const shortName = SHORT_NAMES[s.id] || s.name || '';
       // Ô quá hẹp (<4 ký tự) thì chỉ hiện icon, tránh chữ cắt dở 2-3 ký tự.
       const label = maxChars >= 4 ? esc(shortName.slice(0, maxChars)) : '';
-      html += '<div class="segLabel" style="transform: rotate(' + center + 'deg) translateY(-410px)">' +
+      html += '<div class="segLabel" style="transform: rotate(' + center + 'deg) translateY(-395px)">' +
         '<span class="ic">' + esc(s.icon) + '</span>' + label +
         '</div>';
       angle += width;
