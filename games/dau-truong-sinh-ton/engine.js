@@ -469,6 +469,8 @@ function createEngine(ctx) {
 
   // ---- Demo (theo demo-mode-contract) ----
   function demoUid(name) { return 'demo_' + name.toLowerCase().normalize('NFD').replace(/[^a-z]/g, ''); }
+  // Avatar demo dùng pravatar (như Kéo Co) để eye-check thấy được avatar tròn thật.
+  function demoAvatar(i) { return 'https://i.pravatar.cc/150?img=' + (((i * 7) % 70) + 1); }
   function startDemo() {
     if (session.webhookCount > 0) {
       return { success: false, message: 'Phòng đã có sự kiện thật, không chạy demo được.' };
@@ -477,15 +479,23 @@ function createEngine(ctx) {
       return { success: false, message: 'Bật chế độ thử trước rồi mới chạy demo.' };
     }
     if (session.demoActive) return { success: true, demoActive: true, message: 'Demo đang chạy.' };
-    DEMO_NAMES.forEach((name) => {
-      handleIntake({ kind: 'join', uid: demoUid(name), name: `Demo ${name}`, avatarUrl: null });
-      handleIntake({ kind: 'comment', uid: demoUid(name), name: `Demo ${name}`, text: 'tham gia' });
-      handleIntake({ kind: 'tap', uid: demoUid(name), name: `Demo ${name}`, totalLikeCount: 0 });
-    });
+    // Tách seeding ra để step() gọi lại khi trận mới bắt đầu (sảnh trống).
+    const seedDemoCast = () => {
+      DEMO_NAMES.forEach((name, i) => {
+        handleIntake({ kind: 'join', uid: demoUid(name), name: `Demo ${name}`, avatarUrl: demoAvatar(i) });
+        handleIntake({ kind: 'comment', uid: demoUid(name), name: `Demo ${name}`, text: 'tham gia' });
+        handleIntake({ kind: 'tap', uid: demoUid(name), name: `Demo ${name}`, totalLikeCount: 0 });
+      });
+    };
+    seedDemoCast();
     session.demoActive = true;
     log('🧪 Demo bắt đầu — 12 chiến binh demo vào trận.');
     const step = () => {
       if (!session.demoActive) return;
+      // Trận mới: sảnh trống → thêm lại 12 bot để trận tự bắt đầu (không kẹt chờ).
+      if (session.phase === 'lobby' && aliveFighters().filter((f) => f.uid.startsWith('demo_')).length === 0) {
+        seedDemoCast();
+      }
       const alive = aliveFighters().filter((f) => f.uid.startsWith('demo_'));
       if (alive.length === 0) return;
       const me = alive[Math.floor(Math.random() * alive.length)];

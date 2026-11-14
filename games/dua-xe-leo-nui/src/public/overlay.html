@@ -409,7 +409,7 @@ window.addEventListener('resize', fit); fit();
       html += '<div class="lane" style="top:' + top + 'px"><div class="track"></div><div class="car' +
         (win ? ' win' : '') + (s.phase === 'racing' ? ' running' : '') + (gained ? ' boost' : '') + (spriteOk ? ' sprite-on' : '') +
         '" style="left:' + leftPct + '%;--car-c:' + cc[0] + ';--car-c2:' + cc[1] + '">' +
-        '<div class="tag">' + avatarMarkup(c,'tag-ava') + '<span class="tag-name" title="' + esc(c.name) + '">' + esc(c.name) + '</span></div>' +
+        '<div class="tag"><span class="tag-name" title="' + esc(c.name) + '">' + esc(c.name) + '</span></div>' +
         '<div class="driver">' + driverMarkup(c) + '</div>' +
         '<div class="sprite' + (s.phase === 'racing' ? ' driving' : '') + '" data-colorway="' + cw + '" data-state="' + (s.phase === 'racing' ? 'drive' : 'idle') + '"><span class="smoke"><i></i><i></i><i></i></span></div>' +
         '<div class="body"><div class="cabin"></div><div class="chassis"></div><span class="wheel fl"></span><span class="wheel fr"></span><span class="smoke"><i></i><i></i><i></i></span></div><div class="m">' + c.meters + 'm</div>' +

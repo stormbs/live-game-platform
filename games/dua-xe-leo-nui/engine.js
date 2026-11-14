@@ -522,6 +522,8 @@ function createEngine(ctx) {
     res.json({ success: true, count, viewersOnline: Object.values(session.racers).filter((p) => p.online).length });
   });
   // ---------------- Demo tự động (xem ~/workspace/overlay-moi/demo-mode-contract.md) ----------------
+  // Avatar demo dùng pravatar (như Kéo Co) để eye-check thấy được avatar tròn thật.
+  const demoAvatar = (i) => 'https://i.pravatar.cc/150?img=' + (((i * 7) % 70) + 1);
   const DEMO_CAST_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khánh', 'Lan', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo'];
   const DEMO_COMMENTS = ['Đẩy xe nào!', 'Lên đỉnh nào!', 'Nhanh lên!', 'Cố lên!', 'Xe vàng chạy đi!'];
   const DEMO_GIFTS = [[1, 'Hoa hồng'], [5, 'Hoa hồng'], [10, 'Hoa hồng'], [50, 'Heo may mắn'], [100, 'Heo may mắn']];
@@ -532,15 +534,15 @@ function createEngine(ctx) {
       const name = DEMO_CAST_NAMES[i];
       const uid = `demo_${demo.runId}_${i}`;
       if (demo.cast.has(uid)) continue;
-      const m = { uid, name, likeTotal: 0 };
+      const m = { uid, name, likeTotal: 0, avatar: demoAvatar(i) };
       demo.cast.set(uid, m);
-      handleIntake({ uid, name, avatar: '', kind: 'join', isDemo: true });
+      handleIntake({ uid, name, avatar: m.avatar, kind: 'join', isDemo: true });
       // 2 lần tap: lần 1 làm mốc delta, lần 2 +40 tim -> xe streamer +20m ngay.
-      handleIntake({ uid, name, avatar: '', kind: 'tap', totalLikeCount: 1, isDemo: true });
+      handleIntake({ uid, name, avatar: m.avatar, kind: 'tap', totalLikeCount: 1, isDemo: true });
       m.likeTotal = 41;
-      handleIntake({ uid, name, avatar: '', kind: 'tap', totalLikeCount: 41, isDemo: true });
+      handleIntake({ uid, name, avatar: m.avatar, kind: 'tap', totalLikeCount: 41, isDemo: true });
       // Quà 10 xu để vào Top 3 — xe của chính người đó bắt đầu chạy.
-      handleIntake({ uid, name, avatar: '', kind: 'gift', coins: 10, giftName: 'Hoa hồng', giftId: 'demo', isDemo: true });
+      handleIntake({ uid, name, avatar: m.avatar, kind: 'gift', coins: 10, giftName: 'Hoa hồng', giftId: 'demo', isDemo: true });
       added += 1;
     }
     return added;
@@ -553,10 +555,10 @@ function createEngine(ctx) {
     const m = members[Math.floor(Math.random() * members.length)];
     const roll = Math.random();
     if (roll < 0.35) {
-      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'comment', text: DEMO_COMMENTS[Math.floor(Math.random() * DEMO_COMMENTS.length)], isDemo: true });
+      handleIntake({ uid: m.uid, name: m.name, avatar: m.avatar, kind: 'comment', text: DEMO_COMMENTS[Math.floor(Math.random() * DEMO_COMMENTS.length)], isDemo: true });
     } else if (roll < 0.70) {
       m.likeTotal += 10 + Math.floor(Math.random() * 41); // +10..50 tim
-      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'tap', totalLikeCount: m.likeTotal, isDemo: true });
+      handleIntake({ uid: m.uid, name: m.name, avatar: m.avatar, kind: 'tap', totalLikeCount: m.likeTotal, isDemo: true });
     } else if (roll < 0.88) {
       const [coins, giftName] = DEMO_GIFTS[Math.floor(Math.random() * DEMO_GIFTS.length)];
       handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'gift', coins, giftName, giftId: 'demo', isDemo: true });

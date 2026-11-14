@@ -494,6 +494,8 @@ function createEngine(ctx) {
 
   // -- demo ------------------------------------------------------------------
   function demoUid(name) { return 'demo_' + name.toLowerCase().normalize('NFD').replace(/[^a-z]/g, ''); }
+  // Avatar demo dùng pravatar (như Kéo Co) để eye-check thấy được avatar tròn thật.
+  function demoAvatar(i) { return 'https://i.pravatar.cc/150?img=' + (((i * 7) % 70) + 1); }
   function startDemo() {
     if (session.webhookCount > 0) {
       return { success: false, reason: 'real-events-present', message: 'Phòng đã có sự kiện thật, không chạy demo được.' };
@@ -504,7 +506,7 @@ function createEngine(ctx) {
     if (session.demoActive) return { success: true, demoActive: true, message: 'Demo đang chạy.' };
     DEMO_NAMES.forEach((name, i) => {
       const uid = demoUid(name);
-      const p = ensurePlayer({ uid, name: `Demo ${name}` });
+      const p = ensurePlayer({ uid, name: `Demo ${name}`, avatarUrl: demoAvatar(i) });
       if (p) {
         p.team = i % 2 === 0 ? 'vang' : 'do';
         p.left = false;
@@ -524,7 +526,10 @@ function createEngine(ctx) {
       const me = demoPlayers[Math.floor(Math.random() * demoPlayers.length)];
       const r = Math.random();
       if (r < 0.5) {
-        demoTapTotals[me.uid] = (demoTapTotals[me.uid] || 0) + 1 + Math.floor(Math.random() * 6);
+        // 40% tap thường (1-6 tim), 60% tap dồn (10-15 tim) để kích trống dồn cho demo thấy được
+        const burst = Math.random() < 0.6;
+        const add = burst ? 10 + Math.floor(Math.random() * 6) : 1 + Math.floor(Math.random() * 6);
+        demoTapTotals[me.uid] = (demoTapTotals[me.uid] || 0) + add;
         handleIntake({ kind: 'tap', uid: me.uid, name: me.name, totalLikeCount: demoTapTotals[me.uid] });
       } else if (r < 0.7) {
         handleIntake({ kind: 'comment', uid: me.uid, name: me.name, text: DEMO_CHEERS[Math.floor(Math.random() * DEMO_CHEERS.length)] });
@@ -554,7 +559,7 @@ function createEngine(ctx) {
   function demoOneShot() {
     DEMO_NAMES.slice(0, 6).forEach((name, i) => {
       const uid = demoUid(name);
-      const p = ensurePlayer({ uid, name: `Demo ${name}` });
+      const p = ensurePlayer({ uid, name: `Demo ${name}`, avatarUrl: demoAvatar(i) });
       if (p) {
         p.team = i % 2 === 0 ? 'vang' : 'do';
         p.left = false;

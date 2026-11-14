@@ -669,6 +669,8 @@ function createEngine(ctx) {
     res.json({ success: true, totalFireworks: session.totalFireworks, nextGrandAt: session.nextGrandAt });
   });
   // ---------------- Demo tự động (xem ~/workspace/overlay-moi/demo-mode-contract.md) ----------------
+  // Avatar demo dùng pravatar (như Kéo Co) để eye-check thấy được avatar tròn thật.
+  const demoAvatar = (i) => 'https://i.pravatar.cc/150?img=' + (((i * 7) % 70) + 1);
   const DEMO_CAST_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khánh', 'Lan', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo'];
   const DEMO_COMMENTS = ['đẹp quá', 'pháo đẹp quá', 'bắn nữa đi', 'tuyệt vời', 'lung linh quá'];
   const DEMO_GIFTS = [[1, 'Hoa hồng'], [5, 'Hoa hồng'], [10, 'Kính râm'], [50, 'Heo may mắn'], [100, 'Vương miện'], [500, 'Du thuyền']];
@@ -679,13 +681,13 @@ function createEngine(ctx) {
       const name = DEMO_CAST_NAMES[i];
       const uid = `demo_${demo.runId}_${i}`;
       if (demo.cast.has(uid)) continue;
-      const m = { uid, name, likeTotal: 0 };
+      const m = { uid, name, likeTotal: 0, avatar: demoAvatar(i) };
       demo.cast.set(uid, m);
-      handleIntake({ uid, name, avatar: '', kind: 'join', isDemo: true });
+      handleIntake({ uid, name, avatar: m.avatar, kind: 'join', isDemo: true });
       // 2 lần tap: lần 1 làm mốc delta, lần 2 +20 tim -> +1đ, 1 pháo nhỏ.
-      handleIntake({ uid, name, avatar: '', kind: 'tap', totalLikeCount: 1, isDemo: true });
+      handleIntake({ uid, name, avatar: m.avatar, kind: 'tap', totalLikeCount: 1, isDemo: true });
       m.likeTotal = 21;
-      handleIntake({ uid, name, avatar: '', kind: 'tap', totalLikeCount: 21, isDemo: true });
+      handleIntake({ uid, name, avatar: m.avatar, kind: 'tap', totalLikeCount: 21, isDemo: true });
       handleIntake({ uid, name, avatar: '', kind: 'comment', text: 'đẹp quá', isDemo: true });
       added += 1;
     }

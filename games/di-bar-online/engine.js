@@ -526,6 +526,8 @@ function createEngine(ctx) {
 
   // -- demo ------------------------------------------------------------------
   function demoUid(name) { return 'demo_' + name.toLowerCase().normalize('NFD').replace(/[^a-z]/g, ''); }
+  // Avatar demo dùng pravatar (như Kéo Co) để eye-check thấy được avatar tròn thật.
+  function demoAvatar(i) { return 'https://i.pravatar.cc/150?img=' + (((i * 7) % 70) + 1); }
   function startDemo() {
     if (session.webhookCount > 0) {
       return { success: false, reason: 'real-events-present', message: 'Phòng đã có sự kiện thật, không chạy demo được.' };
@@ -536,7 +538,7 @@ function createEngine(ctx) {
     if (session.demoActive) return { success: true, demoActive: true, message: 'Demo đang chạy.' };
     DEMO_NAMES.forEach((name, i) => {
       const uid = demoUid(name);
-      const p = ensurePlayer({ uid, name: `Demo ${name}` });
+      const p = ensurePlayer({ uid, name: `Demo ${name}`, avatarUrl: demoAvatar(i) });
       if (p) {
         p.isDancer = true;
         p.character = (i % 8) + 1;
