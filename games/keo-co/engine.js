@@ -505,7 +505,7 @@ function createEngine(ctx) {
     let stageSteps = 0; // số bước đã chạy trong stage hiện tại
     let demoStepNo = 0;
     let trickleNo = 0;
-    let pendingJoins = []; // [{ uid, name, team, dueStep }] — khách mới đang chờ ở khán đài, nhập đội sau ~10s
+    let pendingJoins = []; // [{ uid, name, team, dueStep }] — khách mới đang chờ ở khán đài, nhập đội sau ~15s
     const joinTeam = (uid, name, team) => {
       handleIntake({ kind: 'comment', uid, name, text: team === 'xanh' ? '1' : '2' });
     };
@@ -546,7 +546,7 @@ function createEngine(ctx) {
         }
         return;
       }
-      // Khách mới ở khán đài ~10s (4 bước) rồi mới nhập đội — để thấy
+      // Khách mới ở khán đài ~15s (6 bước) rồi mới nhập đội — để thấy
       // khán đài luôn có người đứng xem và thấy rõ lượt đi xuống.
       const dueJoins = pendingJoins.filter((pj) => demoStepNo >= pj.dueStep);
       if (dueJoins.length) {
@@ -554,14 +554,14 @@ function createEngine(ctx) {
         dueJoins.forEach((pj) => joinTeam(pj.uid, pj.name, pj.team));
         return;
       }
-      // Cứ 4 bước lại có 1 khách mới đến khán đài (tối đa ~30 người online,
-      // mỗi đội ~15; tối đa 3 khách cùng chờ ở khán đài để luôn có người xem).
-      if (demoStepNo % 4 === 0 && onlinePlayers().length < 30 && pendingJoins.length < 3) {
+      // Cứ 2 bước lại có 1 khách mới đến khán đài (tối đa ~30 người online,
+      // mỗi đội ~15; tối đa 4 khách cùng chờ ở khán đài để luôn có người xem).
+      if (demoStepNo % 2 === 0 && onlinePlayers().length < 30 && pendingJoins.length < 4) {
         trickleNo += 1;
         const uid = `demo_khach_${trickleNo}`;
         const name = `Khách ${trickleNo}`;
         handleIntake({ kind: 'join', uid, name, avatarUrl: demoAvatar(30 + trickleNo) });
-        pendingJoins.push({ uid, name, team: trickleNo % 2 === 1 ? 'xanh' : 'do', dueStep: demoStepNo + 4 });
+        pendingJoins.push({ uid, name, team: trickleNo % 2 === 1 ? 'xanh' : 'do', dueStep: demoStepNo + 6 });
         return;
       }
       // Cứ 6 bước lại tặng 1 món quà (định kỳ, tối đa 20 xu = 200 lực) để thấy hiệu ứng quà.

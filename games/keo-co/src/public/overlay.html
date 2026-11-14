@@ -501,11 +501,11 @@ h1.ui-title{
   text-align:center;overflow:visible
 }
 .puller .tile-text{
-  position:absolute;top:-58px;left:-18px;width:166px;height:56px;
+  position:absolute;top:-125px;left:-18px;width:166px;height:123px;
   display:block;z-index:15;pointer-events:none
 }
 .puller .nm{
-  position:absolute;left:50%;transform:translateX(-50%);width:auto;max-width:84px;height:22px;
+  position:absolute;top:0;left:50%;transform:translateX(-50%);width:auto;max-width:84px;height:22px;
   display:flex;align-items:center;justify-content:center;
   padding:2px 4px;border:1px solid #bbdcff66;
   border-bottom:2px solid var(--team-color);
@@ -514,15 +514,16 @@ h1.ui-title{
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   text-shadow:0 1px #0005
 }
-.puller:nth-child(even) .nm{top:17px}
-.puller:nth-child(odd) .nm{top:0}
+.puller.tier-1 .nm{top:42px}
+.puller.tier-2 .nm{top:84px}
 .puller .fc{
   position:absolute;top:23px;left:50%;transform:translateX(-50%);width:auto;max-width:84px;height:16px;
   color:#ffe8a7;font-size:12px;font-weight:950;line-height:1;
   text-shadow:0 1px 3px #38210b;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;text-align:center;z-index:14
 }
-.puller:nth-child(even) .fc{top:40px}
+.puller.tier-1 .fc{top:65px}
+.puller.tier-2 .fc{top:107px}
 .puller[hidden]{display:none!important}
 .athlete{
   position:absolute;top:22px;left:0;width:130px;height:230px;
@@ -839,7 +840,7 @@ h1.ui-title{
   position:absolute;inset:0;z-index:45;pointer-events:none;overflow:hidden
 }
 .walker{
-  position:absolute;width:130px;height:230px;transform-origin:50% 50%;
+  position:absolute;width:130px;height:230px;transform-origin:50% 0;
   filter:drop-shadow(0 6px 6px #0006)
 }
 .walker .figure{--direction:1;--lean:-8deg;--head-shift:0px}
@@ -1530,6 +1531,8 @@ function paintRoster(team, people) {
     element.style.left = (fieldX - baseX - 65) + 'px';
     element.style.top = (126 + (index % 2 ? 8 : 0)) + 'px';
     element.style.zIndex = String(30 - index);
+    element.classList.remove('tier-0','tier-1','tier-2');
+    element.classList.add('tier-' + (index % 3));
 
     fitText(element.querySelector('.nm'),14,7);
     fitText(element.querySelector('.fc'),12,7);
@@ -1543,12 +1546,17 @@ function paintRoster(team, people) {
     }
   }
 
-  if (!sorted.length && !box.querySelector('.empty')) {
-    const empty = document.createElement('div');
-    empty.className = 'empty';
-    empty.innerHTML = 'Đội đang đợi bạn<br>Bình luận <b>' +
-      (team === 'xanh' ? '1' : '2') + '</b> để vào đội';
-    box.appendChild(empty);
+  const emptyEl = box.querySelector('.empty');
+  if (!sorted.length) {
+    if (!emptyEl) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.innerHTML = 'Đội đang đợi bạn<br>Bình luận <b>' +
+        (team === 'xanh' ? '1' : '2') + '</b> để vào đội';
+      box.appendChild(empty);
+    }
+  } else if (emptyEl) {
+    emptyEl.remove();
   }
 
   previousRoster[team] = keys;
@@ -1594,7 +1602,7 @@ function walkToTeam(p, team, from) {
 
   const destination = {
     x: fieldX - 65,
-    y: 325 + 40 + 126 + 5
+    y: 325 + 40 + 126
   };
 
   const walker = document.createElement('div');
@@ -1625,23 +1633,23 @@ function walkToTeam(p, team, from) {
   const startX =
     from.x + from.width / 2 - (destination.x + 65);
   const startY =
-    from.y + from.height / 2 - (destination.y + 36);
+    from.y + from.height / 2 - destination.y;
 
   const animation = walker.animate([
     {
       transform:
-        'translate(' + startX + 'px,' + startY + 'px) scale(.48)',
+        'translate(' + startX + 'px,' + startY + 'px) scale(.30)',
       opacity:.95
     },
     {
       transform:
         'translate(' + (startX * .55) + 'px,' +
-        (startY * .45 - 18) + 'px) scale(.77)',
+        (startY * .45 - 18) + 'px) scale(.42)',
       opacity:1,
       offset:.55
     },
     {
-      transform:'translate(0,0) scale(1)',
+      transform:'translate(0,0) scale(.48)',
       opacity:1
     }
   ], {
