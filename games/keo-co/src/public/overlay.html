@@ -528,6 +528,7 @@ h1.ui-title{
   position:absolute;width:130px;height:230px;
   text-align:center;overflow:visible
 }
+.puller.alt .tile-text{top:-32px}
 .puller .tile-text{
   position:absolute;top:-8px;left:50%;transform:translateX(-50%);
   width:auto;max-width:72px;height:24px;
@@ -1546,6 +1547,7 @@ function paintRoster(team, people) {
 
     updatePuller(element,p,index,team);
     element.hidden = false;
+    element.classList.toggle('alt', index % 2 === 1);
 
     const fieldX = team === 'xanh'
       ? 470 - index * 30
@@ -2418,15 +2420,19 @@ function setRefereeArms(pose) {
   if (!referee) return;
   const armA = referee.querySelector('.ref-arm.a');
   const armB = referee.querySelector('.ref-arm.b');
+  const figure = referee.querySelector('.referee-figure');
+  // v18: tay chỉ DÀI HƠN (104px) + xoay ngang hẳn 90 độ + thân nghiêng
+  // về phía đội thắng, để hướng chỉ đọc được rõ ràng.
   const poses = {
-    neutral: ['rotate(18deg)', 'rotate(-18deg)'],
-    blow: ['rotate(-155deg)', 'rotate(-18deg)'],
-    'point-xanh': ['rotate(-85deg)', 'rotate(18deg)'],
-    'point-do': ['rotate(-18deg)', 'rotate(85deg)']
+    neutral: ['rotate(18deg)', 'rotate(-18deg)', 68, 68, 'rotate(0deg)'],
+    blow: ['rotate(-155deg)', 'rotate(-18deg)', 68, 68, 'rotate(0deg)'],
+    'point-xanh': ['rotate(-90deg)', 'rotate(18deg)', 104, 68, 'rotate(-8deg)'],
+    'point-do': ['rotate(-18deg)', 'rotate(90deg)', 68, 104, 'rotate(8deg)']
   };
-  const [a, b] = poses[pose] || poses.neutral;
-  if (armA) armA.style.transform = a;
-  if (armB) armB.style.transform = b;
+  const [a, b, hA, hB, lean] = poses[pose] || poses.neutral;
+  if (armA) { armA.style.transform = a; armA.style.height = hA + 'px'; }
+  if (armB) { armB.style.transform = b; armB.style.height = hB + 'px'; }
+  if (figure) figure.style.transform = 'scale(.55) ' + lean;
   referee.classList.remove('ref-blow', 'ref-point-xanh', 'ref-point-do');
   if (pose === 'blow') referee.classList.add('ref-blow');
   else if (pose === 'point-xanh') referee.classList.add('ref-point-xanh');
