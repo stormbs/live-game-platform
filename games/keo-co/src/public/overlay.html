@@ -473,8 +473,8 @@ h1.ui-title{
 */
 .team-side{
   position:absolute;top:325px;width:438px;height:430px;
-  --team-color:var(--blue);--direction:1;--lean:-21deg;--head-shift:-12px;
-  --beat:1.35s
+  --team-color:var(--blue);--direction:1;--lean:-23deg;
+  --head-shift:-8px;--beat:1.35s;z-index:4
 }
 .team-side.left{left:21px}
 .team-side.right{
@@ -493,82 +493,54 @@ h1.ui-title{
   background:linear-gradient(90deg,transparent,#06182bd9,transparent)
 }
 .pullers{
-  position:absolute;
-  top:40px;
-  left:6px;
-  right:6px;
-  width:auto;
-  height:350px;
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  grid-template-rows:repeat(3,114px);
-  grid-auto-flow:row;
-  gap:4px 7px;
-  align-content:start
+  position:absolute;top:40px;left:0;width:438px;height:350px;
+  display:block;overflow:visible;z-index:4
 }
 .puller{
-  position:relative;
-  min-width:0;
-  width:100%;
-  height:100%;
-  text-align:center
+  position:absolute;width:130px;height:230px;
+  text-align:center;overflow:visible
 }
-
-/* v7: lưới 5 cột x 3 hàng, đủ 15 nhân vật đầy đủ; 5 mạnh nhất ở hàng giữa ôm dây. */
 .puller .tile-text{
-  position:absolute;top:0;left:0;right:0;height:16px;
-  display:flex;align-items:center;gap:4px;padding:0 2px
+  position:absolute;top:-58px;left:-18px;width:166px;height:56px;
+  display:block;z-index:15;pointer-events:none
 }
 .puller .nm{
-  position:static;flex:1;min-width:0;height:auto;padding:0;
-  border:none;background:transparent;font-size:12px;text-align:left
-}
-.puller .fc{
-  position:static;width:auto;height:auto;font-size:11px;
-  text-align:right;flex-shrink:0
-}
-.puller[hidden]{display:none!important}
-.nm{
-  position:absolute;
-  top:0;
-  left:0;
-  width:100%;
-  height:25px;
-  padding:2px 3px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border:1px solid #bbdcff66;
+  position:absolute;left:50%;transform:translateX(-50%);width:auto;max-width:84px;height:22px;
+  display:flex;align-items:center;justify-content:center;
+  padding:2px 4px;border:1px solid #bbdcff66;
   border-bottom:2px solid var(--team-color);
-  border-radius:7px;
-  background:#07182deb;
-  color:#fff;
-  z-index:15;
-  font-size:15px;
-  font-weight:850;
-  line-height:1;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
+  border-radius:7px;background:#07182deb;color:#fff;
+  font-size:14px;font-weight:850;line-height:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   text-shadow:0 1px #0005
 }
+.puller:nth-child(even) .nm{top:17px}
+.puller:nth-child(odd) .nm{top:0}
+.puller .fc{
+  position:absolute;top:23px;left:50%;transform:translateX(-50%);width:auto;max-width:84px;height:16px;
+  color:#ffe8a7;font-size:12px;font-weight:950;line-height:1;
+  text-shadow:0 1px 3px #38210b;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;text-align:center;z-index:14
+}
+.puller:nth-child(even) .fc{top:40px}
+.puller[hidden]{display:none!important}
 .athlete{
-  position:absolute;
-  top:22px;
-  left:50%;
-  margin-left:-65px;
-  width:130px;
-  height:230px;
-  z-index:5;
-  transform:scale(calc(.36 * var(--figure-scale, 1)));
+  position:absolute;top:22px;left:0;width:130px;height:230px;
+  z-index:5;transform:scale(calc(.48 * var(--figure-scale,1)));
   transform-origin:50% 0;
   animation:pull-rhythm var(--beat) ease-in-out infinite;
   animation-delay:var(--delay,0s)
 }
 @keyframes pull-rhythm{
-  0%,100%{transform:scale(calc(.36 * var(--figure-scale, 1))) translateY(0)}
-  35%{transform:scale(calc(.36 * var(--figure-scale, 1))) translate(-2px,-3px)}
-  70%{transform:scale(calc(.36 * var(--figure-scale, 1))) translate(1px,1px)}
+  0%,100%{
+    transform:scale(calc(.48 * var(--figure-scale,1))) translateY(0)
+  }
+  35%{
+    transform:scale(calc(.48 * var(--figure-scale,1))) translate(-3px,-4px)
+  }
+  70%{
+    transform:scale(calc(.48 * var(--figure-scale,1))) translate(2px,2px)
+  }
 }
 .figure{
   position:absolute;inset:0;transform:scaleX(var(--direction))
@@ -579,10 +551,9 @@ h1.ui-title{
   transition:transform .5s ease
 }
 .figure .avatar{
-  position:absolute;top:0;left:34px;
-  width:62px;height:62px;
-  border-radius:50%;overflow:hidden;
-  border:2px solid #ffffff55;box-shadow:0 1px 3px #0008;
+  position:absolute;top:0;left:34px;width:62px;height:62px;
+  border-radius:50%;overflow:hidden;border:2px solid #ffffff55;
+  box-shadow:0 1px 3px #0008;
   transform:translateX(var(--head-shift)) rotate(var(--lean));
   transition:transform .5s ease
 }
@@ -597,91 +568,122 @@ h1.ui-title{
   display:block;width:100%;height:100%;transform:scaleX(var(--direction))
 }
 .arms{
-  position:absolute;
-  top:22px;
-  left:50%;
-  margin-left:-65px;
-  width:130px;
-  height:230px;
-  z-index:12;
-  pointer-events:none;
-  transform:scale(calc(.36 * var(--figure-scale, 1))) scaleX(var(--direction));
+  position:absolute;top:22px;left:0;width:130px;height:230px;
+  z-index:12;pointer-events:none;
+  transform:scale(calc(.48 * var(--figure-scale,1))) scaleX(var(--direction));
   transform-origin:50% 0
 }
-.arms svg{
-  width:130px;
-  height:230px;
-  overflow:visible
-}
-.fc{
-  position:absolute;
-  top:48px;
-  left:0;
-  width:100%;
-  height:16px;
-  z-index:14;
-  color:#ffe8a7;
-  font-size:12px;
-  font-weight:950;
-  line-height:1;
-  text-shadow:0 1px 3px #38210b;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis
-}
+.arms svg{width:130px;height:230px;overflow:visible}
 .puller.arriving .athlete,
 .puller.arriving .arms,
 .puller.arriving .nm,
 .puller.arriving .fc,
-.puller.arriving .tile-text{
-  visibility:hidden
-}
-.puller.joined .nm{
-  animation:joined .9s ease
-}
-@keyframes joined{
-  30%{
-    background:#ffe8a7;
-    color:#10283d;
-    box-shadow:0 0 25px #ffd47388
-  }
-}
+.puller.arriving .tile-text{visibility:hidden}
 .empty{
-  grid-column:1/-1;
-  grid-row:1/-1;
-  align-self:center;
-  margin-top:35px;
-  padding:23px 12px;
-  border:1px dashed #b4d6e677;
-  border-radius:16px;
-  background:#071d31cf;
-  color:#e7f2f9;
-  font-size:24px;
-  line-height:1.5;
-  font-weight:800
+  position:absolute;left:0;right:0;top:110px;
+  padding:23px 12px;border:1px dashed #b4d6e677;border-radius:16px;
+  background:#071d31cf;color:#e7f2f9;font-size:24px;
+  line-height:1.5;font-weight:800;text-align:center
 }
 .empty b{color:#ffe09a}
-
 .body-art .podium{fill:#f4c64f;stroke:#8b5d21;stroke-width:3}
 .body-art .podium-top{fill:#ffe17b;stroke:#9a6a25;stroke-width:2}
-
 .bench{
   position:absolute;top:394px;left:0;width:100%;height:36px;
   display:flex;align-items:center;justify-content:center;
-  padding:0 8px;z-index:3;color:#ffe9bf;
-  text-align:center;font-size:16px;line-height:1.2;font-weight:800;
+  padding:0 8px;z-index:3;color:#ffe9bf;text-align:center;
+  font-size:16px;line-height:1.2;font-weight:800;
   text-shadow:0 2px 4px #24180c
 }
 .lead-xanh .team-side.left,.lead-do .team-side.right{
-  --lean:-31deg;--head-shift:-22px;--beat:.85s
+  --lean:-34deg;--head-shift:-16px;--beat:.85s
 }
 .lead-xanh .team-side.right,.lead-do .team-side.left{
-  --lean:-8deg;--head-shift:0px;--beat:1.65s
+  --lean:-12deg;--head-shift:0px;--beat:1.65s
 }
 .team-side.boost{
-  --lean:-35deg!important;--head-shift:-25px!important;--beat:.48s!important
+  --lean:-38deg!important;--head-shift:-20px!important;--beat:.48s!important
 }
 .team-side.boost .athlete{filter:drop-shadow(0 0 9px var(--team-color))}
+.referee{
+  position:absolute;left:500px;top:502px;width:80px;height:143px;
+  z-index:6;pointer-events:none
+}
+.referee-figure{
+  position:absolute;left:0;top:0;width:130px;height:230px;
+  transform:scale(.62);transform-origin:50% 0
+}
+.referee-figure .ref-head{
+  position:absolute;left:39px;top:0;width:52px;height:52px;
+  border-radius:50%;background:#f4b184;border:2px solid #70452e;
+  box-shadow:0 2px 4px #0008
+}
+.ref-head::before{
+  content:"";position:absolute;left:9px;top:26px;width:6px;height:6px;
+  border-radius:50%;background:#38251f;
+  box-shadow:27px 0 #38251f
+}
+.ref-head::after{
+  content:"";position:absolute;left:17px;top:36px;width:18px;height:7px;
+  border-bottom:2px solid #6e352c;border-radius:0 0 50% 50%
+}
+.referee-figure .ref-body{
+  position:absolute;left:35px;top:48px;width:60px;height:91px;
+  border:3px solid #10151c;border-radius:12px 12px 7px 7px;
+  background:repeating-linear-gradient(90deg,#f5f7fa 0 10px,#151a20 10px 20px)
+}
+.referee-figure .ref-pants{
+  position:absolute;left:37px;top:137px;width:56px;height:48px;
+  background:#10151c;border:3px solid #070b10;
+  clip-path:polygon(0 0,100% 0,88% 100%,57% 100%,50% 28%,43% 100%,12% 100%)
+}
+.referee-figure .ref-leg{
+  position:absolute;top:176px;width:16px;height:35px;
+  background:#111820;border-radius:5px
+}
+.referee-figure .ref-leg.a{left:39px;transform:rotate(5deg)}
+.referee-figure .ref-leg.b{right:39px;transform:rotate(-5deg)}
+.referee-figure .ref-shoe{
+  position:absolute;top:205px;width:35px;height:13px;
+  background:#05080c;border-radius:8px 8px 3px 3px
+}
+.referee-figure .ref-shoe.a{left:23px}
+.referee-figure .ref-shoe.b{right:23px}
+.ref-arm{
+  position:absolute;top:67px;width:13px;height:68px;
+  background:#f4b184;border:2px solid #70452e;border-radius:9px;
+  transform-origin:top center;transition:transform .3s ease
+}
+.ref-arm.a{left:28px;transform:rotate(18deg)}
+.ref-arm.b{right:28px;transform:rotate(-18deg)}
+.ref-whistle{
+  position:absolute;left:64px;top:82px;width:10px;height:10px;
+  border:3px solid #f4d36f;border-radius:50%;
+  box-shadow:0 0 0 2px #6d5321
+}
+#referee.ref-blow .ref-arm.a{transform:rotate(-155deg)}
+#referee.ref-blow .ref-arm.b{transform:rotate(-18deg)}
+#referee.ref-point-xanh .ref-arm.a{transform:rotate(-70deg)}
+#referee.ref-point-xanh .ref-arm.b{transform:rotate(18deg)}
+#referee.ref-point-do .ref-arm.a{transform:rotate(-18deg)}
+#referee.ref-point-do .ref-arm.b{transform:rotate(70deg)}
+.ui-panel,.scoreboard,.guide-board,.top5,.ticker,#scaler>.ui-statusbar{
+  border-color:#b9e1ff55;
+  box-shadow:0 8px 0 #030c18,0 12px 30px #0006,inset 0 1px #ffffff2b
+}
+.field{
+  background:
+    radial-gradient(ellipse at 50% 5%,#9ee7ff35,transparent 58%),
+    linear-gradient(#102b48,#39788a 51%,#805936 52%,#49301f);
+  border-color:#b7e2ff88
+}
+.ground{
+  background:
+    radial-gradient(ellipse at 50% 0,#ffe6a455,transparent 65%),
+    repeating-linear-gradient(173deg,transparent 0 30px,#29170d35 31px 33px),
+    linear-gradient(#a16b3e,#71452d 65%,#3d281e);
+  border-top-color:#f1d08b
+}
 .rope{
   position:absolute;top:549px;left:12px;width:1002px;height:10px;z-index:8;
   border-radius:6px;border-top:1px solid #ffe7b4;border-bottom:1px solid #69401e;
@@ -1032,6 +1034,20 @@ h1.ui-title{
       <div class="pullers" id="pullers-do"></div>
       <div class="bench" id="bench-do"></div>
     </div>
+<div id="referee" class="referee" aria-label="Trọng tài">
+  <div class="referee-figure">
+    <div class="ref-head"></div>
+    <div class="ref-body"></div>
+    <div class="ref-pants"></div>
+    <div class="ref-leg a"></div>
+    <div class="ref-leg b"></div>
+    <div class="ref-shoe a"></div>
+    <div class="ref-shoe b"></div>
+    <div class="ref-arm a"></div>
+    <div class="ref-arm b"></div>
+    <div class="ref-whistle"></div>
+  </div>
+</div>
     <div class="hint" id="hint">Chênh 500 lực → thắng hiệp · Tối đa 180 giây / hiệp</div>
   </div>
 
@@ -1051,6 +1067,7 @@ h1.ui-title{
   </div>
   <div id="motion-layer" aria-hidden="true"></div>
   <div id="gift-burst" aria-hidden="true"></div>
+  <audio id="voiceAudio" preload="auto"></audio>
 </div>
 
 <script>
@@ -1075,6 +1092,11 @@ const socket = io();
 let lastState = null;
 let hasRendered = false;
 let voiceOn = true;
+let previousWaitingForMatch = false;
+let previousPhase = '';
+let previousLead = '';
+let lastWaitingVoiceAt = 0;
+let lastCloseVoiceAt = 0;
 let socketRevision = 0;
 let pollBusy = false;
 let demoBootHandled = false;
@@ -1236,27 +1258,35 @@ function bodyArt() {
   return `<svg class="body-art" viewBox="0 0 130 230" aria-hidden="true">
     <ellipse class="podium" cx="65" cy="224" rx="62" ry="8"/>
     <path class="podium-top" d="M8 216Q65 207 122 216L116 225H14Z"/>
-    <path d="M58 148L46 174L24 208" fill="none" stroke="#7f5338" stroke-width="24" stroke-linecap="round"/>
-    <path d="M58 148L46 174L24 208" fill="none" stroke="var(--skin)" stroke-width="18" stroke-linecap="round"/>
-    <path d="M79 151L90 177L106 207" fill="none" stroke="#7f5338" stroke-width="24" stroke-linecap="round"/>
-    <path d="M79 151L90 177L106 207" fill="none" stroke="var(--skin)" stroke-width="18" stroke-linecap="round"/>
-    <path d="M29 196L19 210M100 195L109 210" stroke="#fff0d3" stroke-width="20"/>
-    <path d="M29 197L24 205M101 197L106 205" stroke="var(--pants)" stroke-width="20"/>
-    <path d="M14 207Q24 202 33 211L36 219H3Q2 210 14 207Z"
+
+    <path d="M54 143L42 166L24 202" fill="none"
+      stroke="#754b36" stroke-width="25" stroke-linecap="round"/>
+    <path d="M54 143L42 166L24 202" fill="none"
+      stroke="var(--skin)" stroke-width="18" stroke-linecap="round"/>
+    <path d="M79 145L92 174L108 207" fill="none"
+      stroke="#754b36" stroke-width="25" stroke-linecap="round"/>
+    <path d="M79 145L92 174L108 207" fill="none"
+      stroke="var(--skin)" stroke-width="18" stroke-linecap="round"/>
+
+    <path d="M24 194L18 207M106 197L111 210"
+      stroke="var(--pants)" stroke-width="21" stroke-linecap="round"/>
+    <path d="M7 207Q22 201 34 211L37 220H3Q2 212 7 207Z"
       fill="#fff" stroke="#091929" stroke-width="2"/>
-    <path d="M101 207Q109 202 117 210L129 216V221H94Q90 213 101 207Z"
+    <path d="M99 208Q110 201 122 211L129 217V221H94Q92 213 99 208Z"
       fill="#fff" stroke="#091929" stroke-width="2"/>
-    <path d="M4 220H35M95 221H128" stroke="#cfd8df" stroke-width="4"/>
-    <path d="M44 134H86L94 158L71 163L66 151L59 163L37 157Z"
+
+    <path d="M39 133H87L94 158L72 163L65 151L58 163L36 157Z"
       fill="var(--pants)" stroke="#071a2b" stroke-width="3"/>
-    <path d="M66 146V157" stroke="#fff" stroke-width="3"/>
+
     <g class="torso">
-      <path d="M46 64Q63 56 78 69L91 137Q65 151 42 135L31 84Z"
+      <path d="M48 62Q63 54 78 68L91 135Q66 149 42 134L31 83Z"
         fill="var(--shirt)" stroke="#092338" stroke-width="3"/>
-      <path d="M43 80L51 128" stroke="#fff" stroke-opacity=".5" stroke-width="4"/>
-      <path d="M73 79L82 131" stroke="#fff" stroke-opacity=".45" stroke-width="4"/>
-      <path d="M48 65Q60 80 73 69" fill="none" stroke="#fff0cf" stroke-width="4"/>
-      <path d="M41 132Q65 145 87 135" fill="none" stroke="#081f32" stroke-opacity=".45" stroke-width="8"/>
+      <path d="M45 76L53 128M72 76L82 130"
+        stroke="#fff" stroke-opacity=".48" stroke-width="4"/>
+      <path d="M47 65Q61 79 74 68"
+        fill="none" stroke="#fff0cf" stroke-width="4"/>
+      <path d="M42 131Q65 144 88 134"
+        fill="none" stroke="#081f32" stroke-opacity=".45" stroke-width="8"/>
     </g>
   </svg>`;
 }
@@ -1266,22 +1296,27 @@ function bodyArt() {
 function armsArt() {
   return `<svg viewBox="0 0 130 230" aria-hidden="true">
     <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M46 94L72 116L99 107" stroke="#805437" stroke-width="20"/>
-      <path d="M46 94L72 116L99 107" stroke="var(--skin)" stroke-width="15"/>
-      <path d="M45 106L71 130L115 107" stroke="#805437" stroke-width="20"/>
-      <path d="M45 106L71 130L115 107" stroke="var(--skin)" stroke-width="15"/>
-      <path d="M42 94L49 100M42 104L50 112" stroke="var(--shirt)" stroke-width="22"/>
+      <path d="M45 86L67 99L101 82"
+        stroke="#754b36" stroke-width="20"/>
+      <path d="M45 86L67 99L101 82"
+        stroke="var(--skin)" stroke-width="15"/>
+      <path d="M43 101L68 113L116 87"
+        stroke="#754b36" stroke-width="20"/>
+      <path d="M43 101L68 113L116 87"
+        stroke="var(--skin)" stroke-width="15"/>
+      <path d="M43 86L48 92M42 100L49 106"
+        stroke="var(--shirt)" stroke-width="22"/>
     </g>
     <g fill="var(--skin)" stroke="#825338" stroke-width="2">
-      <rect x="92" y="95" width="17" height="25" rx="6" transform="rotate(9 100 107)"/>
-      <rect x="109" y="96" width="18" height="25" rx="6" transform="rotate(-5 118 108)"/>
+      <rect x="94" y="70" width="17" height="25" rx="6"
+        transform="rotate(8 102 82)"/>
+      <rect x="110" y="75" width="18" height="25" rx="6"
+        transform="rotate(-5 119 87)"/>
     </g>
     <g stroke="#b57950" stroke-width="1.4" stroke-linecap="round">
-      <path d="M95 102H105M95 107H105M95 112H105"/>
-      <path d="M112 103H123M112 108H123M112 113H123"/>
+      <path d="M97 77H107M97 82H107M97 87H107"/>
+      <path d="M113 82H124M113 87H124M113 92H124"/>
     </g>
-    <path d="M96 115Q91 112 94 107M112 116Q107 112 111 108"
-      fill="none" stroke="#825338" stroke-width="2" stroke-linecap="round"/>
   </svg>`;
 }
 
@@ -1462,54 +1497,47 @@ function paintSpectators(people) {
 function paintRoster(team, people) {
   const box = $('pullers-' + team);
   const nodes = rosterNodes[team];
-  // Đủ 15 nhân vật/đội (5 cột x 3 hàng); 5 mạnh nhất ở hàng giữa ôm dây.
-  const sorted = [...people].sort((a, b) => number(b.force) - number(a.force));
+  const sorted = [...people].sort((a,b) => number(b.force) - number(a.force));
   const keys = new Set(sorted.map(playerKey));
   const joined = hasRendered
     ? sorted.filter(p => !previousRoster[team].has(playerKey(p)))
     : [];
 
-  if (sorted.length) {
-    box.querySelector('.empty')?.remove();
-  }
+  const baseX = team === 'xanh' ? 21 : 621;
 
-  sorted.forEach((p, index) => {
+  sorted.forEach((p,index) => {
     const uid = playerKey(p);
     let element = nodes.get(uid);
 
     if (!element) {
       element = createPuller(p);
       nodes.set(uid, element);
+      box.appendChild(element);
     }
 
-    // Chỉ hiện tối đa 15 người/đội; thừa thì ẩn.
     if (index >= 15) {
       element.hidden = true;
       return;
     }
 
-    updatePuller(element, p, index, team);
+    updatePuller(element,p,index,team);
     element.hidden = false;
 
-    // 5 mạnh nhất -> hàng giữa (row 2, ôm dây); 5 tiếp -> hàng trên;
-    // 5 cuối -> hàng dưới.
-    const group = index < 5 ? 2 : (index < 10 ? 1 : 3);
-    const colInGroup = index % 5;
-    element.style.gridRow = group;
-    element.style.gridColumn = colInGroup + 1;
-    element.style.order = index;
+    const fieldX = team === 'xanh'
+      ? 470 - index * 30
+      : 610 + index * 30;
 
-    if (element.parentNode !== box) {
-      box.appendChild(element);
-    }
+    element.style.left = (fieldX - baseX - 65) + 'px';
+    element.style.top = (126 + (index % 2 ? 8 : 0)) + 'px';
+    element.style.zIndex = String(30 - index);
 
-    fitText(element.querySelector('.nm'), 12, 7);
-    fitText(element.querySelector('.fc'), 11, 7);
+    fitText(element.querySelector('.nm'),14,7);
+    fitText(element.querySelector('.fc'),12,7);
   });
 
-  for (const [uid, element] of nodes) {
+  for (const [uid,element] of nodes) {
     if (!keys.has(uid)) {
-      cancelArrival(team, uid);
+      cancelArrival(team,uid);
       element.remove();
       nodes.delete(uid);
     }
@@ -1519,28 +1547,20 @@ function paintRoster(team, people) {
     const empty = document.createElement('div');
     empty.className = 'empty';
     empty.innerHTML = 'Đội đang đợi bạn<br>Bình luận <b>' +
-      (team === 'xanh' ? '1' : '2') +
-      '</b> để vào đội';
+      (team === 'xanh' ? '1' : '2') + '</b> để vào đội';
     box.appendChild(empty);
   }
 
   previousRoster[team] = keys;
 
-  const details = [];
-
-  if (sorted.length) {
-    details.push(sorted.length + ' người đang giữ dây');
-  }
-
+  const details = sorted.length
+    ? [sorted.length + ' người đang giữ dây']
+    : [];
   const bench = number(lastState.teams[team].bench);
-
-  if (bench > 0) {
-    details.push('Dự bị: ' + bench);
-  }
+  if (bench > 0) details.push('Dự bị: ' + bench);
 
   $('bench-' + team).textContent = details.join(' · ');
-  fitText($('bench-' + team), 16, 10);
-
+  fitText($('bench-' + team),16,10);
   return joined;
 }
 
@@ -1565,12 +1585,16 @@ function walkToTeam(p, team, from) {
   cancelArrival(team, uid);
 
   const targetRect = localRect(target);
-
   if (!targetRect) return;
 
+  const index = [...rosterNodes[team].values()].indexOf(target);
+  const fieldX = team === 'xanh'
+    ? 470 - Math.max(0,index) * 30
+    : 610 + Math.max(0,index) * 30;
+
   const destination = {
-    x: targetRect.x + targetRect.width / 2 - 65,
-    y: targetRect.y + 5
+    x: fieldX - 65,
+    y: 325 + 40 + 126 + 5
   };
 
   const walker = document.createElement('div');
@@ -1643,16 +1667,95 @@ function walkToTeam(p, team, from) {
   };
 }
 
-function announceJoin(p, team) {
-  if (lastState.demoActive || !p.name || p.isDemo || p.demo) return;
-  const name = speechName(p.name);
-  if (name) {
-    playTts(name + ' vừa vào đội ' + teamName(team) +
-      '! Đội ' + teamName(team) + ' có thêm trợ thủ!', 1);
+const voiceAudio = $('voiceAudio');
+const voiceQueue = [];
+let voicePlaying = false;
+let voiceSequence = 0;
+let voiceRestoreVolume = 50;
+const voiceRecent = new Map();
+
+function refreshMusicVolume() {
+  if (!window.StromMusic) return;
+  const volume = voicePlaying ? 10 : voiceRestoreVolume;
+  if (typeof window.StromMusic.setVolume === 'function') {
+    window.StromMusic.setVolume(volume);
+  } else if (typeof window.StromMusic.volume === 'function') {
+    window.StromMusic.volume(volume);
   }
 }
 
-/* Âm thanh tổng hợp tại chỗ, không cần tệp hiệu ứng bên ngoài. */
+function enqueueVoiceFile(name, priority) {
+  if (!voiceOn || !name) return;
+
+  const now = Date.now();
+  const recentAt = voiceRecent.get(name) || 0;
+  if (now - recentAt < 12000) return;
+
+  voiceRecent.set(name,now);
+  for (const [key,at] of voiceRecent) {
+    if (now - at > 30000) voiceRecent.delete(key);
+  }
+
+  voiceQueue.push({
+    name,
+    priority: priority || 0,
+    at: now,
+    sequence: ++voiceSequence
+  });
+
+  while (voiceQueue.length > 3) voiceQueue.shift();
+  voiceQueue.sort((a,b) =>
+    b.priority - a.priority || a.sequence - b.sequence
+  );
+  playVoiceEntry();
+}
+
+function playVoiceEntry() {
+  if (!voiceOn || voicePlaying || !voiceQueue.length) return;
+
+  const now = Date.now();
+  while (voiceQueue.length && now - voiceQueue[0].at > 25000) {
+    voiceQueue.shift();
+  }
+  if (!voiceQueue.length) return;
+
+  const entry = voiceQueue.shift();
+  voicePlaying = true;
+  refreshMusicVolume();
+
+  let finished = false;
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    voiceAudio.onended = null;
+    voiceAudio.onerror = null;
+    voiceAudio.pause();
+    voicePlaying = false;
+    refreshMusicVolume();
+    playVoiceEntry();
+  };
+
+  voiceAudio.src = '/shared/voice/keo-co/' + entry.name + '.mp3';
+  voiceAudio.onended = finish;
+  voiceAudio.onerror = finish;
+  voiceAudio.play().catch(finish);
+}
+
+function stopVoice() {
+  voiceQueue.length = 0;
+  voiceAudio.onended = null;
+  voiceAudio.onerror = null;
+  voiceAudio.pause();
+  voiceAudio.removeAttribute('src');
+  voicePlaying = false;
+  refreshMusicVolume();
+}
+
+function announceJoin(p, team) {
+  if (!p.name) return;
+  enqueueVoiceFile(team === 'xanh' ? 'join-xanh' : 'join-do',4);
+}
+
 let fxCtx = null;
 let lastPullSoundAt = 0;
 let lastCheerAt = 0;
@@ -1785,123 +1888,10 @@ function forceFx(s) {
   if (big >= 30) cheerSound();
   if (dx > 0 && dd > 0 && Math.abs(s.force.xanh - s.force.do) <= 100) drumSound();
 }
-document.addEventListener('pointerdown', () => {
-  fxAudio();
-  nextTts();
-}, { passive: true });
-document.addEventListener('keydown', () => {
-  fxAudio();
-  nextTts();
-});
+document.addEventListener('pointerdown', () => fxAudio(), { passive:true });
+document.addEventListener('keydown', () => fxAudio());
 
-/* TTS: ưu tiên lời quan trọng, giữ khoảng nghỉ ít nhất 2 giây sau mỗi lời. */
-const ttsQueue = [];
-let ttsPlaying = false;
-let ttsAvailableAt = 0;
-let ttsWakeTimer = null;
-let ttsSequence = 0;
-let activeSpeech = null;
-let activeAudio = null;
-let activeUtterance = null;
-
-function speechName(name) {
-  const cleaned = String(name || '')
-    .replace(/https?:\/\/\S+/gi, '')
-    .replace(/[_|~*#]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  return Array.from(cleaned).slice(0, 45).join('');
-}
-function playTts(text, priority) {
-  if (!voiceOn || !text) return;
-  const now = Date.now();
-  if (ttsQueue.some(item => item.text === text && now - item.at < 12000)) return;
-  ttsQueue.push({
-    text,
-    priority: priority || 0,
-    at: now,
-    sequence: ++ttsSequence
-  });
-  ttsQueue.sort((a,b) => b.priority - a.priority || a.sequence - b.sequence);
-  if (ttsQueue.length > 8) ttsQueue.length = 8;
-  nextTts();
-}
-function stopTts() {
-  ttsQueue.length = 0;
-  clearTimeout(ttsWakeTimer);
-  if (activeAudio) {
-    activeAudio.onended = null;
-    activeAudio.onerror = null;
-    activeAudio.pause();
-  }
-  if (activeUtterance && window.speechSynthesis) speechSynthesis.cancel();
-  activeSpeech?.finish();
-}
-function nextTts() {
-  if (!voiceOn || ttsPlaying || !ttsQueue.length) return;
-  const delay = ttsAvailableAt - Date.now();
-  if (delay > 0) {
-    clearTimeout(ttsWakeTimer);
-    ttsWakeTimer = setTimeout(nextTts, delay + 10);
-    return;
-  }
-  while (ttsQueue.length && Date.now() - ttsQueue[0].at > 25000) ttsQueue.shift();
-  if (!ttsQueue.length) return;
-
-  const item = ttsQueue.shift();
-  ttsPlaying = true;
-  let finished = false;
-  let fallbackStarted = false;
-  let watchdog = null;
-  const audio = new Audio(endpoint('tts') + '?text=' + encodeURIComponent(item.text));
-  activeAudio = audio;
-
-  function finish() {
-    if (finished) return;
-    finished = true;
-    clearTimeout(watchdog);
-    audio.onended = null;
-    audio.onerror = null;
-    audio.pause();
-    if (activeAudio === audio) activeAudio = null;
-    activeUtterance = null;
-    activeSpeech = null;
-    ttsPlaying = false;
-    ttsAvailableAt = Date.now() + 2000;
-    nextTts();
-  }
-  function fallback() {
-    if (finished || fallbackStarted) return;
-    fallbackStarted = true;
-    audio.onended = null;
-    audio.onerror = null;
-    audio.pause();
-    try {
-      if (!voiceOn || !window.speechSynthesis) {
-        finish();
-        return;
-      }
-      const utterance = new SpeechSynthesisUtterance(item.text);
-      utterance.lang = 'vi-VN';
-      utterance.rate = 1.06;
-      const voice = speechSynthesis.getVoices().find(v => /^vi(?:-|_)/i.test(v.lang));
-      if (voice) utterance.voice = voice;
-      activeUtterance = utterance;
-      utterance.onend = finish;
-      utterance.onerror = finish;
-      speechSynthesis.speak(utterance);
-    } catch (_) { finish(); }
-  }
-  activeSpeech = { finish };
-  audio.onended = finish;
-  audio.onerror = fallback;
-  watchdog = setTimeout(() => {
-    if (activeUtterance && window.speechSynthesis) speechSynthesis.cancel();
-    finish();
-  }, 30000);
-  audio.play().catch(fallback);
-}
-
+/* Quà dùng force do engine cung cấp; không đặt lực riêng theo loại quà. */
 /* Quà dùng force do engine cung cấp; không đặt lực riêng theo loại quà. */
 function giftSignature(gift) {
   return JSON.stringify([
@@ -2016,20 +2006,7 @@ function showGift(gift, oldSpectatorPositions, oldPlayerPositions) {
   ], { duration: 2000, easing: 'cubic-bezier(.2,.65,.35,1)', fill: 'forwards' });
   animation.onfinish = () => token.remove();
 
-  if (number(gift.coins) >= 50 && !lastState.demoActive && gift.name) {
-    const name = speechName(gift.name);
-    const label = speechName(gift.giftName || 'quà');
-    if (name) {
-      playTts(
-        name + ' tặng ' + label + ' ' + number(gift.coins) + ' xu, ' +
-        (team && number(gift.force) > 0
-          ? 'cộng ' + number(gift.force) + ' lực cho đội ' + teamName(team) +
-            '! Đội ' + teamName(team) + ' đang bứt phá!'
-          : 'hãy chọn đội bằng bình luận 1 hoặc 2 để tính lực nhé!'),
-        3
-      );
-    }
-  }
+  enqueueVoiceFile('gift',5);
 }
 function processGift(s, oldSpectatorPositions, oldPlayerPositions) {
   if (!s.lastGift) {
@@ -2164,6 +2141,48 @@ function updateRules(s) {
   fitText($('hint'), 18, 11);
 }
 
+function updateReferee(s) {
+  const referee = $('referee');
+  if (!referee) return;
+
+  referee.classList.remove('ref-blow','ref-point-xanh','ref-point-do');
+
+  if (s.phase === 'playing') {
+    referee.classList.add('ref-blow');
+  } else if (s.phase === 'roundEnd' && s.lastRoundWinner) {
+    referee.classList.add('ref-point-' + s.lastRoundWinner);
+  } else if (s.phase === 'matchEnd' && s.results?.winner) {
+    referee.classList.add('ref-point-' + s.results.winner);
+  }
+}
+
+function voiceTransitions(s, oldState) {
+  const waiting = !!s.waitingForMatch;
+  const lead = number(s.force.xanh) > number(s.force.do)
+    ? 'xanh'
+    : number(s.force.do) > number(s.force.xanh) ? 'do' : '';
+
+  if (waiting && !previousWaitingForMatch &&
+      Date.now() - lastWaitingVoiceAt >= 30000) {
+    enqueueVoiceFile('waiting',6);
+    lastWaitingVoiceAt = Date.now();
+  }
+
+  if (oldState?.phase !== 'playing' && s.phase === 'playing') {
+    enqueueVoiceFile('round-start',7);
+  }
+
+  if (lead && previousLead && lead !== previousLead &&
+      Date.now() - lastCloseVoiceAt >= 20000) {
+    enqueueVoiceFile('close',3);
+    lastCloseVoiceAt = Date.now();
+  }
+
+  previousWaitingForMatch = waiting;
+  previousPhase = s.phase;
+  previousLead = lead;
+}
+
 function render(s) {
   if (!s || !s.teams?.xanh || !s.teams?.do || !s.force || !s.wins) return;
   const oldState = lastState;
@@ -2175,20 +2194,27 @@ function render(s) {
   const nextVoiceOn = s.settings?.voiceEnabled !== false;
   if (voiceOn && !nextVoiceOn) {
     voiceOn = false;
-    stopTts();
+    stopVoice();
   } else {
     voiceOn = nextVoiceOn;
   }
 
   if (window.StromMusic) {
     window.StromMusic.sync({
-      mood: 'battle', enabled: true, volume: 50,
-      energy: Math.abs(number(s.flagPct)) > 80 ||
+      mood:'battle',
+      enabled:true,
+      volume:voicePlaying ? 10 : 50,
+      energy:Math.abs(number(s.flagPct)) > 80 ||
         number(s.force.xanh) + number(s.force.do) > 300
         ? 2
-        : (number(s.teams.xanh.total) + number(s.teams.do.total) > 0 || s.demoActive ? 1 : 0)
+        : (number(s.teams.xanh.total) + number(s.teams.do.total) > 0 ||
+           s.demoActive ? 1 : 0)
     });
+    refreshMusicVolume();
   }
+
+  voiceTransitions(s,oldState);
+  updateReferee(s);
 
   scaler.style.setProperty('--blue', teamColor('xanh'));
   scaler.style.setProperty('--red', teamColor('do'));
@@ -2332,10 +2358,9 @@ socket.on('state-update', s => {
 });
 socket.on('round-win', d => {
   if (!d?.team) return;
-  playTts(
-    'Tuyệt vời! Đội ' + teamName(d.team) + ' thắng hiệp ' + d.matchRound +
-    '! Một màn kéo dây quá xuất sắc!',
-    4
+  enqueueVoiceFile(
+    d.team === 'xanh' ? 'round-win-xanh' : 'round-win-do',
+    8
   );
   cheerSound();
   surgeRope();
@@ -2345,16 +2370,15 @@ socket.on('round-win', d => {
     StromUI.confetti(24);
   }
 });
+
 socket.on('match-win', d => {
   if (!d?.team) return;
-  /* Lời vinh danh trận thay cho lời báo thắng hiệp còn đang chờ. */
-  for (let index = ttsQueue.length - 1; index >= 0; index--) {
-    if (ttsQueue[index].priority < 5) ttsQueue.splice(index, 1);
+  for (let index = voiceQueue.length - 1; index >= 0; index--) {
+    if (voiceQueue[index].priority < 8) voiceQueue.splice(index,1);
   }
-  playTts(
-    'Nhà vô địch đã lộ diện! Đội ' + teamName(d.team) +
-    ' thắng trận! Chúc mừng tất cả thành viên của đội!',
-    5
+  enqueueVoiceFile(
+    d.team === 'xanh' ? 'match-win-xanh' : 'match-win-do',
+    9
   );
   cheerSound();
   surgeRope();
@@ -2369,15 +2393,17 @@ socket.on('flag-warning', d => {
   if (!d?.team) return;
   cheerSound();
   surgeRope();
-  playTts(
-    'Đội ' + teamName(d.team) +
-    ' chỉ còn một chút nữa là thắng hiệp này! Cả đội kéo mạnh lên!',
-    4
-  );
+  enqueueVoiceFile('close', 3);
   $('arena').classList.add('warning');
   clearTimeout(warningTimer);
-  warningTimer = setTimeout(() => $('arena').classList.remove('warning'), 2600);
-  fieldFeedback(teamName(d.team) + ' SẮP CHẠM ĐÍCH!', teamColor(d.team), true);
+  warningTimer = setTimeout(
+    () => $('arena').classList.remove('warning'),2600
+  );
+  fieldFeedback(
+    teamName(d.team) + ' SẮP CHẠM ĐÍCH!',
+    teamColor(d.team),
+    true
+  );
   flashDrum('⚑ CỜ GẦN ĐÍCH! TĂNG LỰC KÉO NÀO!');
 });
 
@@ -2406,6 +2432,7 @@ async function bootDemo(s) {
       body: '{}'
     });
     if (!demoResponse.ok) throw new Error('demo');
+    enqueueVoiceFile('welcome', 5);
   } catch (_) {
     $('demo-note').textContent = 'Chưa khởi động được demo. Hãy thử tải lại overlay.';
     $('demo-note').classList.add('on');
@@ -2450,8 +2477,9 @@ setInterval(() => {
 
 addEventListener('beforeunload', () => {
   voiceOn = false;
-  stopTts();
-  for (const [key, arrival] of arrivals) {
+  stopVoice();
+
+  for (const [key,arrival] of arrivals) {
     arrival.animation?.cancel();
     arrival.walker.remove();
     arrivals.delete(key);
