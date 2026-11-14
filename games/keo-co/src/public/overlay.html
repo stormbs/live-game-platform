@@ -530,23 +530,18 @@ h1.ui-title{
 }
 .puller .tile-text{
   position:absolute;top:-8px;left:50%;transform:translateX(-50%);
-  width:auto;max-width:88px;height:26px;
-  display:flex;align-items:center;justify-content:center;gap:4px;
-  padding:2px 7px;border:1px solid #bbdcff66;
+  width:auto;max-width:64px;height:24px;
+  display:flex;align-items:center;justify-content:center;
+  padding:2px 6px;border:1px solid #bbdcff66;
   border-bottom:2px solid var(--team-color);
   border-radius:7px;background:#07182df2;
   z-index:15;pointer-events:none;white-space:nowrap
 }
 .puller .nm{
-  flex:0 1 auto;min-width:0;max-width:56px;
+  flex:0 1 auto;min-width:0;max-width:52px;
   color:#fff;font-size:13px;font-weight:850;line-height:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   text-shadow:0 1px #0005
-}
-.puller .fc{
-  flex:0 0 auto;
-  color:#ffe8a7;font-size:12px;font-weight:950;line-height:1;
-  text-shadow:0 1px 3px #38210b;white-space:nowrap
 }
 .puller[hidden]{display:none!important}
 .athlete{
@@ -691,10 +686,10 @@ h1.ui-title{
 }
 #referee.ref-blow .ref-arm.a{transform:rotate(-155deg)}
 #referee.ref-blow .ref-arm.b{transform:rotate(-18deg)}
-#referee.ref-point-xanh .ref-arm.a{transform:rotate(-70deg)}
+#referee.ref-point-xanh .ref-arm.a{transform:rotate(-85deg)}
 #referee.ref-point-xanh .ref-arm.b{transform:rotate(18deg)}
 #referee.ref-point-do .ref-arm.a{transform:rotate(-18deg)}
-#referee.ref-point-do .ref-arm.b{transform:rotate(70deg)}
+#referee.ref-point-do .ref-arm.b{transform:rotate(85deg)}
 .ui-panel,.scoreboard,.guide-board,.top5,.ticker,#scaler>.ui-statusbar{
   border-color:#b9e1ff55;
   box-shadow:0 8px 0 #030c18,0 12px 30px #0006,inset 0 1px #ffffff2b
@@ -1402,7 +1397,7 @@ function createPuller(p) {
   element.className = 'puller';
   element.dataset.player = playerKey(p);
   element.innerHTML =
-    '<div class="tile-text"><div class="nm"></div><div class="fc"></div></div>' +
+    '<div class="tile-text"><div class="nm"></div></div>' +
     '<div class="athlete" aria-hidden="true"><div class="figure">' +
     bodyArt() + '<div class="avatar"></div></div></div>' +
     '<div class="arms" aria-hidden="true">' + armsArt() + '</div>';
@@ -1425,12 +1420,6 @@ function updatePuller(element, p, index, team) {
   const appearance = applyAppearance(element, p, team, index);
   setAvatar(element.querySelector('.figure .avatar'), p, appearance);
 
-  const forceElement = element.querySelector('.fc');
-  const forceText = format(p.force) + ' lực';
-
-  if (forceElement.textContent !== forceText) {
-    forceElement.textContent = forceText;
-  }
 }
 
 
@@ -1566,7 +1555,6 @@ function paintRoster(team, people) {
     element.style.top = (126 + (index % 2 ? 8 : 0)) + 'px';
     element.style.zIndex = String(30 - index);
     fitText(element.querySelector('.nm'),13,7);
-    fitText(element.querySelector('.fc'),12,7);
   });
 
   for (const [uid,element] of nodes) {
@@ -2408,7 +2396,7 @@ function updateReferee(s) {
     // Bắt đầu hiệp/trận: còi 2 tiếng + giơ còi (pose thổi) ~1.6s rồi về tay thường.
     playWhistle('start');
     referee.classList.add('ref-blow');
-    refBlowTimer = setTimeout(() => referee.classList.remove('ref-blow'), 1600);
+    refBlowTimer = setTimeout(() => referee.classList.remove('ref-blow'), 3000);
   } else if (phase === 'roundEnd' && s.lastRoundWinner) {
     // Kết thúc hiệp: còi + chỉ tay về đội thắng hiệp (giữ suốt roundEnd).
     playWhistle('end');
@@ -2643,6 +2631,12 @@ socket.on('state-update', s => {
 });
 socket.on('round-win', d => {
   if (!d?.team) return;
+  // v16: trọng tài chỉ tay về đội thắng hiệp (dự phòng cho phase-tracking).
+  const referee = $('referee');
+  if (referee) {
+    referee.classList.remove('ref-blow', 'ref-point-xanh', 'ref-point-do');
+    referee.classList.add('ref-point-' + d.team);
+  }
   enqueueVoiceFile(
     d.team === 'xanh' ? 'round-win-xanh' : 'round-win-do',
     8
@@ -2658,6 +2652,12 @@ socket.on('round-win', d => {
 
 socket.on('match-win', d => {
   if (!d?.team) return;
+  // v16: trọng tài chỉ tay về đội thắng trận (dự phòng cho phase-tracking).
+  const referee = $('referee');
+  if (referee) {
+    referee.classList.remove('ref-blow', 'ref-point-xanh', 'ref-point-do');
+    referee.classList.add('ref-point-' + d.team);
+  }
   for (let index = voiceQueue.length - 1; index >= 0; index--) {
     if (voiceQueue[index].priority < 8) voiceQueue.splice(index,1);
   }
