@@ -231,7 +231,7 @@ function createEngine(ctx) {
         uid: ev.uid, name: ev.name || ev.uid, avatarUrl: ev.avatarUrl || null,
         team: null, teamJoinedAt: 0, forceRound: 0, forceMatch: 0,
         lastCommentAt: 0, followedRound: 0, sharedRound: 0,
-        joinedAt: Date.now(), left: false, leftAt: 0,
+        joinedAt: Date.now(), left: false, leftAt: 0, lastActiveAt: Date.now(),
       };
       session.players[ev.uid] = p;
     }
@@ -329,8 +329,11 @@ function createEngine(ctx) {
     session.lastRoundReason = null;
     session.phase = 'idle';
     session.phaseEndsAt = 0;
-    Object.values(session.players).forEach((p) => { p.forceRound = 0; p.forceMatch = 0; p.followedRound = 0; p.sharedRound = 0; });
-    log(`Trận mới #${session.matchNo} — đội giữ nguyên, lực về 0.`);
+    Object.values(session.players).forEach((p) => {
+      p.forceRound = 0; p.forceMatch = 0; p.followedRound = 0; p.sharedRound = 0;
+      p.team = null; p.teamJoinedAt = 0;
+    });
+    log(`Trận mới #${session.matchNo} — mọi người về khán đài, bình luận 1/2 để vào đội lại.`);
     saveSession();
     broadcast();
   }
@@ -350,6 +353,7 @@ function createEngine(ctx) {
     if (!ev || !ev.uid) return { ok: false, reason: 'no-uid' };
     const p = ensurePlayer(ev);
     const now = Date.now();
+    p.lastActiveAt = now;
     switch (ev.kind) {
       case 'join': {
         session.stats.joins += 1;
@@ -457,6 +461,15 @@ function createEngine(ctx) {
 
   function tick() {
     const now = Date.now();
+    // v22: người xem out khỏi phòng (TikFinity không gửi event rời) ->
+    // ai không hoạt động 3 phút (1 hiệp) thì rời khỏi đội/khán đài.
+    for (const p of Object.values(session.players)) {
+      if (!p.left && p.lastActiveAt && now - p.lastActiveAt > 180000) {
+        p.left = true;
+        p.leftAt = now;
+        log(`👋 ${p.name} đã rời phòng (không hoạt động 3 phút) — nhân vật rời sân.`);
+      }
+    }
     if (session.phase === 'idle') {
       // Tự bắt đầu hiệp khi cả 2 đội đều có người (tiến độ đầu tiên ≤ ~1 phút).
       if (teamPlayers('xanh').length > 0 && teamPlayers('do').length > 0) startRound();

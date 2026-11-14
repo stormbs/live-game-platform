@@ -150,13 +150,14 @@ test('keo-co: cờ chạm vạch đích thắng hiệp ngay; thắng 3 hiệp ->
     assert.equal(st.phase, 'matchEnd');
     assert.equal(st.results.winner, 'xanh');
     assert.equal(st.results.wins.xanh, 1);
-    // Hết 1s vinh danh -> trận mới, đội giữ nguyên, lực về 0.
+    // Hết 1s vinh danh -> trận mới, mọi người về khán đài (v22), lực về 0.
     st = await waitFor(t, user, (s) => s.matchNo === 2, 20, 500);
     assert.equal(st.matchNo, 2);
     assert.equal(st.wins.xanh, 0);
     assert.equal(st.force.xanh, 0);
-    assert.equal(st.teams.xanh.total, 1, 'đội giữ nguyên sang trận mới');
-    assert.equal(st.teams.do.total, 1);
+    assert.equal(st.teams.xanh.total, 0, 'xong 1 ván: đội trống, mọi người về khán đài');
+    assert.equal(st.teams.do.total, 0);
+    assert.equal(st.spectators.length, 2, 'cả 2 người chơi đều ở khán đài');
   } finally { await stopTestServer(t); }
 });
 

@@ -1713,6 +1713,22 @@ function refreshMusicVolume() {
   }
 }
 
+function trimVoiceQueue() {
+  // v22: hàng đợi nghẽn -> bỏ thông báo CŨ NHẤT (sequence nhỏ nhất) trong
+  // các mục thường, chỉ giữ vài thông báo mới nhất; giữ lại thắng trận (pri>=8).
+  while (voiceQueue.length > 3) {
+    let dropIdx = -1;
+    let minSeq = Infinity;
+    for (let i = 0; i < voiceQueue.length; i++) {
+      const it = voiceQueue[i];
+      if (it.priority >= 8) continue;
+      if (it.sequence < minSeq) { minSeq = it.sequence; dropIdx = i; }
+    }
+    if (dropIdx < 0) dropIdx = 0;
+    voiceQueue.splice(dropIdx, 1);
+  }
+}
+
 function enqueueVoiceFile(name, priority) {
   if (!voiceOn || !name) return;
 
@@ -1732,7 +1748,7 @@ function enqueueVoiceFile(name, priority) {
     sequence: ++voiceSequence
   });
 
-  while (voiceQueue.length > 3) voiceQueue.shift();
+  trimVoiceQueue();
   voiceQueue.sort((a,b) =>
     b.priority - a.priority || a.sequence - b.sequence
   );
@@ -1785,6 +1801,7 @@ function playVoiceEntry() {
 }
 
 function stopVoice() {
+  fragPlayToken++;
   voiceQueue.length = 0;
   voiceAudio.onended = null;
   voiceAudio.onerror = null;
@@ -1824,7 +1841,7 @@ const GIFT_FRAGS = {
   buom: 'gift-buom', rong: 'gift-rong', laudai: 'gift-lau-dai',
   keo: 'gift-keo', kem: 'gift-kem', nen: 'gift-nen'
 };
-const COMMENT_FRAGS = ['cmt-ganh-doi','cmt-dinh','cmt-can-ban','cmt-cam-on','cmt-keo-manh','cmt-tru-cot'];
+const COMMENT_FRAGS = ['cmt-ganh-doi','cmt-dinh','cmt-can-ban','cmt-cam-on','cmt-keo-manh','cmt-tru-cot','cmt-chay-luon','cmt-manh-qua','cmt-keo-nua','cmt-ai-cung-ne','cmt-dinh-cua-chop','cmt-chay-het-minh'];
 let commentIndex = 0;
 let lastGiftSentenceAt = 0;
 
@@ -1897,7 +1914,7 @@ function buildGiftSentence(gift) {
   frags.push(...nameToFragments(gift.name));
   frags.push('ben-doi');
   frags.push(gift.team === 'do' ? 'team-do' : 'team-xanh');
-  frags.push('vua-gui');
+  frags.push((commentIndex % 2 === 0) ? 'vua-gui' : 'vua-tang');
   frags.push(giftToFragment(gift.giftName));
   frags.push('cong');
   frags.push(...numberToFragments(gift.force || 0));
@@ -1906,11 +1923,21 @@ function buildGiftSentence(gift) {
   return frags;
 }
 
+let joinTemplateIndex = 0;
 function buildJoinSentence(p, team) {
   const frags = [];
-  frags.push(...nameToFragments(p.name));
-  frags.push('da-vao-san', 'giup-doi');
-  frags.push(team === 'do' ? 'team-do' : 'team-xanh');
+  const teamFrag = team === 'do' ? 'team-do' : 'team-xanh';
+  const nameFrags = nameToFragments(p.name);
+  const t = joinTemplateIndex++ % 4;
+  if (t === 1) {
+    frags.push(...nameFrags, 've-voi-doi', teamFrag, 'roi');
+  } else if (t === 2) {
+    frags.push('chao-mung', ...nameFrags, 'den-voi-doi', teamFrag);
+  } else if (t === 3) {
+    frags.push('doi', teamFrag, 'co-them', ...nameFrags);
+  } else {
+    frags.push(...nameFrags, 'da-vao-san', 'giup-doi', teamFrag);
+  }
   return frags;
 }
 
@@ -1935,14 +1962,61 @@ function enqueueVoiceFragments(fragments, priority, kind) {
     at: now,
     sequence: ++voiceSequence
   });
-  while (voiceQueue.length > 3) voiceQueue.shift();
+  trimVoiceQueue();
   voiceQueue.sort((a, b) =>
     b.priority - a.priority || a.sequence - b.sequence
   );
   playVoiceEntry();
 }
 
-function playFragmentList(fragments, onDone) {
+// ---- v21: phát mảnh voice liền mạch bằng Web Audio API ----
+let fragAudioCtx = null;
+const fragBufferCache = new Map();
+let fragPlayToken = 0;
+function getFragAudioCtx() {
+  if (!fragAudioCtx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    fragAudioCtx = new AC();
+  }
+  if (fragAudioCtx.state === 'suspended') fragAudioCtx.resume().catch(() => {});
+  return fragAudioCtx;
+}
+async function loadFragBuffer(name) {
+  if (fragBufferCache.has(name)) return fragBufferCache.get(name);
+  const ctx = getFragAudioCtx();
+  if (!ctx) return null;
+  try {
+    const resp = await fetch(FRAG_DIR + name + '.mp3');
+    const ab = await resp.arrayBuffer();
+    const buf = await ctx.decodeAudioData(ab);
+    fragBufferCache.set(name, buf);
+    return buf;
+  } catch (e) { return null; }
+}
+async function playFragmentList(fragments, onDone) {
+  const ctx = getFragAudioCtx();
+  if (!ctx) { playFragmentListLegacy(fragments, onDone); return; }
+  const token = ++fragPlayToken;
+  let t = ctx.currentTime + 0.03;
+  let lastEnd = t;
+  for (const name of fragments) {
+    if (token !== fragPlayToken) return;
+    const buf = await loadFragBuffer(name);
+    if (token !== fragPlayToken) return;
+    if (!buf) continue;
+    const srcNode = ctx.createBufferSource();
+    srcNode.buffer = buf;
+    srcNode.connect(ctx.destination);
+    srcNode.start(t);
+    t += buf.duration;
+    lastEnd = t;
+  }
+  if (token !== fragPlayToken) return;
+  const waitMs = Math.max(0, (lastEnd - ctx.currentTime) * 1000) + 30;
+  setTimeout(() => { if (token === fragPlayToken) onDone(); }, waitMs);
+}
+function playFragmentListLegacy(fragments, onDone) {
   let i = 0;
   const next = () => {
     if (i >= fragments.length) { onDone(); return; }
@@ -1955,8 +2029,25 @@ function playFragmentList(fragments, onDone) {
   next();
 }
 
+let recentJoinTimes = [];
+let lastJoinBurstAt = 0;
 function announceJoin(p, team) {
   if (!p.name) return;
+  const now = Date.now();
+  // v21-6: nhiều người nhảy vào các đội quá (từ 3 lượt/5s) -> đọc 1 câu
+  // tóm tắt chung thay vì đọc từng người. Chống lặp: tối đa 1 lần/15s.
+  recentJoinTimes.push(now);
+  recentJoinTimes = recentJoinTimes.filter((t) => now - t < 5000);
+  if (recentJoinTimes.length >= 3) {
+    if (now - lastJoinBurstAt >= 15000) {
+      lastJoinBurstAt = now;
+      for (let i = voiceQueue.length - 1; i >= 0; i--) {
+        if (voiceQueue[i].kind === 'join') voiceQueue.splice(i, 1);
+      }
+      enqueueVoiceFile('join-burst', 5);
+    }
+    return;
+  }
   // v15: đọc cụ thể 'Nguyễn A đã vào sân, giúp đội xanh'
   // (fallback về clip chung nếu không dựng được câu).
   const sentence = buildJoinSentence(p, team);
@@ -2709,6 +2800,8 @@ socket.on('match-win', d => {
   if (!d?.team) return;
   // v16/v17: trọng tài chỉ tay về đội thắng trận.
   setRefereeArms('point-' + d.team);
+  // v22: thắng trận phải đọc LUÔN ngay khi tuýt còi -> cắt ngang voice đang đọc dở.
+  stopVoice();
   for (let index = voiceQueue.length - 1; index >= 0; index--) {
     if (voiceQueue[index].priority < 8) voiceQueue.splice(index,1);
   }
