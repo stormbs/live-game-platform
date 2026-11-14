@@ -1810,13 +1810,19 @@ function playWhistle(kind) {
 
 // ---- v14: voice động ghép mảnh (tên + đội + quà + lực + câu khích lệ) ----
 const FRAG_DIR = '/shared/voice/keo-co/frag/';
-const NAME_FRAGS = new Set(('nguyen tran le pham hoang huynh phan vu vo dang bui do ho ngo duong ly van thi minh hong ngoc thanh thu quoc huu duc anh linh tuan huong lan trang phuong nam long hai quan dung thang hung son tung viet huy khanh thao ha mai hoa nga nhung giang chi van2 oanh khoa phuc binh tu demo khach a b c').split(' '));
+const NAME_FRAGS = new Set(('nguyen tran le pham hoang huynh phan vu vo dang bui do ho ngo duong ly van thi minh hong ngoc thanh thu quoc huu duc anh linh tuan huong lan trang phuong nam long hai quan dung thang hung son tung viet huy khanh thao ha mai hoa nga nhung giang chi van2 oanh khoa phuc binh tu demo khach a b c an bao chau cuong dat dien gia hieu khang kien lam loc nghia phong quang tai tam tien toan trung vinh xuan yen cao dinh luu ta truong chu doan luong thai trinh quach').split(' '));
 const GIFT_FRAGS = {
   hoahong: 'gift-hoa-hong', trasua: 'gift-tra-sua', kinhram: 'gift-kinh-ram',
   banhkem: 'gift-banh-kem', xehoi: 'gift-xe-hoi', tenlua: 'gift-ten-lua',
   vuongmien: 'gift-vuong-mien', kimcuong: 'gift-kim-cuong',
   gaubong: 'gift-gau-bong', traitim: 'gift-trai-tim',
-  bongbay: 'gift-bong-bay', phaohoa: 'gift-phao-hoa'
+  bongbay: 'gift-bong-bay', phaohoa: 'gift-phao-hoa',
+  ngoisao: 'gift-ngoi-sao', caphe: 'gift-ca-phe', bia: 'gift-bia',
+  tiktok: 'gift-tiktok', nhan: 'gift-nhan', dongho: 'gift-dong-ho',
+  maybay: 'gift-may-bay', duthuyen: 'gift-du-thuyen', sutu: 'gift-su-tu',
+  gautruc: 'gift-gau-truc', meo: 'gift-meo', tho: 'gift-tho',
+  buom: 'gift-buom', rong: 'gift-rong', laudai: 'gift-lau-dai',
+  keo: 'gift-keo', kem: 'gift-kem', nen: 'gift-nen'
 };
 const COMMENT_FRAGS = ['cmt-ganh-doi','cmt-dinh','cmt-can-ban','cmt-cam-on','cmt-keo-manh','cmt-tru-cot'];
 let commentIndex = 0;
@@ -1892,10 +1898,10 @@ function buildGiftSentence(gift) {
   frags.push('ben-doi');
   frags.push(gift.team === 'do' ? 'team-do' : 'team-xanh');
   frags.push('vua-gui');
-  frags.push(...numberToFragments(gift.coins || 1));
   frags.push(giftToFragment(gift.giftName));
-  frags.push('luc-keo-cong');
+  frags.push('cong');
   frags.push(...numberToFragments(gift.force || 0));
+  frags.push('luc-keo');
   frags.push(COMMENT_FRAGS[commentIndex++ % COMMENT_FRAGS.length]);
   return frags;
 }
