@@ -254,8 +254,13 @@ h1.ui-title{
   z-index:2;
   width:36px;
   height:36px;
+  border-radius:50%;overflow:hidden;
   border-width:2px;
   box-shadow:0 2px #0005,0 0 0 1px var(--team-color,#9ed4e8)
+}
+.spectator .avatar img,
+.spectator .avatar .default-face{
+  width:100%;height:100%;object-fit:cover;display:block
 }
 .spectator-body{
   position:absolute;
@@ -678,15 +683,15 @@ h1.ui-title{
 }
 .team-side.boost .athlete{filter:drop-shadow(0 0 9px var(--team-color))}
 .rope{
-  position:absolute;top:547px;left:12px;width:1002px;height:14px;z-index:8;
-  border-radius:8px;border-top:1px solid #ffe7b4;border-bottom:2px solid #69401e;
+  position:absolute;top:549px;left:12px;width:1002px;height:10px;z-index:8;
+  border-radius:6px;border-top:1px solid #ffe7b4;border-bottom:1px solid #69401e;
   background:
     linear-gradient(#fff5,transparent 45%,#43250866),
     repeating-linear-gradient(118deg,#f1ce8f 0 8px,#c28c49 8px 16px,#805322 16px 20px,#dfb16c 20px 27px);
   box-shadow:0 6px 6px #301b0b88
 }
 .rope::before,.rope::after{
-  content:"";position:absolute;top:-3px;width:14px;height:20px;
+  content:"";position:absolute;top:-3px;width:10px;height:16px;
   border-radius:7px;background:repeating-linear-gradient(90deg,#e4bb78 0 3px,#98602d 3px 6px)
 }
 .rope::before{left:4px}.rope::after{right:4px}
@@ -1616,7 +1621,7 @@ function walkToTeam(p, team, from) {
       opacity:1
     }
   ], {
-    duration:1300,
+    duration:2500,
     easing:'cubic-bezier(.25,.65,.3,1)',
     fill:'forwards'
   });
@@ -2008,7 +2013,7 @@ function showGift(gift, oldSpectatorPositions, oldPlayerPositions) {
       transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.45) rotate(0deg)',
       opacity: 0
     }
-  ], { duration: 1050, easing: 'cubic-bezier(.2,.65,.35,1)', fill: 'forwards' });
+  ], { duration: 2000, easing: 'cubic-bezier(.2,.65,.35,1)', fill: 'forwards' });
   animation.onfinish = () => token.remove();
 
   if (number(gift.coins) >= 50 && !lastState.demoActive && gift.name) {
