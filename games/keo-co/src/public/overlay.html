@@ -529,29 +529,25 @@ h1.ui-title{
   text-align:center;overflow:visible
 }
 .puller .tile-text{
-  position:absolute;top:-125px;left:-18px;width:166px;height:123px;
-  display:block;z-index:15;pointer-events:none
+  position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  width:auto;max-width:88px;height:26px;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:2px 7px;border:1px solid #bbdcff66;
+  border-bottom:2px solid var(--team-color);
+  border-radius:7px;background:#07182df2;
+  z-index:15;pointer-events:none;white-space:nowrap
 }
 .puller .nm{
-  position:absolute;top:0;left:50%;transform:translateX(-50%);width:auto;max-width:84px;height:22px;
-  display:flex;align-items:center;justify-content:center;
-  padding:2px 4px;border:1px solid #bbdcff66;
-  border-bottom:2px solid var(--team-color);
-  border-radius:7px;background:#07182df2;color:#fff;
-  font-size:14px;font-weight:850;line-height:1;
+  flex:0 1 auto;min-width:0;max-width:56px;
+  color:#fff;font-size:13px;font-weight:850;line-height:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   text-shadow:0 1px #0005
 }
-.puller.tier-1 .nm{top:42px}
-.puller.tier-2 .nm{top:84px}
 .puller .fc{
-  position:absolute;top:23px;left:50%;transform:translateX(-50%);width:auto;max-width:84px;height:16px;
+  flex:0 0 auto;
   color:#ffe8a7;font-size:12px;font-weight:950;line-height:1;
-  text-shadow:0 1px 3px #38210b;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;text-align:center;z-index:14
+  text-shadow:0 1px 3px #38210b;white-space:nowrap
 }
-.puller.tier-1 .fc{top:65px}
-.puller.tier-2 .fc{top:107px}
 .puller[hidden]{display:none!important}
 .athlete{
   position:absolute;top:22px;left:0;width:130px;height:230px;
@@ -1100,6 +1096,7 @@ h1.ui-title{
   <div id="motion-layer" aria-hidden="true"></div>
   <div id="gift-burst" aria-hidden="true"></div>
   <audio id="voiceAudio" preload="auto"></audio>
+  <audio id="whistleAudio" preload="auto"></audio>
 </div>
 
 <script>
@@ -1568,10 +1565,7 @@ function paintRoster(team, people) {
     element.style.left = (fieldX - baseX - 65) + 'px';
     element.style.top = (126 + (index % 2 ? 8 : 0)) + 'px';
     element.style.zIndex = String(30 - index);
-    element.classList.remove('tier-0','tier-1','tier-2');
-    element.classList.add('tier-' + (index % 3));
-
-    fitText(element.querySelector('.nm'),14,7);
+    fitText(element.querySelector('.nm'),13,7);
     fitText(element.querySelector('.fc'),12,7);
   });
 
@@ -1769,6 +1763,20 @@ function playVoiceEntry() {
   refreshMusicVolume();
 
   let finished = false;
+  if (entry.fragments) {
+    const finishFrag = () => {
+      if (finished) return;
+      finished = true;
+      voiceAudio.onended = null;
+      voiceAudio.onerror = null;
+      voiceAudio.pause();
+      voicePlaying = false;
+      refreshMusicVolume();
+      playVoiceEntry();
+    };
+    playFragmentList(entry.fragments, finishFrag);
+    return;
+  }
   const finish = () => {
     if (finished) return;
     finished = true;
@@ -1794,6 +1802,143 @@ function stopVoice() {
   voiceAudio.removeAttribute('src');
   voicePlaying = false;
   refreshMusicVolume();
+}
+
+// ---- v14: tiếng còi trọng tài (file mp3 thu sẵn, không dùng WebAudio) ----
+const whistleAudio = $('whistleAudio');
+let lastWhistleAt = 0;
+function playWhistle(kind) {
+  if (!whistleAudio || !voiceOn) return;
+  const now = Date.now();
+  if (now - lastWhistleAt < 2000) return;
+  lastWhistleAt = now;
+  whistleAudio.volume = 1;
+  whistleAudio.src = '/shared/voice/keo-co/' +
+    (kind === 'end' ? 'whistle-end' : 'whistle-start') + '.mp3';
+  whistleAudio.play().catch(() => {});
+}
+
+// ---- v14: voice động ghép mảnh (tên + đội + quà + lực + câu khích lệ) ----
+const FRAG_DIR = '/shared/voice/keo-co/frag/';
+const NAME_FRAGS = new Set(('nguyen tran le pham hoang huynh phan vu vo dang bui do ho ngo duong ly van thi minh hong ngoc thanh thu quoc huu duc anh linh tuan huong lan trang phuong nam long hai quan dung thang hung son tung viet huy khanh thao ha mai hoa nga nhung giang chi van2 oanh khoa phuc binh tu demo khach a b c').split(' '));
+const GIFT_FRAGS = {
+  hoahong: 'gift-hoa-hong', trasua: 'gift-tra-sua', kinhram: 'gift-kinh-ram',
+  banhkem: 'gift-banh-kem', xehoi: 'gift-xe-hoi', tenlua: 'gift-ten-lua',
+  vuongmien: 'gift-vuong-mien', kimcuong: 'gift-kim-cuong',
+  gaubong: 'gift-gau-bong', traitim: 'gift-trai-tim',
+  bongbay: 'gift-bong-bay', phaohoa: 'gift-phao-hoa'
+};
+const COMMENT_FRAGS = ['cmt-ganh-doi','cmt-dinh','cmt-can-ban','cmt-cam-on','cmt-keo-manh','cmt-tru-cot'];
+let commentIndex = 0;
+let lastGiftSentenceAt = 0;
+
+function normalizeSyllable(s) {
+  const lower = String(s || '').toLowerCase().trim();
+  if (lower === 'vân') return 'van2';
+  return lower.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd').replace(/[^a-z0-9]/g, '');
+}
+
+function nameToFragments(name) {
+  const frags = [];
+  for (const part of String(name || '').split(/\s+/)) {
+    if (!part) continue;
+    if (/^\d+$/.test(part)) {
+      frags.push(...numberToFragments(parseInt(part, 10)));
+      continue;
+    }
+    const key = normalizeSyllable(part);
+    if (key && NAME_FRAGS.has(key)) frags.push(key);
+  }
+  return frags.length ? frags : ['mot-ban'];
+}
+
+function giftToFragment(giftName) {
+  const key = normalizeSyllable(giftName);
+  return GIFT_FRAGS[key] || 'qua';
+}
+
+function numberToFragments(n) {
+  n = Math.round(Math.abs(Number(n) || 0));
+  const units = ['', 'num-mot', 'num-hai', 'num-ba', 'num-bon', 'num-nam',
+    'num-sau', 'num-bay', 'num-tam', 'num-chin'];
+  if (n <= 0) return ['num-mot'];
+  const out = [];
+  if (n >= 1000) {
+    const th = Math.floor(n / 1000);
+    out.push(...numberToFragments(th), 'num-nghin');
+    n %= 1000;
+    if (n === 0) return out;
+    if (n < 100) out.push('num-le');
+  }
+  if (n >= 100) {
+    out.push(units[Math.floor(n / 100)], 'num-tram');
+    n %= 100;
+    if (n === 0) return out;
+    if (n < 10) out.push('num-le');
+  }
+  if (n >= 10) {
+    if (n < 20) {
+      out.push('num-muoi');
+      const u = n % 10;
+      if (u === 5) out.push('num-lam');
+      else if (u > 0) out.push(units[u]);
+      return out;
+    }
+    out.push(units[Math.floor(n / 10)], 'num-muoi-tens');
+    const u = n % 10;
+    if (u === 1) out.push('num-mot2');
+    else if (u === 5) out.push('num-lam');
+    else if (u > 0) out.push(units[u]);
+    return out;
+  }
+  if (n > 0) out.push(units[n]);
+  return out;
+}
+
+function buildGiftSentence(gift) {
+  const frags = [];
+  frags.push(...nameToFragments(gift.name));
+  frags.push('ben-doi');
+  frags.push(gift.team === 'do' ? 'team-do' : 'team-xanh');
+  frags.push('vua-gui');
+  frags.push(...numberToFragments(gift.coins || 1));
+  frags.push(giftToFragment(gift.giftName));
+  frags.push('luc-keo-cong');
+  frags.push(...numberToFragments(gift.force || 0));
+  frags.push(COMMENT_FRAGS[commentIndex++ % COMMENT_FRAGS.length]);
+  return frags;
+}
+
+function enqueueVoiceFragments(fragments, priority) {
+  if (!voiceOn || !fragments || !fragments.length) return;
+  const now = Date.now();
+  if (now - lastGiftSentenceAt < 8000) return;
+  lastGiftSentenceAt = now;
+  voiceQueue.push({
+    fragments: fragments.slice(),
+    priority: priority || 5,
+    at: now,
+    sequence: ++voiceSequence
+  });
+  while (voiceQueue.length > 3) voiceQueue.shift();
+  voiceQueue.sort((a, b) =>
+    b.priority - a.priority || a.sequence - b.sequence
+  );
+  playVoiceEntry();
+}
+
+function playFragmentList(fragments, onDone) {
+  let i = 0;
+  const next = () => {
+    if (i >= fragments.length) { onDone(); return; }
+    const name = fragments[i++];
+    voiceAudio.src = FRAG_DIR + name + '.mp3';
+    voiceAudio.onended = next;
+    voiceAudio.onerror = next;
+    voiceAudio.play().catch(next);
+  };
+  next();
 }
 
 function announceJoin(p, team) {
@@ -2077,9 +2222,15 @@ function showGift(gift, oldSpectatorPositions, oldPlayerPositions) {
     }, 6000));
   }
 
-  // v13: quà lớn (>= 50 xu) -> thoại biggift thay gift thường.
-  enqueueVoiceFile(Number(gift.coins) >= 50 ? 'biggift' : 'gift',
-    Number(gift.coins) >= 50 ? 6 : 5);
+  // v14: đọc câu động cụ thể: tên + đội + quà + lực + câu khích lệ.
+  // Fallback về clip chung nếu không dựng được câu.
+  const sentence = buildGiftSentence(gift);
+  if (sentence.length) {
+    enqueueVoiceFragments(sentence, 6);
+  } else {
+    enqueueVoiceFile(Number(gift.coins) >= 50 ? 'biggift' : 'gift',
+      Number(gift.coins) >= 50 ? 6 : 5);
+  }
 }
 function processGift(s, oldSpectatorPositions, oldPlayerPositions) {
   if (!s.lastGift) {
@@ -2215,17 +2366,31 @@ function updateRules(s) {
   fitText($('hint'), 18, 11);
 }
 
+let previousRefPhase = '';
+let refBlowTimer = 0;
 function updateReferee(s) {
   const referee = $('referee');
   if (!referee) return;
+  const phase = s.phase || '';
+  // v14: chỉ phản ứng khi phase ĐỔI (tránh còi/pose lặp mỗi render).
+  if (phase === previousRefPhase) return;
+  const prev = previousRefPhase;
+  previousRefPhase = phase;
+  clearTimeout(refBlowTimer);
+  referee.classList.remove('ref-blow', 'ref-point-xanh', 'ref-point-do');
 
-  referee.classList.remove('ref-blow','ref-point-xanh','ref-point-do');
-
-  if (s.phase === 'playing') {
+  if (phase === 'playing' && prev !== 'playing') {
+    // Bắt đầu hiệp/trận: còi 2 tiếng + giơ còi (pose thổi) ~1.6s rồi về tay thường.
+    playWhistle('start');
     referee.classList.add('ref-blow');
-  } else if (s.phase === 'roundEnd' && s.lastRoundWinner) {
+    refBlowTimer = setTimeout(() => referee.classList.remove('ref-blow'), 1600);
+  } else if (phase === 'roundEnd' && s.lastRoundWinner) {
+    // Kết thúc hiệp: còi + chỉ tay về đội thắng hiệp (giữ suốt roundEnd).
+    playWhistle('end');
     referee.classList.add('ref-point-' + s.lastRoundWinner);
-  } else if (s.phase === 'matchEnd' && s.results?.winner) {
+  } else if (phase === 'matchEnd' && s.results?.winner) {
+    // Kết thúc trận: còi 3 tiếng + chỉ tay về đội thắng trận (giữ suốt matchEnd).
+    playWhistle('end');
     referee.classList.add('ref-point-' + s.results.winner);
   }
 }
