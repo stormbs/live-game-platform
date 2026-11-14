@@ -137,7 +137,7 @@ h1.ui-title{
 }
 .bar i{
   display:block;height:100%;border-radius:5px;position:relative;
-  transition:width .32s ease;box-shadow:0 0 12px currentColor
+  transition:width .6s ease;box-shadow:0 0 12px currentColor
 }
 .bar i::after{
   content:"";position:absolute;inset:0;border-radius:inherit;
@@ -496,6 +496,23 @@ h1.ui-title{
   position:absolute;top:40px;left:0;width:438px;height:350px;
   display:block;overflow:visible;z-index:4
 }
+/* v13: hiệu ứng buff khi tặng quà — nhân vật người tặng phát sáng vàng
+   + badge "⚡ +X lực" nổi lên (badge 1.4s, hào quang 6s, xem showGift). */
+.puller.buffed,.spectator.buffed{
+  filter:drop-shadow(0 0 10px rgba(255,217,77,.95)) drop-shadow(0 0 24px rgba(255,140,0,.6))
+}
+.puller .buff-badge,.spectator .buff-badge{
+  position:absolute;left:50%;top:-6px;transform:translateX(-50%);
+  background:linear-gradient(180deg,#ffe066,#ff9d00);color:#3a2400;
+  font-weight:900;font-size:15px;line-height:1.2;padding:2px 9px;
+  border-radius:999px;border:2px solid #fff8;white-space:nowrap;z-index:9;
+  animation:buff-float 1.4s ease-out forwards;pointer-events:none
+}
+@keyframes buff-float{
+  0%{opacity:0;transform:translate(-50%,8px) scale(.8)}
+  20%{opacity:1;transform:translate(-50%,0) scale(1.08)}
+  100%{opacity:0;transform:translate(-50%,-28px) scale(1)}
+}
 .puller{
   position:absolute;width:130px;height:230px;
   text-align:center;overflow:visible
@@ -530,6 +547,7 @@ h1.ui-title{
   z-index:5;transform:scale(calc(.48 * var(--figure-scale,1)));
   transform-origin:50% 0;
   animation:pull-rhythm var(--beat) ease-in-out infinite;
+  transition:filter .4s ease;
   animation-delay:var(--delay,0s)
 }
 @keyframes pull-rhythm{
@@ -606,13 +624,15 @@ h1.ui-title{
   --lean:-38deg!important;--head-shift:-20px!important;--beat:.48s!important
 }
 .team-side.boost .athlete{filter:drop-shadow(0 0 9px var(--team-color))}
+/* v13: trọng tài DỜI XUỐNG giữa sân dưới dây (không đứng trên dây che
+   khung hình nữa). Tâm hình ở x=513 (giữa sân), chân y~760, trên hint (771). */
 .referee{
-  position:absolute;left:500px;top:502px;width:80px;height:143px;
+  position:absolute;left:448px;top:640px;width:72px;height:127px;
   z-index:6;pointer-events:none
 }
 .referee-figure{
   position:absolute;left:0;top:0;width:130px;height:230px;
-  transform:scale(.62);transform-origin:50% 0
+  transform:scale(.55);transform-origin:50% 0
 }
 .referee-figure .ref-head{
   position:absolute;left:39px;top:0;width:52px;height:52px;
@@ -705,7 +725,7 @@ h1.ui-title{
 }
 .flag{
   position:absolute;left:513px;top:532px;width:34px;height:99px;z-index:13;
-  transform:translateX(-50%);transition:left .4s cubic-bezier(.2,.7,.3,1);
+  transform:translateX(-50%);transition:left .6s cubic-bezier(.25,.7,.3,1);
   filter:drop-shadow(0 4px 3px #0007)
 }
 .flag::before{
@@ -947,7 +967,7 @@ h1.ui-title{
         <span class="join-word red">2</span> để vào đội
       </div>
       <div class="guide-grid">
-        <div class="chip"><span class="icon">❤️</span>1 tim<b>+<span id="g-tap">1</span> lực</b></div>
+        <div class="chip"><span class="icon">❤️</span>10 tim<b>+<span id="g-tap">1</span> lực</b></div>
         <div class="chip"><span class="icon">💬</span>Bình luận<b>+<span id="g-comment">5</span> lực</b></div>
         <div class="chip"><span class="icon">🎁</span>1 xu quà<b>+<span id="g-coin">10</span> lực</b></div>
         <div class="chip"><span class="icon">➕</span>Follow<b>+<span id="g-follow">20</span> lực</b></div>
@@ -1098,6 +1118,7 @@ let previousPhase = '';
 let previousLead = '';
 let lastWaitingVoiceAt = 0;
 let lastCloseVoiceAt = 0;
+let lastEncourageVoiceAt = 0;
 let socketRevision = 0;
 let pollBusy = false;
 let demoBootHandled = false;
@@ -1127,7 +1148,8 @@ function number(value, fallback) {
   return Number.isFinite(result) ? result : (fallback ?? 0);
 }
 function format(value) {
-  return number(value).toLocaleString('vi-VN');
+  // v13: lực có thể thập phân (tapForce 0.1) — hiển thị làm tròn số nguyên.
+  return Math.round(number(value)).toLocaleString('vi-VN');
 }
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({
@@ -1957,6 +1979,7 @@ function giftImpact(gift, destination) {
     animation.onfinish = () => spark.remove();
   }
 }
+const buffTimeouts = new Map(); // v13: uid -> timeout gỡ hiệu ứng buff tặng quà (6s)
 function showGift(gift, oldSpectatorPositions, oldPlayerPositions) {
   const uid = String(gift.uid ?? '');
   const team = gift.team === 'xanh' || gift.team === 'do' ? gift.team : null;
@@ -2018,7 +2041,25 @@ function showGift(gift, oldSpectatorPositions, oldPlayerPositions) {
   ], { duration: 2000, easing: 'cubic-bezier(.2,.65,.35,1)', fill: 'forwards' });
   animation.onfinish = () => token.remove();
 
-  enqueueVoiceFile('gift',5);
+  // v13: buff sức mạnh cho nhân vật người tặng quà (phát sáng vàng + badge).
+  if (senderNode) {
+    const badge = document.createElement('div');
+    badge.className = 'buff-badge';
+    badge.textContent = '⚡ +' + format(gift.force || 0) + ' lực';
+    senderNode.appendChild(badge);
+    senderNode.classList.add('buffed');
+    const prevBuff = buffTimeouts.get(uid);
+    if (prevBuff) clearTimeout(prevBuff);
+    buffTimeouts.set(uid, setTimeout(() => {
+      senderNode.classList.remove('buffed');
+      badge.remove();
+      buffTimeouts.delete(uid);
+    }, 6000));
+  }
+
+  // v13: quà lớn (>= 50 xu) -> thoại biggift thay gift thường.
+  enqueueVoiceFile(Number(gift.coins) >= 50 ? 'biggift' : 'gift',
+    Number(gift.coins) >= 50 ? 6 : 5);
 }
 function processGift(s, oldSpectatorPositions, oldPlayerPositions) {
   if (!s.lastGift) {
@@ -2138,7 +2179,8 @@ function ruleValue(s, keys, fallback) {
 }
 function updateRules(s) {
   const st = s.settings || {};
-  $('g-tap').textContent = st.tapForce ?? 1;
+  // v13: chip "10 tim" — lực / 10 tim = tapForce * 10 (0.1 -> +1 lực).
+  $('g-tap').textContent = Math.round((st.tapForce ?? 0.1) * 10);
   $('g-comment').textContent = st.commentForce ?? 5;
   $('g-coin').textContent = st.coinToForce ?? 10;
   $('g-follow').textContent = st.followForce ?? 20;
@@ -2181,13 +2223,34 @@ function voiceTransitions(s, oldState) {
   }
 
   if (oldState?.phase !== 'playing' && s.phase === 'playing') {
-    enqueueVoiceFile('round-start',7);
+    // v13: đội còn 1 hiệp nữa là vô địch -> thoại matchpoint thay round-start.
+    const winsNeeded = s.settings?.roundsToWin ?? 3;
+    if (s.wins?.xanh === winsNeeded - 1 && s.wins.xanh > (s.wins?.do ?? 0)) {
+      enqueueVoiceFile('matchpoint-xanh',8);
+    } else if (s.wins?.do === winsNeeded - 1 && s.wins.do > (s.wins?.xanh ?? 0)) {
+      enqueueVoiceFile('matchpoint-do',8);
+    } else {
+      enqueueVoiceFile('round-start',7);
+    }
   }
 
+  // v13: đổi đội dẫn -> gọi tên đội vươn lên; mất đội dẫn (hòa) -> 'close'.
   if (lead && previousLead && lead !== previousLead &&
+      Date.now() - lastCloseVoiceAt >= 20000) {
+    enqueueVoiceFile(lead === 'xanh' ? 'lead-xanh' : 'lead-do',4);
+    lastCloseVoiceAt = Date.now();
+  } else if (!lead && previousLead &&
       Date.now() - lastCloseVoiceAt >= 20000) {
     enqueueVoiceFile('close',3);
     lastCloseVoiceAt = Date.now();
+  }
+
+  // v13: đội bị dẫn xa (cờ lệch > 70) -> động viên đội đang thua.
+  const flagPct = number(s.flagPct || 0);
+  if (s.phase === 'playing' && Math.abs(flagPct) > 70 &&
+      Date.now() - lastEncourageVoiceAt >= 30000) {
+    enqueueVoiceFile(flagPct > 0 ? 'encourage-do' : 'encourage-xanh',3);
+    lastEncourageVoiceAt = Date.now();
   }
 
   previousWaitingForMatch = waiting;

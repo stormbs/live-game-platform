@@ -92,8 +92,8 @@
   <div class="card">
     <h2>Cài đặt (lưu là dùng ngay)</h2>
     <div class="form-row">
-      <div><label>Lực / 1 tim (1–10)</label><input type="number" id="set-tap" value="1" min="1" max="10"></div>
-      <div><label>Lực / bình luận (1–50)</label><input type="number" id="set-comment" value="5" min="1" max="50"></div>
+      <div><label>Số tim = 1 lực (1–100)</label><input type="number" id="set-tap" value="10" min="1" max="100"></div>
+      <div><label>Lực / bình luận (1–50)</label><input type="number" id="set-comment" value="1" min="1" max="50"></div>
       <div><label>Lực / 1 xu quà (1–100)</label><input type="number" id="set-coin" value="10" min="1" max="100"></div>
       <div><label>Lực follow (0–100)</label><input type="number" id="set-follow" value="20" min="0" max="100"></div>
       <div><label>Lực share (0–100)</label><input type="number" id="set-share" value="10" min="0" max="100"></div>
@@ -135,7 +135,7 @@
       <h2>📖 Cách chơi (đọc nhanh)</h2>
       <ul class="guide">
         <li>Bình luận "xanh" / "đỏ" (hoặc "1" / "2") để vào đội. Chưa chọn đội thì chưa tính lực.</li>
-        <li>1 tim = +1 lực · 1 bình luận tính điểm = +5 (chống spam 1/5s) · 1 xu quà = +10 lực · follow +20, share +10 (1 lần/người/hiệp).</li>
+        <li>10 tim = +1 lực · 1 bình luận tính điểm = +1 (chống spam 1/5s) · 1 xu quà = +10 lực · follow +20, share +10 (1 lần/người/hiệp).</li>
         <li>Cờ chạm vạch đích 1 bên → bên đó thắng hiệp. Hết giờ (mặc định 3 phút), bên đang dẫn thắng hiệp.</li>
         <li>Thắng 3 hiệp trước (tối đa 5 hiệp) → thắng trận, vinh danh 20s rồi trận mới (đội giữ nguyên, lực về 0).</li>
         <li>Tối đa 24 người kéo dây mỗi bên — người vào sau chờ ở khán đài, vẫn tính lực.</li>
@@ -207,7 +207,8 @@ function render(s) {
   $('logs').innerHTML = s.logs.slice(-80).reverse().map((l) => '<div>' + new Date(l.t).toLocaleTimeString('vi-VN') + ' ' + esc(l.text) + '</div>').join('');
   if (!render.filled) {
     render.filled = true;
-    $('set-tap').value = s.settings.tapForce;
+    // v13: ô hiển thị SỐ TIM = 1 lực (nghịch đảo của tapForce).
+    $('set-tap').value = Math.round(1 / (s.settings.tapForce || 0.1));
     $('set-comment').value = s.settings.commentForce;
     $('set-coin').value = s.settings.coinToForce;
     $('set-follow').value = s.settings.followForce;
@@ -223,7 +224,7 @@ function render(s) {
 }
 async function saveSettings() {
   const r = await api('/api/settings', {
-    tapForce: +$('set-tap').value, commentForce: +$('set-comment').value,
+    tapForce: 1 / (+$('set-tap').value || 10), commentForce: +$('set-comment').value,
     coinToForce: +$('set-coin').value, followForce: +$('set-follow').value,
     shareForce: +$('set-share').value, roundDurationS: +$('set-duration').value,
     winForce: +$('set-winforce').value, roundsToWin: +$('set-winrounds').value,

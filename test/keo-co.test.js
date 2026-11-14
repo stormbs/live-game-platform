@@ -64,13 +64,13 @@ test('keo-co: comment chọn đội, tap cộng lực đúng đội, hết hiệ
     assert.equal(st.phase, 'playing', 'hiệp phải tự bắt đầu khi đủ 2 đội');
     assert.equal(st.teams.xanh.total, 1);
     assert.equal(st.teams.do.total, 1);
-    // Tap: lần đầu baseline, lần 2 delta 30 -> đội Xanh +30 lực (đã +5 từ comment).
+    // Tap: lần đầu baseline, lần 2 delta 30 -> đội Xanh +3 lực (đã +1 từ comment).
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-a', nickname: 'AnhXanh', likeCount: 100 });
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-a', nickname: 'AnhXanh', likeCount: 130 });
     st = await getState(t, user);
     assert.equal(st.stats.taps, 30, 'tap tính theo delta');
-    assert.equal(st.force.xanh, 35, 'comment +5, tap 30 x 1 = 35 lực đội Xanh');
-    assert.equal(st.force.do, 5, 'đội Đỏ chỉ có +5 từ comment');
+    assert.equal(st.force.xanh, 4, 'comment +1, tap 30 x 0.1 = 4 lực đội Xanh');
+    assert.equal(st.force.do, 1, 'đội Đỏ chỉ có +1 từ comment');
     // Hết 3s -> đội Xanh đang dẫn thắng hiệp.
     st = await waitFor(t, user, (s) => s.phase === 'roundEnd', 20, 500);
     assert.equal(st.phase, 'roundEnd');
@@ -88,13 +88,13 @@ test('keo-co: quà 10 xu = +100 lực; quà không rõ xu = 0 điểm + log WARN
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-g', nickname: 'NguoiTang', content: 'xanh' });
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 3, userId: 'u-g', nickname: 'NguoiTang', giftName: 'Hoa hồng', diamondCount: 10, repeatCount: 1 });
     let st = await getState(t, user);
-    assert.equal(st.force.xanh, 105, 'comment +5, quà 10 xu x 10 = +100');
+    assert.equal(st.force.xanh, 101, 'comment +1, quà 10 xu x 10 = +100');
     assert.equal(st.stats.gifts, 1);
     // Quà lạ không rõ xu.
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 3, userId: 'u-g', nickname: 'NguoiTang', giftName: 'Quà lạ', repeatCount: 1 });
     st = await getState(t, user);
     assert.equal(st.stats.giftsUnknown, 1);
-    assert.equal(st.force.xanh, 105, 'quà lạ không cộng lực');
+    assert.equal(st.force.xanh, 101, 'quà lạ không cộng lực');
     assert.ok(JSON.stringify(st.logs).includes('không rõ số xu'), 'log cảnh báo phải ghi rõ');
   } finally { await stopTestServer(t); }
 });
@@ -109,7 +109,7 @@ test('keo-co: tap lần đầu đặt baseline, không cộng ồ ạt', async (
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-t', nickname: 'NguoiTap', likeCount: 5000 });
     let st = await getState(t, user);
     assert.equal(st.stats.taps, 0, 'delta lần đầu = 0');
-    assert.equal(st.force.do, 5, 'chỉ có +5 từ comment, không bị 5000 tim ồ ạt');
+    assert.equal(st.force.do, 1, 'chỉ có +1 từ comment, không bị 5000 tim ồ ạt');
   } finally { await stopTestServer(t); }
 });
 
@@ -123,9 +123,9 @@ test('keo-co: chống spam comment 1/5s; hết giờ hòa lực -> không đội
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-s1', nickname: 'SpamXanh', content: 'Cố lên!' });
     let st = await getState(t, user);
     assert.equal(st.stats.commentsBlocked, 1, 'comment thứ 2 trong 5s bị chặn');
-    assert.equal(st.force.xanh, 5, 'comment spam không cộng lực');
+    assert.equal(st.force.xanh, 1, 'comment spam không cộng lực');
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-s2', nickname: 'NguoiDo', content: 'đỏ' });
-    // Lực 2 đội bằng nhau (5-5) -> hết giờ hòa.
+    // Lực 2 đội bằng nhau (1-1) -> hết giờ hòa.
     st = await waitFor(t, user, (s) => s.phase === 'roundEnd', 20, 500);
     assert.equal(st.phase, 'roundEnd', 'hiệp phải kết thúc đúng giờ');
     assert.equal(st.lastRoundWinner, null, 'hòa lực thì không đội nào thắng hiệp');
@@ -143,9 +143,9 @@ test('keo-co: cờ chạm vạch đích thắng hiệp ngay; thắng 3 hiệp ->
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-m1', nickname: 'ManhXanh', content: 'xanh' });
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-m2', nickname: 'ManhDo', content: 'đỏ' });
     await waitFor(t, user, (s) => s.phase === 'playing');
-    // Tap delta 100 -> lực Xanh = 5 + 100 = 105 >= winForce 100 -> cờ chạm vạch.
+    // Tap delta 1000 -> lực Xanh = 1 + 100 = 101 >= winForce 100 -> cờ chạm vạch.
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-m1', nickname: 'ManhXanh', likeCount: 10 });
-    await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-m1', nickname: 'ManhXanh', likeCount: 110 });
+    await t.rooms.dispatchWebhook(room, { triggerTypeId: 7, userId: 'u-m1', nickname: 'ManhXanh', likeCount: 1010 });
     let st = await waitFor(t, user, (s) => s.phase === 'matchEnd', 20, 500);
     assert.equal(st.phase, 'matchEnd');
     assert.equal(st.results.winner, 'xanh');
@@ -193,7 +193,7 @@ test('keo-co: follow +20 (1 lần/người/hiệp), share +10 (1 lần/người/
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 8, userId: 'u-f', nickname: 'NguoiFollow' });
     await t.rooms.dispatchWebhook(room, { triggerTypeId: 8, userId: 'u-f', nickname: 'NguoiFollow' });
     const st = await getState(t, user);
-    assert.equal(st.force.xanh, 5 + 20 + 10, 'comment +5, follow +20 (1 lần), share +10 (1 lần)');
+    assert.equal(st.force.xanh, 1 + 20 + 10, 'comment +1, follow +20 (1 lần), share +10 (1 lần)');
     assert.equal(st.stats.follows, 2);
     assert.equal(st.stats.shares, 2);
   } finally { await stopTestServer(t); }
@@ -209,12 +209,12 @@ test('keo-co: demo start -> lực 2 đội tăng; stop -> dừng; từ chối kh
     });
     assert.equal(start.status, 200);
     assert.equal(start.json.success, true);
-    // Demo cho 24 người vào 2 đội theo đợt (mỗi người +5 lực từ comment chọn đội).
+    // Demo cho 24 người vào 2 đội theo đợt (mỗi người +1 lực từ comment chọn đội).
     // Demo v7 dàn chậm: khán đài ~10s, chỉ Xanh ~10s (chờ ghép), Đỏ vào ở ~20s,
-    // đợt cuối chia 2 sóng xong ở ~30s — chờ tới 40s cho đủ 30 lực/đội.
-    let st = await waitFor(t, user, (s) => s.demoActive === true && s.force.xanh >= 30 && s.force.do >= 30, 80, 500);
+    // đợt cuối chia 2 sóng xong ở ~30s — chờ tới 40s cho đủ 12 lực/đội.
+    let st = await waitFor(t, user, (s) => s.demoActive === true && s.force.xanh >= 12 && s.force.do >= 12, 80, 500);
     assert.equal(st.demoActive, true);
-    assert.ok(st.force.xanh >= 30 && st.force.do >= 30, 'demo vào đội đã cộng lực 2 bên');
+    assert.ok(st.force.xanh >= 12 && st.force.do >= 12, 'demo vào đội đã cộng lực 2 bên');
     const f1 = { x: st.force.xanh, d: st.force.do };
     // Chờ tới 12s (bước demo 2.5s/bước) cho lực tăng thêm.
     st = await waitFor(t, user, (s) => s.force.xanh + s.force.do > f1.x + f1.d, 24, 500);

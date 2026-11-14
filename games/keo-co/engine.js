@@ -50,8 +50,8 @@ function createEngine(ctx) {
   const MAX_PULLERS = 24;
 
   const defaultSettings = {
-    tapForce: 1,          // lực / 1 tim (delta)
-    commentForce: 5,      // lực / 1 bình luận tính điểm
+    tapForce: 0.1,        // lực / 1 tim (delta) — 10 tim = 1 lực
+    commentForce: 1,      // lực / 1 bình luận tính điểm (cmt tên đội)
     coinToForce: 10,      // lực / 1 xu quà
     followForce: 20,      // lực follow (1 lần/người/hiệp)
     shareForce: 10,       // lực share (1 lần/người/hiệp)
@@ -124,6 +124,13 @@ function createEngine(ctx) {
     const n = Number(v);
     if (!Number.isFinite(n)) return dflt;
     return Math.max(min, Math.min(max, Math.floor(n)));
+  }
+  // tapForce là số thập phân (0.1 = 10 tim = 1 lực) — clampInt làm tròn
+  // xuống sẽ biến 0.1 thành 0 nên dùng clamp riêng, làm tròn 2 chữ số.
+  function clampFloat(v, min, max, dflt) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return dflt;
+    return Math.max(min, Math.min(max, Math.round(n * 100) / 100));
   }
   // Tên đội hiển thị (chỉ đổi tên, không đổi key đội 'xanh'/'do').
   function teamDisplayName(team) {
@@ -578,7 +585,9 @@ function createEngine(ctx) {
         return;
       }
       // Cứ 6 bước lại tặng 1 món quà (định kỳ, tối đa 20 xu = 200 lực) để thấy hiệu ứng quà.
-      if (demoStepNo % 6 === 0) {
+      // % 6 == 3 (bước lẻ): khối trickle return ở mọi bước chẵn nên % 6 == 0
+      // không bao giờ tới được — quà định kỳ gần như không chạy (lỗi #21).
+      if (demoStepNo % 6 === 3) {
         const gift = DEMO_GIFTS[Math.floor(Math.random() * DEMO_GIFTS.length)];
         const name = DEMO_NAMES[Math.floor(Math.random() * DEMO_NAMES.length)];
         handleIntake({ kind: 'gift', uid: demoUid(name), name: `Demo ${name}`, giftName: gift.name, coins: gift.coins, qty: 1 });
@@ -664,7 +673,7 @@ function createEngine(ctx) {
 
   router.post('/api/settings', (req, res) => {
     const b = req.body || {};
-    if (b.tapForce !== undefined) settings.tapForce = clampInt(b.tapForce, 1, 10, settings.tapForce);
+    if (b.tapForce !== undefined) settings.tapForce = clampFloat(b.tapForce, 0.01, 10, settings.tapForce);
     if (b.commentForce !== undefined) settings.commentForce = clampInt(b.commentForce, 1, 50, settings.commentForce);
     if (b.coinToForce !== undefined) settings.coinToForce = clampInt(b.coinToForce, 1, 100, settings.coinToForce);
     if (b.followForce !== undefined) settings.followForce = clampInt(b.followForce, 0, 100, settings.followForce);
