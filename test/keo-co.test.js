@@ -210,7 +210,8 @@ test('keo-co: demo start -> lực 2 đội tăng; stop -> dừng; từ chối kh
     assert.equal(start.status, 200);
     assert.equal(start.json.success, true);
     // Demo cho 12 người vào 2 đội ngay (mỗi người +5 lực từ comment chọn đội).
-    let st = await waitFor(t, user, (s) => s.demoActive === true && s.force.xanh > 0 && s.force.do > 0, 10, 500);
+    // Demo v4 vào đội theo đợt (khán đài -> nhập đội): chờ tới 10s cho đủ 30 lực/đội.
+    let st = await waitFor(t, user, (s) => s.demoActive === true && s.force.xanh >= 30 && s.force.do >= 30, 20, 500);
     assert.equal(st.demoActive, true);
     assert.ok(st.force.xanh >= 30 && st.force.do >= 30, 'demo vào đội đã cộng lực 2 bên');
     const f1 = { x: st.force.xanh, d: st.force.do };
@@ -228,6 +229,42 @@ test('keo-co: demo start -> lực 2 đội tăng; stop -> dừng; từ chối kh
     st = await getState(t, user);
     assert.equal(st.force.xanh, f2.x, 'dừng demo thì lực không tăng nữa');
     assert.equal(st.force.do, f2.d);
+  } finally { await stopTestServer(t); }
+});
+
+test('keo-co v4: khán giả ở spectators, chờ ghép trận khi 1 đội, nhập đội giữa hiệp được, lastGift', async () => {
+  const t = await startTestServer();
+  try {
+    const user = uniq('keo_v4');
+    const room = await t.rooms.getOrCreate(GAME, user);
+    await setSettings(t, user, { roundDurationS: 30, roundBreakS: 1, winForce: 5000 });
+    // A vào xem (chưa chọn đội) -> ngồi khán đài, chưa có đội nào -> chưa chờ ghép trận.
+    await t.rooms.dispatchWebhook(room, { triggerTypeId: 6, userId: 'u-a', nickname: 'AnhA' });
+    let st = await getState(t, user);
+    assert.equal(st.spectators.length, 1, 'người mới vào xem ở khán đài');
+    assert.equal(st.waitingForMatch, false, 'chưa có đội nào thì chưa chờ ghép trận');
+    // A comment '1' -> vào đội Xanh; chỉ 1 đội có người -> chờ ghép trận.
+    await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-a', nickname: 'AnhA', content: '1' });
+    st = await getState(t, user);
+    assert.equal(st.teams.xanh.total, 1);
+    assert.equal(st.spectators.length, 0);
+    assert.equal(st.waitingForMatch, true, 'chỉ 1 đội có người thì chờ ghép trận');
+    // B vào đội Đỏ -> đủ 2 đội -> hiệp bắt đầu.
+    await t.rooms.dispatchWebhook(room, { triggerTypeId: 6, userId: 'u-b', nickname: 'BinhB' });
+    await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-b', nickname: 'BinhB', content: '2' });
+    st = await waitFor(t, user, (s) => s.phase === 'playing', 10, 500);
+    assert.equal(st.phase, 'playing');
+    assert.equal(st.waitingForMatch, false);
+    // C vào xem giữa hiệp rồi comment '1' -> được nhập đội ngay (không bị chặn như đổi đội).
+    await t.rooms.dispatchWebhook(room, { triggerTypeId: 6, userId: 'u-c', nickname: 'ChiC' });
+    await t.rooms.dispatchWebhook(room, { triggerTypeId: 11, userId: 'u-c', nickname: 'ChiC', content: '1' });
+    st = await getState(t, user);
+    assert.equal(st.teams.xanh.total, 2, 'khán giả nhập đội giữa hiệp được');
+    // Quà 10 xu -> lastGift ghi nhận +100 lực (1 xu = 10 lực).
+    await t.rooms.dispatchWebhook(room, { triggerTypeId: 3, userId: 'u-c', nickname: 'ChiC', giftName: 'Hoa hồng', diamondCount: 10, repeatCount: 1 });
+    st = await getState(t, user);
+    assert.equal(st.lastGift.coins, 10);
+    assert.equal(st.lastGift.force, 100, '1 xu = 10 lực');
   } finally { await stopTestServer(t); }
 });
 

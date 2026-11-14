@@ -85,6 +85,7 @@ function createEngine(ctx) {
       results: null,          // { winner: 'xanh'|'do'|null, wins, matchNo }
       lastRoundWinner: null,
       lastRoundReason: null,
+      lastGift: null,           // { uid, name, team, giftName, coins, force, at } — quà mới nhất, overlay làm hiệu ứng
       flagWarned: { xanh: false, do: false },
       logs: [],
       stats: { joins: 0, comments: 0, commentsBlocked: 0, taps: 0, gifts: 0, giftsUnknown: 0, follows: 0, shares: 0 },
@@ -103,6 +104,7 @@ function createEngine(ctx) {
   if (!session.avatarStats) session.avatarStats = { total: 0, withAvatar: 0 };
   if (!session.avatarSeen) session.avatarSeen = {};
   if (typeof session.webhookCount !== 'number') session.webhookCount = 0;
+  if (!('lastGift' in session)) session.lastGift = null;
   session.demoActive = false; // demo không sống qua restart
   session.phase = session.phase === 'playing' ? 'idle' : session.phase;
   if (session.phase === 'idle') session.phaseEndsAt = 0;
@@ -177,6 +179,14 @@ function createEngine(ctx) {
       .sort((a, b) => b.forceMatch - a.forceMatch)
       .slice(0, 5)
       .map((p) => ({ uid: p.uid, name: p.name, team: p.team, force: p.forceMatch }));
+    // v4: khán giả chưa chọn đội (ngồi khán đài) + cờ chờ ghép trận.
+    const spectators = onlinePlayers()
+      .filter((p) => !p.team)
+      .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0))
+      .slice(0, 24)
+      .map((p) => ({ uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, joinedAt: p.joinedAt || 0 }));
+    const waitingForMatch = session.phase === 'idle'
+      && ((teamPlayers('xanh').length > 0) !== (teamPlayers('do').length > 0));
     return {
       game: 'keo-co',
       username: USERNAME,
@@ -191,6 +201,9 @@ function createEngine(ctx) {
       flagPct: flagPct(),
       teams: { xanh: mkTeam('xanh'), do: mkTeam('do') },
       top,
+      spectators,
+      waitingForMatch,
+      lastGift: session.lastGift || null,
       viewersOnline: onlinePlayers().length,
       stats: session.stats,
       logs: session.logs.slice(-30),
@@ -339,7 +352,8 @@ function createEngine(ctx) {
         session.stats.comments += 1;
         const team = detectTeam(ev.text);
         if (team && team !== p.team) {
-          if (session.phase === 'playing') {
+          // Chỉ chặn ĐỔI đội giữa hiệp; khán giả chưa có đội thì được nhập đội ngay.
+          if (p.team && session.phase === 'playing') {
             log(`${p.name} muốn đổi sang đội ${teamDisplayName(team)} nhưng đang trong hiệp — chỉ đổi đội giữa các hiệp.`);
           } else {
             p.team = team;
@@ -379,6 +393,7 @@ function createEngine(ctx) {
         }
         session.stats.gifts += 1;
         const force = Math.round(Number(coins) * settings.coinToForce);
+        session.lastGift = { uid: p.uid, name: p.name, team: p.team || null, giftName: ev.giftName || 'quà', coins: Number(coins), force: p.team ? force : 0, at: Date.now() };
         if (p.team) {
           addForce(p, force, 'gift');
           log(`🎁 ${p.name} tặng ${ev.giftName || 'quà'} ${coins} xu → +${force} lực cho đội ${teamDisplayName(p.team)}!`);
@@ -467,18 +482,52 @@ function createEngine(ctx) {
       return { success: false, message: 'Bật chế độ thử trước rồi mới chạy demo.' };
     }
     if (session.demoActive) return { success: true, demoActive: true, message: 'Demo đang chạy.' };
-    // Cho 12 người demo vào 2 đội (qua đúng đường handleIntake).
-    DEMO_NAMES.forEach((name, i) => {
-      const team = i % 2 === 0 ? 'xanh' : 'do';
+    // Demo v4 — đủ luồng: người mới đến ngồi khán đài trước, rồi mới
+    // comment chọn đội và đi xuống nhập đội. Đợt 0: cả 12 vào khán đài.
+    // Bước demo 1: 6 người nhập đội (3 Xanh + 3 Đỏ). Bước demo 2: 6 người
+    // còn lại nhập đội. Sau đó cứ vài bước lại có khách mới đến khán đài
+    // rồi nhập đội — overlay luôn có dịp trình diễn luồng đầy đủ.
+    DEMO_NAMES.forEach((name) => {
       handleIntake({ kind: 'join', uid: demoUid(name), name: `Demo ${name}`, avatarUrl: null });
-      handleIntake({ kind: 'comment', uid: demoUid(name), name: `Demo ${name}`, text: team === 'xanh' ? 'xanh' : 'đỏ' });
       // Đặt baseline tap = 0 cho mỗi người demo để bước tap sau luôn có delta thật.
       handleIntake({ kind: 'tap', uid: demoUid(name), name: `Demo ${name}`, totalLikeCount: 0 });
     });
+    let demoStage = 0; // 0 = chờ đợt 1, 1 = chờ đợt 2, 2 = chạy tự do + khách mới
+    let demoStepNo = 0;
+    let trickleNo = 0;
+    let pendingJoin = null; // { uid, name, team } — khách mới đang chờ nhập đội ở bước sau
+    const joinTeam = (uid, name, team) => {
+      handleIntake({ kind: 'comment', uid, name, text: team === 'xanh' ? '1' : '2' });
+    };
     session.demoActive = true;
-    log('🧪 Demo bắt đầu — 12 người demo kéo co 2 đội.');
+    log('🧪 Demo bắt đầu — 12 người demo vào khán đài, rồi lần lượt nhập đội kéo co.');
     const step = () => {
       if (!session.demoActive) return;
+      demoStepNo += 1;
+      if (demoStage === 0) {
+        demoStage = 1;
+        DEMO_NAMES.slice(0, 6).forEach((name, i) => joinTeam(demoUid(name), `Demo ${name}`, i % 2 === 0 ? 'xanh' : 'do'));
+        return;
+      }
+      if (demoStage === 1) {
+        demoStage = 2;
+        DEMO_NAMES.slice(6).forEach((name, i) => joinTeam(demoUid(name), `Demo ${name}`, i % 2 === 0 ? 'xanh' : 'do'));
+        return;
+      }
+      if (pendingJoin) {
+        const pj = pendingJoin; pendingJoin = null;
+        joinTeam(pj.uid, pj.name, pj.team);
+        return;
+      }
+      // Cứ 4 bước lại có 1 khách mới đến khán đài (tối đa ~20 người online).
+      if (demoStepNo % 4 === 0 && onlinePlayers().length < 20) {
+        trickleNo += 1;
+        const uid = `demo_khach_${trickleNo}`;
+        const name = `Khách ${trickleNo}`;
+        handleIntake({ kind: 'join', uid, name, avatarUrl: null });
+        pendingJoin = { uid, name, team: trickleNo % 2 === 1 ? 'xanh' : 'do' };
+        return;
+      }
       const name = DEMO_NAMES[Math.floor(Math.random() * DEMO_NAMES.length)];
       const uid = demoUid(name);
       const r = Math.random();
