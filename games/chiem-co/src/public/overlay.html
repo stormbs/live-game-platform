@@ -6,210 +6,557 @@
 <title>Chiếm Cờ — LIVE Overlay</title>
 <link rel="stylesheet" href="/shared/ui.css">
 <script src="/shared/ui.js"></script>
-<link rel="stylesheet" href="/shared/meme.css">
-<script src="/shared/meme.js"></script>
 <style>
-  :root { --ui-accent: #0284C7; --ui-accent-2: #DC2626; }
+  :root {
+    --ui-accent: #0284C7;
+    --ui-accent-2: #DC2626;
+    --team-xanh: #0284C7;
+    --team-do: #DC2626;
+    --ink: #102334;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 1080px; height: 1920px; overflow: hidden; background: transparent; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #fff; }
-  #stage { position: relative; width: 1080px; height: 1920px; background: linear-gradient(180deg, #0b3d2e 0%, #14532d 45%, #166534 100%); }
-  .grass { position: absolute; left: 0; right: 0; bottom: 0; height: 1150px; background:
-    radial-gradient(ellipse 60% 18% at 20% 90%, rgba(255,255,255,.06), transparent),
-    radial-gradient(ellipse 50% 14% at 80% 85%, rgba(255,255,255,.05), transparent); }
-  .stripes { position: absolute; inset: 0; opacity: .12; background: repeating-linear-gradient(90deg, rgba(255,255,255,.25) 0 60px, transparent 60px 120px); }
-  /* Vạch sân bóng thật: vạch biên + vòng tròn giữa + chấm (giữa + 2 chấm phạt đền) */
-  .pitch-lines { position: absolute; inset: 0 30px 30px; border: 3px solid rgba(255,255,255,.55); border-radius: 8px; pointer-events: none; }
-  .pitch-lines::before { content: ''; position: absolute; left: 50%; top: 50%; width: 220px; height: 220px; transform: translate(-50%,-50%); border: 3px solid rgba(255,255,255,.55); border-radius: 50%; }
-  .pitch-lines::after { content: ''; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; transform: translate(-50%,-50%); background: rgba(255,255,255,.7); border-radius: 50%; box-shadow: -320px 0 0 rgba(255,255,255,.7), 320px 0 0 rgba(255,255,255,.7); }
-  header { position: absolute; top: 24px; left: 0; right: 0; text-align: center; }
-  header h1 { font-size: 64px; letter-spacing: 6px; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
-  header .sub { font-size: 26px; opacity: .9; margin-top: 6px; }
-  #score { position: absolute; top: 170px; left: 40px; right: 40px; display: flex; justify-content: space-between; }
-  .team-box { flex: 0 0 400px; border-radius: 22px; padding: 18px 20px; background: rgba(0,0,0,.35); border: 4px solid; }
-  .team-box.xanh { border-color: #38bdf8; }
-  .team-box.do { border-color: #f87171; }
-  .team-box .tname { font-size: 30px; font-weight: 800; }
-  .team-box.xanh .tname { color: #7dd3fc; }
-  .team-box.do .tname { color: #fca5a5; }
-  .team-box .pts { font-size: 76px; font-weight: 900; line-height: 1; }
+  html, body {
+    width: 1080px; height: 1920px; overflow: hidden;
+    background: transparent;
+    font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #fff;
+  }
+  html { background: #000; }
+  #scaler {
+    position: absolute; left: 0; top: 0; width: 1080px; height: 1920px;
+    transform-origin: top left;
+  }
+  #stage {
+    position: relative; width: 1080px; height: 1920px;
+    overflow: hidden; isolation: isolate;
+    background: #174e36 url('/shared/bg/chiem-co.webp') center center / cover no-repeat;
+  }
+  #stage::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1;
+    background: linear-gradient(180deg, rgba(6,22,35,.58), rgba(6,22,35,.16) 46%, rgba(6,22,35,.65));
+  }
+  .grass {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 1150px;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 55%, rgba(126,225,110,.10), transparent 65%);
+  }
+  .stripes {
+    position: absolute; inset: 0; opacity: .035; pointer-events: none;
+    background: repeating-linear-gradient(90deg, #fff 0 60px, transparent 60px 120px);
+  }
+  header {
+    position: absolute; top: 22px; left: 0; right: 0;
+    text-align: center;
+  }
+  header h1 {
+    font-size: 64px; font-weight: 900; letter-spacing: 5px;
+    color: #ffeb87;
+    -webkit-text-stroke: 2px var(--ink);
+    paint-order: stroke fill;
+    text-shadow: 0 5px 0 var(--ink), 0 9px 16px rgba(0,0,0,.4);
+  }
+  header .sub { font-size: 25px; margin-top: 6px; text-shadow: 0 2px 4px #102334; }
+  #score {
+    position: absolute; top: 164px; left: 40px; right: 40px;
+    display: flex; justify-content: space-between;
+  }
+  .team-box {
+    flex: 0 0 390px; min-width: 0; border-radius: 22px;
+    padding: 15px 20px; border: 4px solid;
+    background-color: rgba(10,28,43,.91);
+    box-shadow: 0 7px 0 var(--ink), inset 0 3px 0 rgba(255,255,255,.2);
+  }
+  .team-box.xanh { border-color: var(--team-xanh); }
+  .team-box.do { border-color: var(--team-do); text-align: right; }
+  .team-box .tname {
+    font-size: 28px; font-weight: 900; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+    text-shadow: 0 2px 3px #000;
+  }
+  .team-box .pts {
+    font-size: 70px; font-weight: 900; line-height: 1.05;
+    font-variant-numeric: tabular-nums; transform-origin: center;
+  }
+  .team-box .flags-held { font-size: 22px; margin-top: 3px; }
   .team-box .pts.pts-bump { animation: pts-bump .4s ease; }
-  @keyframes pts-bump { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
-  .team-box .flags-held { font-size: 24px; opacity: .9; }
-  #timer { position: absolute; top: 170px; left: 50%; transform: translateX(-50%); width: 190px; text-align: center; background: rgba(0,0,0,.55); border-radius: 20px; padding: 14px 6px; }
-  #timer .clock { font-size: 52px; font-weight: 900; }
-  #timer .win { font-size: 22px; opacity: .85; }
-  #field { position: absolute; top: 516px; left: 0; right: 0; bottom: 520px; display: flex; justify-content: space-around; align-items: flex-end; padding: 0 30px 30px; }
-  .flag { width: 300px; text-align: center; transition: transform .6s ease; transform-origin: 50% 100%; position: relative; }
-  .flag .pole { position: relative; height: 560px; margin: 0 auto; width: 14px; background: #d6d3d1; border-radius: 7px; box-shadow: 2px 2px 0 rgba(0,0,0,.3); }
-  .flag .cloth { position: absolute; top: 0; left: 14px; width: 190px; height: 120px; clip-path: polygon(0 0, 100% 15%, 88% 50%, 100% 85%, 0 100%); display: flex; align-items: center; justify-content: center; font-size: 44px; font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.5); transition: background .4s; animation: flag-wave 1.2s ease-in-out infinite; }
-  @keyframes flag-wave { 0%, 100% { transform: skewY(-3deg) translateX(-3px); } 50% { transform: skewY(5deg) translateX(3px); } }
-  .flag .cloth::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.30) 50%, transparent 70%); background-size: 220% 100%; animation: cloth-shine 1.2s linear infinite; pointer-events: none; }
-  @keyframes cloth-shine { from { background-position: 120% 0; } to { background-position: -120% 0; } }
-  .flag.flag-captured { animation: flag-captured .9s ease; }
-  @keyframes flag-captured { 0% { transform: scale(1); filter: brightness(1); } 40% { transform: scale(1.14); filter: brightness(1.4); } 100% { transform: scale(1); filter: brightness(1); } }
+  @keyframes pts-bump {
+    0% { transform: scale(1.16); }
+    100% { transform: scale(1); }
+  }
+  #timer {
+    position: absolute; top: 174px; left: 50%; transform: translateX(-50%);
+    width: 200px; text-align: center; background: #102334;
+    border: 3px solid #ffe28a; border-radius: 20px; padding: 15px 4px;
+    box-shadow: 0 6px 0 rgba(0,0,0,.4); z-index: 2;
+  }
+  #timer .clock {
+    font-size: 48px; font-weight: 900; font-variant-numeric: tabular-nums;
+  }
+  #timer .win { font-size: 19px; margin-top: 5px; color: #ffe99e; }
+  #timer.urgent { border-color: #ff8b62; }
+  #timer.urgent .win { animation: countdown-pulse .65s ease-in-out infinite alternate; }
+  @keyframes countdown-pulse {
+    from { transform: scale(1); opacity: .8; }
+    to { transform: scale(1.06); opacity: 1; }
+  }
+  #howto {
+    position: absolute; top: 350px; left: 40px; right: 40px;
+    padding: 12px 17px; z-index: 5;
+    background: rgba(9,29,43,.94); border: 3px solid #8cc8b3;
+    border-radius: 18px; box-shadow: 0 6px 0 var(--ink);
+    font-size: 22px; line-height: 1.4;
+  }
+  #howto .howto-line { white-space: normal; overflow-wrap: anywhere; }
+  #howto .howto-line + .howto-line { margin-top: 5px; }
+  #howto-1 { color: #fff2ab; font-weight: 800; }
+  #howto-3 { color: #b8fbd0; }
+  #field {
+    position: absolute; top: 638px; left: 0; right: 0; bottom: 520px;
+    display: flex; justify-content: space-around; align-items: flex-end;
+    padding: 0 30px 24px;
+  }
+  .pitch-lines {
+    position: absolute; inset: 8px 24px 14px;
+    border: 3px solid rgba(230,255,221,.4); border-radius: 40px;
+    pointer-events: none;
+    box-shadow: inset 0 0 30px rgba(14,58,32,.2);
+  }
+  .pitch-lines::before {
+    content: ''; position: absolute; left: 50%; top: 50%;
+    width: 220px; height: 220px; transform: translate(-50%,-50%);
+    border: 3px solid rgba(230,255,221,.35); border-radius: 50%;
+  }
+  .pitch-lines::after {
+    content: ''; position: absolute; left: 50%; top: 50%;
+    width: 12px; height: 12px; transform: translate(-50%,-50%);
+    background: rgba(230,255,221,.6); border-radius: 50%;
+    box-shadow: -320px 0 0 rgba(230,255,221,.6), 320px 0 0 rgba(230,255,221,.6);
+  }
+  .flag {
+    width: 300px; text-align: center; position: relative;
+    transition: transform .6s ease; transform-origin: 50% 100%;
+    text-shadow: 0 2px 4px rgba(0,0,0,.8);
+  }
+  .flag .pole {
+    position: relative; height: 440px; margin: 0 auto; width: 14px;
+    background: linear-gradient(90deg, #7c8d96 0 25%, #edf6f5 25% 70%, #a6b9bd 70%);
+    border: 2px solid var(--ink); border-radius: 7px;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.3);
+  }
+  .flag .pole::after {
+    content: ''; position: absolute; bottom: -6px; left: 50%;
+    width: 90px; height: 18px; border-radius: 50%;
+    background: rgba(0,0,0,.26); transform: translateX(-50%); z-index: -1;
+  }
+  .flag .cloth {
+    position: absolute; top: 0; left: 12px; width: 190px; height: 120px;
+    clip-path: polygon(0 0, 100% 15%, 88% 50%, 100% 85%, 0 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px; font-weight: 900; color: #fff;
+    transition: background .4s; animation: flag-wave 1.2s ease-in-out infinite;
+  }
   .flag .cloth.neutral { background: #78716c; }
-  .flag .cloth.xanh { background: #0284c7; }
-  .flag .cloth.do { background: #dc2626; }
-  /* Sprite cờ 2D (Đợt B, shared/assets/2d/chiem-co/curated/): 1 frame tĩnh/sheet
-     512x512, frame rect co-xanh/co-trung-lap (9,277,494,226), co-do (9,223,494,280).
-     Div dùng background-position để crop đúng frame; vẫy bằng flag-wave như
-     .cloth cũ. .cloth CSS giữ làm fallback khi ảnh sprite lỗi/chưa tải xong. */
-  .flag-sprite { position: absolute; top: 0; left: 14px; width: 190px; height: 120px; background-repeat: no-repeat; background-size: 197px 197px; animation: flag-wave 1.2s ease-in-out infinite; display: none; z-index: 1; }
+  .flag .cloth.xanh { background: var(--team-xanh); }
+  .flag .cloth.do { background: var(--team-do); }
+  .flag .cloth::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,.3) 50%, transparent 70%);
+    background-size: 220% 100%; animation: cloth-shine 1.2s linear infinite;
+  }
+  @keyframes flag-wave {
+    0%, 100% { transform: skewY(-3deg) translateX(-3px); }
+    50% { transform: skewY(5deg) translateX(3px); }
+  }
+  @keyframes cloth-shine {
+    from { background-position: 120% 0; }
+    to { background-position: -120% 0; }
+  }
+  .flag.flag-captured { animation: flag-captured .9s ease; }
+  @keyframes flag-captured {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  /* Sheet 512 × 512; giữ vùng crop của các sprite cờ hiện có. */
+  .flag-sprite {
+    position: absolute; top: 0; left: 12px; width: 190px; height: 120px;
+    background-repeat: no-repeat; background-size: 197px 197px;
+    animation: flag-wave 1.2s ease-in-out infinite; display: none; z-index: 1;
+    filter: drop-shadow(2px 3px 0 rgba(16,35,52,.5));
+  }
   .flag-sprite.on { display: block; }
-  .flag-sprite.xanh { background-image: url('/shared/assets/2d/chiem-co/curated/co-xanh-sheet.png'); background-position: -3.5px -106.5px; }
-  .flag-sprite.do { background-image: url('/shared/assets/2d/chiem-co/curated/co-do-sheet.png'); background-position: -3.5px -85.8px; }
-  .flag-sprite.neutral { background-image: url('/shared/assets/2d/chiem-co/curated/co-trung-lap-sheet.png'); background-position: -3.5px -106.5px; }
+  .flag-sprite.xanh {
+    background-image: url('/shared/assets/2d/chiem-co/curated/co-xanh-sheet.png');
+    background-position: -3.5px -106.5px;
+  }
+  .flag-sprite.do {
+    background-image: url('/shared/assets/2d/chiem-co/curated/co-do-sheet.png');
+    background-position: -3.5px -85.8px;
+  }
+  .flag-sprite.neutral {
+    background-image: url('/shared/assets/2d/chiem-co/curated/co-trung-lap-sheet.png');
+    background-position: -3.5px -106.5px;
+  }
+  #mid-flag .pole { height: 490px; }
+  #mid-flag .cloth { width: 210px; height: 140px; font-size: 50px; }
   #mid-flag .flag-sprite { width: 210px; height: 140px; background-size: 218px 218px; }
   #mid-flag .flag-sprite.xanh { background-position: -3.8px -117.8px; }
   #mid-flag .flag-sprite.do { background-position: -3.8px -94.8px; }
   #mid-flag .flag-sprite.neutral { background-position: -3.8px -117.8px; }
   .flag.sprite-on .cloth { display: none; }
-  /* Cầu thủ trong sân: tối đa 2 mỗi đội ở mỗi cờ (12 người/sân — engine gửi
-     tới 72 players trong state, không phải giới hạn top 6). Tên trên đầu,
-     mặt meme làm ĐẦU (mẫu Kéo Co, mỗi người 1 mặt khác nhau toàn game),
-     thân là khối màu đội + emoji chạy. 4 người xếp 1 hàng ngang qua cột cờ,
-     kẹp trong khung cờ 300px nên tên không tràn mép. Chỉ animate
-     transform/opacity. */
-  .pfig { position: absolute; bottom: 205px; width: 70px; text-align: center; z-index: 3; animation: run-bob .7s ease-in-out infinite; }
-  .pfig-xanh-0 { left: 0; }
-  .pfig-xanh-1 { left: 72px; }
-  .pfig-do-1 { right: 72px; }
-  .pfig-do-0 { right: 0; }
-  .pfig .pname { font-size: 14px; font-weight: 800; max-width: 70px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 2px 3px rgba(0,0,0,.9), 0 0 6px rgba(0,0,0,.8); }
-  /* Mặt meme làm ĐẦU cầu thủ: khung vuông bo nhẹ, viền màu đội (KHÔNG cắt tròn). */
-  .pfig .pmeme { width: 46px; height: 46px; margin: 3px auto 0; border-radius: 12px; border: 3px solid #fff; background: rgba(0,0,0,.25); }
-  /* Thân màu đội: khối áo đội + emoji chạy/cắm cờ. */
-  .pfig .pbody { width: 52px; height: 30px; margin: 4px auto 0; border-radius: 10px; font-size: 24px; line-height: 30px; display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
-  .pfig .pflag { position: absolute; top: -10px; right: 2px; font-size: 26px; opacity: 0; transition: opacity .2s; }
+  .flag .fname { font-size: 31px; font-weight: 900; margin-top: 14px; }
+  #mid-flag .fname { color: #ffe58c; }
+  .flag .owner {
+    font-size: 23px; font-weight: 800; margin-top: 4px; min-height: 32px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .flag .rate { font-size: 21px; color: #e0fbd0; }
+  .capwrap { position: relative; }
+  .capbar {
+    margin-top: 10px; height: 29px; border-radius: 12px; overflow: hidden;
+    display: flex; background: #102334; border: 3px solid var(--ink);
+    box-shadow: 0 3px 0 rgba(0,0,0,.35); position: relative;
+  }
+  .capbar .bx { background: var(--team-xanh); height: 100%; transition: width .35s ease; }
+  .capbar .bd { background: var(--team-do); height: 100%; transition: width .35s ease; }
+  .capbar::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+    animation: ui-shine 1.8s linear infinite;
+  }
+  .capbar .lbl {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    z-index: 2; font-size: 17px; font-weight: 900; color: #fff;
+    background: rgba(0,0,0,.6); padding: 1px 9px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .flag .capnum {
+    font-size: 20px; font-weight: 800; margin-top: 7px;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Giữ 2 slot/đội/cờ: tổng 12 slot. Xếp so le để tên rộng và đầu rõ. */
+  .pfig {
+    position: absolute; bottom: 208px; width: 110px;
+    text-align: center; z-index: 3; --kit: #0284C7;
+    animation: run-bob .7s ease-in-out infinite;
+    transform-origin: 50% 100%;
+  }
+  .pfig-xanh-0 { left: -5px; }
+  .pfig-xanh-1 { left: 24px; bottom: 352px; animation-delay: -.2s; }
+  .pfig-do-0 { right: -5px; }
+  .pfig-do-1 { right: 24px; bottom: 352px; animation-delay: -.35s; }
+  .pfig .pname {
+    display: block; max-width: 110px; margin: 0 auto 4px;
+    padding: 3px 5px; border: 2px solid var(--ink); border-radius: 8px;
+    font-size: 17px; font-weight: 900; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: #fff; background: rgba(9,29,43,.94);
+    text-shadow: 0 1px 2px #000;
+  }
+  .pfig .pavatar {
+    position: relative; width: 60px; height: 60px; margin: 0 auto;
+    overflow: hidden; border-radius: 50%; border: 4px solid var(--kit);
+    background: #f4cba5; color: #533425;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 27px; font-weight: 900;
+    box-shadow: 0 0 0 2px var(--ink), 0 4px 0 rgba(0,0,0,.25);
+    text-shadow: none;
+  }
+  .pavatar .avatar-letter { position: relative; }
+  .pavatar img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    display: block; object-fit: cover;
+  }
+  .pfig .pbody {
+    position: relative; width: 50px; height: 34px; margin: 3px auto 0;
+    border: 3px solid var(--ink); border-radius: 12px 12px 8px 8px;
+    background: var(--kit); box-shadow: inset 0 -9px 0 rgba(0,0,0,.18);
+  }
+  .pfig .pbody::before {
+    content: ''; position: absolute; top: 6px; left: -13px;
+    width: 70px; height: 11px; border: 3px solid var(--ink);
+    border-radius: 7px; background: #f4cba5; z-index: -1;
+    transform: rotate(-13deg);
+  }
+  .pfig .pbody::after {
+    content: ''; position: absolute; bottom: -13px; left: 5px;
+    width: 13px; height: 17px; background: #102334;
+    border-radius: 0 0 5px 5px; box-shadow: 21px 0 0 #102334;
+    animation: runner-legs .28s ease-in-out infinite alternate;
+  }
+  .pfig .pflag {
+    position: absolute; top: 12px; right: -2px; font-size: 30px;
+    opacity: 0; transition: opacity .2s; pointer-events: none;
+  }
   .pfig.leading { animation-duration: .45s; }
-  .pfig.trailing { animation-duration: 1.3s; opacity: .8; }
+  .pfig.leading .pbody::after { animation-duration: .18s; }
+  .pfig.trailing { animation-duration: 1.3s; opacity: .88; }
+  .pfig.trailing .pbody::after { animation-duration: .5s; }
   .pfig.planting { animation: plant-flag .8s ease; }
   .pfig.planting .pflag { opacity: 1; }
-  @keyframes run-bob { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-12px) rotate(5deg); } }
-  @keyframes plant-flag { 0% { transform: translateY(0) rotate(0); } 30% { transform: translateY(-16px) rotate(-14deg); } 60% { transform: translateY(2px) rotate(8deg); } 100% { transform: translateY(0) rotate(0); } }
-  /* Avatar trong top list */
-  .top-list .row { align-items: center; gap: 8px; }
-  .top-list .row .tname-cell { flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; }
-  .top-list .row .tname-cell > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .top-av { flex: 0 0 30px; width: 30px; height: 30px; border-radius: 50%; overflow: hidden; position: relative; background: #334155; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; }
-  .top-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .top-list.xanh .top-av { background: #0284c7; }
-  .top-list.do .top-av { background: #dc2626; }
-  .flag .fname { font-size: 34px; font-weight: 800; margin-top: 16px; }
-  .flag .owner { font-size: 26px; margin-top: 4px; min-height: 34px; }
-  .flag .rate { font-size: 22px; opacity: .85; }
-  .capbar { margin-top: 12px; height: 26px; border-radius: 13px; overflow: hidden; display: flex; background: rgba(0,0,0,.45); border: 2px solid rgba(255,255,255,.35); position: relative; }
-  .capbar .bx { background: #0284c7; height: 100%; }
-  .capbar .bd { background: #dc2626; height: 100%; }
-  .capbar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); animation: ui-shine 1.8s linear infinite; pointer-events: none; }
-  .capbar .lbl { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); z-index: 2; font-size: 22px; font-weight: 900; color: #fff; background: rgba(0,0,0,.55); padding: 2px 12px; border-radius: 999px; text-shadow: 0 1px 3px rgba(0,0,0,.8); white-space: nowrap; }
-  .flag .capwrap { position: relative; }
-  .flag .capnum { font-size: 22px; margin-top: 6px; }
-  #mid-flag .pole { height: 640px; }
-  #mid-flag .cloth { width: 210px; height: 140px; font-size: 50px; }
-  #tops { position: absolute; left: 40px; right: 40px; bottom: 210px; display: flex; gap: 20px; }
-  .top-list { flex: 1; background: rgba(0,0,0,.35); border-radius: 18px; padding: 14px 18px; }
-  .top-list h3 { font-size: 26px; margin-bottom: 8px; }
-  .top-list.xanh h3 { color: #7dd3fc; }
-  .top-list.do h3 { color: #fca5a5; }
-  .top-list .row { font-size: 24px; padding: 3px 0; display: flex; justify-content: space-between; }
-  #ticker { position: absolute; left: 40px; right: 40px; bottom: 130px; height: 64px; background: rgba(0,0,0,.55); border-radius: 14px; display: flex; align-items: center; padding: 0 20px; font-size: 28px; white-space: nowrap; overflow: hidden; }
-  #ticker-text.scroll { animation: ticker-scroll 22s linear infinite; }
-  @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  #statusbar { position: absolute; left: 0; right: 0; bottom: 56px; height: 58px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 26px; background: rgba(0,0,0,.4); }
-  /* #banner dùng class .ui-banner từ shared/ui.css (xem HTML) */
-  #demo-badge { position: absolute; top: 24px; right: 24px; background: #f59e0b; color: #111; font-weight: 900; font-size: 26px; padding: 10px 18px; border-radius: 14px; display: none; }
-  #hint { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 22px; opacity: .75; }
-  /* Bảng hướng dẫn chơi (Đợt 2, chuẩn chung #3): dải 4 dòng gọn giữa bảng
-     điểm và sân cờ — số lấy từ settings (JS cập nhật theo s.settings),
-     HTML tĩnh giữ đúng số mặc định của engine.js. Không che sân/capbar.
-     Font 24px / line-height 1.5 (chuẩn đợt 2: đọc rõ khi scale); nội dung
-     rút gọn cho vừa 1 dòng mỗi hàng ở cỡ chữ mới. */
-  #howto { position: absolute; top: 352px; left: 40px; right: 40px; background: rgba(0,0,0,.45); border: 2px solid rgba(255,255,255,.25); border-radius: 16px; padding: 8px 16px; font-size: 24px; line-height: 1.5; z-index: 5; }
-  #howto .howto-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  /* Trọng tài NPC (Đợt 2, chuẩn chung #4): đứng giữa sân trước cột cờ Giữa
-     (vòng tròn giữa sân), áo sọc + còi sprite coi-sheet.png (frame 9,258,
-     493x245). Chỉ animate transform/opacity. */
-  #referee { position: absolute; left: 50%; top: 330px; transform: translateX(-50%); width: 96px; text-align: center; z-index: 4; }
-  .ref-tag { display: inline-block; font-size: 19px; font-weight: 900; letter-spacing: 1px; white-space: nowrap; background: rgba(0,0,0,.6); border: 2px solid #fff; border-radius: 999px; padding: 2px 12px; text-shadow: 0 1px 3px rgba(0,0,0,.8); }
-  .ref-head { position: relative; font-size: 54px; line-height: 1.05; margin-top: 2px; filter: drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
-  .ref-whistle { position: absolute; right: 0; bottom: 4px; width: 40px; height: 20px; background-image: url('/shared/assets/2d/chiem-co/curated/coi-sheet.png'); background-size: 42px 42px; background-position: -0.7px -21.2px; background-repeat: no-repeat; transform-origin: 80% 50%; }
+  @keyframes run-bob {
+    0%, 100% { transform: translateY(0) rotate(-4deg); }
+    50% { transform: translateY(-11px) rotate(4deg); }
+  }
+  @keyframes runner-legs {
+    from { transform: rotate(-13deg); }
+    to { transform: rotate(13deg); }
+  }
+  @keyframes plant-flag {
+    0% { transform: translateY(0) rotate(0); }
+    30% { transform: translateY(-19px) rotate(-12deg); }
+    60% { transform: translateY(2px) rotate(8deg); }
+    100% { transform: translateY(0) rotate(0); }
+  }
+  #referee {
+    position: absolute; left: 50%; top: 178px; transform: translateX(-50%);
+    width: 96px; text-align: center; z-index: 4;
+  }
+  .ref-tag {
+    display: inline-block; font-size: 17px; font-weight: 900;
+    white-space: nowrap; background: #102334; color: #ffe99e;
+    border: 2px solid #ffe99e; border-radius: 999px; padding: 3px 10px;
+  }
+  .ref-head {
+    position: relative; font-size: 54px; line-height: 1.05;
+    margin-top: 3px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.5));
+  }
+  .ref-whistle {
+    position: absolute; right: 0; bottom: 4px; width: 40px; height: 20px;
+    background-image: url('/shared/assets/2d/chiem-co/curated/coi-sheet.png');
+    background-size: 42px 42px; background-position: -0.7px -21.2px;
+    background-repeat: no-repeat; transform-origin: 80% 50%;
+  }
   .ref-whistle-fb { display: none; position: absolute; right: 0; bottom: 0; font-size: 26px; }
   #referee.no-coi .ref-whistle { display: none; }
   #referee.no-coi .ref-whistle-fb { display: block; }
-  .ref-puff { position: absolute; right: -26px; bottom: 8px; font-size: 26px; opacity: 0; pointer-events: none; }
-  .ref-shirt { width: 68px; height: 52px; margin: 2px auto 0; border-radius: 10px; border: 2px solid #111; background: repeating-linear-gradient(90deg, #111 0 8px, #f8fafc 8px 16px); box-shadow: 0 3px 3px rgba(0,0,0,.4); }
+  .ref-puff {
+    position: absolute; right: -26px; bottom: 8px;
+    font-size: 26px; opacity: 0; pointer-events: none;
+  }
+  .ref-shirt {
+    width: 68px; height: 52px; margin: 2px auto 0; border-radius: 10px;
+    border: 2px solid #111;
+    background: repeating-linear-gradient(90deg, #111 0 8px, #f8fafc 8px 16px);
+    box-shadow: 0 3px 3px rgba(0,0,0,.4);
+  }
   .ref-shorts { width: 68px; height: 14px; margin: 2px auto 0; background: #111; border-radius: 0 0 8px 8px; }
   .ref-shoes { font-size: 24px; line-height: 1.1; letter-spacing: 6px; }
   #referee.blowing .ref-bob { animation: ref-bounce .18s ease-in-out 5; }
   #referee.blowing .ref-whistle { animation: whistle-shake .12s linear 7; }
   #referee.blowing .ref-puff { animation: puff-out .9s ease forwards; }
-  @keyframes ref-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-  @keyframes whistle-shake { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(14deg); } }
-  @keyframes puff-out { 0% { opacity: 1; transform: translateX(0) scale(.6); } 100% { opacity: 0; transform: translateX(26px) scale(1.2); } }
-  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
-  html { background: #000; }
+  @keyframes ref-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes whistle-shake {
+    0%, 100% { transform: rotate(-14deg); }
+    50% { transform: rotate(14deg); }
+  }
+  @keyframes puff-out {
+    0% { opacity: 1; transform: translateX(0) scale(.6); }
+    100% { opacity: 0; transform: translateX(26px) scale(1.2); }
+  }
+  #tops {
+    position: absolute; left: 40px; right: 40px; bottom: 210px;
+    display: flex; gap: 20px;
+  }
+  .top-list {
+    flex: 1; min-width: 0; background: rgba(9,29,43,.94);
+    border: 3px solid var(--ink); border-radius: 18px; padding: 12px 16px;
+    box-shadow: 0 5px 0 rgba(0,0,0,.35);
+  }
+  .top-list.xanh { border-top-color: var(--team-xanh); }
+  .top-list.do { border-top-color: var(--team-do); }
+  .top-list h3 {
+    font-size: 24px; margin-bottom: 8px; font-weight: 900;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .top-list .row {
+    font-size: 22px; min-height: 38px; padding: 3px 0;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .top-list .row .tname-cell {
+    flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0;
+  }
+  .top-list .row .tname-cell > span:last-child {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .top-list .row > span:last-child { white-space: nowrap; }
+  .top-av {
+    flex: 0 0 32px; width: 32px; height: 32px; border-radius: 50%;
+    overflow: hidden; position: relative; background: #f4cba5;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 900; color: #533425;
+    border: 2px solid #fff;
+  }
+  .top-list.xanh .top-av { border-color: var(--team-xanh); }
+  .top-list.do .top-av { border-color: var(--team-do); }
+  .top-av img { width: 100%; height: 100%; object-fit: cover; display: block; position: absolute; inset: 0; }
+  #ticker {
+    position: absolute; left: 40px; right: 40px; bottom: 130px;
+    height: 64px; background: rgba(9,29,43,.95); border: 2px solid #779886;
+    border-radius: 14px; display: flex; align-items: center; padding: 0 20px;
+    font-size: 26px; white-space: nowrap; overflow: hidden;
+  }
+  #ticker-text { display: inline-block; flex-shrink: 0; }
+  #ticker-text.scroll { animation: ticker-scroll 22s linear infinite; }
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  #statusbar {
+    position: absolute; left: 0; right: 0; bottom: 56px; height: 58px;
+    display: flex; align-items: center; justify-content: center; gap: 18px;
+    font-size: 24px; background: rgba(9,29,43,.88);
+  }
+  #banner { z-index: 20; pointer-events: none; }
+  #banner h2 { overflow-wrap: anywhere; }
+  #demo-badge {
+    position: absolute; top: 24px; right: 24px; z-index: 6;
+    background: #ffdc64; color: #102334; font-weight: 900; font-size: 24px;
+    padding: 9px 14px; border: 3px solid var(--ink);
+    border-radius: 14px; display: none; box-shadow: 0 4px 0 var(--ink);
+  }
+  #hint {
+    position: absolute; left: 24px; right: 24px; bottom: 9px;
+    text-align: center; font-size: 21px; color: #e3f3dc;
+  }
+  #ui-toast { z-index: 30; }
 </style>
 </head>
 <body>
 <div id="scaler">
 <div id="stage">
-  <div class="ui-vignette"></div><div class="ui-grain"></div><div class="ui-toast" id="ui-toast"></div>
-  <div class="grass"></div><div class="stripes"></div>
+  <div class="ui-vignette"></div>
+  <div class="ui-grain"></div>
+  <div class="ui-toast" id="ui-toast"></div>
+  <div class="grass"></div>
+  <div class="stripes"></div>
+
   <header>
     <h1>🚩 CHIẾM CỜ</h1>
-    <div class="sub" id="match-label">Trận 1 — chờ người chơi vào đội</div>
+    <div class="sub" id="match-label">Đang kết nối sân đấu…</div>
   </header>
   <div id="demo-badge">🧪 DEMO</div>
+
   <div id="score">
-    <div class="team-box xanh"><div class="tname">🔵 ĐỘI XANH</div><div class="pts" id="pts-xanh">0</div><div class="flags-held" id="flags-xanh">0 cờ</div></div>
-    <div class="team-box do"><div class="tname">🔴 ĐỘI ĐỎ</div><div class="pts" id="pts-do">0</div><div class="flags-held" id="flags-do">0 cờ</div></div>
+    <div class="team-box xanh">
+      <div class="tname">🔵 ĐỘI XANH</div>
+      <div class="pts" id="pts-xanh">0</div>
+      <div class="flags-held" id="flags-xanh">0 cờ</div>
+    </div>
+    <div class="team-box do">
+      <div class="tname">🔴 ĐỘI ĐỎ</div>
+      <div class="pts" id="pts-do">0</div>
+      <div class="flags-held" id="flags-do">0 cờ</div>
+    </div>
   </div>
-  <div id="timer"><div class="clock" id="clock">10:00</div><div class="win" id="win-label">Cửa sổ: 30s</div></div>
+
+  <div id="timer">
+    <div class="clock" id="clock">--:--</div>
+    <div class="win" id="win-label">Đang kết nối…</div>
+  </div>
+
   <div id="howto">
-    <div class="howto-line" id="howto-1">📋 Cmt “xanh”/“đỏ” vào đội • “cờ trái/giữa/phải” chọn cờ — mặc định Giữa</div>
-    <div class="howto-line" id="howto-2">💪 1 tim +1 • 1 cmt +5 (1/5s) • 1 xu +20 • Follow +30 • Share +15 (1 lần/trận)</div>
-    <div class="howto-line" id="howto-3">🏁 Cửa sổ 30s: nhiều lực hơn chiếm cờ (hòa giữ nguyên) • Giữ cờ +1đ/s, Giữa ×2</div>
-    <div class="howto-line" id="howto-4">🏆 Trận 10 phút: nhiều điểm thắng • Hòa → xét số cờ → đội chiếm cờ cuối</div>
+    <div class="howto-line" id="howto-1">📋 “xanh” / “1” hoặc “đỏ” / “do” / “2” để vào đội.</div>
+    <div class="howto-line" id="howto-2">💪 Đang tải tỉ lệ lực từ sân đấu…</div>
+    <div class="howto-line" id="howto-3">🏁 Đang tải luật chiếm cờ và điểm giữ cờ…</div>
+    <div class="howto-line" id="howto-4">🏆 Đang tải thời lượng trận và vinh danh…</div>
   </div>
+
   <div id="field">
     <div class="pitch-lines"></div>
+
     <div class="flag" id="flag-left">
-      <div class="pole"><div class="flag-sprite neutral" id="sprite-left"></div><div class="cloth neutral" id="cloth-left">🏳️</div></div>
+      <div class="pole">
+        <div class="flag-sprite neutral" id="sprite-left"></div>
+        <div class="cloth neutral" id="cloth-left">🏳️</div>
+      </div>
       <div class="fname">CỜ TRÁI</div>
       <div class="owner" id="owner-left">— trống —</div>
-      <div class="rate">+1 điểm/giây</div>
-      <div class="capwrap"><div class="capbar"><div class="bx" id="capbx-left" style="width:50%"></div><div class="bd" id="capbd-left" style="width:50%"></div><span class="lbl" id="caplbl-left"></span></div></div>
+      <div class="rate">Đang tải điểm giữ cờ…</div>
+      <div class="capwrap">
+        <div class="capbar">
+          <div class="bx" id="capbx-left" style="width:50%"></div>
+          <div class="bd" id="capbd-left" style="width:50%"></div>
+          <span class="lbl" id="caplbl-left"></span>
+        </div>
+      </div>
       <div class="capnum" id="capnum-left">0 — 0</div>
-      <div class="pfig pfig-xanh-0" id="pfig-left-xanh-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-xanh-1" id="pfig-left-xanh-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-do-1" id="pfig-left-do-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-do-0" id="pfig-left-do-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-xanh-0" id="pfig-left-xanh-0" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
+      <div class="pfig pfig-xanh-1" id="pfig-left-xanh-1" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
+      <div class="pfig pfig-do-1" id="pfig-left-do-1" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
+      <div class="pfig pfig-do-0" id="pfig-left-do-0" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
     </div>
+
     <div class="flag" id="mid-flag">
-      <div class="pole"><div class="flag-sprite neutral" id="sprite-mid"></div><div class="cloth neutral" id="cloth-mid">🏳️</div></div>
+      <div class="pole">
+        <div class="flag-sprite neutral" id="sprite-mid"></div>
+        <div class="cloth neutral" id="cloth-mid">🏳️</div>
+      </div>
       <div class="fname">⭐ CỜ GIỮA</div>
       <div class="owner" id="owner-mid">— trống —</div>
-      <div class="rate">+2 điểm/giây (điểm nóng)</div>
-      <div class="capwrap"><div class="capbar"><div class="bx" id="capbx-mid" style="width:50%"></div><div class="bd" id="capbd-mid" style="width:50%"></div><span class="lbl" id="caplbl-mid"></span></div></div>
+      <div class="rate">Đang tải điểm giữ cờ…</div>
+      <div class="capwrap">
+        <div class="capbar">
+          <div class="bx" id="capbx-mid" style="width:50%"></div>
+          <div class="bd" id="capbd-mid" style="width:50%"></div>
+          <span class="lbl" id="caplbl-mid"></span>
+        </div>
+      </div>
       <div class="capnum" id="capnum-mid">0 — 0</div>
-      <div class="pfig pfig-xanh-0" id="pfig-mid-xanh-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-xanh-1" id="pfig-mid-xanh-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-do-1" id="pfig-mid-do-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-do-0" id="pfig-mid-do-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-xanh-0" id="pfig-mid-xanh-0" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
+      <div class="pfig pfig-xanh-1" id="pfig-mid-xanh-1" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
+      <div class="pfig pfig-do-1" id="pfig-mid-do-1" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
+      <div class="pfig pfig-do-0" id="pfig-mid-do-0" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
     </div>
+
     <div class="flag" id="flag-right">
-      <div class="pole"><div class="flag-sprite neutral" id="sprite-right"></div><div class="cloth neutral" id="cloth-right">🏳️</div></div>
+      <div class="pole">
+        <div class="flag-sprite neutral" id="sprite-right"></div>
+        <div class="cloth neutral" id="cloth-right">🏳️</div>
+      </div>
       <div class="fname">CỜ PHẢI</div>
       <div class="owner" id="owner-right">— trống —</div>
-      <div class="rate">+1 điểm/giây</div>
-      <div class="capwrap"><div class="capbar"><div class="bx" id="capbx-right" style="width:50%"></div><div class="bd" id="capbd-right" style="width:50%"></div><span class="lbl" id="caplbl-right"></span></div></div>
+      <div class="rate">Đang tải điểm giữ cờ…</div>
+      <div class="capwrap">
+        <div class="capbar">
+          <div class="bx" id="capbx-right" style="width:50%"></div>
+          <div class="bd" id="capbd-right" style="width:50%"></div>
+          <span class="lbl" id="caplbl-right"></span>
+        </div>
+      </div>
       <div class="capnum" id="capnum-right">0 — 0</div>
-      <div class="pfig pfig-xanh-0" id="pfig-right-xanh-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-xanh-1" id="pfig-right-xanh-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-do-1" id="pfig-right-do-1" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
-      <div class="pfig pfig-do-0" id="pfig-right-do-0" style="display:none"><div class="pname"></div><div class="pmeme"></div><div class="pbody">🏃</div><div class="pflag">🚩</div></div>
+      <div class="pfig pfig-xanh-0" id="pfig-right-xanh-0" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
+      <div class="pfig pfig-xanh-1" id="pfig-right-xanh-1" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
+      <div class="pfig pfig-do-1" id="pfig-right-do-1" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
+      <div class="pfig pfig-do-0" id="pfig-right-do-0" style="display:none">
+        <div class="pname"></div><div class="pavatar"></div><div class="pbody"></div><div class="pflag">🚩</div>
+      </div>
     </div>
+
     <div id="referee" title="Trọng tài">
       <div class="ref-bob">
         <div class="ref-tag">TRỌNG TÀI</div>
@@ -220,16 +567,26 @@
       </div>
     </div>
   </div>
+
   <div id="tops">
-    <div class="top-list xanh"><h3 id="top-title-xanh">🔵 Top lực — Đội Xanh</h3><div id="top-xanh"></div></div>
-    <div class="top-list do"><h3 id="top-title-do">🔴 Top lực — Đội Đỏ</h3><div id="top-do"></div></div>
+    <div class="top-list xanh">
+      <h3 id="top-title-xanh">🔵 Top lực — Đội Xanh</h3><div id="top-xanh"></div>
+    </div>
+    <div class="top-list do">
+      <h3 id="top-title-do">🔴 Top lực — Đội Đỏ</h3><div id="top-do"></div>
+    </div>
   </div>
-  <div id="ticker"><span id="ticker-text">Bình luận "xanh" hoặc "đỏ" để vào đội • "cờ trái / cờ giữa / cờ phải" để chọn cờ cần đánh • 1 tim +1 lực, 1 xu quà +20 lực</span></div>
+  <div id="ticker">
+    <span id="ticker-text">🚩 Cờ đang chờ chủ! Bình luận “xanh” / “1” hoặc “đỏ” / “do” / “2” để nhập hội!</span>
+  </div>
   <div id="statusbar"><span id="phase-label">Chờ trận đấu</span><span id="counts"></span></div>
   <div id="banner" class="ui-banner"></div>
-  <div id="hint">Chiếm cờ — bình luận để vào đội, tap/quà để chiếm cờ. Cờ Giữa tính đôi điểm.</div>
+  <div id="hint">Chọn đội trước để được tính lực • “trái” / “giữa” / “phải” để chọn cờ!</div>
 </div>
 </div>
+
+<audio id="voiceAudio" preload="none" playsinline></audio>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="/shared/music.js"></script>
 <script>
@@ -240,327 +597,698 @@ function fit() {
   scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
   scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
 }
-window.addEventListener('resize', fit); fit();
+window.addEventListener('resize', fit);
+fit();
+
 (function () {
+  'use strict';
+
   const params = new URLSearchParams(location.search);
-  const path = location.pathname.split('/').filter(Boolean);
-  const username = path[2] || 'live';
   const demoParam = params.get('demo') === '1';
+  const FLAG_IDS = ['left', 'mid', 'right'];
+  const TEAMS = ['xanh', 'do'];
+  const FLAG_NAMES = { left: 'Trái', mid: 'Giữa', right: 'Phải' };
+
   let state = null;
-  let voiceOn = true;
-  // Trạng thái cũ để phát hiện thay đổi: tăng điểm, đổi chủ cờ, sang trận thắng mới.
+  let voiceOn = false;
   let prevPts = { xanh: 0, do: 0 };
   let prevOwners = {};
   let prevPhase = null;
   let prevMatchNo = null;
-  let prevShare60 = {}; // flagId-team -> đội đó có đang >60% lực cờ không (để trigger cắm cờ)
-  // Sprite cờ 2D: preload để biết sheet nào tải được; sheet lỗi -> giữ .cloth CSS.
+  let clockOffset = 0;
+  let latestStateNow = -Infinity;
+  let lastTickerText = '';
+  let eventTicker = null;
+  const pendingPlants = new Map();
+
+  const $ = (id) => document.getElementById(id);
+  const flagElement = (id) => $(id === 'mid' ? 'mid-flag' : 'flag-' + id);
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function firstLetter(name) {
+    const chars = Array.from(String(name || '').trim());
+    return (chars[0] || '?').toUpperCase();
+  }
+
+  function settingNumber(settings, key) {
+    const value = settings[key];
+    if (value === null || value === undefined || value === '') return null;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  function numberText(value) {
+    return value === null ? '…' : new Intl.NumberFormat('vi-VN', {
+      maximumFractionDigits: 3
+    }).format(value);
+  }
+
+  function durationText(value) {
+    if (value === null) return '…';
+    return value % 60 === 0 ? numberText(value / 60) + ' phút' : numberText(value) + ' giây';
+  }
+
+  function teamCfg(s) {
+    const st = (s && s.settings) || {};
+    const color = (value, fallback) => {
+      const v = String(value || '');
+      return /^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(v) ? v : fallback;
+    };
+    // Ảnh nền đội dùng asset nội bộ; không tải ảnh nền từ host ngoài.
+    const background = (value) => {
+      const v = String(value || '');
+      return v.startsWith('/shared/') && !/[\\\r\n]/.test(v) ? v : '';
+    };
+    return {
+      xanh: {
+        name: String(st.teamXanhName || 'Xanh'),
+        color: color(st.teamXanhColor, '#0284C7'),
+        bg: background(st.teamXanhBg)
+      },
+      do: {
+        name: String(st.teamDoName || 'Đỏ'),
+        color: color(st.teamDoColor, '#DC2626'),
+        bg: background(st.teamDoBg)
+      }
+    };
+  }
+
+  // URL avatar là dữ liệu người chơi do engine cung cấp.
+  // Không khai báo hay tự tạo URL avatar từ dịch vụ ngoài.
+  function avatarSource(value) {
+    if (!value) return '';
+    try {
+      const url = new URL(String(value), location.origin);
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') return '';
+      return url.href;
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function updateHowto(s) {
+    const st = (s && s.settings) || {};
+    const get = (key) => settingNumber(st, key);
+    const text = (key) => numberText(get(key));
+    const pps = get('pointsPerFlagS');
+    const multiplier = get('midMultiplier');
+
+    $('howto-1').textContent =
+      '📋 “xanh”/“1” hoặc “đỏ”/“do”/“2” vào đội • “cờ trái/giữa/phải” hay “trái/giữa/phải” chọn cờ; mặc định Giữa.';
+    $('howto-2').textContent =
+      '💪 1 tim +' + text('tapForce') +
+      ' • 1 cmt +' + text('commentForce') + ' (1/' + text('commentSpamS') + 's)' +
+      ' • 1 xu +' + text('coinToForce') +
+      ' • Follow +' + text('followForce') +
+      ', Share +' + text('shareForce') + ' (mỗi loại 1 lần/trận). Chọn đội mới tính lực!';
+    $('howto-3').textContent =
+      '🏁 Mỗi ' + text('windowS') + 's: nhiều lực hơn chiếm cờ; hòa giữ chủ cũ.' +
+      ' Giữ cờ +' + text('pointsPerFlagS') + 'đ/s; Giữa ×' + text('midMultiplier') + '.';
+    $('howto-4').textContent =
+      '🏆 Trận ' + durationText(get('matchDurationS')) +
+      ': xét điểm → số cờ → đội chiếm cờ cuối. Vinh danh ' + text('spotlightS') + 's rồi trận mới.';
+
+    FLAG_IDS.forEach((id) => {
+      const rate = id === 'mid'
+        ? (pps === null || multiplier === null ? null : pps * multiplier)
+        : pps;
+      flagElement(id).querySelector('.rate').textContent =
+        '+' + numberText(rate) + ' điểm/giây' + (id === 'mid' ? ' • ×' + text('midMultiplier') : '');
+    });
+
+    // Bảng luật tự giãn theo số và tên; sân luôn bắt đầu phía dưới bảng.
+    $('field').style.top = Math.max(638, $('howto').offsetTop + $('howto').offsetHeight + 24) + 'px';
+  }
+
   const SPRITE_URLS = {
     xanh: '/shared/assets/2d/chiem-co/curated/co-xanh-sheet.png',
     do: '/shared/assets/2d/chiem-co/curated/co-do-sheet.png',
-    neutral: '/shared/assets/2d/chiem-co/curated/co-trung-lap-sheet.png',
+    neutral: '/shared/assets/2d/chiem-co/curated/co-trung-lap-sheet.png'
   };
   const spriteReady = { xanh: false, do: false, neutral: false };
-  Object.keys(SPRITE_URLS).forEach((k) => {
-    const im = new Image();
-    im.onload = () => { spriteReady[k] = true; if (state) render(state); };
-    im.onerror = () => { spriteReady[k] = false; };
-    im.src = SPRITE_URLS[k];
+
+  Object.keys(SPRITE_URLS).forEach((key) => {
+    const image = new Image();
+    image.onload = () => {
+      spriteReady[key] = true;
+      if (state) render(state);
+    };
+    image.onerror = () => { spriteReady[key] = false; };
+    image.src = SPRITE_URLS[key];
   });
-  // Trọng tài NPC (Đợt 2): preload sprite còi; lỗi -> hiện fallback 📣.
+
   const coiImg = new Image();
-  coiImg.onerror = () => { const r = document.getElementById('referee'); if (r) r.classList.add('no-coi'); };
+  coiImg.onerror = () => {
+    const r = $('referee');
+    if (r) r.classList.add('no-coi');
+  };
   coiImg.src = '/shared/assets/2d/chiem-co/curated/coi-sheet.png';
+
   let blowTimer = null;
-  // Trọng tài thổi còi: nảy người + rung còi + hơi 💨 + tiếng pop (0.9s).
+  // Giữ hiệu ứng còi: nảy người + rung còi + hơi + StromUI pop.
   function blowWhistle() {
     const r = document.getElementById('referee');
     if (!r) return;
     r.classList.remove('blowing');
-    void r.offsetWidth; // ép chạy lại animation thổi còi
+    void r.offsetWidth;
     r.classList.add('blowing');
     if (window.StromUI) window.StromUI.sfx('pop');
     if (blowTimer) clearTimeout(blowTimer);
     blowTimer = setTimeout(() => r.classList.remove('blowing'), 950);
   }
-  // Bảng hướng dẫn chơi: số lấy từ settings thật của engine (state.settings);
-  // thiếu settings thì dùng đúng số mặc định của engine.js.
-  function updateHowto(s) {
-    const st = (s && s.settings) || {};
-    const num = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
-    const windowS = num(st.windowS, 30);
-    const tap = num(st.tapForce, 1);
-    const cmt = num(st.commentForce, 5);
-    const spam = num(st.commentSpamS, 5);
-    const coin = num(st.coinToForce, 20);
-    const fol = num(st.followForce, 30);
-    const shr = num(st.shareForce, 15);
-    const pps = num(st.pointsPerFlagS, 1);
-    const mid = num(st.midMultiplier, 2);
-    const dur = num(st.matchDurationS, 600);
-    const durText = dur % 60 === 0 ? (dur / 60) + ' phút' : dur + ' giây';
-    const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
-    setText('howto-1', '📋 Cmt “xanh”/“đỏ” vào đội • “cờ trái/giữa/phải” chọn cờ — mặc định Giữa');
-    setText('howto-2', '💪 1 tim +' + tap + ' • 1 cmt +' + cmt + ' (1/' + spam + 's) • 1 xu +' + coin + ' • Follow +' + fol + ' • Share +' + shr + ' (1 lần/trận)');
-    setText('howto-3', '🏁 Cửa sổ ' + windowS + 's: nhiều lực hơn chiếm cờ (hòa giữ nguyên) • Giữ cờ +' + pps + 'đ/s, Giữa ×' + mid);
-    setText('howto-4', '🏆 Trận ' + durText + ': nhiều điểm thắng • Hòa → xét số cờ → đội chiếm cờ cuối');
+
+  // Voice thu sẵn: tối đa 3 câu tính cả câu đang phát.
+  // Ưu tiên: thắng trận > khai cuộc > chiếm cờ; cùng ưu tiên giữ thứ tự đến.
+  const voiceAudio = $('voiceAudio');
+  const voiceQueue = [];
+  const VOICE_PRIORITIES = {
+    'capture-xanh-left': 1,
+    'capture-xanh-mid': 1,
+    'capture-xanh-right': 1,
+    'capture-do-left': 1,
+    'capture-do-mid': 1,
+    'capture-do-right': 1,
+    'match-start': 2,
+    'win-xanh': 3,
+    'win-do': 3,
+    'win-draw': 3
+  };
+  let voicePlaying = false;
+  let voiceGeneration = 0;
+  let voiceTimeout = null;
+  let voiceOrder = 0;
+
+  function clearVoice() {
+    voiceGeneration++;
+    clearTimeout(voiceTimeout);
+    voiceTimeout = null;
+    voiceQueue.length = 0;
+    voicePlaying = false;
+    voiceAudio.onended = null;
+    voiceAudio.onerror = null;
+    voiceAudio.pause();
+    voiceAudio.removeAttribute('src');
+    voiceAudio.load();
   }
-  function teamCfg(s) {
-    const st = (s && s.settings) || {};
-    return {
-      xanh: { name: st.teamXanhName || 'Xanh', bg: st.teamXanhBg || '', color: st.teamXanhColor || '#0284C7' },
-      do: { name: st.teamDoName || 'Đỏ', bg: st.teamDoBg || '', color: st.teamDoColor || '#DC2626' },
-    };
+
+  function setVoiceEnabled(enabled) {
+    if (!enabled && (voiceOn || voicePlaying || voiceQueue.length)) clearVoice();
+    voiceOn = enabled;
   }
-  function firstLetter(name) {
-    const t = String(name || '').trim();
-    return (t.charAt(0) || '?').toUpperCase();
+
+  function queueVoice(clip) {
+    if (!voiceOn || !Object.prototype.hasOwnProperty.call(VOICE_PRIORITIES, clip)) return;
+    voiceQueue.push({
+      clip: clip,
+      priority: VOICE_PRIORITIES[clip],
+      order: voiceOrder++
+    });
+    voiceQueue.sort((a, b) => b.priority - a.priority || a.order - b.order);
+    const capacity = voicePlaying ? 2 : 3;
+    if (voiceQueue.length > capacity) voiceQueue.length = capacity;
+    nextVoice();
   }
-  function shortName(name) {
-    const t = String(name || '?');
-    return t.length > 10 ? t.slice(0, 10) + '…' : t;
+
+  function nextVoice() {
+    if (!voiceOn || voicePlaying || !voiceQueue.length) return;
+    const item = voiceQueue.shift();
+    const generation = ++voiceGeneration;
+    voicePlaying = true;
+    let finished = false;
+
+    function finish() {
+      if (finished || generation !== voiceGeneration) return;
+      finished = true;
+      clearTimeout(voiceTimeout);
+      voiceTimeout = null;
+      voiceAudio.onended = null;
+      voiceAudio.onerror = null;
+      voiceAudio.pause();
+      voicePlaying = false;
+      nextVoice();
+    }
+
+    voiceAudio.onended = finish;
+    voiceAudio.onerror = finish;
+    voiceAudio.src = '/shared/voice/chiem-co/' + item.clip + '.mp3';
+    // File lỗi hoặc tải treo đều được bỏ qua, tránh khóa cả hàng đợi.
+    voiceTimeout = setTimeout(finish, 15000);
+    try {
+      const promise = voiceAudio.play();
+      if (promise && typeof promise.catch === 'function') promise.catch(finish);
+    } catch (e) {
+      finish();
+    }
   }
-  // Cầu thủ tiêu biểu của 1 đội ở 1 cờ: top 2 lực trong số người đang đánh cờ
-  // đó (s.players có focus); thiếu thì bù bằng top lực của đội. Tối đa 2/đội/cờ
-  // = 12 người trong sân (engine gửi tới 72 players trong state, không phải top 6).
+
   function repPlayers(s, flagId, team) {
-    const cands = (s.players || []).filter((p) => p.team === team && !p.left && (p.focus || 'mid') === flagId)
-      .sort((a, b) => (b.force || 0) - (a.force || 0));
-    const out = cands.slice(0, 2);
-    if (out.length < 2) {
+    const candidates = (s.players || []).filter((p) =>
+      p.team === team && !p.left && (p.focus || 'mid') === flagId
+    ).sort((a, b) => (b.force || 0) - (a.force || 0));
+    const result = candidates.slice(0, 2);
+    if (result.length < 2) {
       const top = (s.top && s.top[team]) || [];
-      for (const t of top) {
-        if (out.length >= 2) break;
-        if (!out.some((p) => p.uid === t.uid)) out.push(t);
+      for (const player of top) {
+        if (result.length >= 2) break;
+        if (!player.left && !result.some((p) => p.uid === player.uid)) result.push(player);
       }
     }
-    return out;
+    return result;
   }
-  // Mặt meme làm ĐẦU cầu thủ (mẫu Kéo Co): faceImgIn với danh sách chung toàn
-  // game để không ai trùng mặt; thân là khối màu đội.
-  function renderFig(flagId, team, slot, player, leading, color, allPlayers) {
-    const el = document.getElementById('pfig-' + flagId + '-' + team + '-' + slot);
+
+  function renderFig(flagId, team, slot, player, leading, trailing, color) {
+    const el = $('pfig-' + flagId + '-' + team + '-' + slot);
     if (!el) return;
-    if (!player) { el.style.display = 'none'; el._uid = null; return; }
+    if (!player) {
+      el.style.display = 'none';
+      el.classList.remove('leading', 'trailing', 'planting');
+      el._avatarKey = null;
+      clearTimeout(el._plantTimer);
+      return;
+    }
+
     el.style.display = 'block';
-    el.classList.toggle('leading', !!leading);
-    el.classList.toggle('trailing', !leading);
-    const body = el.querySelector('.pbody');
-    body.textContent = leading ? '🏃' : '🚶';
-    body.style.background = color;
-    const meme = el.querySelector('.pmeme');
-    meme.style.borderColor = color;
-    if (el._uid !== player.uid) {
-      el._uid = player.uid;
-      el.querySelector('.pname').textContent = shortName(player.name);
-      meme.innerHTML = (window.MemeFaces
-        ? window.MemeFaces.faceImgIn(player, allPlayers || [player], 'meme-face')
-        : escapeHtml(firstLetter(player.name)));
+    el.style.setProperty('--kit', color);
+    el.classList.toggle('leading', leading);
+    el.classList.toggle('trailing', trailing);
+
+    const name = String(player.name || 'Người chơi');
+    const nameEl = el.querySelector('.pname');
+    nameEl.textContent = name;
+    nameEl.title = name;
+    el.title = name + ' • ' + numberText(Number(player.force) || 0) + ' lực';
+
+    const avatar = el.querySelector('.pavatar');
+    avatar.style.borderColor = color;
+    const source = avatarSource(player.avatarUrl);
+    const key = JSON.stringify([player.uid, name, source]);
+    if (el._avatarKey !== key) {
+      el._avatarKey = key;
+      avatar.replaceChildren();
+      const initial = document.createElement('span');
+      initial.className = 'avatar-letter';
+      initial.textContent = firstLetter(name);
+      avatar.appendChild(initial);
+      if (source) {
+        const image = new Image();
+        image.alt = '';
+        image.decoding = 'async';
+        image.referrerPolicy = 'no-referrer';
+        image.onerror = () => image.remove();
+        image.src = source;
+        avatar.appendChild(image);
+      }
     }
   }
+
   function plantFig(flagId, team) {
-    const el = document.getElementById('pfig-' + flagId + '-' + team + '-0');
-    if (!el || el.style.display === 'none') return;
-    el.classList.remove('planting');
-    void el.offsetWidth; // ép chạy lại animation cắm cờ 0.8s
-    el.classList.add('planting');
-    setTimeout(() => el.classList.remove('planting'), 850);
+    for (let slot = 0; slot < 2; slot++) {
+      const el = $('pfig-' + flagId + '-' + team + '-' + slot);
+      if (!el || el.style.display === 'none') continue;
+      clearTimeout(el._plantTimer);
+      el.classList.remove('planting');
+      void el.offsetWidth;
+      el.classList.add('planting');
+      el._plantTimer = setTimeout(() => el.classList.remove('planting'), 850);
+    }
   }
-  const ttsQueue = [];
-  let ttsPlaying = false;
+
+  function capturePop(id) {
+    const el = flagElement(id);
+    if (!el) return;
+    clearTimeout(el._captureTimer);
+    el.classList.remove('flag-captured');
+    void el.offsetWidth;
+    el.classList.add('flag-captured');
+    el._captureTimer = setTimeout(() => el.classList.remove('flag-captured'), 950);
+  }
 
   function fmtClock(ms) {
-    if (ms == null) return '--:--';
-    const s = Math.max(0, Math.ceil(ms / 1000));
-    return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    if (ms == null || !Number.isFinite(ms)) return '--:--';
+    const seconds = Math.max(0, Math.ceil(ms / 1000));
+    return String(Math.floor(seconds / 60)).padStart(2, '0') + ':' +
+      String(seconds % 60).padStart(2, '0');
   }
-  function playTts(text) {
-    if (!voiceOn || !text) return;
-    ttsQueue.push(text);
-    nextTts();
+
+  function updateTimers() {
+    if (!state) return;
+    const now = Date.now() + clockOffset;
+    const playing = state.phase === 'playing';
+    const spotlight = state.phase === 'spotlight';
+    const remaining = state.windowEndsAt ? Math.max(0, Math.ceil((state.windowEndsAt - now) / 1000)) : null;
+
+    $('clock').textContent = playing && state.matchEndsAt
+      ? fmtClock(state.matchEndsAt - now)
+      : spotlight && state.phaseEndsAt ? fmtClock(state.phaseEndsAt - now) : '--:--';
+    $('win-label').textContent = playing && remaining !== null
+      ? 'Đợt ' + state.windowNo + ' • ' + remaining + 's'
+      : spotlight ? 'VINH DANH' : 'CHỜ KHAI CUỘC';
+    $('timer').classList.toggle('urgent', playing && remaining !== null && remaining > 0 && remaining <= 5);
   }
-  function nextTts() {
-    if (ttsPlaying || !ttsQueue.length) return;
-    ttsPlaying = true;
-    const text = ttsQueue.shift();
-    const audio = new Audio('/api/tts?text=' + encodeURIComponent(text));
-    audio.onended = () => { ttsPlaying = false; nextTts(); };
-    audio.onerror = () => {
-      try {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'vi-VN';
-        u.onend = () => { ttsPlaying = false; nextTts(); };
-        speechSynthesis.speak(u);
-      } catch (e) { ttsPlaying = false; nextTts(); }
-    };
-    audio.play().catch(() => { ttsPlaying = false; nextTts(); });
-  }
-  // Điểm đội tăng -> số nhảy (class .pts-bump 0.4s, tự gỡ).
-  function bumpPts(id, val, prev) {
-    const el = document.getElementById(id);
-    el.textContent = val;
-    if (val > prev) {
+
+  function bumpPts(id, value, previous) {
+    const el = $(id);
+    el.textContent = new Intl.NumberFormat('vi-VN').format(value);
+    if (value > previous) {
+      clearTimeout(el._bumpTimer);
       el.classList.remove('pts-bump');
-      void el.offsetWidth; // ép chạy lại animation
+      void el.offsetWidth;
       el.classList.add('pts-bump');
-      setTimeout(() => el.classList.remove('pts-bump'), 450);
+      el._bumpTimer = setTimeout(() => el.classList.remove('pts-bump'), 450);
     }
   }
+
+  function setTicker(text) {
+    if (text === lastTickerText) return;
+    lastTickerText = text;
+    const el = $('ticker-text');
+    el.classList.remove('scroll');
+    el.textContent = text;
+    if (el.scrollWidth > el.parentElement.clientWidth - 40) {
+      el.textContent = text + '   •   ' + text + '   •   ';
+      void el.offsetWidth;
+      el.classList.add('scroll');
+    }
+  }
+
+  function showEventTicker(text) {
+    eventTicker = { text: text, until: Date.now() + 6500 };
+    setTicker(text);
+  }
+
+  function topRow(player, index) {
+    const source = avatarSource(player.avatarUrl);
+    const avatar = '<span class="top-av"><span>' + escapeHtml(firstLetter(player.name)) + '</span>' +
+      (source
+        ? '<img src="' + escapeHtml(source) + '" alt="" referrerpolicy="no-referrer" onerror="this.remove()">'
+        : '') + '</span>';
+    return '<div class="row"><span class="tname-cell">' + avatar +
+      '<span title="' + escapeHtml(player.name) + '">' + (index + 1) + '. ' + escapeHtml(player.name) +
+      '</span></span><span>' + numberText(Number(player.force) || 0) + ' lực</span></div>';
+  }
+
   function render(s) {
     if (!s || s.game !== 'chiem-co') return;
-    state = s;
-    // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
-    if (window.StromMusic) window.StromMusic.sync({ mood: 'battle', enabled: true, volume: 50, energy: (s.phase === 'spotlight' || (s.phase === 'playing' && ['left', 'mid', 'right'].some(function (id) { return s.flags[id].force.xanh + s.flags[id].force.do > 20; }))) ? 2 : (s.phase === 'playing' ? 1 : 0) });
-    voiceOn = s.settings.voiceEnabled !== false;
-    // Bảng hướng dẫn chơi: cập nhật số thật từ settings mỗi lần render.
-    updateHowto(s);
-    // Tên/màu/ảnh nền đội từ settings (dashboard "Tùy chỉnh đội").
-    const cfg = teamCfg(s);
-    for (const t of ['xanh', 'do']) {
-      const box = document.querySelector('.team-box.' + t);
-      if (box) {
-        box.querySelector('.tname').textContent = (t === 'xanh' ? '🔵 ĐỘI ' : '🔴 ĐỘI ') + cfg[t].name.toUpperCase();
-        box.querySelector('.tname').style.color = cfg[t].color;
-        box.style.borderColor = cfg[t].color;
-        if (cfg[t].bg) {
-          box.style.backgroundImage = 'linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url("' + cfg[t].bg + '")';
-          box.style.backgroundSize = 'cover';
-          box.style.backgroundPosition = 'center';
-        } else {
-          box.style.backgroundImage = '';
-          box.style.backgroundSize = '';
-        }
-      }
+    const serverNow = Number(s.now);
+    const hasServerNow = s.now != null && Number.isFinite(serverNow);
+    // Không để response poll cũ ghi đè state socket mới hơn.
+    if (hasServerNow && serverNow < latestStateNow) return;
+    if (hasServerNow) {
+      latestStateNow = serverNow;
+      clockOffset = serverNow - Date.now();
     }
-    document.getElementById('top-title-xanh').textContent = '🔵 Top lực — Đội ' + cfg.xanh.name;
-    document.getElementById('top-title-do').textContent = '🔴 Top lực — Đội ' + cfg.do.name;
+
+    state = s;
+    // Cờ voice ở state là điều kiện chính; vẫn tôn trọng setting nếu có.
+    setVoiceEnabled(s.voiceEnabled !== false && (!s.settings || s.settings.voiceEnabled !== false));
+    updateHowto(s);
+
+    const cfg = teamCfg(s);
+    const root = document.documentElement;
+    root.style.setProperty('--team-xanh', cfg.xanh.color);
+    root.style.setProperty('--team-do', cfg.do.color);
+    root.style.setProperty('--ui-accent', cfg.xanh.color);
+    root.style.setProperty('--ui-accent-2', cfg.do.color);
+
+    if (window.StromMusic) {
+      const active = FLAG_IDS.some((id) => {
+        const flag = s.flags && s.flags[id];
+        return flag && flag.force && flag.force.xanh + flag.force.do > 20;
+      });
+      window.StromMusic.sync({
+        mood: 'battle',
+        enabled: true,
+        volume: 50,
+        energy: s.phase === 'spotlight' || (s.phase === 'playing' && active)
+          ? 2 : s.phase === 'playing' ? 1 : 0
+      });
+    }
+
+    for (const team of TEAMS) {
+      const box = document.querySelector('.team-box.' + team);
+      const nameEl = box.querySelector('.tname');
+      nameEl.textContent = (team === 'xanh' ? '🔵 ĐỘI ' : '🔴 ĐỘI ') + cfg[team].name.toUpperCase();
+      nameEl.title = cfg[team].name;
+      box.style.borderColor = cfg[team].color;
+      box.style.backgroundImage = cfg[team].bg
+        ? 'linear-gradient(rgba(9,29,43,.72),rgba(9,29,43,.72)),url(' + JSON.stringify(cfg[team].bg) + ')'
+        : '';
+      box.style.backgroundSize = cfg[team].bg ? 'cover' : '';
+      box.style.backgroundPosition = cfg[team].bg ? 'center' : '';
+      const title = $('top-title-' + team);
+      title.textContent = (team === 'xanh' ? '🔵' : '🔴') + ' Top lực — Đội ' + cfg[team].name;
+      title.title = title.textContent;
+    }
+
     bumpPts('pts-xanh', s.points.xanh, prevPts.xanh);
     bumpPts('pts-do', s.points.do, prevPts.do);
     prevPts = { xanh: s.points.xanh, do: s.points.do };
-    const heldX = ['left', 'mid', 'right'].filter((id) => s.flags[id].owner === 'xanh').length;
-    const heldD = ['left', 'mid', 'right'].filter((id) => s.flags[id].owner === 'do').length;
-    document.getElementById('flags-xanh').textContent = heldX + ' cờ';
-    document.getElementById('flags-do').textContent = heldD + ' cờ';
-    const now = Date.now();
-    document.getElementById('clock').textContent = s.phase === 'playing' && s.matchEndsAt ? fmtClock(s.matchEndsAt - now) : (s.phase === 'spotlight' ? '⏳' : '--:--');
-    document.getElementById('win-label').textContent = s.phase === 'playing' && s.windowEndsAt ? ('Cửa sổ ' + s.windowNo + ': ' + Math.max(0, Math.ceil((s.windowEndsAt - now) / 1000)) + 's') : '—';
-    document.getElementById('match-label').textContent = 'Trận ' + s.matchNo + (s.phase === 'lobby' ? ' — chờ người chơi vào đội' : s.phase === 'playing' ? ' — đang diễn ra' : ' — vinh danh đội thắng');
-    // Mặt meme khác nhau toàn game: danh sách chung cả 2 đội.
-    const allPlayers = s.players || [];
-    for (const id of ['left', 'mid', 'right']) {
-      const fl = s.flags[id];
-      const cloth = document.getElementById('cloth-' + id);
-      const clothCls = 'cloth ' + (fl.owner || 'neutral');
-      if (cloth.className !== clothCls) cloth.className = clothCls;
-      cloth.textContent = fl.owner === 'xanh' ? 'X' : fl.owner === 'do' ? 'Đ' : '?';
-      // Sprite cờ 2D thay .cloth khi sheet tải được; lỗi -> giữ .cloth CSS.
-      const flagEl = document.getElementById(id === 'mid' ? 'mid-flag' : 'flag-' + id);
-      const sprite = document.getElementById('sprite-' + id);
-      const ownerKey = fl.owner || 'neutral';
-      if (sprite) {
-        const useSprite = !!spriteReady[ownerKey];
-        sprite.className = 'flag-sprite' + (useSprite ? ' on ' + ownerKey : ' ' + ownerKey);
-        if (flagEl) flagEl.classList.toggle('sprite-on', useSprite);
-      }
-      document.getElementById('owner-' + id).textContent = fl.owner === 'xanh' ? '🔵 Đội ' + cfg.xanh.name + ' giữ' : fl.owner === 'do' ? '🔴 Đội ' + cfg.do.name + ' giữ' : '— trống —';
-      const fx = fl.force.xanh, fd = fl.force.do, tot = fx + fd;
-      const px = tot ? Math.round((fx / tot) * 100) : 50;
-      // Cầu thủ tiêu biểu mỗi bên cờ (tối đa 2/đội/cờ): đội dẫn lực chạy nhanh
-      // (🏃), đội bị dẫn chạy chậm (🚶); cắm cờ khi vừa đổi chủ sang đội mình
-      // hoặc lực >60%.
-      const rx = repPlayers(s, id, 'xanh');
-      const rd = repPlayers(s, id, 'do');
-      renderFig(id, 'xanh', 0, rx[0], fx >= fd, cfg.xanh.color, allPlayers);
-      renderFig(id, 'xanh', 1, rx[1], fx >= fd, cfg.xanh.color, allPlayers);
-      renderFig(id, 'do', 0, rd[0], fd >= fx, cfg.do.color, allPlayers);
-      renderFig(id, 'do', 1, rd[1], fd >= fx, cfg.do.color, allPlayers);
-      if (fl.owner && prevOwners[id] !== undefined && fl.owner !== prevOwners[id]) plantFig(id, fl.owner);
-      for (const t of ['xanh', 'do']) {
-        const share = tot ? (t === 'xanh' ? fx : fd) / tot : 0;
-        const key = id + '-' + t;
-        if (share > 0.6 && !prevShare60[key]) plantFig(id, t);
-        prevShare60[key] = share > 0.6;
-      }
-      // Cờ nghiêng theo lực: bên mạnh hơn kéo cờ nghiêng về phía mình (xanh = trái).
-      if (flagEl) {
-        const lean = tot ? Math.max(-10, Math.min(10, -((fx - fd) / tot) * 10)) : 0;
-        flagEl.style.transform = 'rotate(' + lean + 'deg)';
-      }
-      document.getElementById('capbx-' + id).style.width = px + '%';
-      document.getElementById('capbd-' + id).style.width = (100 - px) + '%';
-      document.getElementById('caplbl-' + id).textContent = px + '%';
-      document.getElementById('capnum-' + id).textContent = fx + ' — ' + fd;
-      // Đổi chủ cờ (không tính lần render đầu) -> cờ pop 0.9s + tiếng pop.
-      if (fl.owner && prevOwners[id] !== undefined && fl.owner !== prevOwners[id]) {
-        if (flagEl) {
-          flagEl.classList.remove('flag-captured');
-          void flagEl.offsetWidth; // ép chạy lại animation
-          flagEl.classList.add('flag-captured');
-          setTimeout(() => flagEl.classList.remove('flag-captured'), 950);
+
+    const heldX = FLAG_IDS.filter((id) => s.flags[id].owner === 'xanh').length;
+    const heldD = FLAG_IDS.filter((id) => s.flags[id].owner === 'do').length;
+    const pps = settingNumber(s.settings || {}, 'pointsPerFlagS');
+    const midMultiplier = settingNumber(s.settings || {}, 'midMultiplier');
+
+    for (const team of TEAMS) {
+      const held = team === 'xanh' ? heldX : heldD;
+      const income = pps === null || midMultiplier === null ? null :
+        FLAG_IDS.reduce((sum, id) => sum + (s.flags[id].owner === team
+          ? pps * (id === 'mid' ? midMultiplier : 1) : 0), 0);
+      $('flags-' + team).textContent = held + ' cờ • +' + numberText(income) + 'đ/s';
+    }
+
+    updateTimers();
+    $('match-label').textContent = 'Trận ' + s.matchNo +
+      (s.phase === 'lobby' ? ' — chọn đội, chuẩn bị xuất phát!' :
+        s.phase === 'playing' ? ' — ba lá cờ, hai đội, hết mình!' :
+          ' — vỗ tay cho cả sân!');
+
+    for (const id of FLAG_IDS) {
+      const flag = s.flags[id];
+      const cloth = $('cloth-' + id);
+      const ownerKey = flag.owner || 'neutral';
+      cloth.className = 'cloth ' + ownerKey;
+      cloth.textContent = flag.owner === 'xanh' ? 'X' : flag.owner === 'do' ? 'Đ' : '?';
+
+      const el = flagElement(id);
+      const sprite = $('sprite-' + id);
+      const useSprite = !!spriteReady[ownerKey];
+      sprite.className = 'flag-sprite ' + ownerKey + (useSprite ? ' on' : '');
+      el.classList.toggle('sprite-on', useSprite);
+
+      const ownerEl = $('owner-' + id);
+      ownerEl.textContent = flag.owner
+        ? (flag.owner === 'xanh' ? '🔵 Đội ' : '🔴 Đội ') + cfg[flag.owner].name + ' giữ'
+        : '🏳️ Chưa có chủ — vào chiếm!';
+      ownerEl.title = ownerEl.textContent;
+
+      const fx = Number(flag.force.xanh) || 0;
+      const fd = Number(flag.force.do) || 0;
+      const total = fx + fd;
+      const share = total ? fx / total * 100 : 50;
+      const reps = {
+        xanh: repPlayers(s, id, 'xanh'),
+        do: repPlayers(s, id, 'do')
+      };
+
+      for (const team of TEAMS) {
+        const ownForce = team === 'xanh' ? fx : fd;
+        const opposingForce = team === 'xanh' ? fd : fx;
+        for (let slot = 0; slot < 2; slot++) {
+          renderFig(id, team, slot, reps[team][slot],
+            ownForce > opposingForce, ownForce < opposingForce, cfg[team].color);
         }
+      }
+
+      // Chỉ cắm cờ khi có chiếm cờ; không cắm vì vượt một ngưỡng lực.
+      const pending = pendingPlants.get(id);
+      if (pending) {
+        if (pending.until > Date.now() && pending.matchNo === s.matchNo) plantFig(id, pending.team);
+        pendingPlants.delete(id);
+      }
+
+      const lean = total ? Math.max(-8, Math.min(8, -((fx - fd) / total) * 8)) : 0;
+      el.style.transform = 'rotate(' + lean + 'deg)';
+      $('capbx-' + id).style.width = share + '%';
+      $('capbd-' + id).style.width = (100 - share) + '%';
+      $('caplbl-' + id).textContent = !total ? 'CHƯA CÓ LỰC' :
+        fx === fd ? 'HÒA LỰC' : Math.round(share) + '% / ' + Math.round(100 - share) + '%';
+      $('capnum-' + id).textContent = numberText(fx) + ' ⚡ ' + numberText(fd);
+
+      if (flag.owner && prevOwners[id] !== undefined && flag.owner !== prevOwners[id] &&
+          prevMatchNo === s.matchNo) {
+        capturePop(id);
+        // Fallback hình ảnh khi chỉ nhận được poll, không tự suy ra voice.
+        plantFig(id, flag.owner);
         if (window.StromUI) window.StromUI.sfx('pop');
       }
-      prevOwners[id] = fl.owner;
+      prevOwners[id] = flag.owner;
     }
-    const topRow = (p, i) => {
-      const av = p.avatarUrl
-        ? `<span class="top-av"><img src="${escapeHtml(p.avatarUrl)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none">${escapeHtml(firstLetter(p.name))}</span></span>`
-        : `<span class="top-av">${escapeHtml(firstLetter(p.name))}</span>`;
-      return `<div class="row"><span class="tname-cell">${av}<span>${i + 1}. ${escapeHtml(p.name)}</span></span><span>${p.force} lực</span></div>`;
-    };
-    const topX = s.top.xanh.map(topRow).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
-    const topD = s.top.do.map(topRow).join('') || '<div class="row"><span>— chưa có ai —</span></div>';
-    document.getElementById('top-xanh').innerHTML = topX;
-    document.getElementById('top-do').innerHTML = topD;
-    document.getElementById('phase-label').textContent =
-      s.phase === 'lobby' ? '🕒 Chờ trận đấu' : s.phase === 'playing' ? '⚔️ Trận đang diễn ra' : '🏆 Vinh danh đội thắng';
-    document.getElementById('counts').textContent = `🔵 ${s.teamCounts.xanh} • 🔴 ${s.teamCounts.do} • 👥 ${s.teamCounts.none} chưa chọn đội`;
-    const banner = document.getElementById('banner');
-    if (s.phase === 'spotlight' && s.winner) {
-      banner.innerHTML = '<h2>' + (s.winner.team ? (s.winner.team === 'xanh' ? '🔵 ĐỘI ' + cfg.xanh.name.toUpperCase() + ' THẮNG!' : '🔴 ĐỘI ' + cfg.do.name.toUpperCase() + ' THẮNG!') : '🤝 HÒA!') + '</h2>';
-      banner.classList.add('show');
-      // Chỉ nổ confetti 1 lần khi vừa sang trạng thái vinh danh của trận này.
-      if (prevPhase !== 'spotlight' || prevMatchNo !== s.matchNo) {
-        if (window.StromUI) { window.StromUI.confetti(48); window.StromUI.sfx('win'); }
+
+    for (const team of TEAMS) {
+      const html = ((s.top && s.top[team]) || []).slice(0, 5).map(topRow).join('') ||
+        '<div class="row"><span>Chưa có ai — lên bảng nào!</span></div>';
+      const list = $('top-' + team);
+      if (list._html !== html) {
+        list._html = html;
+        list.innerHTML = html;
       }
-    } else banner.classList.remove('show');
-    // Trận vừa bắt đầu (lobby -> playing): trọng tài thổi còi khai cuộc.
-    if (prevPhase === 'lobby' && s.phase === 'playing') blowWhistle();
+    }
+
+    $('phase-label').textContent = s.phase === 'lobby' ? '🕒 Chờ khai cuộc' :
+      s.phase === 'playing' ? '⚔️ Đang tranh cờ' : '🏆 Vinh danh';
+    const counts = s.teamCounts || {};
+    $('counts').textContent = '🔵 ' + (counts.xanh || 0) + ' • 🔴 ' + (counts.do || 0) +
+      ' • 👥 ' + (counts.none || 0) + ' chưa chọn đội';
+
+    const banner = $('banner');
+    if (s.phase === 'spotlight' && s.winner) {
+      const team = s.winner.team;
+      const title = team && cfg[team]
+        ? (team === 'xanh' ? '🔵 ĐỘI ' : '🔴 ĐỘI ') + cfg[team].name.toUpperCase() + ' THẮNG!'
+        : '🤝 TRẬN ĐẤU HÒA!';
+      banner.innerHTML = '<h2>' + escapeHtml(title) + '</h2>';
+      banner.classList.add('show');
+      if (prevPhase !== 'spotlight' || prevMatchNo !== s.matchNo) {
+        if (window.StromUI) {
+          window.StromUI.confetti(48);
+          window.StromUI.sfx('win');
+        }
+      }
+    } else {
+      banner.classList.remove('show');
+    }
+
+    if (prevPhase === 'lobby' && s.phase === 'playing') {
+      queueVoice('match-start');
+      blowWhistle();
+      showEventTicker('🏁 Xuất phát! Cờ chưa có chủ, ai nhanh tay thì vào chiếm!');
+    }
+
     prevPhase = s.phase;
     prevMatchNo = s.matchNo;
-    document.getElementById('demo-badge').style.display = s.demoActive ? 'block' : 'none';
-    if (s.logs && s.logs.length) {
-      const tk = document.getElementById('ticker-text');
-      const lt = s.logs[s.logs.length - 1].text;
-      tk.textContent = lt + '   •   ' + lt;
-      tk.classList.toggle('scroll', tk.scrollWidth > tk.parentElement.clientWidth);
+    $('demo-badge').style.display = s.demoActive ? 'block' : 'none';
+
+    if (eventTicker && eventTicker.until > Date.now()) {
+      setTicker(eventTicker.text);
+    } else {
+      eventTicker = null;
+      const logs = s.logs || [];
+      setTicker(logs.length ? String(logs[logs.length - 1].text || '') :
+        '🚩 Chọn đội trước để tính lực! “xanh” / “1” hoặc “đỏ” / “do” / “2”; chọn cờ bằng “trái” / “giữa” / “phải”.');
     }
   }
-  function escapeHtml(x) { return String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
   async function poll() {
     try {
-      const r = await fetch('/api/state');
-      const s = await r.json();
-      render(s);
-    } catch (e) { /* keep last */ }
+      const response = await fetch('/api/state');
+      if (!response.ok) throw new Error('state unavailable');
+      render(await response.json());
+    } catch (e) {
+      // Giữ state cuối cùng khi mất kết nối tạm thời.
+    }
     setTimeout(poll, 1500);
   }
+
   function boot() {
     try {
       const socket = io();
       socket.on('state-update', (s) => render(s));
-      socket.on('flag-capture', (d) => { if (d && d.text) playTts(d.text); blowWhistle(); });
-      socket.on('match-win', (d) => { if (d && d.text) playTts(d.text); blowWhistle(); });
-    } catch (e) { /* polling fallback */ }
+      socket.on('flag-capture', (data) => {
+        if (data && TEAMS.includes(data.team) && FLAG_IDS.includes(data.flag)) {
+          queueVoice('capture-' + data.team + '-' + data.flag);
+          plantFig(data.flag, data.team);
+          capturePop(data.flag);
+          // Event có thể đến trước state mới: giữ tín hiệu cho lượt render kế tiếp.
+          pendingPlants.set(data.flag, {
+            team: data.team,
+            matchNo: state ? state.matchNo : null,
+            until: Date.now() + 2500
+          });
+          const cfg = teamCfg(state);
+          showEventTicker('🚩 Đội ' + cfg[data.team].name + ' vừa chiếm cờ ' +
+            FLAG_NAMES[data.flag] + '! Cắm chắc nhé, bên kia đang tới!');
+        }
+        blowWhistle();
+      });
+      socket.on('match-win', (data) => {
+        if (data && (data.team === null || TEAMS.includes(data.team))) {
+          queueVoice(data.team === null ? 'win-draw' : 'win-' + data.team);
+          const cfg = teamCfg(state);
+          showEventTicker(data.team === null
+            ? '🤝 Hòa rồi! Cả sân cùng vỗ tay — trận sau phục thù!'
+            : '🏆 Đội ' + cfg[data.team].name + ' thắng trận! Một tràng pháo tay cho cả hai đội!');
+        }
+        blowWhistle();
+      });
+    } catch (e) {
+      // Poll tiếp tục hoạt động nếu socket chưa sẵn sàng.
+    }
+
     poll();
-    (function () { const tk = document.getElementById('ticker-text'); const t = tk.textContent; tk.textContent = t + '   •   ' + t; tk.classList.toggle('scroll', tk.scrollWidth > tk.parentElement.clientWidth); })();
+    setInterval(updateTimers, 250);
+    setTicker('🚩 Cờ đang chờ chủ! Bình luận “xanh” / “1” hoặc “đỏ” / “do” / “2” để nhập hội!');
+
     if (demoParam) {
-      fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
-        .then(() => fetch('/api/demo/start', { method: 'POST' })).catch(() => {});
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ demoMode: true })
+      }).then((response) => {
+        if (!response.ok) throw new Error('demo settings unavailable');
+        return fetch('/api/demo/start', { method: 'POST' });
+      }).catch(() => {});
     }
   }
+
   boot();
 })();
 </script>
+
+<!--
+VOICE THU SẴN — Giọng TruthTeller
+Thư mục: /shared/voice/chiem-co/
+Tổng cộng 10 file MP3 cần thu:
+
+1. capture-xanh-left.mp3
+   Đội Xanh vừa chiếm cờ Trái!
+
+2. capture-xanh-mid.mp3
+   Đội Xanh vừa chiếm cờ Giữa!
+
+3. capture-xanh-right.mp3
+   Đội Xanh vừa chiếm cờ Phải!
+
+4. capture-do-left.mp3
+   Đội Đỏ vừa chiếm cờ Trái!
+
+5. capture-do-mid.mp3
+   Đội Đỏ vừa chiếm cờ Giữa!
+
+6. capture-do-right.mp3
+   Đội Đỏ vừa chiếm cờ Phải!
+
+7. win-xanh.mp3
+   Đội Xanh thắng trận!
+
+8. win-do.mp3
+   Đội Đỏ thắng trận!
+
+9. win-draw.mp3
+   Trận đấu kết thúc với tỷ số hòa!
+
+10. match-start.mp3
+    Trận đấu bắt đầu! Chiếm cờ đi!
+
+GIỚI HẠN:
+Clip chiếm cờ và thắng trận đọc tên đội mặc định "Xanh"/"Đỏ",
+kể cả khi dashboard đổi tên đội. Overlay vẫn hiển thị tên mới.
+File chưa có, lỗi tải hoặc bị chặn phát sẽ được bỏ qua.
+-->
 </body>
 </html>

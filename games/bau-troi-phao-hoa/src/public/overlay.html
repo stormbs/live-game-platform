@@ -3,74 +3,302 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#050514">
 <title>Bầu Trời Pháo Hoa</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 1080px; height: 1920px; overflow: hidden; color: #fff;
-    font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { position: relative; width: 1080px; height: 1920px;
-    background: linear-gradient(180deg, #050514 0%, #0b0b2a 45%, #1a0f3a 70%, #2a1230 100%); }
-  #demo-badge { position: absolute; top: 18px; left: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden; background: #000; color: #fff;
+    font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  button { font: inherit; }
+  #scaler {
+    position: absolute; left: 0; top: 0; width: 1080px; height: 1920px;
+    transform-origin: top left;
+  }
+  .wrap {
+    position: relative; isolation: isolate; width: 1080px; height: 1920px; overflow: hidden;
+    background: #050514 url('/shared/bg/bau-troi-phao-hoa.webp') center / cover no-repeat;
+  }
+  .wrap::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(5,5,20,.32), rgba(11,11,42,.08) 45%, rgba(26,15,58,.2) 70%, rgba(5,5,20,.88));
+  }
+  .wrap::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    box-shadow: inset 0 0 150px 20px rgba(3,3,16,.35);
+    border: 8px solid rgba(144,122,255,.16);
+  }
+  #demo-badge {
+    position: absolute; top: 15px; left: 24px; z-index: 50; display: none;
+    background: #ffe065; color: #241132; font-size: 20px; font-weight: 900;
+    padding: 8px 15px; border: 3px solid #251237; border-radius: 12px;
+    box-shadow: 0 5px 0 #251237;
+  }
   #demo-badge.on { display: block; }
-  .stars { position: absolute; inset: 0 0 500px 0; background-image:
-    radial-gradient(2px 2px at 80px 120px, #fff, transparent), radial-gradient(2px 2px at 300px 260px, #ffe9a0, transparent),
-    radial-gradient(1.5px 1.5px at 520px 90px, #fff, transparent), radial-gradient(2px 2px at 760px 320px, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 950px 150px, #ffe9a0, transparent), radial-gradient(2px 2px at 180px 420px, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 640px 480px, #fff, transparent), radial-gradient(2px 2px at 900px 560px, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 420px 620px, #fff, transparent), radial-gradient(2px 2px at 60px 700px, #ffe9a0, transparent);
-    opacity: .9; }
-  .moon { position: absolute; top: 170px; right: 70px; font-size: 110px; opacity: .95; }
-  #sky { position: absolute; left: 0; top: 0; width: 1080px; height: 1420px; }
-  .city { position: absolute; left: 0; right: 0; bottom: 280px; height: 220px; display: flex; align-items: flex-end; gap: 0; opacity: .95; }
-  .bld { background: linear-gradient(180deg, #241a3a, #120a24); border-top: 2px solid rgba(255, 210, 77, .25); position: relative; }
-  .bld::after { content: "🟨🟨  🟨   🟨🟨 🟨  🟨"; position: absolute; top: 20px; left: 8px; font-size: 14px; letter-spacing: 6px; opacity: .8; }
-  .top3 { position: absolute; top: 0; left: 0; right: 0; display: flex; gap: 14px; padding: 18px 24px; z-index: 5; }
-  .topCard { flex: 1; background: rgba(0,0,0,.55); border: 2px solid rgba(255, 210, 77, .6); border-radius: 16px; padding: 10px 12px; text-align: center; min-height: 118px; }
-  .topCard img, .topCard .ava { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: #ffb37a; display: inline-flex; align-items: center; justify-content: center; font-size: 30px; border: 2px solid #ffd24d; }
-  .topCard b { display: block; font-size: 24px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .topCard span { font-size: 22px; color: #ffe9a0; }
-  .totalBar { position: absolute; top: 150px; left: 24px; right: 24px; text-align: center; z-index: 5; }
-  .totalBar .line { font-size: 30px; font-weight: 800; text-shadow: 0 2px 6px rgba(0,0,0,.8); }
-  .totalBar .next { font-size: 25px; color: #ffe9a0; text-shadow: 0 2px 4px rgba(0,0,0,.8); }
-  .countdown { position: absolute; top: 150px; left: 24px; right: 24px; text-align: center; z-index: 6; display: none; }
+  .stars {
+    position: absolute; inset: 0 0 500px 0; pointer-events: none;
+    background-image:
+      radial-gradient(2px 2px at 80px 120px, #fff, transparent),
+      radial-gradient(2px 2px at 300px 260px, #ffe9a0, transparent),
+      radial-gradient(1.5px 1.5px at 520px 90px, #fff, transparent),
+      radial-gradient(2px 2px at 760px 320px, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 950px 150px, #ffe9a0, transparent),
+      radial-gradient(2px 2px at 180px 420px, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 640px 480px, #fff, transparent),
+      radial-gradient(2px 2px at 900px 560px, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 420px 620px, #fff, transparent),
+      radial-gradient(2px 2px at 60px 700px, #ffe9a0, transparent);
+    opacity: .9;
+  }
+  .moon {
+    position: absolute; top: 540px; right: 54px; font-size: 100px; opacity: .95;
+    filter: drop-shadow(0 0 22px rgba(255,220,124,.25)); pointer-events: none;
+  }
+  #sky {
+    position: absolute; left: 0; top: 0; width: 1080px; height: 1420px;
+    z-index: 2; pointer-events: none;
+  }
+  .city {
+    position: absolute; left: 0; right: 0; bottom: 480px; height: 220px;
+    display: flex; align-items: flex-end; gap: 0; opacity: .95; pointer-events: none;
+  }
+  .bld {
+    flex-shrink: 0; background: #11102c; border: 3px solid #070719;
+    border-top-color: #4b3771; position: relative;
+    box-shadow: inset 8px 0 0 #20183a;
+  }
+  .bld::after {
+    content: ""; position: absolute; top: 20px; left: 12px; right: 10px; bottom: 15px;
+    background-image: radial-gradient(ellipse, #ffd365 0 35%, transparent 40%);
+    background-size: 25px 29px; opacity: .7;
+  }
+  .masthead {
+    position: absolute; top: 32px; left: 24px; right: 24px; z-index: 5;
+    text-align: center; pointer-events: none;
+  }
+  .eyebrow { color: #8cf4ff; font-size: 17px; font-weight: 900; letter-spacing: 5px; }
+  .masthead h1 {
+    margin-top: 6px; color: #fff5cb; font-size: 46px; font-weight: 1000; letter-spacing: 1px;
+    text-shadow: 0 4px 0 #452064, 3px 0 #251238, -3px 0 #251238, 0 0 26px #b7499360;
+  }
+  .top3 {
+    position: absolute; top: 132px; left: 24px; right: 24px;
+    display: flex; gap: 14px; z-index: 5;
+  }
+  .topCard {
+    flex: 1; min-width: 0; position: relative;
+    background: #17142de8; border: 3px solid #b094e3; border-radius: 20px;
+    padding: 12px 12px 14px; text-align: center; min-height: 160px;
+    box-shadow: 0 7px 0 #08091b, inset 0 4px 0 #ffffff12;
+  }
+  .topCard:first-child { border-color: #ffda64; background: #342045eb; }
+  .topCard:nth-child(2) { border-color: #b5e5ff; }
+  .topCard:nth-child(3) { border-color: #ffa975; }
+  .rank { position: absolute; top: 12px; left: 14px; font-size: 30px; }
+  .topCard img, .topCard .ava {
+    width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
+    background: #633375; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 30px; border: 3px solid #ffd24d;
+  }
+  .topCard b {
+    display: block; font-size: 25px; margin-top: 6px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+  .topCard .score { display: block; margin-top: 3px; font-size: 21px; color: #ffe9a0; font-weight: 750; }
+  .topCard.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .topCard.empty b { white-space: normal; }
+  .totalBar {
+    position: absolute; top: 318px; left: 32px; right: 32px; text-align: center; z-index: 5;
+    padding: 14px 18px 12px; border: 3px solid #6553a5; border-radius: 22px;
+    background: #10112bdd; box-shadow: 0 6px 0 #08091b, inset 0 3px 0 #ffffff0d;
+  }
+  .totalBar .line { font-size: 35px; font-weight: 950; color: #fff5cf; }
+  .totalBar .next { margin-top: 4px; font-size: 25px; color: #8ef2ff; font-weight: 800; }
+  .grandProgress {
+    height: 12px; margin: 12px 2px 9px; background: #08091c;
+    border: 2px solid #08091c; border-radius: 10px; overflow: hidden;
+  }
+  .grandProgress span {
+    display: block; width: var(--progress, 0%); height: 100%; border-radius: 8px;
+    background: #ffce55; box-shadow: inset 0 3px 0 #fff4b5;
+    transition: width .35s ease;
+  }
+  .giftTiers { font-size: 21px; line-height: 1.5; font-weight: 750; color: #e6dafa; }
+  .countdown {
+    position: absolute; top: 522px; left: 230px; right: 230px; text-align: center;
+    z-index: 6; display: none; padding: 10px 16px 13px;
+    border: 3px solid #ffcf5a; border-radius: 22px; background: #18112ddc;
+    box-shadow: 0 7px 0 #08091b;
+  }
   .countdown.show { display: block; }
-  .countdown .cdClock { font-size: 64px; font-weight: 900; color: #ffd24d; text-shadow: 0 0 24px rgba(255, 210, 77, .8); }
+  .countdown::before {
+    content: "✦ ĐẾM NGƯỢC GIỜ G ✦"; display: block; font-size: 19px;
+    font-weight: 900; letter-spacing: 3px; color: #fff0b4;
+  }
+  .countdown .cdClock {
+    font-size: 66px; font-weight: 950; color: #ffd65f;
+    font-variant-numeric: tabular-nums; line-height: 1.2;
+    text-shadow: 0 4px 0 #6c324b, 0 0 24px #ffd24d40;
+  }
   .countdown .cdClock.flash { animation: flash 1s steps(2) infinite; }
-  @keyframes flash { 50% { opacity: .35; } }
-  .countdown .cdMsg { font-size: 28px; color: #ffe9c4; }
-  .bubbles { position: absolute; left: 24px; right: 24px; top: 1050px; z-index: 4; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
-  .bubble { background: rgba(255,255,255,.92); color: #222; border-radius: 20px; padding: 12px 20px; font-size: 30px; max-width: 90%; box-shadow: 0 6px 16px rgba(0,0,0,.5); animation: bubbleIn .3s ease-out; }
-  @keyframes bubbleIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  .banner { display: none; position: absolute; left: 36px; right: 36px; top: 560px; background: rgba(10, 5, 30, .94); border: 4px solid #ffd24d; border-radius: 26px; padding: 30px 28px; text-align: center; z-index: 10; box-shadow: 0 18px 40px rgba(0,0,0,.6); }
+  .countdown .cdMsg {
+    font-size: 23px; color: #fff1dc; line-height: 1.35; overflow-wrap: anywhere;
+    max-height: 94px; overflow: hidden;
+  }
+  @keyframes flash { 50% { opacity: .4; } }
+  .skyCaption {
+    position: absolute; top: 1010px; left: 24px; right: 24px; z-index: 3;
+    text-align: center; color: #fff2ce; font-size: 21px; font-weight: 800;
+    text-shadow: 0 2px 5px #000; letter-spacing: 1px; pointer-events: none;
+  }
+  .bubbles {
+    position: absolute; left: 30px; right: 30px; top: 1080px; max-height: 326px;
+    overflow: hidden; z-index: 4; display: flex; flex-direction: column;
+    gap: 8px; align-items: flex-start;
+  }
+  .bubble {
+    background: #fff4e8f0; color: #2d1c40; border: 3px solid #241334;
+    border-radius: 16px 18px 18px 5px; padding: 8px 16px; font-size: 23px;
+    line-height: 1.35; max-width: 78%; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+    box-shadow: 0 4px 0 #09091980; animation: bubbleIn .3s ease-out;
+  }
+  .bubble b { color: #7c287a; }
+  @keyframes bubbleIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .banner {
+    display: none; position: absolute; left: 54px; right: 54px; top: 738px;
+    background: #231333f2; border: 5px solid #ffd45b; border-radius: 28px;
+    padding: 23px 26px; text-align: center; z-index: 10;
+    box-shadow: 0 10px 0 #0a071d, inset 0 5px 0 #fff2b42b, 0 0 55px #ffb74425;
+    animation: bannerIn .35s cubic-bezier(.2,.9,.25,1.2);
+  }
   .banner.show { display: block; }
-  .banner h2 { font-size: 50px; margin-bottom: 10px; }
-  .banner p { font-size: 30px; color: #ffe9c4; line-height: 1.5; }
-  .ticker { position: absolute; left: 0; right: 0; bottom: 140px; background: rgba(0,0,0,.6); padding: 16px 24px; font-size: 27px; min-height: 72px; color: #ffe9c4; z-index: 5; }
-  .info { position: absolute; left: 0; right: 0; bottom: 40px; text-align: center; font-size: 25px; color: rgba(255,255,255,.9); text-shadow: 0 2px 4px rgba(0,0,0,.7); z-index: 5; }
-  .status { position: absolute; bottom: 6px; left: 24px; right: 24px; display: flex; justify-content: space-between; font-size: 20px; color: rgba(255,233,196,.75); z-index: 5; }
-  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; }
-  html { background: #000; }
+  .banner h2 { font-size: 39px; margin-bottom: 10px; color: #ffe385; line-height: 1.25; overflow-wrap: anywhere; }
+  .banner p { font-size: 28px; color: #fff0dc; line-height: 1.5; overflow-wrap: anywhere; white-space: pre-line; }
+  .banner[data-kind="epic"] { border-color: #ff92e1; box-shadow: 0 10px 0 #0a071d, 0 0 60px #ff4b9238; }
+  .banner[data-kind="epic"] h2 { color: #ffb0ec; }
+  .banner[data-kind="finale"] { border-color: #8ff4ff; }
+  .banner[data-kind="finale"] h2 { color: #a0f5ff; }
+  @keyframes bannerIn {
+    from { opacity: 0; transform: translateY(18px) scale(.94); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .leaderboard {
+    position: absolute; left: 24px; right: 24px; top: 1440px; height: 196px; z-index: 5;
+    padding: 14px 18px; background: #14142df2; border: 3px solid #6953a2;
+    border-radius: 22px; box-shadow: 0 6px 0 #08091b;
+  }
+  .leaderboardHead { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+  .leaderboardHead b { font-size: 25px; color: #ffe18b; }
+  .leaderboardHead span { font-size: 19px; color: #c3b9dd; }
+  .top10List { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin-top: 12px; }
+  .top10Item {
+    display: flex; align-items: center; gap: 7px; min-width: 0; padding: 8px;
+    background: #27203e; border: 2px solid #3e3159; border-radius: 10px; font-size: 18px;
+  }
+  .top10Item em { font-style: normal; font-weight: 900; color: #b5a0ef; }
+  .top10Item .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .top10Item strong { color: #ffe19b; white-space: nowrap; font-size: 17px; }
+  .top10Empty { grid-column: 1 / -1; font-size: 23px; color: #d3c7eb; padding: 12px 0; text-align: center; }
+  .ticker {
+    position: absolute; left: 24px; right: 24px; top: 1655px; height: 76px;
+    display: flex; align-items: center; padding: 12px 20px;
+    background: #261d3ded; border: 2px solid #655080; border-radius: 16px;
+    font-size: 24px; line-height: 1.35; color: #ffe9c4; z-index: 5;
+    overflow: hidden; overflow-wrap: anywhere;
+  }
+  .info {
+    position: absolute; left: 24px; right: 24px; top: 1752px; z-index: 5;
+    text-align: center; color: #f1e9ff; text-shadow: 0 2px 4px #000;
+    font-size: 23px; line-height: 1.7; font-weight: 650;
+  }
+  .info strong { color: #ffe18b; font-weight: 900; }
+  .status {
+    position: absolute; bottom: 22px; left: 28px; right: 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; font-size: 20px; color: #d6cbea; z-index: 6;
+  }
+  .statusRight { display: flex; align-items: center; gap: 16px; }
+  #stMode { max-width: 530px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  #voice-btn {
+    cursor: pointer; background: #34304e; color: #fff1c3; border: 2px solid #ac96d3;
+    border-radius: 12px; padding: 8px 12px; font-size: 19px; font-weight: 800;
+    box-shadow: 0 3px 0 #08091b;
+  }
+  #voice-btn[aria-pressed="false"] { color: #c0b3ce; background: #201c32; border-color: #635473; }
+  #voice-btn:focus-visible { outline: 3px solid #8ff4ff; outline-offset: 4px; }
+  #voice-btn:active { transform: translateY(2px); box-shadow: none; }
+  .wrap.grand-active .totalBar { border-color: #ffd45b; }
+  .wrap.finale-active .totalBar { border-color: #8ff4ff; }
+  .wrap.grand-active .skyCaption, .wrap.finale-active .skyCaption { color: #a0f5ff; }
+  @media (prefers-reduced-motion: reduce) {
+    .bubble, .banner, .countdown .cdClock.flash { animation: none; }
+    .grandProgress span { transition: none; }
+  }
 </style>
 </head>
 <body>
+<audio id="voiceAudio" preload="none" playsinline></audio>
 <div id="scaler">
-<div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
-<div class="wrap">
-  <div class="stars"></div>
-  <div class="moon">🌙</div>
-  <canvas id="sky" width="1080" height="1420"></canvas>
-  <div class="city" id="city"></div>
+  <div id="demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
+  <div class="wrap">
+    <div class="stars" aria-hidden="true"></div>
+    <div class="moon" aria-hidden="true">🌙</div>
+    <canvas id="sky" width="1080" height="1420" aria-label="Bầu trời pháo hoa trực tiếp"></canvas>
+    <div class="city" id="city" aria-hidden="true"></div>
 
-  <div class="top3" id="top3"></div>
-  <div class="totalBar"><div class="line" id="totalLine">🎆 0 pháo đã nổ</div><div class="next" id="nextLine">Còn 100 pháo nữa tới màn lớn</div></div>
-  <div class="countdown" id="countdown"><div class="cdClock" id="cdClock">00:00:00</div><div class="cdMsg" id="cdMsg"></div></div>
+    <header class="masthead">
+      <div class="eyebrow">ĐÊM LỄ HỘI • CÙNG NHAU THẮP SÁNG</div>
+      <h1>BẦU TRỜI PHÁO HOA</h1>
+    </header>
 
-  <div class="bubbles" id="bubbles"></div>
-  <div class="banner" id="banner"><h2 id="bannerTitle"></h2><p id="bannerText"></p></div>
-  <div class="ticker" id="ticker">🎆 Bầu trời đêm đã sẵn sàng! Tap 20 = 1 pháo • Comment = 1 pháo • Follow = pháo tên bạn • Quà = pháo theo giá trị!</div>
-  <div class="info">Tap 20 = 1 pháo • Comment = 1 pháo • Follow = pháo tên bạn • Quà = pháo theo giá trị</div>
-  <div class="status"><span id="stMode">🎆 Bầu Trời Pháo Hoa</span><span id="stViewers">👥 0 người xem</span></div>
-</div>
+    <div class="top3" id="top3"></div>
+
+    <div class="totalBar">
+      <div class="line" id="totalLine">🎆 Bầu trời đang chờ bạn!</div>
+      <div class="next" id="nextLine">Đang nhận mốc màn pháo lớn…</div>
+      <div class="grandProgress" role="progressbar" aria-label="Tiến độ tới màn pháo lớn" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span></span></div>
+      <div class="giftTiers">🎁 Quà 1–9 xu → pháo tròn • 10–99 → chùm 3 vòng • ≥100 → pháo hình + Epic</div>
+    </div>
+
+    <div class="countdown" id="countdown">
+      <div class="cdClock" id="cdClock">00:00:00</div>
+      <div class="cdMsg" id="cdMsg"></div>
+    </div>
+
+    <div class="skyCaption">Mỗi người góp một tia sáng, cả phòng có một bầu trời! ✨</div>
+    <div class="bubbles" id="bubbles"></div>
+
+    <div class="banner" id="banner" role="status">
+      <h2 id="bannerTitle"></h2>
+      <p id="bannerText"></p>
+    </div>
+
+    <section class="leaderboard" aria-label="Bảng xếp hạng Top 10">
+      <div class="leaderboardHead">
+        <b>🏆 TOP 10 ĐÊM HỘI</b>
+        <span>Top 3 ở trên • Điểm chỉ tăng ↗</span>
+      </div>
+      <div class="top10List"><div class="top10Empty">Bắn pháo, góp vui, ghi tên lên bảng! ✨</div></div>
+    </section>
+
+    <div class="ticker" id="ticker">🎆 Bầu trời đã sẵn sàng! Cùng góp pháo mở màn lớn và đón giờ G!</div>
+    <div class="info">
+      <div>Đang nhận hướng dẫn từ phòng LIVE…</div>
+      <div>Follow để tên bạn bay lên trời ✨</div>
+    </div>
+    <div class="status">
+      <span id="stMode">🎆 Bầu Trời Pháo Hoa</span>
+      <div class="statusRight">
+        <span id="stViewers">👥 0 người xem</span>
+        <button id="voice-btn" type="button" aria-pressed="false" title="Bật hoặc tắt voice trên thiết bị này">🔇 Voice Tắt</button>
+      </div>
+    </div>
+  </div>
 </div>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/shared/music.js"></script>
@@ -84,39 +312,228 @@ function fit() {
 }
 window.addEventListener('resize', fit); fit();
 (function () {
+  'use strict';
   const $ = (id) => document.getElementById(id);
   const canvas = $('sky'), ctx = canvas.getContext('2d');
+  const wrap = document.querySelector('.wrap');
+  const info = document.querySelector('.info');
+  const progress = document.querySelector('.grandProgress');
+  const top10List = document.querySelector('.top10List');
+  const skyCaption = document.querySelector('.skyCaption');
+  const numberFormat = new Intl.NumberFormat('vi-VN');
+  const fmt = n => numberFormat.format(Number(n) || 0);
+
   // Thành phố phía dưới (nhà cao tầng).
   (function buildCity() {
     const widths = [90, 120, 70, 140, 100, 80, 130, 90, 110, 75, 95];
     const heights = [150, 210, 120, 190, 160, 110, 200, 140, 175, 125, 165];
     $('city').innerHTML = widths.map((w, i) => '<div class="bld" style="width:' + w + 'px;height:' + heights[i] + 'px"></div>').join('');
   })();
-  let voiceOn = true, voiceQueue = [], speaking = false;
+
+  // Thư viện tên/số Kéo Co: giữ nguyên bộ phân mảnh đã kiểm chứng.
+  const NAME_FRAGS = new Set(('nguyen tran le pham hoang huynh phan vu vo dang bui do ho ngo duong ly van thi minh hong ngoc thanh thu quoc huu duc anh linh tuan huong lan trang phuong nam long hai quan dung thang hung son tung viet huy khanh thao ha mai hoa nga nhung giang chi van2 oanh khoa phuc binh tu demo khach a b c an bao chau cuong dat dien gia hieu khang kien lam loc nghia phong quang tai tam tien toan trung vinh xuan yen cao dinh luu ta truong chu doan luong thai trinh quach').split(' '));
+function normalizeSyllable(s) {
+  const lower = String(s || '').toLowerCase().trim();
+  if (lower === 'vân') return 'van2';
+  return lower.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd').replace(/[^a-z0-9]/g, '');
+}
+
+function nameToFragments(name) {
+  const frags = [];
+  for (const part of String(name || '').split(/\s+/)) {
+    if (!part) continue;
+    if (/^\d+$/.test(part)) {
+      frags.push(...numberToFragments(parseInt(part, 10)));
+      continue;
+    }
+    const key = normalizeSyllable(part);
+    if (key && NAME_FRAGS.has(key)) frags.push(key);
+  }
+  return frags.length ? frags : ['mot-ban'];
+}
+
+function numberToFragments(n) {
+  n = Math.round(Math.abs(Number(n) || 0));
+  const units = ['', 'num-mot', 'num-hai', 'num-ba', 'num-bon', 'num-nam',
+    'num-sau', 'num-bay', 'num-tam', 'num-chin'];
+  if (n <= 0) return ['num-mot'];
+  const out = [];
+  if (n >= 1000) {
+    const th = Math.floor(n / 1000);
+    out.push(...numberToFragments(th), 'num-nghin');
+    n %= 1000;
+    if (n === 0) return out;
+    if (n < 100) out.push('num-le');
+  }
+  if (n >= 100) {
+    out.push(units[Math.floor(n / 100)], 'num-tram');
+    n %= 100;
+    if (n === 0) return out;
+    if (n < 10) out.push('num-le');
+  }
+  if (n >= 10) {
+    if (n < 20) {
+      out.push('num-muoi');
+      const u = n % 10;
+      if (u === 5) out.push('num-lam');
+      else if (u > 0) out.push(units[u]);
+      return out;
+    }
+    out.push(units[Math.floor(n / 10)], 'num-muoi-tens');
+    const u = n % 10;
+    if (u === 1) out.push('num-mot2');
+    else if (u === 5) out.push('num-lam');
+    else if (u > 0) out.push(units[u]);
+    return out;
+  }
+  if (n > 0) out.push(units[n]);
+  return out;
+}
+
+  const VOICE_CONNECTORS = new Set(['cam-on', 'da-tang-phao-epic', 'da-tang-qua', 'vua-theo-doi']);
+  const VOICE_CLIPS = new Set(['man-phao-lon', 'finale', 'con-30-giay', 'con-10-giay']);
+  function voiceSrc(fragName) {
+    if (NAME_FRAGS.has(fragName) || fragName.startsWith('num-') || fragName === 'mot-ban') {
+      return '/shared/voice/keo-co/frag/' + fragName + '.mp3';
+    }
+    if (VOICE_CONNECTORS.has(fragName)) {
+      return '/shared/voice/bau-troi-phao-hoa/frag/' + fragName + '.mp3';
+    }
+    if (VOICE_CLIPS.has(fragName)) {
+      return '/shared/voice/bau-troi-phao-hoa/' + fragName + '.mp3';
+    }
+    return '';
+  }
+
+  const voiceAudio = $('voiceAudio');
+  let settingsEnabled = false;
+  let userMuted = false;
+  try { userMuted = localStorage.getItem('bau-troi-phao-hoa:voice-muted') === '1'; } catch (e) {}
+  let voiceOn = false;
+  let voiceJobs = [];
+  let activeVoice = null;
+  let voiceOrder = 0;
+  let voiceToken = 0;
+  let voiceTimeout = null;
+  let voiceBlocked = false;
+  const failedVoiceAssets = new Set();
+
+  function clearVoice() {
+    voiceToken += 1;
+    clearTimeout(voiceTimeout);
+    voiceTimeout = null;
+    voiceAudio.onended = null;
+    voiceAudio.onerror = null;
+    voiceAudio.pause();
+    voiceAudio.removeAttribute('src');
+    voiceAudio.load();
+    voiceJobs = [];
+    activeVoice = null;
+    voiceBlocked = false;
+  }
+
+  function syncVoiceControl() {
+    const next = settingsEnabled && !userMuted;
+    if (!next && (voiceOn || activeVoice || voiceJobs.length)) clearVoice();
+    voiceOn = next;
+    $('voice-btn').textContent = voiceOn ? '🔊 Voice Bật' : '🔇 Voice Tắt';
+    $('voice-btn').setAttribute('aria-pressed', String(voiceOn));
+    $('voice-btn').title = !settingsEnabled
+      ? 'Voice đang tắt trong cài đặt phòng. Nút này lưu lựa chọn trên thiết bị.'
+      : 'Bật hoặc tắt voice trên thiết bị này';
+  }
+
+  function trimVoiceJobs() {
+    voiceJobs.sort((a, b) => b.priority - a.priority || a.order - b.order);
+    voiceJobs.length = Math.min(voiceJobs.length, 3);
+  }
+
+  function enqueueVoice(fragments, priority) {
+    if (!voiceOn || !settingsEnabled || !Array.isArray(fragments)) return;
+    const valid = fragments.filter(fragment => voiceSrc(fragment));
+    if (!valid.length) return;
+    voiceJobs.push({ fragments: valid, index: 0, priority, order: voiceOrder++ });
+    trimVoiceJobs();
+    playNextVoice();
+  }
+
+  // Mỗi câu phát trọn các mảnh liên tiếp; hàng chờ tối đa 3 câu, ưu tiên cao trước.
+  // File chưa thu / lỗi tải được bỏ qua để hàng chờ không bị kẹt.
+  function playNextVoice() {
+    if (!voiceOn || !settingsEnabled || voiceBlocked || activeVoice) return;
+    activeVoice = voiceJobs.shift() || null;
+    if (activeVoice) playVoiceFragment();
+  }
+
+  function playVoiceFragment() {
+    if (!voiceOn || !settingsEnabled || !activeVoice) return;
+    while (activeVoice.index < activeVoice.fragments.length &&
+      failedVoiceAssets.has(voiceSrc(activeVoice.fragments[activeVoice.index]))) {
+      activeVoice.index += 1;
+    }
+    if (activeVoice.index >= activeVoice.fragments.length) {
+      activeVoice = null;
+      playNextVoice();
+      return;
+    }
+    const src = voiceSrc(activeVoice.fragments[activeVoice.index]);
+    const token = ++voiceToken;
+    let settled = false;
+
+    function advance(failed) {
+      if (settled || token !== voiceToken || !activeVoice) return;
+      settled = true;
+      clearTimeout(voiceTimeout);
+      voiceTimeout = null;
+      voiceAudio.onended = null;
+      voiceAudio.onerror = null;
+      if (failed) failedVoiceAssets.add(src);
+      activeVoice.index += 1;
+      playVoiceFragment();
+    }
+
+    voiceAudio.onended = () => advance(false);
+    voiceAudio.onerror = () => advance(true);
+    voiceAudio.src = src;
+    voiceTimeout = setTimeout(() => advance(true), 15000);
+    const playback = voiceAudio.play();
+    if (playback && playback.catch) playback.catch(error => {
+      if (settled || token !== voiceToken || !activeVoice) return;
+      if (error && error.name === 'NotAllowedError') {
+        settled = true;
+        clearTimeout(voiceTimeout);
+        voiceTimeout = null;
+        voiceAudio.onended = null;
+        voiceAudio.onerror = null;
+        voiceJobs.push(activeVoice);
+        trimVoiceJobs();
+        activeVoice = null;
+        voiceBlocked = true;
+        return;
+      }
+      advance(true);
+    });
+  }
+
+  function unlockVoice() {
+    if (!voiceOn || !settingsEnabled) return;
+    voiceBlocked = false;
+    playNextVoice();
+  }
+  document.addEventListener('pointerdown', unlockVoice);
+  document.addEventListener('keydown', unlockVoice);
+  $('voice-btn').addEventListener('click', () => {
+    userMuted = !userMuted;
+    try { localStorage.setItem('bau-troi-phao-hoa:voice-muted', userMuted ? '1' : '0'); } catch (e) {}
+    syncVoiceControl();
+    unlockVoice();
+  });
+  syncVoiceControl();
+
   const seenFireworks = new Set();
   const rockets = [];   // {x, y, targetY, speed, fw}
   const bursts = [];    // {particles:[{x,y,vx,vy,life,maxLife,color,size}], text, textX, textY, mult}
-  function speak(text) {
-    if (!voiceOn || !text) return;
-    voiceQueue.push(text);
-    if (voiceQueue.length > 3) voiceQueue.shift();
-    pumpVoice();
-  }
-  function pumpVoice() {
-    if (speaking || !voiceQueue.length) return;
-    const text = voiceQueue.shift();
-    speaking = true;
-    fetch('/api/tts?text=' + encodeURIComponent(text)).then(r => r.ok ? r.blob() : null).then(b => {
-      if (!b) throw 0;
-      const a = new Audio(URL.createObjectURL(b));
-      a.onended = () => { speaking = false; pumpVoice(); };
-      a.onerror = () => { speaking = false; pumpVoice(); };
-      a.play().catch(() => { speaking = false; pumpVoice(); });
-    }).catch(() => {
-      try { const u = new SpeechSynthesisUtterance(text); u.lang = 'vi-VN'; u.onend = () => { speaking = false; pumpVoice(); }; speechSynthesis.speak(u); }
-      catch (e) { speaking = false; pumpVoice(); }
-    });
-  }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
   function heartPoints(cx, cy, s, n) {
     const pts = [];
@@ -228,13 +645,43 @@ window.addEventListener('resize', fit); fit();
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+
   let bannerTimer = null;
-  function showBanner(title, text, ms) {
+  let bannerPriority = 0;
+  let bannerUntil = 0;
+  let latestSettings = {};
+  let countdownSnapshot = null;
+  let grandEndsAt = 0;
+  let finaleEndsAt = 0;
+  let grandMilestone = null;
+
+  function settingNumber(settings, key, fallback) {
+    const value = settings[key];
+    return value !== null && value !== undefined && Number.isFinite(Number(value))
+      ? Number(value) : fallback;
+  }
+  function timeValue(value) {
+    if (!value) return 0;
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) return numeric;
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  function showBanner(title, text, ms, priority, kind) {
+    priority = priority || 0;
+    if (Date.now() < bannerUntil && priority < bannerPriority) return;
     $('bannerTitle').textContent = title;
     $('bannerText').textContent = text;
+    $('banner').dataset.kind = kind || '';
     $('banner').className = 'banner show';
+    bannerPriority = priority;
+    bannerUntil = Date.now() + (ms || 8000);
     clearTimeout(bannerTimer);
-    bannerTimer = setTimeout(() => { $('banner').className = 'banner'; }, ms || 8000);
+    bannerTimer = setTimeout(() => {
+      $('banner').className = 'banner';
+      bannerPriority = 0;
+      bannerUntil = 0;
+    }, ms || 8000);
   }
   function fmtClock(sec) {
     sec = Math.max(0, Math.floor(sec));
@@ -242,63 +689,272 @@ window.addEventListener('resize', fit); fit();
     return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
   }
   function avatarHtml(p) {
-    if (p.avatar) return '<img src="' + p.avatar + '" alt="">';
+    if (p.avatar) {
+      try {
+        const url = new URL(String(p.avatar), location.origin);
+        if (url.protocol === 'https:' || url.protocol === 'http:') {
+          return '<img src="' + esc(url.href) + '" alt="" referrerpolicy="no-referrer">';
+        }
+      } catch (e) {}
+    }
     return '<span class="ava">⭐</span>';
   }
-  function render(s) {
-    voiceOn = !!(s.settings && s.settings.voiceEnabled);
-    // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
-    if (window.StromMusic) window.StromMusic.sync({ mood: 'calm', enabled: true, volume: 50, energy: (s.grandShow ? 2 : (((s.totalFireworks || 0) > 0 || (s.viewersOnline || 0) > 0 || s.demoActive) ? 1 : 0)) });
-    document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
-    $('totalLine').textContent = '🎆 ' + s.totalFireworks + ' pháo đã nổ';
-    $('nextLine').textContent = s.grandShow ? '🎆 MÀN PHÁO LỚN ĐANG CHẠY!' : 'Còn ' + s.fireworksToGrand + ' pháo nữa tới màn lớn';
-    $('top3').innerHTML = (s.top || []).map((p, i) =>
-      '<div class="topCard">' + ['🥇', '🥈', '🥉'][i] + ' ' + avatarHtml(p) + '<b>' + esc(p.name) + '</b><span>' + p.points + 'đ • ' + p.fireworks + ' pháo</span></div>').join('')
-      || '<div class="topCard"><b>Chưa có ai bắn pháo</b><span>Tap/comment/quà để lên Top 3!</span></div>';
-    const cd = s.countdown;
-    if (cd && cd.active) {
+  $('top3').addEventListener('error', event => {
+    if (event.target.tagName === 'IMG') {
+      const replacement = document.createElement('span');
+      replacement.className = 'ava';
+      replacement.textContent = '⭐';
+      event.target.replaceWith(replacement);
+    }
+  }, true);
+
+  function topThreeText(top) {
+    return (top || []).slice(0, 3).map((p, i) =>
+      ['🥇', '🥈', '🥉'][i] + ' ' + p.name + ' · ' + fmt(p.points) + 'đ'
+    ).join('\n') || 'Chưa có ai — cùng thắp sáng bầu trời nhé!';
+  }
+
+  function renderRules(settings) {
+    const tap = settingNumber(settings, 'tapPerPoint', 20);
+    const comment = settingNumber(settings, 'commentPoints', 1);
+    const follow = settingNumber(settings, 'followPoints', 5);
+    const gift = settingNumber(settings, 'giftPointsPerCoin', 10);
+    const share = settingNumber(settings, 'sharePoints', 1);
+    const commentCooldown = settingNumber(settings, 'commentCooldownS', 5);
+    const shareCooldown = settingNumber(settings, 'shareCooldownS', 30);
+
+    info.innerHTML =
+      '<div>❤️ <strong>' + fmt(tap) + ' tim</strong> → +1đ & pháo • 💬 <strong>+' + fmt(comment) +
+      'đ</strong> & pháo <small>(' + fmt(commentCooldown) + 's/lần)</small> • ➕ Follow <strong>+' + fmt(follow) + 'đ</strong> & pháo tên</div>' +
+      '<div>🎁 <strong>1 xu = ' + fmt(gift) + 'đ</strong> • ↗ Share <strong>+' + fmt(share) +
+      'đ</strong> <small>(' + fmt(shareCooldown) + 's/lần)</small> • Follow tính 1 lần/phiên</div>';
+
+    return '❤️ ' + fmt(tap) + ' tim = +1đ & 1 pháo • Bình luận tính điểm +' + fmt(comment) +
+      'đ & 1 pháo (' + fmt(commentCooldown) + 's/lần) • Follow +' + fmt(follow) +
+      'đ & pháo tên • Quà: mỗi xu +' + fmt(gift) + 'đ';
+  }
+
+  function updateLiveClocks() {
+    const now = Date.now();
+    if (countdownSnapshot && countdownSnapshot.active) {
+      const seconds = Math.max(0, Math.ceil((countdownSnapshot.targetAt - now) / 1000));
       $('countdown').className = 'countdown show';
-      $('cdClock').textContent = fmtClock(cd.secondsLeft);
-      $('cdClock').classList.toggle('flash', cd.secondsLeft <= 60);
-      $('cdMsg').textContent = 'tới giờ G — ' + cd.message;
-    } else $('countdown').className = 'countdown';
-    $('bubbles').innerHTML = (s.recentComments || []).map(c =>
+      $('cdClock').textContent = fmtClock(seconds);
+      $('cdClock').classList.toggle('flash', seconds <= 60);
+      $('cdMsg').textContent = 'tới giờ G — ' + countdownSnapshot.message;
+    } else {
+      $('countdown').className = 'countdown';
+      $('cdClock').classList.remove('flash');
+    }
+
+    const grandActive = grandEndsAt > now;
+    const finaleActive = finaleEndsAt > now;
+    wrap.classList.toggle('grand-active', grandActive);
+    wrap.classList.toggle('finale-active', finaleActive);
+    if (finaleActive) {
+      $('nextLine').textContent = '🌟 MÀN PHÁO ĐẠI • CÒN ' + Math.ceil((finaleEndsAt - now) / 1000) + ' GIÂY';
+      skyCaption.textContent = 'Cả phòng cùng ngước nhìn — giờ G rực rỡ! 🌟';
+    } else if (grandActive) {
+      $('nextLine').textContent = '🎆 MÀN PHÁO LỚN • CÒN ' + Math.ceil((grandEndsAt - now) / 1000) + ' GIÂY';
+      skyCaption.textContent = 'Màn lớn đã lên! Ai cũng góp một phần lung linh ✨';
+    } else {
+      $('nextLine').textContent = normalNextLine;
+      skyCaption.textContent = 'Mỗi người góp một tia sáng, cả phòng có một bầu trời! ✨';
+    }
+  }
+  let normalNextLine = 'Đang nhận mốc màn pháo lớn…';
+
+  function render(s) {
+    if (!s || typeof s !== 'object') return;
+    latestSettings = s.settings || {};
+    settingsEnabled = !!latestSettings.voiceEnabled;
+    syncVoiceControl();
+
+    // Nhạc nền dùng chung; chỉ đồng bộ mood/energy theo state.
+    if (window.StromMusic) window.StromMusic.sync({
+      mood: 'calm', enabled: true, volume: 50,
+      energy: (s.grandShow || timeValue(s.finaleActiveUntil) > Date.now()
+        ? 2
+        : (((s.totalFireworks || 0) > 0 || (s.viewersOnline || 0) > 0 || s.demoActive) ? 1 : 0))
+    });
+    $('demo-badge').classList.toggle('on', !!s.demoActive);
+    $('totalLine').textContent = '🎆 ' + fmt(s.totalFireworks) + ' PHÁO ĐÃ NỔ';
+
+    const every = Math.max(1, settingNumber(latestSettings, 'grandEvery', 100));
+    const remaining = Number.isFinite(Number(s.fireworksToGrand))
+      ? Math.max(0, Number(s.fireworksToGrand)) : every;
+    const grandSeconds = settingNumber(latestSettings, 'grandShowS', 10);
+    normalNextLine = 'Còn ' + fmt(remaining) + ' pháo → màn lớn ' + fmt(grandSeconds) + 's + Top 3!';
+    if (s.pendingGrand && !s.grandShow) normalNextLine = '✨ Màn pháo lớn tiếp theo đang chờ lên trời!';
+    const percentage = Math.max(0, Math.min(100, (1 - remaining / every) * 100));
+    progress.style.setProperty('--progress', percentage + '%');
+    progress.setAttribute('aria-valuenow', String(Math.round(percentage)));
+
+    $('top3').innerHTML = (s.top || []).slice(0, 3).map((p, i) =>
+      '<div class="topCard"><span class="rank">' + ['🥇', '🥈', '🥉'][i] + '</span>' +
+      avatarHtml(p) + '<b>' + esc(p.name) + '</b><span class="score">' + fmt(p.points) +
+      'đ • ' + fmt(p.fireworks) + ' pháo</span></div>').join('')
+      || '<div class="topCard empty"><b>✨ Vị trí dẫn đầu đang chờ bạn!</b><span class="score">Thả tim, bình luận, follow hoặc tặng quà để góp pháo</span></div>';
+
+    const ranking = (s.top10 || s.top || []).slice(0, 10);
+    top10List.innerHTML = ranking.slice(3).map((p, i) =>
+      '<div class="top10Item"><em>#' + (i + 4) + '</em><span class="name">' +
+      esc(p.name) + '</span><strong>' + fmt(p.points) + 'đ</strong></div>').join('')
+      || '<div class="top10Empty">' + (ranking.length
+        ? 'Top 4–10 còn chỗ! Góp pháo để ghi tên nhé ✨'
+        : 'Bắn pháo, góp vui, ghi tên lên bảng! ✨') + '</div>';
+
+    const cd = s.countdown;
+    countdownSnapshot = cd && cd.active ? {
+      active: true,
+      targetAt: timeValue(cd.targetAt) || Date.now() + Math.max(0, Number(cd.secondsLeft) || 0) * 1000,
+      message: String(cd.message || latestSettings.countdownMessage || 'CHÚC MỪNG NĂM MỚI!')
+    } : null;
+
+    grandEndsAt = s.grandShow ? timeValue(s.grandShow.endsAt) : 0;
+    finaleEndsAt = timeValue(s.finaleActiveUntil);
+    if (s.grandShow && grandEndsAt > Date.now() && grandMilestone !== s.grandShow.milestone) {
+      grandMilestone = s.grandShow.milestone;
+      showBanner(
+        '🎆 MÀN PHÁO LỚN — ' + fmt(s.grandShow.milestone) + ' PHÁO!',
+        'Top 3 đêm nay:\n' + topThreeText(s.top),
+        Math.max(1, grandEndsAt - Date.now()), 8, 'grand'
+      );
+    }
+
+    $('bubbles').innerHTML = (s.recentComments || []).slice(0, 5).map(c =>
       '<div class="bubble"><b>' + esc(c.name) + ':</b> ' + esc(c.text) + '</div>').join('');
+
+    const defaultTicker = renderRules(latestSettings);
     const last = (s.logs || []).slice(-1)[0];
-    if (last) $('ticker').textContent = last.text;
-    $('stViewers').textContent = '👥 ' + s.viewersOnline + ' người xem';
+    $('ticker').textContent = last && last.text ? last.text : defaultTicker;
+    $('stViewers').textContent = '👥 ' + fmt(s.viewersOnline) + ' người xem';
+    $('stMode').textContent = s.demoActive
+      ? '🧪 Đang mô phỏng • Chờ tương tác thật'
+      : '🎆 LIVE • Cùng nhau thắp sáng bầu trời';
+    updateLiveClocks();
     (s.recentFireworks || []).forEach(spawnFirework);
   }
+
   function poll() { fetch('/api/state').then(r => r.json()).then(render).catch(() => {}); }
-  poll(); setInterval(poll, 1500);
+  poll();
+  setInterval(poll, 1500);
+  setInterval(updateLiveClocks, 250);
+
   // ?demo=1: tự bật chế độ thử + chạy demo (chỉ khi phòng chưa có event thật).
+  // Engine tự dừng mô phỏng khi nhận tương tác thật; overlay đồng bộ demoActive.
   if (new URLSearchParams(location.search).get('demo') === '1') {
     fetch('/api/state').then((r) => r.json()).then((st) => {
       if ((st.webhookCount || 0) > 0) return;
-      return fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
-        .then(() => fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) }));
+      return fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ demoMode: true })
+      }).then(() => fetch('/api/test/demo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start' })
+      }));
     }).catch(() => {});
   }
+
   const socket = io();
   socket.on('state-update', render);
   socket.on('firework', spawnFirework);
+
   socket.on('epic', d => {
-    showBanner('🎆 PHÁO HÌNH ' + (d.shape === 'heart' ? 'TRÁI TIM ❤️' : d.shape === 'star' ? 'NGÔI SAO ⭐' : 'CHỮ TÊN'), d.rawName + ' tặng ' + d.giftName + ' ' + d.coins + ' xu (+' + d.points + 'đ)!', 8000);
-    speak('Cảm ơn ' + d.name + ' đã tặng ' + d.giftName + '!');
+    showBanner(
+      '🎆 EPIC! PHÁO HÌNH ' + (d.shape === 'heart' ? 'TRÁI TIM ❤️' : d.shape === 'star' ? 'NGÔI SAO ⭐' : 'CHỮ TÊN'),
+      (d.rawName || d.name) + ' tặng ' + d.giftName + '\n' + fmt(d.coins) + ' xu • +' + fmt(d.points) + 'đ!',
+      8000, 8, 'epic'
+    );
+    enqueueVoice(['cam-on'].concat(nameToFragments(d.name), ['da-tang-phao-epic']), 8);
   });
-  socket.on('highlight', d => speak('Cảm ơn ' + d.name + ' đã tặng ' + d.giftName + '!'));
-  socket.on('follow-name', d => speak(d.name + ' vừa theo dõi, pháo tên bạn đang bay lên trời!'));
+
+  socket.on('highlight', d => {
+    showBanner(
+      '🎁 ' + d.giftName,
+      (d.rawName || d.name) + ' • ' + fmt(d.coins) + ' xu • +' + fmt(d.points) + 'đ\nMột món quà, bầu trời thêm rực rỡ!',
+      4500, 7, 'gift'
+    );
+    enqueueVoice(['cam-on'].concat(nameToFragments(d.name), ['da-tang-qua']), 7);
+  });
+
+  socket.on('follow-name', d => {
+    enqueueVoice(nameToFragments(d.name).concat(['vua-theo-doi']), 6);
+  });
+
   socket.on('grand-show', d => {
-    const top = (d.top || []).map((p, i) => (i + 1) + '. ' + p.name + ' ' + p.points + ' điểm').join(' — ');
-    showBanner('🎆 MÀN PHÁO LỚN — ' + d.milestone + ' PHÁO ĐÃ NỔ!', 'Top 3 đêm nay: ' + (top || 'chưa có ai'), 8000);
-    speak('Màn pháo lớn! Top 3 đêm nay: ' + (top || 'chưa có ai'));
+    const duration = settingNumber(latestSettings, 'grandShowS', 10) * 1000;
+    grandMilestone = d.milestone;
+    grandEndsAt = Date.now() + duration;
+    showBanner(
+      '🎆 MÀN PHÁO LỚN — ' + fmt(d.milestone) + ' PHÁO ĐÃ NỔ!',
+      'Top 3 đêm nay:\n' + topThreeText(d.top),
+      duration, 8, 'grand'
+    );
+    enqueueVoice(['man-phao-lon'], 8);
+    updateLiveClocks();
   });
+
+  /*
+    GIỚI HẠN VOICE FINALE:
+    Clip finale.mp3 đọc thông điệp MẶC ĐỊNH "Chúc mừng năm mới!".
+    Nếu dashboard đổi countdownMessage, voice vẫn đọc câu mặc định;
+    chữ trên banner lấy d.message mới là thông điệp thật của phiên.
+  */
   socket.on('finale', d => {
-    showBanner('🎆 ' + d.message, 'Màn pháo đại 15 giây — chúc mừng!', 15000);
-    speak(d.message);
+    const duration = settingNumber(latestSettings, 'finaleS', 15) * 1000;
+    finaleEndsAt = Date.now() + duration;
+    showBanner(
+      '🌟 ' + d.message,
+      'Màn pháo đại ' + fmt(duration / 1000) + ' giây — cả phòng cùng ăn mừng!',
+      duration, 9, 'finale'
+    );
+    enqueueVoice(['finale'], 9);
+    updateLiveClocks();
   });
-  socket.on('countdown-voice', d => speak(d.text));
+
+  socket.on('countdown-voice', d => {
+    if (d.text === 'Còn 30 giây!') enqueueVoice(['con-30-giay'], 7);
+    else if (d.text === 'Còn 10 giây!') enqueueVoice(['con-10-giay'], 7);
+  });
+
+  socket.on('session-reset', () => {
+    clearVoice();
+    seenFireworks.clear();
+    rockets.length = 0;
+    bursts.length = 0;
+    ctx.clearRect(0, 0, 1080, 1420);
+    clearTimeout(bannerTimer);
+    $('banner').className = 'banner';
+    $('bannerTitle').textContent = '';
+    $('bannerText').textContent = '';
+    bannerPriority = 0;
+    bannerUntil = 0;
+    grandMilestone = null;
+    grandEndsAt = 0;
+    finaleEndsAt = 0;
+    countdownSnapshot = null;
+    normalNextLine = 'Đang nhận mốc màn pháo lớn…';
+    $('bubbles').innerHTML = '';
+    updateLiveClocks();
+    poll();
+  });
 })();
 </script>
+<!--
+CHANGELOG
+1. Thay Google TTS bằng voice file TruthTeller ghép mảnh, hàng chờ tối đa 3 câu, ưu tiên sự kiện.
+2. Cần thu 4 clip: man-phao-lon.mp3, finale.mp3, con-30-giay.mp3, con-10-giay.mp3.
+3. Cần thu 4 mảnh: cam-on.mp3, da-tang-phao-epic.mp3, da-tang-qua.mp3, vua-theo-doi.mp3.
+4. Tái dùng nguyên bộ tên/số /shared/voice/keo-co/frag/; tên quà chỉ hiển thị trên banner.
+5. Nút Voice Bật/Tắt lưu lựa chọn client, luôn tuân theo settings.voiceEnabled.
+6. Nền chính /shared/bg/bau-troi-phao-hoa.webp; giữ lớp phủ sao, trăng, thành phố.
+7. Hướng dẫn đọc số thật từ settings; thêm dòng tầng quà cố định dưới thanh tổng.
+8. Top 3, Top 10, tiến độ màn lớn, countdown và thời lượng cao trào hiển thị theo state/settings.
+9. Giữ toàn bộ id cũ, logic canvas, dedupe 200, socket event, API literal, poll 1.5s và luồng demo.
+10. Audio nằm ngoài scaler; finale voice mặc định, thông điệp thật luôn hiển thị trên banner.
+-->
 </body>
 </html>

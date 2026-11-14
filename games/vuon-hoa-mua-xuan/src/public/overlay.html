@@ -8,229 +8,1032 @@
 <script src="/shared/music.js"></script>
 <link rel="stylesheet" href="/shared/ui.css">
 <script src="/shared/ui.js"></script>
-<link rel="stylesheet" href="/shared/meme.css">
-<script src="/shared/meme.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root { --ui-accent: #FF5E8A; --ui-accent-2: #2E7D32; }
   html, body { width: 1080px; height: 1920px; overflow: hidden; }
   body {
-    font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif; color: #2d1a0e;
+    font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif;
+    color: #2d1a0e;
+    background: #000;
   }
-  .sun { position: absolute; top: 40px; right: 60px; font-size: 90px; filter: drop-shadow(0 0 24px #ffd94d); }
-  #demo-badge { position: absolute; top: 300px; left: 18px; z-index: 50; background: #b8860b; color: #1c1c1c; font-size: 24px; font-weight: 800; padding: 8px 16px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.35); display: none; }
-  /* Dời xuống dưới hàng tiêu đề (header kết thúc ~284px, vườn bắt đầu 400px):
-     góc trên-trái cũ che tiêu đề, góc trên-phải đã có mặt trời. */
+
+  .sun {
+    position: absolute;
+    top: 40px;
+    right: 60px;
+    font-size: 90px;
+    filter: drop-shadow(0 0 24px #ffd94d);
+  }
+
+  #demo-badge {
+    position: absolute;
+    top: 300px;
+    left: 18px;
+    z-index: 50;
+    background: #b8860b;
+    color: #1c1c1c;
+    font-size: 24px;
+    font-weight: 800;
+    padding: 8px 16px;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.35);
+    display: none;
+  }
+
   #demo-badge.on { display: block; }
-  .cloud { position: absolute; font-size: 64px; opacity: .85; animation: drift 26s linear infinite; }
-  @keyframes drift { from { transform: translateX(-140px); } to { transform: translateX(1180px); } }
-  .rainbow { position: absolute; top: 150px; left: 50%; transform: translateX(-50%); font-size: 120px; opacity: .9; display: none; }
+
+  .cloud {
+    position: absolute;
+    font-size: 64px;
+    opacity: .85;
+    animation: drift 26s linear infinite;
+  }
+
+  @keyframes drift {
+    from { transform: translateX(-140px); }
+    to { transform: translateX(1180px); }
+  }
+
+  .rainbow {
+    position: absolute;
+    top: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 120px;
+    opacity: .9;
+    display: none;
+    filter: drop-shadow(0 8px 10px rgba(0,0,0,.25));
+  }
+
   .rainbow.on { display: block; }
-  header { position: relative; z-index: 5; text-align: center; padding: 26px 30px 0; }
-  h1 { font-size: 58px; color: #fff; text-shadow: 0 3px 0 #2e7d32, 0 6px 18px rgba(0,0,0,.35); letter-spacing: 1px; }
-  .sub { font-size: 26px; color: #fff; text-shadow: 0 2px 6px rgba(0,0,0,.45); margin-top: 6px; }
-  .progress { margin: 16px auto 0; width: 880px; background: rgba(255,255,255,.85); border-radius: 999px; padding: 10px 18px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
-  .progress .label { font-size: 26px; font-weight: 800; color: #2e7d32; display: flex; justify-content: space-between; }
+
+  header {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    padding: 26px 30px 0;
+  }
+
+  h1 {
+    font-size: 58px;
+    color: #fff;
+    text-shadow: 0 3px 0 #2e7d32, 0 6px 18px rgba(0,0,0,.35);
+    letter-spacing: 1px;
+  }
+
+  .sub {
+    font-size: 26px;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0,0,0,.45);
+    margin-top: 6px;
+  }
+
+  .progress {
+    margin: 16px auto 0;
+    width: 880px;
+    background: rgba(255,255,255,.88);
+    border-radius: 999px;
+    padding: 10px 18px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.2);
+  }
+
+  .progress .label {
+    font-size: 26px;
+    font-weight: 800;
+    color: #2e7d32;
+    display: flex;
+    justify-content: space-between;
+  }
+
   .progress .ui-progress { margin-top: 6px; }
-  /* Ghi đè cục bộ vệt sáng thanh tiến độ (KHÔNG sửa shared/ui.css):
-     shared dùng ::after inset:0 (rộng bằng cả thanh) + trắng .55 + 1.8s nên
-     trông như gradient tĩnh. Dải sáng hẹp lại (45% bề rộng thanh), lõi trắng
-     đặc, chạy nhanh gấp đôi và quét hết chiều dài thanh. */
+
   .progress .ui-progress > i::after {
-    left: 0; right: auto; width: 45%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.95) 42%, #ffffff 50%, rgba(255,255,255,.95) 58%, transparent);
+    left: 0;
+    right: auto;
+    width: 45%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255,255,255,.95) 42%,
+      #ffffff 50%,
+      rgba(255,255,255,.95) 58%,
+      transparent
+    );
     animation: ui-shine-local .9s linear infinite;
   }
-  @keyframes ui-shine-local { from { transform: translateX(-110%); } to { transform: translateX(240%); } }
-  .milestones { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-  .ms { display: inline-block; font-size: 22px; font-weight: 800; background: rgba(255,255,255,.75); color: #6b4a12; padding: 6px 14px; border-radius: 999px; }
-  .ms.hit { background: #ffd94d; color: #4a2f00; }
+
+  @keyframes ui-shine-local {
+    from { transform: translateX(-110%); }
+    to { transform: translateX(240%); }
+  }
+
+  .milestones {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 10px;
+  }
+
+  .ms {
+    display: inline-block;
+    font-size: 22px;
+    font-weight: 800;
+    background: rgba(255,255,255,.78);
+    color: #6b4a12;
+    padding: 6px 14px;
+    border-radius: 999px;
+    box-shadow: 0 3px 8px rgba(0,0,0,.16);
+  }
+
+  .ms.hit {
+    background: #ffd94d;
+    color: #4a2f00;
+  }
+
   .ms-pop { animation: ms-pop .6s ease; }
-  @keyframes ms-pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
-  .top5 { position: absolute; top: 300px; right: 24px; z-index: 6; width: 300px; background: rgba(255,255,255,.88); border-radius: 16px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
-  .top5 h3 { font-size: 24px; color: #2e7d32; margin-bottom: 6px; }
-  .top5.ui-board h3 { font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif; font-size: 24px; color: var(--ui-accent); }
-  /* Hàng Top gọn lại (rank/avatar nhỏ hơn) để điểm không bị ép ra mép phải:
-     .ui-pts flex:none + nowrap — "40đ" không bao giờ bị co/cắt. */
-  .top5 .ui-row { font-size: 20px; color: #2d1a0e; border-bottom-color: rgba(0,0,0,.12); padding: 6px 0; }
-  .top5 .ui-row .ui-rank { width: 40px; height: 40px; font-size: 22px; }
-  .top5 .ui-row .ui-ava { width: 40px; height: 40px; }
-  .top5 .ui-row .ui-pts { flex: none; white-space: nowrap; font-size: 20px; }
+
+  @keyframes ms-pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+
+  .top5 {
+    position: absolute;
+    top: 300px;
+    right: 24px;
+    z-index: 6;
+    width: 300px;
+    background: rgba(255,255,255,.9);
+    border-radius: 16px;
+    padding: 12px 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.2);
+  }
+
+  .top5 h3 {
+    font-size: 24px;
+    color: #2e7d32;
+    margin-bottom: 6px;
+  }
+
+  .top5.ui-board h3 {
+    font-family: 'Baloo 2', 'Be Vietnam Pro', sans-serif;
+    font-size: 24px;
+    color: var(--ui-accent);
+  }
+
+  .top5 .ui-row {
+    font-size: 20px;
+    color: #2d1a0e;
+    border-bottom-color: rgba(0,0,0,.12);
+    padding: 6px 0;
+  }
+
+  .top5 .ui-row .ui-rank {
+    width: 40px;
+    height: 40px;
+    font-size: 22px;
+  }
+
+  .top5 .ui-row .ui-ava {
+    width: 40px;
+    height: 40px;
+  }
+
+  .top5 .ui-row .ui-pts {
+    flex: none;
+    white-space: nowrap;
+    font-size: 20px;
+  }
+
   .top5 .ui-row .ui-bar { background: rgba(0,0,0,.12); }
-  .top5 .top-empty { font-size: 22px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ui-ava-fallback { display: inline-flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: #fff; background: var(--ui-accent); }
-  .garden { position: absolute; top: 400px; left: 30px; width: 740px; height: 1180px; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(8, 1fr); gap: 10px; z-index: 4; }
-  .plot { background:
+
+  .top5 .top-empty {
+    font-size: 22px;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ui-ava-fallback,
+  .g-face-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    color: #fff;
+    background: linear-gradient(145deg, #f4bd86, #cf7a4d);
+  }
+
+  .ui-ava-fallback {
+    font-size: 24px;
+    border-radius: 50%;
+  }
+
+  .garden {
+    position: absolute;
+    top: 400px;
+    left: 30px;
+    width: 740px;
+    height: 1180px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    gap: 10px;
+    z-index: 4;
+    padding: 10px;
+    border-radius: 28px;
+    background: linear-gradient(rgba(20,65,36,.2), rgba(26,58,26,.42));
+    box-shadow: inset 0 0 0 4px rgba(255,255,255,.22), 0 12px 30px rgba(0,0,0,.25);
+  }
+
+  .plot {
+    background:
       radial-gradient(circle at 20% 30%, rgba(0,0,0,.28) 0 6px, transparent 7px),
       radial-gradient(circle at 70% 60%, rgba(0,0,0,.24) 0 5px, transparent 6px),
       radial-gradient(circle at 45% 82%, rgba(255,255,255,.16) 0 4px, transparent 5px),
       linear-gradient(180deg, #7a4a22 0%, #5d3a1a 55%, #4a2c12 100%);
-    border: 3px solid rgba(255,255,255,.5); border-top: 6px solid #4caf50; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; overflow: hidden; padding: 6px 4px 4px; }
+    border: 3px solid rgba(255,255,255,.5);
+    border-top: 6px solid #4caf50;
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    overflow: hidden;
+    padding: 6px 4px 4px;
+  }
+
   .plot.empty { justify-content: center; }
-  /* Nhân vật NGƯỜI LÀM VƯỜN đứng trong vườn (mẫu Kéo Co): tên trên đầu
-     (13px) + mặt meme làm ĐẦU (44px, khung vuông bo nhẹ, không cắt tròn)
-     + thân áo xanh lá đơn giản. Mỗi luống hoa có người làm vườn của mình
-     đứng cạnh hoa — mặt khác nhau theo chủ luống (faceImgIn, danh sách
-     chung toàn vườn nên không ai trùng mặt). */
-  .plot .gardener { display: flex; flex-direction: column; align-items: center; width: 100%; animation: gardener-sway 3s ease-in-out infinite; }
-  @keyframes gardener-sway { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
-  .plot .g-name { font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif; font-size: 13px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.9); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 128px; line-height: 1.3; }
-  .plot .g-face { width: 44px; height: 44px; border-radius: 12px; border: 2px solid rgba(255,255,255,.9); background: transparent; margin-top: 1px; }
-  .plot .g-face img { width: 100%; height: 100%; object-fit: contain; }
-  .plot .g-body { width: 40px; height: 12px; margin-top: 2px; border-radius: 6px 6px 4px 4px; background: #2e7d32; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
-  .plot .f { font-size: 46px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+
+  .plot .gardener {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    animation: gardener-sway 3s ease-in-out infinite;
+  }
+
+  @keyframes gardener-sway {
+    0%, 100% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+  }
+
+  .plot .g-name {
+    font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    line-height: 1.25;
+  }
+
+  .plot .g-face {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,.98);
+    background: #e7a875;
+    margin-top: 2px;
+    overflow: hidden;
+    box-shadow: 0 3px 7px rgba(0,0,0,.35);
+  }
+
+  .plot .g-face img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .g-face-fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    font-size: 25px;
+  }
+
+  .plot .g-body {
+    width: 42px;
+    height: 14px;
+    margin-top: 2px;
+    border-radius: 7px 7px 4px 4px;
+    background: #2e7d32;
+    border: 2px solid rgba(255,255,255,.38);
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.25);
+  }
+
+  .plot .f {
+    font-size: 46px;
+    line-height: 1;
+    filter: drop-shadow(0 3px 4px rgba(0,0,0,.3));
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
   .plot .f.stage-ic { font-size: 34px; }
-  /* Sprite 2D thay emoji khi load được; lỗi/thiếu thì emoji fallback hiện lại. */
-  .plot .f .spr { width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(0 3px 4px rgba(0,0,0,.3)); }
-  .plot .f.stage-ic .spr { width: 44px; height: 44px; }
-  /* Bình tưới phủ lên ô 1.2s khi có gift tưới (chỉ animate transform/opacity). */
-  .plot .water { position: absolute; right: 0; top: 88px; width: 70px; height: 70px; pointer-events: none; z-index: 3; animation: water-pour 1.2s ease forwards; }
-  .plot .water img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
-  @keyframes water-pour { 0% { opacity: 0; transform: translate(16px,-12px) rotate(16deg); } 25% { opacity: 1; transform: translate(0,0) rotate(6deg); } 70% { opacity: 1; transform: translate(-3px,3px) rotate(-4deg); } 100% { opacity: 0; transform: translate(-8px,8px) rotate(-8deg); } }
-  /* Pop nhỏ khi chuyển giai đoạn hạt→mầm→nụ (nở đã có bloom-pop riêng). */
+
+  .plot .f .spr {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 4px rgba(0,0,0,.3));
+  }
+
+  .plot .f.stage-ic .spr {
+    width: 44px;
+    height: 44px;
+  }
+
+  .plot .water {
+    position: absolute;
+    right: 0;
+    top: 88px;
+    width: 70px;
+    height: 70px;
+    pointer-events: none;
+    z-index: 3;
+    animation: water-pour 1.2s ease forwards;
+  }
+
+  .plot .water img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.35));
+  }
+
+  @keyframes water-pour {
+    0% { opacity: 0; transform: translate(16px,-12px) rotate(16deg); }
+    25% { opacity: 1; transform: translate(0,0) rotate(6deg); }
+    70% { opacity: 1; transform: translate(-3px,3px) rotate(-4deg); }
+    100% { opacity: 0; transform: translate(-8px,8px) rotate(-8deg); }
+  }
+
   .plot.just-grew .f { animation: stage-pop .4s ease; }
-  @keyframes stage-pop { 0% { transform: scale(.55); opacity: .4; } 60% { transform: scale(1.18); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-  .plot.golden { border-color: #ffd700; box-shadow: 0 0 18px #ffd700; }
+
+  @keyframes stage-pop {
+    0% { transform: scale(.55); opacity: .4; }
+    60% { transform: scale(1.18); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .plot.golden {
+    border-color: #ffd700;
+    box-shadow: 0 0 18px #ffd700;
+  }
+
   .plot.bloom { animation: sway 3s ease-in-out infinite; }
-  @keyframes sway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+
+  @keyframes sway {
+    0%, 100% { transform: rotate(-2deg); }
+    50% { transform: rotate(2deg); }
+  }
+
   .plot.just-bloomed .f { animation: bloom-pop .6s ease; }
-  @keyframes bloom-pop { 0% { transform: scale(.3) rotate(-20deg); opacity: 0; } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
-  .plot.empty::after { content: "🌱"; font-size: 30px; opacity: .45; }
-  #petals { position: absolute; inset: 0; pointer-events: none; z-index: 8; overflow: hidden; }
-  .petal { position: absolute; top: -40px; width: 26px; height: 34px; background: radial-gradient(circle at 35% 35%, #ffd1e0, #ff5e8a); border-radius: 60% 40% 60% 40%; opacity: .9; animation: fall 6s linear infinite; }
-  @keyframes fall { from { transform: translateY(-60px) rotate(0deg); } to { transform: translateY(1980px) rotate(540deg); } }
-  /* Thanh vườn ươm: bottom 260 (cách feed 2 dòng ~8px) — trước đây bottom 250
-     đè lên dòng feed thứ 3 của ticker khi ticker đủ 3 dòng. */
-  .nursery { position: absolute; left: 30px; bottom: 260px; width: 740px; z-index: 5; background: rgba(255,255,255,.85); border-radius: 14px; padding: 10px 16px; font-size: 22px; font-weight: 700; color: #6b4a12; }
-  .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
-  .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
-  .statusbar { position: absolute; left: 0; bottom: 0; width: 1080px; height: 140px; z-index: 5; background: #2e7d32; color: #fff; display: flex; align-items: center; justify-content: space-around; font-size: 26px; font-weight: 800; padding: 0 30px; }
+
+  @keyframes bloom-pop {
+    0% { transform: scale(.3) rotate(-20deg); opacity: 0; }
+    60% { transform: scale(1.25); }
+    100% { transform: scale(1); }
+  }
+
+  .plot.empty::after {
+    content: "🌱";
+    font-size: 30px;
+    opacity: .45;
+  }
+
+  #petals {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 8;
+    overflow: hidden;
+  }
+
+  .petal {
+    position: absolute;
+    top: -40px;
+    width: 26px;
+    height: 34px;
+    background: radial-gradient(circle at 35% 35%, #ffd1e0, #ff5e8a);
+    border-radius: 60% 40% 60% 40%;
+    opacity: .9;
+    animation: fall 6s linear infinite;
+  }
+
+  @keyframes fall {
+    from { transform: translateY(-60px) rotate(0deg); }
+    to { transform: translateY(1980px) rotate(540deg); }
+  }
+
+  .nursery {
+    position: absolute;
+    left: 30px;
+    bottom: 260px;
+    width: 740px;
+    z-index: 5;
+    background: rgba(255,255,255,.88);
+    border-radius: 14px;
+    padding: 10px 16px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #6b4a12;
+    box-shadow: 0 4px 14px rgba(0,0,0,.16);
+  }
+
+  .ticker {
+    position: absolute;
+    left: 0;
+    bottom: 150px;
+    width: 1080px;
+    z-index: 5;
+    background: rgba(0,0,0,.55);
+    color: #fff;
+    font-size: 26px;
+    padding: 12px 24px;
+  }
+
+  .ticker div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+  }
+
+  .statusbar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 1080px;
+    height: 140px;
+    z-index: 5;
+    background: #2e7d32;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    font-size: 26px;
+    font-weight: 800;
+    padding: 0 30px;
+  }
+
   .statusbar .big { font-size: 34px; }
-  .banner { position: absolute; left: 50%; top: 760px; transform: translateX(-50%); z-index: 20; width: 980px; text-align: center; background: rgba(255,255,255,.96); border: 6px solid #ff5e8a; border-radius: 28px; padding: 34px 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4); display: none; }
-  .banner.on { display: block; animation: pop .4s ease; }
-  @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
-  .banner h2 { font-size: 52px; color: #d6336c; }
-  .banner p { font-size: 30px; margin-top: 10px; line-height: 1.4; }
-  .banner .names { font-size: 28px; font-weight: 800; color: #2e7d32; margin-top: 12px; line-height: 1.5; }
-  .bees { position: absolute; font-size: 40px; z-index: 3; display: none; }
-  .bees.on { display: block; animation: fly 9s linear infinite; }
-  @keyframes fly { 0% { left: 60px; top: 500px; } 25% { left: 700px; top: 420px; } 50% { left: 300px; top: 900px; } 75% { left: 800px; top: 1100px; } 100% { left: 60px; top: 500px; } }
-  /* Bảng hướng dẫn chơi (chuẩn chung đợt 2 — nguyên tắc 3): cột phải dưới
-     bảng top (top5 gọn lại kết thúc ~614px), không che vườn hoa.
-     Font 24px/1.5 (đợt 2: 19px quá nhỏ nên mắt đọc thành dính chữ) — nội
-     dung rút gọn câu chữ nhưng giữ đủ mọi con số thật từ settings;
-     renderHowto() cập nhật lại khi dashboard đổi số. */
-  .howto { position: absolute; top: 625px; right: 24px; z-index: 6; width: 300px; background: rgba(255,255,255,.92); border-radius: 16px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
-  .howto h3 { font-size: 24px; color: #2e7d32; margin-bottom: 6px; }
+
+  .banner {
+    position: absolute;
+    left: 50%;
+    top: 760px;
+    transform: translateX(-50%);
+    z-index: 20;
+    width: 980px;
+    text-align: center;
+    background: rgba(255,255,255,.96);
+    border: 6px solid #ff5e8a;
+    border-radius: 28px;
+    padding: 34px 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.4);
+    display: none;
+  }
+
+  .banner.on {
+    display: block;
+    animation: pop .4s ease;
+  }
+
+  @keyframes pop {
+    from { transform: translateX(-50%) scale(.85); opacity: 0; }
+    to { transform: translateX(-50%) scale(1); opacity: 1; }
+  }
+
+  .banner h2 {
+    font-size: 52px;
+    color: #d6336c;
+  }
+
+  .banner p {
+    font-size: 30px;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+
+  .banner .names {
+    font-size: 28px;
+    font-weight: 800;
+    color: #2e7d32;
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+
+  .bees {
+    position: absolute;
+    font-size: 40px;
+    z-index: 3;
+    display: none;
+  }
+
+  .bees.on {
+    display: block;
+    animation: fly 9s linear infinite;
+  }
+
+  @keyframes fly {
+    0% { left: 60px; top: 500px; }
+    25% { left: 700px; top: 420px; }
+    50% { left: 300px; top: 900px; }
+    75% { left: 800px; top: 1100px; }
+    100% { left: 60px; top: 500px; }
+  }
+
+  .howto {
+    position: absolute;
+    top: 625px;
+    right: 24px;
+    z-index: 6;
+    width: 300px;
+    background: rgba(255,255,255,.92);
+    border-radius: 16px;
+    padding: 12px 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.2);
+  }
+
+  .howto h3 {
+    font-size: 24px;
+    color: #2e7d32;
+    margin-bottom: 6px;
+  }
+
   .howto ul { list-style: none; }
-  .howto li { font-size: 24px; line-height: 1.5; margin-bottom: 5px; color: #2d1a0e; }
+
+  .howto li {
+    font-size: 23px;
+    line-height: 1.43;
+    margin-bottom: 5px;
+    color: #2d1a0e;
+  }
+
   .howto li b { color: #2e7d32; }
-  /* NPC Bác Nông Dân (chuẩn chung đợt 2 — nguyên tắc 4): đứng góc dưới-phải
-     vườn, trên dải ticker; vẫy bình tưới khi hoa nở, chúc mừng khi chạm mốc,
-     nhảy múa khi lễ hội. Chỉ animate transform/opacity. */
-  .farmer { position: absolute; right: 30px; bottom: 280px; z-index: 6; width: 230px; text-align: center; }
-  .farmer-bubble { position: absolute; left: 50%; transform: translateX(-50%) translateY(6px); bottom: calc(100% + 4px); width: 250px; background: #fff; color: #2d1a0e; font-size: 21px; font-weight: 800; line-height: 1.35; padding: 10px 14px; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; }
-  .farmer-bubble::after { content: ""; position: absolute; left: 50%; bottom: -10px; margin-left: -10px; border: 10px solid transparent; border-top-color: #fff; border-bottom: 0; }
-  .farmer-bubble.on { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .farmer-body { font-size: 104px; line-height: 1; filter: drop-shadow(0 4px 6px rgba(0,0,0,.3)); }
+
+  .farmer {
+    position: absolute;
+    right: 30px;
+    bottom: 280px;
+    z-index: 6;
+    width: 230px;
+    text-align: center;
+  }
+
+  .farmer-bubble {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    bottom: calc(100% + 4px);
+    width: 250px;
+    background: #fff;
+    color: #2d1a0e;
+    font-size: 21px;
+    font-weight: 800;
+    line-height: 1.35;
+    padding: 10px 14px;
+    border-radius: 16px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s, transform .3s;
+  }
+
+  .farmer-bubble::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -10px;
+    margin-left: -10px;
+    border: 10px solid transparent;
+    border-top-color: #fff;
+    border-bottom: 0;
+  }
+
+  .farmer-bubble.on {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .farmer-body {
+    font-size: 104px;
+    line-height: 1;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,.3));
+  }
+
   .farmer.cheer .farmer-body { animation: farmer-wave 2.4s ease; }
-  @keyframes farmer-wave { 0%,100% { transform: rotate(0) translateY(0); } 20% { transform: rotate(-9deg) translateY(-8px); } 40% { transform: rotate(8deg) translateY(-4px); } 60% { transform: rotate(-7deg) translateY(-8px); } 80% { transform: rotate(5deg) translateY(-3px); } }
-  .farmer-can { position: absolute; right: 6px; top: 52px; font-size: 44px; opacity: 0; pointer-events: none; }
-  .farmer.cheer .farmer-can { opacity: 1; animation: can-pour 2.4s ease; }
-  @keyframes can-pour { 0%,100% { opacity: 0; transform: rotate(18deg) translate(6px,-4px); } 25% { opacity: 1; transform: rotate(-14deg) translate(0,0); } 70% { opacity: 1; transform: rotate(-20deg) translate(-2px,3px); } }
-  .farmer.festival .farmer-body { animation: farmer-dance .7s ease-in-out infinite; }
-  @keyframes farmer-dance { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-18px) rotate(6deg); } }
-  .farmer-name { font-size: 20px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000, 0 0 8px rgba(0,0,0,.55); margin-top: 2px; }
-  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; background: linear-gradient(180deg, #7ec8f7 0%, #aee3ff 22%, #e8f7d9 45%, #8fce62 100%); }
-  html { background: #000; }
+
+  @keyframes farmer-wave {
+    0%, 100% { transform: rotate(0) translateY(0); }
+    20% { transform: rotate(-9deg) translateY(-8px); }
+    40% { transform: rotate(8deg) translateY(-4px); }
+    60% { transform: rotate(-7deg) translateY(-8px); }
+    80% { transform: rotate(5deg) translateY(-3px); }
+  }
+
+  .farmer-can {
+    position: absolute;
+    right: 6px;
+    top: 52px;
+    font-size: 44px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .farmer.cheer .farmer-can {
+    opacity: 1;
+    animation: can-pour 2.4s ease;
+  }
+
+  @keyframes can-pour {
+    0%, 100% { opacity: 0; transform: rotate(18deg) translate(6px,-4px); }
+    25% { opacity: 1; transform: rotate(-14deg) translate(0,0); }
+    70% { opacity: 1; transform: rotate(-20deg) translate(-2px,3px); }
+  }
+
+  .farmer.festival .farmer-body {
+    animation: farmer-dance .7s ease-in-out infinite;
+  }
+
+  @keyframes farmer-dance {
+    0%, 100% { transform: translateY(0) rotate(-6deg); }
+    50% { transform: translateY(-18px) rotate(6deg); }
+  }
+
+  .farmer-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 1px 2px #000, 0 0 8px rgba(0,0,0,.55);
+    margin-top: 2px;
+  }
+
+  #scaler {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1080px;
+    height: 1920px;
+    transform-origin: top left;
+    background:
+      linear-gradient(rgba(20,70,42,.28), rgba(20,70,42,.42)),
+      url("/shared/bg/vuon-hoa-mua-xuan.webp") center / cover no-repeat;
+  }
 </style>
 </head>
 <body>
+<audio id="voiceAudio" preload="auto"></audio>
+
 <div id="scaler">
-<div class="ui-vignette"></div>
-<div class="ui-grain"></div>
-<div class="ui-toast" id="ui-toast"></div>
-<div id="petals"></div>
-<div id="demo-badge" class="ui-demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
-<div class="sun">☀️</div>
-<div class="cloud" style="top:90px; animation-delay:-6s;">☁️</div>
-<div class="cloud" style="top:190px; animation-delay:-18s; font-size:48px;">☁️</div>
-<div class="rainbow" id="rainbow">🌈</div>
-<div class="bees" id="bees">🐝</div>
-<header>
-  <h1>🌸 VƯỜN HOA MÙA XUÂN 🌸</h1>
-  <div class="sub" id="round-line">Ván 1 · Bình luận / thả tim để gieo hạt — quà tưới nước, follow tặng hồng vàng</div>
-  <div class="progress">
-    <div class="label"><span>🌸 Hoa đã nở: <b id="blooms">0</b>/<span id="target">100</span></span><span id="phase-label">Đang trồng…</span></div>
-    <div class="ui-progress" id="progress"><i id="bar" style="width:0%"></i></div>
+  <div class="ui-vignette"></div>
+  <div class="ui-grain"></div>
+  <div class="ui-toast" id="ui-toast"></div>
+  <div id="petals"></div>
+
+  <div id="demo-badge" class="ui-demo-badge">🧪 DEMO — đang mô phỏng khán giả</div>
+  <div class="sun">☀️</div>
+  <div class="cloud" style="top:90px; animation-delay:-6s;">☁️</div>
+  <div class="cloud" style="top:190px; animation-delay:-18s; font-size:48px;">☁️</div>
+  <div class="rainbow" id="rainbow">🌈</div>
+  <div class="bees" id="bees">🐝</div>
+
+  <header>
+    <h1>🌸 VƯỜN HOA MÙA XUÂN 🌸</h1>
+    <div class="sub" id="round-line">Ván · Bình luận / thả tim để gieo hạt — quà tưới nước, follow tặng hồng vàng</div>
+
+    <div class="progress">
+      <div class="label">
+        <span>🌸 Hoa đã nở: <b id="blooms">0</b>/<span id="target">0</span></span>
+        <span id="phase-label">Đang trồng…</span>
+      </div>
+      <div class="ui-progress" id="progress">
+        <i id="bar" style="width:0%"></i>
+      </div>
+    </div>
+
+    <div class="milestones" id="milestones"></div>
+  </header>
+
+  <div class="top5 ui-board" id="top5">
+    <h3>🏆 Top người trồng</h3>
+    <div>Chưa có ai trồng hoa…</div>
   </div>
-  <div class="milestones" id="milestones"></div>
-</header>
 
-<div class="top5 ui-board" id="top5"><h3>🏆 Top người trồng</h3><div>Chưa có ai trồng hoa…</div></div>
-<div class="howto" id="howto"><h3>📖 CÁCH CHƠI</h3><ul>
-  <li>💬 <b>Bình luận</b> (1 lần/<span id="ht-spam">5</span>s): gieo <b>1 hạt</b>, tối đa <span id="ht-max">8</span> hoa</li>
-  <li>❤️ <b>Thả tim</b>: 1 tim = 1 hạt (đủ hoa: +1 hoa non nhất)</li>
-  <li>🎁 <b>Quà</b>: 1 xu = +1; ≥<span id="ht-rain">100</span> xu mưa +5; ≥<span id="ht-rainbow">500</span> xu cầu vồng: nở ngay 1 hoa +10</li>
-  <li>➕ <b>Follow</b>: +<span id="ht-follow">5</span>đ + hồng vàng (lần đầu)</li>
-  <li>🔁 <b>Chia sẻ</b>: +<span id="ht-share">2</span> hoa non nhất</li>
-  <li>🌱 Nảy mầm sau <span id="ht-sprout">10</span>s; mỗi bậc cần <span id="ht-stage">3</span></li>
-  <li>💧 Sương xuân mỗi <span id="ht-dew">60</span>s: cả vườn +<span id="ht-dewamt">1</span></li>
-  <li>🧺 Hoa nở <span id="ht-harvest">90</span>s thì hái, trả luống</li>
-  <li>🎯 <b><span id="ht-target">100</span> hoa nở</b> → Lễ hội hoa! Mốc: <span id="ht-milestones">10 hoa 🦋 bướm · 50 hoa 🐝 ong · 75 hoa 🌈 cầu vồng · 100 hoa 🎉 lễ hội</span></li>
-</ul></div>
-<div class="garden" id="garden"></div>
-<div class="nursery" id="nursery">🌱 Vườn ươm: 0 hạt đang chờ</div>
-<div class="farmer" id="farmer"><div class="farmer-bubble" id="farmer-bubble"></div><div class="farmer-body">👨‍🌾</div><div class="farmer-can">💧</div><div class="farmer-name">Bác Nông Dân</div></div>
-<div class="ticker" id="ticker"></div>
-<div class="statusbar">
-  <span>🌱 <span class="big" id="st-flowers">0</span> hoa trên vườn</span>
-  <span>👀 <span class="big" id="st-online">0</span> đang xem</span>
-  <span>🎁 <span class="big" id="st-gifts">0</span> quà đã tưới</span>
-</div>
-<div class="banner" id="banner"><h2 id="banner-title"></h2><p id="banner-text"></p><div class="names" id="banner-names"></div></div>
+  <div class="howto" id="howto">
+    <h3>📖 CÁCH CHƠI</h3>
+    <ul>
+      <li>💬 <b>Bình luận</b> (1 lần/<span id="ht-spam">—</span>s): gieo <b>1 hạt</b>, tối đa <span id="ht-max">—</span> hoa</li>
+      <li>❤️ <b>Thả tim</b>: 1 tim = 1 hạt; đủ hoa thì tưới hoa non nhất</li>
+      <li>🎁 <b>Quà</b>: 1 xu = +<span id="ht-coin">—</span> tăng trưởng; ≥<span id="ht-rain">—</span> xu mưa; ≥<span id="ht-rainbow">—</span> xu cầu vồng</li>
+      <li>➕ <b>Follow</b>: +<span id="ht-follow">—</span> điểm + hồng vàng</li>
+      <li>🔁 <b>Chia sẻ</b>: +<span id="ht-share">—</span> tăng trưởng</li>
+      <li>🌱 Nảy mầm sau <span id="ht-sprout">—</span>s; mỗi bậc cần <span id="ht-stage">—</span> tăng trưởng</li>
+      <li>💧 Sương xuân mỗi <span id="ht-dew">—</span>s: cả vườn +<span id="ht-dewamt">—</span></li>
+      <li>🧺 Hoa nở <span id="ht-harvest">—</span>s thì hái, trả luống</li>
+      <li>🎯 <b><span id="ht-target">—</span> hoa nở</b> → Lễ hội hoa! Mốc: <span id="ht-milestones">—</span></li>
+    </ul>
+  </div>
 
+  <div class="garden" id="garden"></div>
+
+  <div class="nursery" id="nursery">🌱 Vườn ươm: 0 hạt đang chờ</div>
+
+  <div class="farmer" id="farmer">
+    <div class="farmer-bubble" id="farmer-bubble"></div>
+    <div class="farmer-body">👨‍🌾</div>
+    <div class="farmer-can">💧</div>
+    <div class="farmer-name">Bác Nông Dân</div>
+  </div>
+
+  <div class="ticker" id="ticker"></div>
+
+  <div class="statusbar">
+    <span>🌱 <span class="big" id="st-flowers">0</span> hoa trên vườn</span>
+    <span>👀 <span class="big" id="st-online">0</span> đang xem</span>
+    <span>🎁 <span class="big" id="st-gifts">0</span> quà đã tưới</span>
+  </div>
+
+  <div class="banner" id="banner">
+    <h2 id="banner-title"></h2>
+    <p id="banner-text"></p>
+    <div class="names" id="banner-names"></div>
+  </div>
 </div>
+
 <script>
 var scaler = document.getElementById('scaler');
+
 function fit() {
   var s = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
   scaler.style.transform = 'scale(' + s + ')';
   scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
   scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
 }
-window.addEventListener('resize', fit); fit();
+
+window.addEventListener('resize', fit);
+fit();
+
 const socket = io();
-const FLOWER_ICON = { mai: '🌼', dao: '🌸', cuc: '🏵️', sen: '🪷', hong: '🌹', huongduong: '🌻', 'hong-vang': '🌹' };
-const STAGE_ICON = { seed: '🌱', sprout: '🌿', bud: '🌷' };
-const STAGE_NAME = { seed: 'Hạt', sprout: 'Mầm', bud: 'Nụ', bloom: 'Nở' };
-// Sprite 2D Đợt B (1 frame/sheet, 512x512) — đường dẫn /shared/ không bị transform chạm.
-const STAGE_SPRITE = { seed: 'hat', sprout: 'mam', bud: 'nu', bloom: 'hoa-no' };
+
+const FLOWER_ICON = {
+  mai: '🌼',
+  dao: '🌸',
+  cuc: '🏵️',
+  sen: '🪷',
+  hong: '🌹',
+  huongduong: '🌻',
+  'hong-vang': '🌹'
+};
+
+const STAGE_ICON = {
+  seed: '🌱',
+  sprout: '🌿',
+  bud: '🌷'
+};
+
+const STAGE_NAME = {
+  seed: 'Hạt',
+  sprout: 'Mầm',
+  bud: 'Nụ',
+  bloom: 'Nở'
+};
+
+const STAGE_SPRITE = {
+  seed: 'hat',
+  sprout: 'mam',
+  bud: 'nu',
+  bloom: 'hoa-no'
+};
+
 const SPRITE_BASE = '/shared/assets/2d/vuon-hoa-mua-xuan/curated/';
 const WATER_SPRITE = SPRITE_BASE + 'binh-tuoi/sheet.png';
+
 let lastState = null;
 let prevPhase = null;
-let prevStages = null; // stage từng ô ở lần render trước — để phát hiện hoa vừa nở (bloom-pop 1 lần)
-let lastWaterSeenT = null; // mốc log tưới mới nhất đã xử lý (null = lần render đầu, bỏ qua log cũ)
-let waterFx = []; // [{ idx, until }] — ô đang hiện animation bình tưới
+let prevStages = null;
+let lastWaterSeenT = null;
+let waterFx = [];
 let voiceOn = true;
 let farmerTimer = null;
 let farmerWelcomed = false;
-const ttsQueue = [];
-let ttsPlaying = false;
 
-// NPC Bác Nông Dân: nói + vẫy bình tưới khi có sự kiện thật (hoa nở, chạm
-// mốc, lễ hội). Bong bóng tự ẩn sau ms; đang lễ hội thì giữ bong bóng lễ hội.
+const voiceAudio = document.getElementById('voiceAudio');
+const voiceQueue = [];
+let voicePlaying = false;
+let voiceCurrent = null;
+let bloomVoiceTimer = null;
+let bloomVoicePending = null;
+let lastBloomVoiceAt = 0;
+
+const NAME_FRAGS = new Set(('nguyen tran le pham hoang huynh phan vu vo dang bui do ho ngo duong ly van thi minh hong ngoc thanh thu quoc huu duc anh linh tuan huong lan trang phuong nam long hai quan dung thang hung son tung viet huy khanh thao ha mai hoa nga nhung giang chi van2 oanh khoa phuc binh tu demo khach a b c an bao chau cuong dat dien gia hieu khang kien lam loc nghia phong quang tai tam tien toan trung vinh xuan yen cao dinh luu ta truong chu doan luong thai trinh quach').split(' '));
+
+function normalizeSyllable(s) {
+  const lower = String(s || '').toLowerCase().trim();
+  if (lower === 'vân') return 'van2';
+  return lower.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd').replace(/[^a-z0-9]/g, '');
+}
+
+function nameToFragments(name) {
+  const frags = [];
+  for (const part of String(name || '').split(/\s+/)) {
+    if (!part) continue;
+    if (/^\d+$/.test(part)) {
+      frags.push(...numberToFragments(parseInt(part, 10)));
+      continue;
+    }
+    const key = normalizeSyllable(part);
+    if (key && NAME_FRAGS.has(key)) frags.push(key);
+  }
+  return frags.length ? frags : ['mot-ban'];
+}
+
+function numberToFragments(n) {
+  n = Math.round(Math.abs(Number(n) || 0));
+  const units = ['', 'num-mot', 'num-hai', 'num-ba', 'num-bon', 'num-nam',
+    'num-sau', 'num-bay', 'num-tam', 'num-chin'];
+  if (n <= 0) return ['num-mot'];
+  const out = [];
+  if (n >= 1000) {
+    const th = Math.floor(n / 1000);
+    out.push(...numberToFragments(th), 'num-nghin');
+    n %= 1000;
+    if (n === 0) return out;
+    if (n < 100) out.push('num-le');
+  }
+  if (n >= 100) {
+    out.push(units[Math.floor(n / 100)], 'num-tram');
+    n %= 100;
+    if (n === 0) return out;
+    if (n < 10) out.push('num-le');
+  }
+  if (n >= 10) {
+    if (n < 20) {
+      out.push('num-muoi');
+      const u = n % 10;
+      if (u === 5) out.push('num-lam');
+      else if (u > 0) out.push(units[u]);
+      return out;
+    }
+    out.push(units[Math.floor(n / 10)], 'num-muoi-tens');
+    const u = n % 10;
+    if (u === 1) out.push('num-mot2');
+    else if (u === 5) out.push('num-lam');
+    else if (u > 0) out.push(units[u]);
+    return out;
+  }
+  if (n > 0) out.push(units[n]);
+  return out;
+}
+
+function voiceSrc(fragName) {
+  if (fragName === 'festival') {
+    return '/shared/voice/vuon-hoa-mua-xuan/festival.mp3';
+  }
+
+  const springFrags = new Set([
+    'hoa-cua',
+    'da-no-roi',
+    'moc',
+    'hoa-no',
+    'cau-vong',
+    'cam-on',
+    'da-tang-qua-lon',
+    'mua-rao'
+  ]);
+
+  if (springFrags.has(fragName)) {
+    return '/shared/voice/vuon-hoa-mua-xuan/frag/' + fragName + '.mp3';
+  }
+
+  if (NAME_FRAGS.has(fragName) || fragName.indexOf('num-') === 0 || fragName === 'mot-ban') {
+    return '/shared/voice/keo-co/frag/' + fragName + '.mp3';
+  }
+
+  return '';
+}
+
+function voiceAllowed() {
+  return voiceOn && !!lastState &&
+    lastState.voiceEnabled !== false &&
+    (!lastState.settings || lastState.settings.voiceEnabled !== false);
+}
+
+function enqueueVoice(fragments, priority) {
+  if (!voiceAllowed() || !Array.isArray(fragments) || !fragments.length) return;
+
+  const item = {
+    fragments: fragments.slice(),
+    priority: Number(priority) || 0
+  };
+
+  if (voiceQueue.length >= 3) {
+    const weakest = voiceQueue.reduce((min, value, index, array) => {
+      return value.priority < array[min].priority ? index : min;
+    }, 0);
+
+    if (voiceQueue[weakest].priority > item.priority) return;
+    voiceQueue.splice(weakest, 1);
+  }
+
+  voiceQueue.push(item);
+  voiceQueue.sort((a, b) => b.priority - a.priority);
+  nextVoice();
+}
+
+function nextVoice() {
+  if (voicePlaying || !voiceQueue.length || !voiceAllowed()) return;
+
+  voicePlaying = true;
+  voiceCurrent = voiceQueue.shift();
+  playVoiceFragment(0);
+}
+
+function playVoiceFragment(index) {
+  if (!voiceCurrent || index >= voiceCurrent.fragments.length) {
+    voiceCurrent = null;
+    voicePlaying = false;
+    nextVoice();
+    return;
+  }
+
+  const src = voiceSrc(voiceCurrent.fragments[index]);
+
+  if (!src) {
+    playVoiceFragment(index + 1);
+    return;
+  }
+
+  voiceAudio.src = src;
+  voiceAudio.currentTime = 0;
+
+  const advance = () => {
+    voiceAudio.onended = null;
+    voiceAudio.onerror = null;
+    playVoiceFragment(index + 1);
+  };
+
+  voiceAudio.onended = advance;
+  voiceAudio.onerror = advance;
+
+  const result = voiceAudio.play();
+  if (result && typeof result.catch === 'function') {
+    result.catch(advance);
+  }
+}
+
+function queueBloomVoice(flower) {
+  if (!flower) return;
+
+  bloomVoicePending = [
+    'hoa-cua',
+    ...nameToFragments(flower.name),
+    'da-no-roi'
+  ];
+
+  const now = Date.now();
+  const wait = Math.max(0, 8000 - (now - lastBloomVoiceAt));
+
+  if (bloomVoiceTimer) clearTimeout(bloomVoiceTimer);
+
+  bloomVoiceTimer = setTimeout(() => {
+    if (!bloomVoicePending) return;
+    lastBloomVoiceAt = Date.now();
+    enqueueVoice(bloomVoicePending, 7);
+    bloomVoicePending = null;
+    bloomVoiceTimer = null;
+  }, wait);
+}
+
 function farmerSay(text, ms) {
   const b = document.getElementById('farmer-bubble');
   const f = document.getElementById('farmer');
   if (!b || !f) return;
+
   b.textContent = text;
   b.classList.add('on');
   f.classList.add('cheer');
+
   if (farmerTimer) clearTimeout(farmerTimer);
+
   farmerTimer = setTimeout(() => {
     f.classList.remove('cheer');
+
     if (f.classList.contains('festival')) {
       b.textContent = '🎉 Lễ hội hoa! Cảm ơn cả phòng! 🎉';
     } else {
@@ -238,11 +1041,14 @@ function farmerSay(text, ms) {
     }
   }, ms || 3000);
 }
+
 function farmerFestival(on) {
   const f = document.getElementById('farmer');
   const b = document.getElementById('farmer-bubble');
   if (!f || !b) return;
+
   f.classList.toggle('festival', !!on);
+
   if (on) {
     b.textContent = '🎉 Lễ hội hoa! Cảm ơn cả phòng! 🎉';
     b.classList.add('on');
@@ -251,13 +1057,17 @@ function farmerFestival(on) {
   }
 }
 
-// Bảng hướng dẫn: số liệu lấy từ settings (engine.js defaultSettings),
-// cập nhật theo state để đúng cả khi dashboard đổi số.
 function renderHowto(s) {
   const st = s.settings || {};
-  const set = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== null) el.textContent = v; };
+
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el && value !== undefined && value !== null) el.textContent = value;
+  };
+
   set('ht-spam', st.commentSpamS);
   set('ht-max', st.maxFlowersPerViewer);
+  set('ht-coin', st.giftCoinToGrowth);
   set('ht-rain', st.giftRainCoins);
   set('ht-rainbow', st.giftRainbowCoins);
   set('ht-follow', st.followPoints);
@@ -268,7 +1078,9 @@ function renderHowto(s) {
   set('ht-dewamt', st.dewGrowth);
   set('ht-harvest', st.harvestAfterBloomS);
   set('ht-target', s.target);
+
   const msEl = document.getElementById('ht-milestones');
+
   if (msEl && Array.isArray(s.milestones)) {
     msEl.textContent = s.milestones.map((m) => {
       if (m >= s.target) return m + ' hoa 🎉 lễ hội';
@@ -280,198 +1092,387 @@ function renderHowto(s) {
   }
 }
 
-function playTts(text) {
-  if (!voiceOn || !text) return;
-  ttsQueue.push(text);
-  nextTts();
-}
-function nextTts() {
-  if (ttsPlaying || !ttsQueue.length) return;
-  ttsPlaying = true;
-  const text = ttsQueue.shift();
-  const audio = new Audio('/api/tts?text=' + encodeURIComponent(text));
-  audio.onended = () => { ttsPlaying = false; nextTts(); };
-  audio.onerror = () => {
-    // Fallback: giọng trình duyệt.
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'vi-VN';
-      u.onend = () => { ttsPlaying = false; nextTts(); };
-      speechSynthesis.speak(u);
-    } catch (e) { ttsPlaying = false; nextTts(); }
-  };
-  audio.play().catch(() => { ttsPlaying = false; nextTts(); });
-}
-
 function showBanner(title, text, names, ms) {
   const b = document.getElementById('banner');
+
   document.getElementById('banner-title').textContent = title;
   document.getElementById('banner-text').textContent = text || '';
   document.getElementById('banner-names').textContent = names || '';
+
   b.classList.add('on');
-  if (ms) setTimeout(() => b.classList.remove('on'), ms);
+
+  if (ms) {
+    setTimeout(() => b.classList.remove('on'), ms);
+  }
 }
 
 function spawnPetals() {
   const host = document.getElementById('petals');
   if (!host) return;
+
   let html = '';
+
   for (let i = 0; i < 8; i++) {
     const left = Math.floor(Math.random() * 1020);
     const size = 18 + Math.floor(Math.random() * 16);
     const dur = (5 + Math.random() * 3).toFixed(1);
     const delay = (-Math.random() * 6).toFixed(1);
-    html += '<div class="petal" style="left:' + left + 'px;width:' + size + 'px;height:' + Math.round(size * 1.3) + 'px;animation-duration:' + dur + 's;animation-delay:' + delay + 's;"></div>';
+
+    html += '<div class="petal" style="left:' + left +
+      'px;width:' + size +
+      'px;height:' + Math.round(size * 1.3) +
+      'px;animation-duration:' + dur +
+      's;animation-delay:' + delay + 's;"></div>';
   }
+
   host.innerHTML = html;
 }
 
-// Hoa non nhất trong vườn (theo đúng thứ tự engine: giai đoạn sớm nhất, rồi gieo sớm nhất).
 function youngestIdx(flowers, name) {
   const order = ['seed', 'sprout', 'bud', 'bloom'];
   let best = -1;
+
   for (let i = 0; i < flowers.length; i++) {
     const fl = flowers[i];
     if (!fl) continue;
     if (name !== undefined && fl.name !== name) continue;
-    if (best < 0) { best = i; continue; }
+
+    if (best < 0) {
+      best = i;
+      continue;
+    }
+
     const a = flowers[best];
     const d = order.indexOf(fl.stage) - order.indexOf(a.stage);
-    if (d < 0 || (d === 0 && fl.plantedAt < a.plantedAt)) best = i;
+
+    if (d < 0 || (d === 0 && fl.plantedAt < a.plantedAt)) {
+      best = i;
+    }
   }
+
   return best;
 }
 
-// Phát hiện log tưới MỚI trong state: 💧 = tưới 1 ô của người tưới,
-// 🌧️/🌈 = tưới cả vườn. Engine không emit event tưới riêng nên đọc log
-// (tên trong [..] → tìm hoa non nhất cùng tên; không khớp thì hoa non nhất vườn).
 function detectWatering(s) {
   if (!s.logs || !s.logs.length) return;
+
   let maxT = lastWaterSeenT;
+
   for (const l of s.logs) {
     if (!l || typeof l.t !== 'number') continue;
-    if (lastWaterSeenT === null) { if (maxT === null || l.t > maxT) maxT = l.t; continue; }
+
+    if (lastWaterSeenT === null) {
+      if (maxT === null || l.t > maxT) maxT = l.t;
+      continue;
+    }
+
     if (l.t <= lastWaterSeenT) continue;
     if (l.kind !== 'gift' || typeof l.text !== 'string') continue;
+
     const until = Date.now() + 1200;
+
     if (l.text.indexOf('💧') === 0) {
       const m = l.text.match(/\[([^\]]+)\]/);
       let idx = m ? youngestIdx(s.flowers, m[1]) : -1;
+
       if (idx < 0) idx = youngestIdx(s.flowers);
       if (idx >= 0) waterFx.push({ idx, until });
     } else if (l.text.indexOf('🌧️') === 0 || l.text.indexOf('🌈') === 0) {
-      for (let i = 0; i < s.flowers.length; i++) if (s.flowers[i]) waterFx.push({ idx: i, until });
+      for (let i = 0; i < s.flowers.length; i++) {
+        if (s.flowers[i]) waterFx.push({ idx: i, until });
+      }
     }
+
     if (maxT === null || l.t > maxT) maxT = l.t;
   }
+
   lastWaterSeenT = maxT;
 }
 
+function avatarMarkup(person, className, fallbackClass) {
+  const name = String(person && person.name || '?');
+  const avatar = person && person.avatar;
+  const initial = escapeHtml(name.trim().charAt(0) || '?');
+
+  if (!avatar) {
+    return '<span class="' + className + ' ' + fallbackClass + '">' + initial + '</span>';
+  }
+
+  return '<img class="' + className + '" src="' + escapeHtml(avatar) +
+    '" alt="" onerror="this.style.display=\'none\';' +
+    'this.nextElementSibling.style.display=\'inline-flex\'">' +
+    '<span class="' + className + ' ' + fallbackClass +
+    '" style="display:none">' + initial + '</span>';
+}
+
 function render(s) {
+  if (!s) return;
+
   lastState = s;
   renderHowto(s);
-  if (!farmerWelcomed) { farmerWelcomed = true; farmerSay('Chào mừng đến vườn hoa! 🌸', 4000); }
-  // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
-  if (window.StromMusic) window.StromMusic.sync({ mood: 'folk', enabled: true, volume: 50, energy: (s.phase === 'festival' || s.phase === 'results') ? 2 : (s.demoActive || (s.viewersOnline || 0) > 0 || (s.flowers || []).length > 0 ? 1 : 0) });
-  voiceOn = s.settings.voiceEnabled !== false;
+
+  if (!farmerWelcomed) {
+    farmerWelcomed = true;
+    farmerSay('Chào mừng đến vườn hoa! 🌸', 4000);
+  }
+
+  if (window.StromMusic) {
+    window.StromMusic.sync({
+      mood: 'folk',
+      enabled: true,
+      volume: 50,
+      energy: (s.phase === 'festival' || s.phase === 'results')
+        ? 2
+        : (s.demoActive || (s.viewersOnline || 0) > 0 || (s.flowers || []).length > 0 ? 1 : 0)
+    });
+  }
+
+  voiceOn = s.voiceEnabled !== false &&
+    (!s.settings || s.settings.voiceEnabled !== false);
+
   document.getElementById('blooms').textContent = s.gardenBlooms;
   document.getElementById('target').textContent = s.target;
-  const bloomPct = Math.min(100, s.gardenBlooms / s.target * 100);
+
+  const bloomPct = s.target > 0
+    ? Math.min(100, s.gardenBlooms / s.target * 100)
+    : 0;
+
   document.getElementById('bar').style.width = bloomPct + '%';
   document.getElementById('progress').classList.toggle('hot', bloomPct > 80);
-  document.getElementById('round-line').textContent = 'Ván ' + s.roundNo + ' · Bình luận / thả tim để gieo hạt — quà tưới nước, follow tặng hồng vàng';
+
+  document.getElementById('round-line').textContent =
+    'Ván ' + s.roundNo +
+    ' · Bình luận / thả tim để gieo hạt — quà tưới nước, follow tặng hồng vàng';
+
   document.getElementById('phase-label').textContent =
-    s.phase === 'festival' ? '🎉 LỄ HỘI HOA!' : s.phase === 'results' ? '🏆 Kết quả ván' : 'Đang trồng…';
+    s.phase === 'festival'
+      ? '🎉 LỄ HỘI HOA!'
+      : s.phase === 'results'
+        ? '🏆 Kết quả ván'
+        : 'Đang trồng…';
+
   document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
-  document.getElementById('milestones').innerHTML = s.milestones.map((m) =>
-    '<span class="ms' + (s.milestonesHit.includes(m) ? ' hit' : '') + '">' + (m >= s.target ? '🎉' : '🌸') + ' ' + m + ' hoa</span>').join('');
-  document.getElementById('rainbow').classList.toggle('on', s.milestonesHit.includes(75));
-  document.getElementById('bees').classList.toggle('on', s.milestonesHit.includes(50));
+
+  document.getElementById('milestones').innerHTML =
+    (s.milestones || []).map((m) =>
+      '<span class="ms' +
+      ((s.milestonesHit || []).includes(m) ? ' hit' : '') +
+      '">' +
+      (m >= s.target ? '🎉' : '🌸') + ' ' + m + ' hoa</span>'
+    ).join('');
+
+  document.getElementById('rainbow').classList.toggle(
+    'on',
+    (s.milestonesHit || []).includes(75)
+  );
+
+  document.getElementById('bees').classList.toggle(
+    'on',
+    (s.milestonesHit || []).includes(50)
+  );
 
   const top = document.getElementById('top5');
-  const maxPts = s.top.length ? Math.max(1, s.top[0].points) : 1;
-  top.innerHTML = '<h3>🏆 Top người trồng</h3>' + (s.top.length
-    ? s.top.map((t, i) => {
-        const medal = ['🥇', '🥈', '🥉'][i] || (i + 1);
-        const ava = t.avatar
-          ? '<img class="ui-ava" src="' + escapeHtml(t.avatar) + '" alt="">'
-          : '<span class="ui-ava ui-ava-fallback">' + escapeHtml((String(t.name || '?').trim().charAt(0)) || '?') + '</span>';
-        return '<div class="ui-row' + (i < 3 ? ' rank-' + (i + 1) : '') + '">' +
-          '<div class="ui-rank">' + medal + '</div>' + ava +
-          '<div class="ui-name">' + escapeHtml(t.name) + '<div class="ui-bar"><i style="width:' + Math.round(t.points / maxPts * 100) + '%"></i></div></div>' +
-          '<div class="ui-pts">' + t.points + 'đ</div></div>';
-      }).join('')
-    : '<div class="top-empty">Chưa có ai trồng hoa…</div>');
+  const maxPts = s.top && s.top.length
+    ? Math.max(1, s.top[0].points)
+    : 1;
+
+  top.innerHTML = '<h3>🏆 Top người trồng</h3>' +
+    (s.top && s.top.length
+      ? s.top.map((t, i) => {
+          const medal = ['🥇', '🥈', '🥉'][i] || (i + 1);
+          const ava = avatarMarkup(t, 'ui-ava', 'ui-ava-fallback');
+
+          return '<div class="ui-row' + (i < 3 ? ' rank-' + (i + 1) : '') + '">' +
+            '<div class="ui-rank">' + medal + '</div>' +
+            ava +
+            '<div class="ui-name">' +
+              escapeHtml(t.name) +
+              '<div class="ui-bar"><i style="width:' +
+                Math.round(t.points / maxPts * 100) +
+                '%"></i></div>' +
+            '</div>' +
+            '<div class="ui-pts">' + t.points + 'đ</div>' +
+          '</div>';
+        }).join('')
+      : '<div class="top-empty">Chưa có ai trồng hoa…</div>');
 
   detectWatering(s);
   waterFx = waterFx.filter((w) => w.until > Date.now());
 
   const g = document.getElementById('garden');
-  // Mặt meme khác nhau toàn vườn: gán theo danh sách chung mọi chủ luống.
-  const allOwners = s.flowers.filter(Boolean);
   let html = '';
+
   for (let i = 0; i < s.plots; i++) {
     const f = s.flowers[i];
-    if (!f) { html += '<div class="plot empty"></div>'; continue; }
-    const shortName = [...String(f.name || '')].slice(0, 8).join('');
-    const justBloomed = prevStages && prevStages[i] !== 'bloom' && f.stage === 'bloom';
-    const justGrew = prevStages && prevStages[i] && prevStages[i] !== f.stage && f.stage !== 'bloom';
-    const icon = f.stage === 'bloom' ? FLOWER_ICON[f.type] : STAGE_ICON[f.stage];
-    const sprSrc = SPRITE_BASE + STAGE_SPRITE[f.stage] + '/sheet.png';
+
+    if (!f) {
+      html += '<div class="plot empty"></div>';
+      continue;
+    }
+
+    const shortName = [...String(f.name || '')].slice(0, 12).join('');
+    const justBloomed = prevStages &&
+      prevStages[i] !== 'bloom' &&
+      f.stage === 'bloom';
+
+    const justGrew = prevStages &&
+      prevStages[i] &&
+      prevStages[i] !== f.stage &&
+      f.stage !== 'bloom';
+
+    const icon = f.stage === 'bloom'
+      ? FLOWER_ICON[f.type] || '🌸'
+      : STAGE_ICON[f.stage] || '🌱';
+
+    const sprSrc = SPRITE_BASE +
+      (STAGE_SPRITE[f.stage] || STAGE_SPRITE.seed) +
+      '/sheet.png';
+
     const watering = waterFx.some((w) => w.idx === i);
-    // Người làm vườn: mặt meme làm ĐẦU (mỗi chủ luống 1 mặt khác nhau
-    // trong toàn vườn qua faceImgIn) + thân áo xanh lá, tên trên đầu.
-    const face = (window.MemeFaces
-      ? window.MemeFaces.faceImgIn(f, allOwners, 'meme-face')
-      : '<span>' + escapeHtml((String(f.name || '?').trim().charAt(0)) || '?') + '</span>');
-    html += '<div class="plot' + (f.golden ? ' golden' : '') + (f.stage === 'bloom' ? ' bloom' : '') + (justBloomed ? ' just-bloomed' : '') + (justGrew ? ' just-grew' : '') + (watering ? ' watering' : '') + '" title="' + escapeHtml(f.name) + ' — ' + STAGE_NAME[f.stage] + '">' +
-      '<div class="gardener"><div class="g-name">' + escapeHtml(shortName) + '</div>' +
-      '<div class="g-face">' + face + '</div>' +
-      '<div class="g-body"></div></div>' +
-      '<div class="f' + (f.stage === 'bloom' ? '' : ' stage-ic') + '"><img class="spr" src="' + sprSrc + '" alt="" onerror="this.style.display=\'none\';var e=this.nextElementSibling;if(e)e.style.display=\'inline\';"><span class="emo" style="display:none">' + icon + '</span></div>' +
-      (watering ? '<div class="water"><img src="' + WATER_SPRITE + '" alt=""></div>' : '') +
+    const face = avatarMarkup(f, 'g-face-img', 'g-face-fallback');
+
+    html +=
+      '<div class="plot' +
+      (f.golden ? ' golden' : '') +
+      (f.stage === 'bloom' ? ' bloom' : '') +
+      (justBloomed ? ' just-bloomed' : '') +
+      (justGrew ? ' just-grew' : '') +
+      (watering ? ' watering' : '') +
+      '" title="' + escapeHtml(f.name) +
+      ' — ' + escapeHtml(STAGE_NAME[f.stage] || f.stage) + '">' +
+
+        '<div class="gardener">' +
+          '<div class="g-name">' + escapeHtml(shortName) + '</div>' +
+          '<div class="g-face">' + face + '</div>' +
+          '<div class="g-body"></div>' +
+        '</div>' +
+
+        '<div class="f' +
+          (f.stage === 'bloom' ? '' : ' stage-ic') +
+          '">' +
+          '<img class="spr" src="' + sprSrc +
+          '" alt="" onerror="this.style.display=\'none\';' +
+          'var e=this.nextElementSibling;if(e)e.style.display=\'inline\'">' +
+          '<span class="emo" style="display:none">' + icon + '</span>' +
+        '</div>' +
+
+        (watering
+          ? '<div class="water"><img src="' + WATER_SPRITE + '" alt=""></div>'
+          : '') +
+
       '</div>';
   }
+
   g.innerHTML = html;
   prevStages = s.flowers.map((f) => (f ? f.stage : null));
 
-  document.getElementById('nursery').textContent = '🌱 Vườn ươm: ' + s.nursery.count + ' hạt đang chờ' +
-    (s.nursery.waiting.length ? ' — ' + s.nursery.waiting.map(escapeHtml).join(', ') : '');
+  const nursery = s.nursery || { count: 0, waiting: [] };
+
+  document.getElementById('nursery').textContent =
+    '🌱 Vườn ươm: ' + nursery.count + ' hạt đang chờ' +
+    (nursery.waiting && nursery.waiting.length
+      ? ' — ' + nursery.waiting.map(escapeHtml).join(', ')
+      : '');
+
   document.getElementById('st-flowers').textContent = s.flowers.length;
   document.getElementById('st-online').textContent = s.viewersOnline;
-  document.getElementById('st-gifts').textContent = s.stats.gifts;
+  document.getElementById('st-gifts').textContent =
+    s.stats && s.stats.gifts !== undefined ? s.stats.gifts : 0;
 
-  // Ticker chỉ 2 dòng (đợt 2: 3 dòng mọc cao lên đè thanh vườn ươm).
   const tk = document.getElementById('ticker');
-  tk.innerHTML = s.logs.slice(-2).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
 
-  if (s.phase === 'festival' && prevPhase !== 'festival') { spawnPetals(); farmerFestival(true); }
-  if (s.phase !== 'festival' && prevPhase === 'festival') { document.getElementById('petals').innerHTML = ''; farmerFestival(false); }
+  tk.innerHTML = (s.logs || []).slice(-2).reverse().map((l) =>
+    '<div>' + escapeHtml(l.text) + '</div>'
+  ).join('');
+
+  if (s.phase === 'festival' && prevPhase !== 'festival') {
+    spawnPetals();
+    farmerFestival(true);
+  }
+
+  if (s.phase !== 'festival' && prevPhase === 'festival') {
+    document.getElementById('petals').innerHTML = '';
+    farmerFestival(false);
+  }
+
   prevPhase = s.phase;
 
   if (s.phase === 'festival') {
-    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
-    showBanner('🎉 LỄ HỘI HOA! 🎉', 'Vườn đã đầy ' + s.target + ' hoa nở — cảm ơn cả phòng! Ván mới sau ' + left + 's…', '');
+    const left = Math.max(
+      0,
+      Math.ceil((s.phaseEndsAt - Date.now()) / 1000)
+    );
+
+    showBanner(
+      '🎉 LỄ HỘI HOA! 🎉',
+      'Vườn đã đầy ' + s.target +
+      ' hoa nở — cảm ơn cả phòng! Ván mới sau ' + left + 's…',
+      ''
+    );
   } else if (s.phase === 'results' && s.results) {
-    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
-    const names = s.results.top.map((t, i) => (i + 1) + '. ' + t.name + ' ' + t.points + 'đ').join(' · ');
-    showBanner('🏆 KẾT QUẢ VÁN ' + s.results.roundNo, s.results.blooms + ' hoa đã nở trong ván này. Ván mới sau ' + left + 's…', names || 'Chưa có ai trồng hoa');
+    const left = Math.max(
+      0,
+      Math.ceil((s.phaseEndsAt - Date.now()) / 1000)
+    );
+
+    const names = s.results.top.map((t, i) =>
+      (i + 1) + '. ' + t.name + ' ' + t.points + 'đ'
+    ).join(' · ');
+
+    showBanner(
+      '🏆 KẾT QUẢ VÁN ' + s.results.roundNo,
+      s.results.blooms +
+      ' hoa đã nở trong ván này. Ván mới sau ' + left + 's…',
+      names || 'Chưa có ai trồng hoa'
+    );
   } else {
     document.getElementById('banner').classList.remove('on');
   }
 }
+
 function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[c]));
 }
 
 socket.on('state-update', render);
-socket.on('bloom', (d) => { if (d && d.flower) { playTts('Hoa của ' + d.flower.name + ' đã nở rồi!'); farmerSay('Hoa của ' + d.flower.name + ' nở rồi! 🌸'); } });
-socket.on('festival', () => playTts('Vườn hoa đã đầy! Lễ hội hoa bắt đầu!'));
+
+socket.on('bloom', (d) => {
+  if (!d || !d.flower) return;
+
+  queueBloomVoice(d.flower);
+  farmerSay(
+    'Hoa của ' + d.flower.name + ' nở rồi! 🌸',
+    3000
+  );
+});
+
+socket.on('festival', (d) => {
+  enqueueVoice(['festival'], 9);
+  farmerFestival(true);
+});
+
 socket.on('milestone', (d) => {
   if (!d) return;
-  playTts('Mốc ' + d.milestone + ' hoa nở! ' + (d.effect || ''));
-  farmerSay('Mốc ' + d.milestone + ' hoa nở! 🎉');
+
+  enqueueVoice([
+    'moc',
+    ...numberToFragments(d.milestone),
+    'hoa-no'
+  ], 8);
+
+  farmerSay(
+    d.effect || ('Mốc ' + d.milestone + ' hoa nở! 🎉'),
+    3500
+  );
+
   if (window.StromUI) StromUI.sfx('pop');
+
   document.querySelectorAll('#milestones .ms').forEach((el) => {
     if (el.textContent.indexOf(String(d.milestone)) !== -1) {
       el.classList.add('ms-pop');
@@ -479,18 +1480,123 @@ socket.on('milestone', (d) => {
     }
   });
 });
-socket.on('rainbow', (d) => { if (d) playTts('Cầu vồng! Cảm ơn ' + d.name + ' đã tặng quà lớn!'); });
 
-fetch('/api/state').then((r) => r.json()).then(render).catch(() => {});
-// ?demo=1: tự bật chế độ thử + chạy demo để xem game chơi thật (chỉ khi phòng chưa có event thật).
+socket.on('rainbow', (d) => {
+  if (!d) return;
+
+  enqueueVoice([
+    'cau-vong',
+    'cam-on',
+    ...nameToFragments(d.name),
+    'da-tang-qua-lon'
+  ], 8);
+
+  farmerSay(
+    '🌈 Cầu vồng! Cảm ơn ' + d.name + ' đã tặng quà lớn!',
+    3500
+  );
+});
+
+socket.on('rain', (d) => {
+  if (!d) return;
+
+  enqueueVoice([
+    'mua-rao',
+    'cam-on',
+    ...nameToFragments(d.name)
+  ], 6);
+
+  farmerSay(
+    '🌧️ Mưa rào! Cảm ơn ' + d.name + '!',
+    3000
+  );
+});
+
+socket.on('round-reset', () => {
+  voiceQueue.length = 0;
+  bloomVoicePending = null;
+  if (bloomVoiceTimer) clearTimeout(bloomVoiceTimer);
+  bloomVoiceTimer = null;
+});
+
+socket.on('session-reset', () => {
+  voiceQueue.length = 0;
+  bloomVoicePending = null;
+  if (bloomVoiceTimer) clearTimeout(bloomVoiceTimer);
+  bloomVoiceTimer = null;
+});
+
+fetch('/api/state')
+  .then((r) => r.json())
+  .then(render)
+  .catch(() => {});
+
 if (new URLSearchParams(location.search).get('demo') === '1') {
-  fetch('/api/state').then((r) => r.json()).then((st) => {
-    if ((st.webhookCount || 0) > 0) return;
-    return fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
-      .then(() => fetch('/api/test/demo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start' }) }));
-  }).catch(() => {});
+  fetch('/api/state')
+    .then((r) => r.json())
+    .then((st) => {
+      if ((st.webhookCount || 0) > 0) return;
+
+      return fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ demoMode: true })
+      }).then(() =>
+        fetch('/api/test/demo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'start' })
+        })
+      );
+    })
+    .catch(() => {});
 }
-setInterval(() => { if (lastState) render(lastState); }, 1000); // đếm ngược lễ hội/kết quả
+
+setInterval(() => {
+  if (lastState) render(lastState);
+}, 1000);
 </script>
+
+<!--
+VOICE ASSETS — VƯỜN HOA MÙA XUÂN
+
+Cần thu mới:
+
+1. /shared/voice/vuon-hoa-mua-xuan/festival.mp3
+   Câu thoại chính xác: "Vườn hoa đã đầy! Lễ hội hoa bắt đầu!"
+
+2. /shared/voice/vuon-hoa-mua-xuan/frag/hoa-cua.mp3
+   Câu thoại chính xác: "Hoa của"
+
+3. /shared/voice/vuon-hoa-mua-xuan/frag/da-no-roi.mp3
+   Câu thoại chính xác: "đã nở rồi!"
+
+4. /shared/voice/vuon-hoa-mua-xuan/frag/moc.mp3
+   Câu thoại chính xác: "Mốc"
+
+5. /shared/voice/vuon-hoa-mua-xuan/frag/hoa-no.mp3
+   Câu thoại chính xác: "hoa nở!"
+
+6. /shared/voice/vuon-hoa-mua-xuan/frag/cau-vong.mp3
+   Câu thoại chính xác: "Cầu vồng!"
+
+7. /shared/voice/vuon-hoa-mua-xuan/frag/cam-on.mp3
+   Câu thoại chính xác: "Cảm ơn"
+
+8. /shared/voice/vuon-hoa-mua-xuan/frag/da-tang-qua-lon.mp3
+   Câu thoại chính xác: "đã tặng quà lớn!"
+
+9. /shared/voice/vuon-hoa-mua-xuan/frag/mua-rao.mp3
+   Câu thoại chính xác: "Mưa rào!"
+
+Tái sử dụng thư viện Kéo Co, không cần thu lại:
+
+- Mảnh tên trong /shared/voice/keo-co/frag/
+- Mảnh số trong /shared/voice/keo-co/frag/
+- Các mảnh số gồm các tên do numberToFragments() sinh ra như:
+  num-mot, num-hai, num-ba, num-bon, num-nam, num-sau, num-bay,
+  num-tam, num-chin, num-muoi, num-muoi-tens, num-mot2, num-lam,
+  num-tram, num-nghin, num-le và mot-ban.
+-->
 </body>
 </html>

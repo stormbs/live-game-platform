@@ -6,158 +6,706 @@
 <title>Đấu Trường Sinh Tồn — Overlay</title>
 <script src="/socket.io/socket.io.js"></script>
 <script src="/shared/music.js"></script>
-<link rel="stylesheet" href="/shared/meme.css">
-<script src="/shared/meme.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 1080px; height: 1920px; overflow: hidden; }
-  body {
-    font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif; color: #fff;
-  }
-  .demo-badge { position: absolute; top: 14px; left: 14px; z-index: 30; background: #b8860b; color: #1c1c1c; font-weight: 900; font-size: 24px; padding: 8px 16px; border-radius: 10px; display: none; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
-  .demo-badge.on { display: block; }
-  .demo-note { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); z-index: 30; background: rgba(0,0,0,.75); color: #ffd94d; font-weight: 800; font-size: 22px; padding: 10px 18px; border-radius: 10px; display: none; text-align: center; width: 900px; }
-  .demo-note.on { display: block; }
-  header { position: relative; z-index: 5; text-align: center; padding: 30px 30px 0; }
-  h1 { font-size: 60px; text-shadow: 0 3px 0 #000, 0 6px 18px rgba(0,0,0,.5); letter-spacing: 1px; }
-  .sub { font-size: 25px; text-shadow: 0 2px 6px rgba(0,0,0,.5); margin-top: 6px; }
-  .infobar { margin: 16px auto 0; width: 920px; background: rgba(0,0,0,.45); border-radius: 20px; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 28px; font-weight: 900; }
-  .infobar .zone { color: #ff8a94; }
-  .infobar .zone.safe { color: #7dff9e; }
-  .arena-wrap { position: absolute; top: 330px; left: 0; width: 1080px; height: 1000px; z-index: 4; }
-  .arena { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 960px; height: 900px; border-radius: 50%; background: radial-gradient(circle, #3d5a3a 0%, #2c4429 60%, #1e2f1c 100%); border: 6px solid #8a6d3b; box-shadow: inset 0 0 60px rgba(0,0,0,.5); }
-  .zone-ring { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 5px solid rgba(255, 60, 60, .9); border-radius: 50%; box-shadow: 0 0 30px rgba(255, 0, 0, .5), inset 0 0 40px rgba(255, 0, 0, .25); pointer-events: none; transition: width 1s linear, height 1s linear; }
-  .fighter { position: absolute; width: 130px; margin-left: -65px; margin-top: -100px; text-align: center; z-index: 6; }
-  /* Đông người (>14): thu nhỏ fighter để tên/avatar không chồng nhau —
-     vòng tròn rx 400/ry 340 chỉ đủ chỗ ~97px/người khi đủ 24 chiến binh. */
-  .arena-wrap.crowded .fighter { width: 104px; margin-left: -52px; margin-top: -78px; }
-  .arena-wrap.crowded .fighter .nm { font-size: 17px; max-width: 100px; }
-  .arena-wrap.crowded .fighter .meme-head { width: 44px; height: 44px; border-width: 2px; border-radius: 10px; }
-  .arena-wrap.crowded .fighter .torso { width: 42px; height: 20px; }
-  .arena-wrap.crowded .fighter .wp { font-size: 34px; }
-  .arena-wrap.crowded .fighter .hpnum { font-size: 14px; }
-  /* Trọng tài đứng GIỮA SÂN (tâm đấu trường, chỗ trống giữa vòng chiến
-     binh), to rõ — phất cờ + bình luận theo sự kiện thật. Ẩn khi chưa có
-     chiến binh nào (tránh đè dòng chữ chờ người chơi ở giữa sân). */
-  .referee { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 5; text-align: center; width: 280px; }
-  .ref-bubble { background: rgba(255,255,255,.95); color: #222; font-size: 23px; font-weight: 800; line-height: 1.3; border-radius: 14px; padding: 10px 14px; margin-bottom: 8px; box-shadow: 0 3px 10px rgba(0,0,0,.4); min-height: 64px; display: flex; align-items: center; justify-content: center; }
-  .ref-body { font-size: 104px; line-height: 1; position: relative; display: inline-block; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
-  .ref-flag { position: absolute; right: -34px; top: -8px; font-size: 56px; display: inline-block; }
-  .referee.waving .ref-flag { animation: flagWave .5s ease-in-out 4; }
-  @keyframes flagWave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-28deg); } }
-  .ref-name { font-size: 22px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 4px #000; margin-top: 4px; }
-  /* Bảng hướng dẫn chơi: dải gọn giữa infobar và đấu trường (vùng trống
-     trên miệng vòng tròn — không che fighter, không che bảng top). Số mặc
-     định = defaultSettings trong engine.js; render() đồng bộ lại theo
-     s.settings nên đổi setting ở dashboard vẫn hiển thị đúng. */
-  .howto { position: absolute; top: 232px; left: 30px; width: 1020px; z-index: 6; background: rgba(0,0,0,.5); border: 2px solid rgba(255,217,77,.55); border-radius: 14px; padding: 6px 16px; font-size: 24px; font-weight: 700; line-height: 1.5; text-align: center; text-shadow: 0 1px 3px #000; }
-  .howto b { color: #ffd94d; }
-  /* Idle: bob nhẹ lên xuống (chỉ transform) — chạy trên lớp trong để không
-     xung đột với lunge / giật lùi / ngã ở lớp ngoài .fighter. */
-  .fighter:not(.down) .fbody { animation: bob 1.8s ease-in-out infinite; }
-  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-  /* Tấn công: lao về phía đối thủ (hướng --lx/--ly = về tâm đấu trường, nơi
-     đối thủ đứng) 0.25s rồi về; vũ khí vung 1 nhịp. */
-  .fighter.atk { animation: lunge .25s ease-out; }
-  @keyframes lunge { 0% { transform: translate(0, 0); } 35% { transform: translate(calc(var(--lx, 0) * 16px), calc(var(--ly, 0) * 16px)); } 100% { transform: translate(0, 0); } }
-  .fighter.atk .wp { animation: swing .25s ease-in-out; }
-  @keyframes swing { 0% { transform: rotate(0deg); } 40% { transform: rotate(-35deg); } 100% { transform: rotate(0deg); } }
-  /* Bị đánh: giật lùi (ngược hướng đối thủ) + chớp đỏ 0.3s. */
-  .fighter.hurt { animation: hurtShake .3s ease-out; }
-  @keyframes hurtShake { 0% { transform: translate(0, 0); opacity: 1; } 30% { transform: translate(calc(var(--lx, 0) * -12px), calc(var(--ly, 0) * -12px)); opacity: .55; } 100% { transform: translate(0, 0); opacity: 1; } }
-  .fighter.hurt .meme-head { border-color: #ff3b30; box-shadow: 0 0 14px rgba(255, 59, 48, .9); }
-  .fighter .wp { font-size: 46px; line-height: 1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
-  .fighter .nm { font-size: 18px; font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 6px rgba(0,0,0,.85), 0 2px 8px rgba(0,0,0,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 150px; background: rgba(0,0,0,.55); padding: 1px 8px; border-radius: 9px; }
-  /* Nhân vật MEME: mặt meme làm ĐẦU chiến binh (mỗi người 1 mặt khác nhau
-     trong toàn game qua faceImgIn — tránh trùng mặt) + thân là khối giáp
-     đơn giản + vũ khí + HP. Fallback khi meme.js lỗi: vòng chữ cái cũ. */
-  .fighter .meme-head { width: 64px; height: 64px; margin: 3px auto 0; border-radius: 14px; border: 3px solid rgba(255,255,255,.85); background: rgba(0,0,0,.25); }
-  .fighter .meme-head img { width: 100%; height: 100%; object-fit: contain; }
-  .fighter .torso { width: 58px; height: 28px; margin: 4px auto 0; border-radius: 14px 14px 8px 8px; background: linear-gradient(180deg, #c3cedb, #67748a); box-shadow: inset 0 -7px 0 rgba(0,0,0,.3), 0 2px 4px rgba(0,0,0,.5); }
-  /* Avatar tròn 44px ngay dưới tên; chữ cái đầu tên làm fallback khi không
-     có avatar thật (demo) hoặc ảnh lỗi — img lỗi tự gỡ để lộ chữ cái. */
-  .fighter .av-wrap { position: relative; width: 44px; height: 44px; margin: 2px auto 0; }
-  .fighter .av { width: 44px; height: 44px; border-radius: 50%; }
-  .fighter .av-fb { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #5b7fa6, #2c4a6b); font-size: 22px; font-weight: 900; color: #fff; border: 2px solid rgba(255,255,255,.75); text-shadow: 0 1px 3px rgba(0,0,0,.6); }
-  .fighter .av-img { position: absolute; left: 0; top: 0; object-fit: cover; border: 2px solid rgba(255,255,255,.75); background: #333; }
-  .fighter .hpbar { height: 12px; background: rgba(0,0,0,.6); border-radius: 6px; overflow: hidden; margin-top: 3px; border: 1px solid rgba(255,255,255,.4); }
-  .fighter .hpbar i { display: block; height: 100%; background: linear-gradient(90deg, #37d67a, #7dff9e); transition: width .4s; }
-  .fighter .hpbar i.low { background: linear-gradient(90deg, #ff3b30, #ff8a80); }
-  .fighter .hpnum { font-size: 16px; font-weight: 800; color: #7dff9e; text-shadow: 0 1px 3px #000; }
-  .fighter.down { opacity: .45; filter: grayscale(1); animation: fallDown .6s ease-in forwards; }
-  .fighter.down .fbody { animation: none; }
-  @keyframes fallDown { from { transform: translateY(0) rotate(0deg); opacity: 1; } to { transform: translateY(28px) rotate(70deg); opacity: .45; } }
-  .fighter.down .wp { font-size: 62px; }
-  .hit-float { position: absolute; z-index: 8; font-size: 34px; font-weight: 900; color: #ff5b4d; text-shadow: 0 2px 4px #000; animation: floatUp 1.4s ease-out forwards; pointer-events: none; }
-  @keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-70px); opacity: 0; } }
-  .heal-float { color: #7dff9e; }
-  .side { position: absolute; top: 1360px; left: 30px; width: 1020px; z-index: 6; display: flex; gap: 16px; }
-  .panel { flex: 1; background: rgba(0,0,0,.5); border-radius: 16px; padding: 14px 18px; }
-  .panel h3 { font-size: 25px; margin-bottom: 6px; }
-  .panel div { font-size: 22px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .panel .top-av-wrap { position: relative; display: inline-block; width: 24px; height: 24px; vertical-align: middle; margin-right: 10px; }
-  .panel .top-av { width: 24px; height: 24px; border-radius: 50%; }
-  .panel .top-av-fb { display: inline-flex; align-items: center; justify-content: center; background: #5b7fa6; font-size: 13px; font-weight: 900; color: #fff; }
-  .panel .top-av-img { position: absolute; left: 0; top: 0; object-fit: cover; }
-  .queue-line { position: absolute; top: 1330px; left: 0; width: 1080px; text-align: center; font-size: 23px; font-weight: 800; color: #ffe9bd; text-shadow: 0 1px 3px #000; z-index: 6; }
-  .ticker { position: absolute; left: 0; bottom: 150px; width: 1080px; z-index: 5; background: rgba(0,0,0,.55); color: #fff; font-size: 26px; padding: 12px 24px; }
-  .ticker div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.5; }
-  .statusbar { position: absolute; left: 0; bottom: 0; width: 1080px; height: 140px; z-index: 5; background: #0d1b2e; color: #fff; display: flex; align-items: center; justify-content: space-around; font-size: 26px; font-weight: 800; padding: 0 30px; }
-  .statusbar .big { font-size: 34px; }
-  .banner { position: absolute; left: 50%; top: 700px; transform: translateX(-50%); z-index: 20; width: 980px; text-align: center; background: rgba(255,255,255,.96); border: 6px solid #ffd700; border-radius: 28px; padding: 34px 30px; box-shadow: 0 10px 40px rgba(0,0,0,.4); display: none; }
-  .banner.on { display: block; animation: pop .4s ease; }
-  @keyframes pop { from { transform: translateX(-50%) scale(.85); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
-  .banner h2 { font-size: 54px; color: #7a5c00; }
-  .banner p { font-size: 30px; margin-top: 10px; line-height: 1.4; color: #333; }
-  #scaler { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; transform-origin: top left; background: linear-gradient(180deg, #0d1b2e 0%, #1b3a5c 40%, #2c2118 100%); }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
   html { background: #000; }
+  body {
+    font-family: "Be Vietnam Pro", "Segoe UI", Verdana, sans-serif;
+    color: #fff;
+  }
+  #scaler {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    transform-origin: top left;
+    background:
+      radial-gradient(ellipse at 50% 0, #235c74 0, transparent 48%),
+      linear-gradient(180deg, #102d43, #101f32 70%, #0b1524);
+  }
+  #scaler::before {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    border: 3px solid #416176;
+    border-radius: 30px;
+    pointer-events: none;
+    z-index: 1;
+  }
+  header {
+    position: relative;
+    z-index: 5;
+    text-align: center;
+    padding: 28px 24px 0;
+  }
+  .eyebrow {
+    color: #9ceafa;
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: 5px;
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 53px;
+    line-height: 1.2;
+    color: #ffdf78;
+    letter-spacing: 1px;
+    text-shadow: 0 4px 0 #713d21, 0 7px 0 #071320;
+  }
+  .sub {
+    font-size: 23px;
+    margin-top: 10px;
+    color: #e0f4ff;
+    font-weight: 700;
+  }
+  .infobar {
+    margin: 16px auto 0;
+    width: 1000px;
+    min-height: 60px;
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    background: #122b40;
+    border: 3px solid #52788e;
+    border-radius: 18px;
+    box-shadow: 0 5px 0 #071521;
+    font-size: 23px;
+    font-weight: 900;
+  }
+  #timer {
+    min-width: 104px;
+    font-variant-numeric: tabular-nums;
+    color: #ffe178;
+  }
+  .infobar .zone { color: #ff9ca9; font-size: 20px; }
+  .infobar .zone.safe { color: #93f7c2; }
+  .howto {
+    position: absolute;
+    top: 232px;
+    left: 30px;
+    width: 1020px;
+    z-index: 6;
+    padding: 10px 14px;
+    background: #122b40;
+    border: 3px solid #c8a851;
+    border-radius: 18px;
+    box-shadow: 0 5px 0 #071521;
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.45;
+    text-align: center;
+  }
+  .howto b { color: #ffe282; }
+  .howto .extra { color: #bfd5e5; font-size: 18px; }
+  .arena-wrap {
+    position: absolute;
+    top: 420px;
+    left: 0;
+    width: 1080px;
+    height: 900px;
+    z-index: 4;
+    isolation: isolate;
+    background:
+      linear-gradient(180deg, rgba(8,20,32,.24), rgba(8,20,32,.12) 50%, rgba(8,20,32,.40)),
+      url('/shared/bg/dau-truong-sinh-ton.webp') center / cover no-repeat;
+    border-top: 4px solid #caab60;
+    border-bottom: 4px solid #caab60;
+    box-shadow: 0 8px 0 #071521, inset 0 0 70px rgba(0,0,0,.3);
+  }
+  .arena {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 960px;
+    height: 860px;
+    border-radius: 48%;
+    background: rgba(11,30,28,.12);
+    border: 5px solid rgba(255,226,148,.5);
+    box-shadow: inset 0 0 35px rgba(0,0,0,.2);
+    pointer-events: none;
+  }
+  .arena-caption {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    color: #ffe6ab;
+    background: #142638;
+    border: 2px solid #a88b4f;
+    border-radius: 10px;
+    padding: 5px 18px;
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    z-index: 3;
+  }
+  .zone-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 5px solid rgba(255,90,97,.95);
+    border-radius: 50%;
+    box-shadow: 0 0 25px rgba(255,45,70,.5), inset 0 0 35px rgba(255,45,70,.2);
+    pointer-events: none;
+    transition: width 1s linear, height 1s linear;
+    z-index: 2;
+  }
+  .arena-wrap.zone-active .zone-ring {
+    animation: zonePulse 1.5s ease-in-out infinite;
+  }
+  @keyframes zonePulse {
+    0%, 100% { border-color: #ff667b; }
+    50% { border-color: #ffd594; box-shadow: 0 0 40px rgba(255,66,92,.65); }
+  }
+  .fighter {
+    position: absolute;
+    width: 140px;
+    margin-left: -70px;
+    margin-top: -83px;
+    text-align: center;
+    z-index: 6;
+  }
+  .fbody { position: relative; }
+  .fighter:not(.down) .fbody {
+    animation: bob 1.8s ease-in-out infinite;
+    animation-delay: var(--bob-delay, 0s);
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .fighter .nm {
+    display: block;
+    width: 140px;
+    max-width: 140px;
+    margin: 0 auto 4px;
+    padding: 3px 6px;
+    border: 2px solid #56748b;
+    border-radius: 9px;
+    background: #12283b;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 22px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-shadow: 0 2px 0 #06131f;
+    box-shadow: 0 3px 0 rgba(0,0,0,.25);
+  }
+  .fighter .av-wrap {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto;
+    border-radius: 50%;
+    box-shadow: 0 4px 0 #0b1b2a, 0 0 0 3px #253c50, 0 0 17px rgba(130,224,255,.25);
+    z-index: 2;
+  }
+  .fighter .av { width: 72px; height: 72px; border-radius: 50%; }
+  .fighter .av-fb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #347bad;
+    color: #fff;
+    border: 4px solid #fff6db;
+    font-size: 32px;
+    font-weight: 900;
+    text-shadow: 0 2px 0 #17364f;
+  }
+  .fighter .av-img {
+    position: absolute;
+    inset: 0;
+    object-fit: cover;
+    border: 4px solid #fff6db;
+    background: #29475d;
+  }
+  .fighter .torso {
+    position: relative;
+    width: 62px;
+    height: 29px;
+    margin: -2px auto 0;
+    border: 3px solid #152637;
+    border-radius: 13px 13px 8px 8px;
+    background: #8dbce0;
+    box-shadow: inset 0 -8px 0 #4278a1, inset 0 5px 0 #c8e5f6, 0 3px 0 rgba(0,0,0,.4);
+  }
+  .fighter .torso::after {
+    content: "◆";
+    display: block;
+    color: #ffe17c;
+    font-size: 19px;
+    line-height: 23px;
+    text-shadow: 0 2px 0 #694c22;
+  }
+  .fighter .wp {
+    position: absolute;
+    top: 96px;
+    right: 3px;
+    font-size: 39px;
+    line-height: 1;
+    transform-origin: 50% 80%;
+    filter: drop-shadow(0 3px 1px #112131);
+    z-index: 3;
+  }
+  .fighter .hpbar {
+    height: 13px;
+    margin: 5px 8px 0;
+    background: #10202d;
+    border: 2px solid #e1f0e8;
+    border-radius: 7px;
+    overflow: hidden;
+    box-shadow: 0 2px 0 #10202d;
+  }
+  .fighter .hpbar i {
+    display: block;
+    height: 100%;
+    background: #53e993;
+    box-shadow: inset 0 3px 0 #a5ffd0;
+    transition: width .35s ease;
+  }
+  .fighter .hpbar i.low {
+    background: #ff596d;
+    box-shadow: inset 0 3px 0 #ffb08c;
+  }
+  .fighter .hpnum {
+    display: inline-block;
+    margin-top: 3px;
+    padding: 0 6px;
+    background: rgba(10,25,36,.9);
+    border-radius: 6px;
+    color: #a0ffd0;
+    font-size: 17px;
+    font-weight: 900;
+    line-height: 22px;
+    text-shadow: 0 2px 0 #06131f;
+  }
+  .fighter .bonus {
+    position: absolute;
+    top: 35px;
+    right: 0;
+    min-width: 30px;
+    padding: 3px 4px;
+    border: 2px solid #563a18;
+    border-radius: 8px;
+    background: #ffdc73;
+    color: #513115;
+    font-size: 14px;
+    font-weight: 900;
+    z-index: 4;
+  }
+  .fighter .bonus[hidden] { display: none; }
+  .arena-wrap.crowded .fighter .av-wrap,
+  .arena-wrap.crowded .fighter .av { width: 64px; height: 64px; }
+  .arena-wrap.crowded .fighter .wp { top: 88px; font-size: 36px; }
+  .arena-wrap.crowded .fighter .torso { height: 26px; }
+  .arena-wrap.crowded .fighter .nm { font-size: 18px; }
+  .fighter.atk { animation: lunge .25s ease-out; }
+  @keyframes lunge {
+    0%, 100% { transform: translate(0,0); }
+    35% { transform: translate(calc(var(--lx, 0) * 16px), calc(var(--ly, 0) * 16px)); }
+  }
+  .fighter.atk .wp { animation: swing .25s ease-in-out; }
+  @keyframes swing {
+    0%, 100% { transform: rotate(0); }
+    40% { transform: rotate(-35deg); }
+  }
+  .fighter.hurt { animation: hurtShake .3s ease-out; }
+  @keyframes hurtShake {
+    0%, 100% { transform: translate(0,0); opacity: 1; }
+    30% {
+      transform: translate(calc(var(--lx, 0) * -12px), calc(var(--ly, 0) * -12px));
+      opacity: .55;
+    }
+  }
+  .fighter.hurt .av {
+    border-color: #ff594f;
+    box-shadow: 0 0 18px #ff403d;
+  }
+  .fighter.down {
+    opacity: .45;
+    filter: grayscale(1);
+    animation: fallDown .6s ease-in forwards;
+    pointer-events: none;
+  }
+  .fighter.down .fbody { animation: none; }
+  .fighter.down .wp { font-size: 49px; }
+  @keyframes fallDown {
+    from { transform: translateY(0) rotate(0); opacity: 1; }
+    to { transform: translateY(20px) rotate(70deg); opacity: .45; }
+  }
+  .referee {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 264px;
+    text-align: center;
+    z-index: 5;
+  }
+  .ref-bubble {
+    position: relative;
+    min-height: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #fff9df;
+    color: #24384a;
+    border: 4px solid #172a3b;
+    border-radius: 20px;
+    box-shadow: 0 5px 0 rgba(0,0,0,.3);
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .ref-bubble::after {
+    content: "";
+    position: absolute;
+    bottom: -13px;
+    left: 115px;
+    width: 20px;
+    height: 20px;
+    background: #fff9df;
+    border-right: 4px solid #172a3b;
+    border-bottom: 4px solid #172a3b;
+    transform: rotate(45deg);
+  }
+  .ref-body {
+    position: relative;
+    display: inline-block;
+    font-size: 94px;
+    line-height: 1;
+    filter: drop-shadow(0 4px 1px #10202c);
+  }
+  .ref-flag {
+    position: absolute;
+    right: -34px;
+    top: -8px;
+    display: inline-block;
+    font-size: 54px;
+    transform-origin: bottom left;
+  }
+  .referee.waving .ref-flag { animation: flagWave .5s ease-in-out 4; }
+  @keyframes flagWave {
+    0%, 100% { transform: rotate(0); }
+    50% { transform: rotate(-28deg); }
+  }
+  .ref-name {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 12px;
+    border: 2px solid #b89d57;
+    border-radius: 9px;
+    background: #14283b;
+    color: #ffe293;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 2px;
+  }
+  .empty-arena {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 620px;
+    padding: 30px;
+    border: 4px solid #e6c578;
+    border-radius: 24px;
+    background: rgba(14,35,49,.94);
+    box-shadow: 0 7px 0 #0b1a29;
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.6;
+    text-align: center;
+  }
+  .empty-arena strong { color: #ffe185; font-size: 36px; }
+  .hit-float {
+    position: absolute;
+    z-index: 50;
+    pointer-events: none;
+    font-size: 33px;
+    font-weight: 900;
+    color: #ff8a78;
+    white-space: nowrap;
+    text-shadow: 2px 2px 0 #4c1523, -2px -2px 0 #4c1523, 0 4px 0 #10202b;
+    animation: floatUp 1.4s ease-out forwards;
+  }
+  .heal-float { color: #94ffd0; }
+  @keyframes floatUp {
+    from { transform: translateY(0) scale(.9); opacity: 1; }
+    20% { transform: translateY(-10px) scale(1.15); opacity: 1; }
+    to { transform: translateY(-80px) scale(1); opacity: 0; }
+  }
+  .queue-line {
+    position: absolute;
+    top: 1333px;
+    left: 30px;
+    width: 1020px;
+    height: 32px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffe9bd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 6;
+  }
+  .side {
+    position: absolute;
+    top: 1375px;
+    left: 30px;
+    width: 1020px;
+    height: 290px;
+    display: flex;
+    gap: 16px;
+    z-index: 6;
+  }
+  .panel {
+    flex: 1;
+    min-width: 0;
+    padding: 14px 16px;
+    overflow: hidden;
+    background: #142b40;
+    border: 3px solid #47667f;
+    border-radius: 20px;
+    box-shadow: 0 6px 0 #081624;
+  }
+  .panel h3 {
+    margin-bottom: 10px;
+    padding-bottom: 9px;
+    border-bottom: 2px solid #3d5970;
+    font-size: 25px;
+    color: #ffe08a;
+  }
+  .panel .row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 35px;
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .panel .row-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .panel .damage { color: #ffdf8a; font-variant-numeric: tabular-nums; }
+  .panel .muted { color: #a8c0d4; font-size: 21px; line-height: 1.6; }
+  .panel .top-av-wrap {
+    position: relative;
+    display: inline-block;
+    flex: 0 0 30px;
+    width: 30px;
+    height: 30px;
+    vertical-align: middle;
+  }
+  .panel .top-av { width: 30px; height: 30px; border-radius: 50%; }
+  .panel .top-av-fb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #347bad;
+    border: 2px solid #d9effc;
+    font-size: 15px;
+    font-weight: 900;
+    color: #fff;
+  }
+  .panel .top-av-img {
+    position: absolute;
+    inset: 0;
+    object-fit: cover;
+    border: 2px solid #d9effc;
+  }
+  .ticker {
+    position: absolute;
+    left: 30px;
+    top: 1685px;
+    width: 1020px;
+    height: 139px;
+    padding: 12px 20px;
+    overflow: hidden;
+    z-index: 5;
+    background: #0e2235;
+    border: 2px solid #395a73;
+    border-radius: 16px;
+    font-size: 23px;
+    color: #d9eaf5;
+  }
+  .ticker div {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.6;
+  }
+  .statusbar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 1080px;
+    height: 78px;
+    padding: 0 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 15px;
+    z-index: 5;
+    background: #0a1929;
+    border-top: 3px solid #56748b;
+    color: #d6e8f6;
+    font-size: 22px;
+    font-weight: 800;
+  }
+  .statusbar .big { font-size: 30px; color: #ffe08a; }
+  .banner {
+    position: absolute;
+    left: 50%;
+    top: 695px;
+    transform: translateX(-50%);
+    z-index: 40;
+    width: 940px;
+    padding: 34px 30px;
+    display: none;
+    text-align: center;
+    background: #fff6d5;
+    border: 7px solid #ffd365;
+    border-radius: 30px;
+    box-shadow: 0 0 0 5px #63451f, 0 14px 0 rgba(10,22,35,.75), 0 0 100px rgba(255,208,84,.35);
+  }
+  .banner::before {
+    content: "✦  ★  ✦";
+    display: block;
+    margin-bottom: 12px;
+    color: #d48321;
+    font-size: 48px;
+    letter-spacing: 30px;
+  }
+  .banner.on { display: block; animation: pop .4s ease; }
+  @keyframes pop {
+    from { transform: translateX(-50%) scale(.85); opacity: 0; }
+    to { transform: translateX(-50%) scale(1); opacity: 1; }
+  }
+  .banner h2 {
+    font-size: 48px;
+    line-height: 1.25;
+    color: #75451e;
+    overflow-wrap: anywhere;
+  }
+  .banner p { margin-top: 16px; font-size: 28px; line-height: 1.5; color: #334155; }
+  .demo-badge {
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    z-index: 50;
+    display: none;
+    padding: 7px 12px;
+    border: 2px solid #5c4314;
+    border-radius: 10px;
+    background: #ffdc73;
+    color: #493415;
+    font-size: 20px;
+    font-weight: 900;
+  }
+  .demo-note {
+    position: absolute;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    display: none;
+    width: 900px;
+    padding: 12px 18px;
+    border: 2px solid #d6b85e;
+    border-radius: 12px;
+    background: #14283b;
+    color: #ffe08a;
+    font-size: 22px;
+    font-weight: 800;
+    text-align: center;
+  }
+  .demo-badge.on, .demo-note.on { display: block; }
 </style>
 </head>
 <body>
 <div id="scaler">
-<div class="demo-badge" id="demo-badge">🧪 DEMO</div>
-<div class="demo-note" id="demo-note"></div>
-<header>
-  <h1>⚔️ ĐẤU TRƯỜNG SINH TỒN ⚔️</h1>
-  <div class="sub" id="round-line">Bình luận “tham gia” để vào trận — người sống sót cuối cùng thắng</div>
-  <div class="infobar">
-    <span id="match-label">Trận 1 · Chờ người chơi</span>
-    <span id="timer"></span>
-    <span id="zone-label" class="zone safe">⭕ Vòng bo: chưa siết</span>
+  <div class="demo-badge" id="demo-badge">🧪 DEMO</div>
+  <div class="demo-note" id="demo-note"></div>
+
+  <header>
+    <div class="eyebrow">BATTLE ROYALE · TIKTOK LIVE</div>
+    <h1>⚔️ ĐẤU TRƯỜNG SINH TỒN</h1>
+    <div class="sub" id="round-line">Gõ “tham gia” · Cầm vũ khí · Trụ đến cuối cùng!</div>
+    <div class="infobar">
+      <span id="match-label">Đang kết nối đấu trường…</span>
+      <span id="timer"></span>
+      <span id="zone-label" class="zone safe">⭕ Vòng bo: chưa siết</span>
+    </div>
+  </header>
+
+  <div class="howto" id="howto">
+    <div>💬 Gõ “tham gia” → <b><span id="g-hp">—</span> HP</b> + ⚔️/🏹/🔨 ngẫu nhiên · tối đa <b><span id="g-max">—</span></b> chiến binh</div>
+    <div>❤️ 1 tim: địch ngẫu nhiên <b>−<span id="g-tap">—</span> HP</b> · 🎯 Gõ đúng tên địch: <b>−<span id="g-cmt">—</span> HP</b> · Follow <b>+<span id="g-fol">—</span> HP</b>, 1 lần/trận</div>
+    <div>🎁 1 xu = <b>+1 sát thương</b> đòn sau, dồn tối đa <b>+<span id="g-bonus">—</span></b> · Quà ≥<b><span id="g-gcoins">—</span> xu</b>: hồi <b>+<span id="g-ghp">—</span> HP</b></div>
+    <div>⭕ Sau <b><span id="g-zone">—</span></b>: mỗi <b><span id="g-zint">—</span>s −1 HP</b> tất cả · 👑 Còn 1 người hoặc nhiều HP nhất sau <b><span id="g-dur">—</span></b> thắng</div>
+    <div class="extra">💀 Gục nằm sân <span id="g-down">—</span>s · Đầy sân thì xếp hàng · Vinh danh <span id="g-spot">—</span>s · Giãn lệnh đánh tên: <span id="g-spam">—</span>s</div>
   </div>
-</header>
 
-<div class="howto" id="howto">
-  <div>💬 Bình luận “tham gia” để vào trận · <b><span id="g-hp">100</span> HP</b> · tối đa <b><span id="g-max">24</span></b> chiến binh</div>
-  <div>❤️ 1 tim = <b>−<span id="g-tap">2</span> HP</b> ngẫu nhiên · 🎯 Bình luận tên địch = <b>−<span id="g-cmt">3</span> HP</b> · 💙 Follow <b>+<span id="g-fol">10</span> HP</b> (1 lần/trận)</div>
-  <div>🎁 1 xu = <b>+1 sát thương</b> đòn sau (tối đa <b>+<span id="g-bonus">20</span></b>) · quà ≥<b><span id="g-gcoins">100</span> xu</b> hồi <b>+<span id="g-ghp">20</span> HP</b></div>
-  <div>⭕ Vòng bo sau <b><span id="g-zone">3</span> phút</b>, mỗi <b><span id="g-zint">10</span>s −1 HP</b> · 👑 còn 1 người sống (hoặc nhiều HP nhất sau <b><span id="g-dur">10</span> phút</b>) thì thắng</div>
-</div>
+  <div class="arena-wrap" id="arena-wrap">
+    <div class="arena"></div>
+    <div class="zone-ring" id="zone-ring" style="width:960px; height:860px; display:none;"></div>
+    <div id="fighters"></div>
+    <div class="referee" id="referee" style="display:none;">
+      <div class="ref-bubble" id="ref-bubble">⚔️ Ai sẽ sống sót cuối cùng?</div>
+      <div class="ref-body">🧑‍⚖️<span class="ref-flag" id="ref-flag">🏁</span></div>
+      <div class="ref-name">TRỌNG TÀI</div>
+    </div>
+    <div class="arena-caption">SỐNG DAI THÀNH HUYỀN THOẠI</div>
+  </div>
 
-<div class="arena-wrap" id="arena-wrap">
-  <div class="arena"></div>
-  <div class="zone-ring" id="zone-ring" style="width:960px; height:900px;"></div>
-  <div id="fighters"></div>
-  <div class="referee" id="referee">
-    <div class="ref-bubble" id="ref-bubble">⚔️ Ai sẽ sống sót cuối cùng?</div>
-    <div class="ref-body">🧑‍⚖️<span class="ref-flag" id="ref-flag">🏁</span></div>
-    <div class="ref-name">TRỌNG TÀI</div>
+  <div class="queue-line" id="queue-line"></div>
+
+  <div class="side">
+    <div class="panel" id="top5">
+      <h3>🏆 Top 5 sát thương</h3>
+      <div class="muted">Ai sẽ tung đòn mở màn?</div>
+    </div>
+    <div class="panel" id="downed">
+      <h3>💀 Đã gục</h3>
+      <div class="muted">Chưa ai nằm nghỉ cả!</div>
+    </div>
+  </div>
+
+  <div class="ticker" id="ticker"></div>
+
+  <div class="statusbar">
+    <span>⚔️ <span class="big" id="st-fighters">0</span> chiến binh</span>
+    <span>👀 <span class="big" id="st-online">0</span> đang xem</span>
+    <span>💥 <span class="big" id="st-hits">0</span> đòn đánh</span>
+  </div>
+
+  <div class="banner" id="banner">
+    <h2 id="banner-title"></h2>
+    <p id="banner-text"></p>
   </div>
 </div>
-<div class="queue-line" id="queue-line"></div>
-<div class="side">
-  <div class="panel" id="top5"><h3>🏆 Top sát thương</h3><div>Chưa có ai đánh…</div></div>
-  <div class="panel" id="downed"><h3>💀 Đã gục</h3><div>Chưa ai gục…</div></div>
-</div>
-<div class="ticker" id="ticker"></div>
-<div class="statusbar">
-  <span>⚔️ <span class="big" id="st-fighters">0</span> chiến binh</span>
-  <span>👀 <span class="big" id="st-online">0</span> đang xem</span>
-  <span>💥 <span class="big" id="st-hits">0</span> đòn đánh</span>
-</div>
-<div class="banner" id="banner"><h2 id="banner-title"></h2><p id="banner-text"></p></div>
 
-</div>
+<audio id="voiceAudio" preload="none" playsinline></audio>
+
 <script>
 var scaler = document.getElementById('scaler');
 function fit() {
@@ -166,179 +714,433 @@ function fit() {
   scaler.style.left = ((window.innerWidth - 1080 * s) / 2) + 'px';
   scaler.style.top = ((window.innerHeight - 1920 * s) / 2) + 'px';
 }
-window.addEventListener('resize', fit); fit();
+window.addEventListener('resize', fit);
+fit();
+
 const socket = io();
 let lastState = null;
-let voiceOn = true;
-const ttsQueue = [];
-let ttsPlaying = false;
-const fighterPos = {}; // uid -> {x, y} trong arena-wrap
-const fighterEls = {}; // uid -> element .fighter (giữ lại giữa các lần render để animation bob/lunge không bị reset)
-const fighterCache = {}; // uid -> key(name|avatarUrl|weapon|alive) để chỉ rebuild innerHTML khi đổi
-const animUntil = {}; // uid -> {type: 'atk'|'hurt', until} — class tấn công/bị đánh còn hiệu lực
+let voiceOn = false;
+
+const fighterPos = Object.create(null);
+const fighterEls = Object.create(null);
+const fighterCache = Object.create(null);
+const animUntil = Object.create(null);
 let fightersPlaceholderOn = false;
+
+const NAME_FRAGS = new Set(('nguyen tran le pham hoang huynh phan vu vo dang bui do ho ngo duong ly van thi minh hong ngoc thanh thu quoc huu duc anh linh tuan huong lan trang phuong nam long hai quan dung thang hung son tung viet huy khanh thao ha mai hoa nga nhung giang chi van2 oanh khoa phuc binh tu demo khach a b c an bao chau cuong dat dien gia hieu khang kien lam loc nghia phong quang tai tam tien toan trung vinh xuan yen cao dinh luu ta truong chu doan luong thai trinh quach').split(' '));
+
+function normalizeSyllable(s) {
+  const lower = String(s || '').toLowerCase().trim();
+  if (lower === 'vân') return 'van2';
+  return lower.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd').replace(/[^a-z0-9]/g, '');
+}
+
+function nameToFragments(name) {
+  const frags = [];
+  for (const part of String(name || '').split(/\s+/)) {
+    if (!part) continue;
+    if (/^\d+$/.test(part)) {
+      frags.push(...numberToFragments(parseInt(part, 10)));
+      continue;
+    }
+    const key = normalizeSyllable(part);
+    if (key && NAME_FRAGS.has(key)) frags.push(key);
+  }
+  return frags.length ? frags : ['mot-ban'];
+}
+
+function numberToFragments(n) {
+  n = Math.round(Math.abs(Number(n) || 0));
+  const units = ['', 'num-mot', 'num-hai', 'num-ba', 'num-bon', 'num-nam',
+    'num-sau', 'num-bay', 'num-tam', 'num-chin'];
+  if (n <= 0) return ['num-mot'];
+  const out = [];
+  if (n >= 1000) {
+    const th = Math.floor(n / 1000);
+    out.push(...numberToFragments(th), 'num-nghin');
+    n %= 1000;
+    if (n === 0) return out;
+    if (n < 100) out.push('num-le');
+  }
+  if (n >= 100) {
+    out.push(units[Math.floor(n / 100)], 'num-tram');
+    n %= 100;
+    if (n === 0) return out;
+    if (n < 10) out.push('num-le');
+  }
+  if (n >= 10) {
+    if (n < 20) {
+      out.push('num-muoi');
+      const u = n % 10;
+      if (u === 5) out.push('num-lam');
+      else if (u > 0) out.push(units[u]);
+      return out;
+    }
+    out.push(units[Math.floor(n / 10)], 'num-muoi-tens');
+    const u = n % 10;
+    if (u === 1) out.push('num-mot2');
+    else if (u === 5) out.push('num-lam');
+    else if (u > 0) out.push(units[u]);
+    return out;
+  }
+  if (n > 0) out.push(units[n]);
+  return out;
+}
+
+function voiceSrc(fragName) {
+  if (NAME_FRAGS.has(fragName) || fragName.startsWith('num-') || fragName === 'mot-ban') {
+    return '/shared/voice/keo-co/frag/' + fragName + '.mp3';
+  }
+  if (fragName === 'da-guc' || fragName === 'thang-tran') {
+    return '/shared/voice/dau-truong-sinh-ton/frag/' + fragName + '.mp3';
+  }
+  if (['match-start', 'zone', 'win-draw'].includes(fragName)) {
+    return '/shared/voice/dau-truong-sinh-ton/' + fragName + '.mp3';
+  }
+  return null;
+}
+
+const voiceAudio = document.getElementById('voiceAudio');
+const voiceQueue = [];
+let voiceCurrent = null;
+let voiceSequence = 0;
+let voiceWatchdog = null;
+let voiceGeneration = 0;
+let lastDownVoiceAt = 0;
+let pendingDownVoice = null;
+let downVoiceTimer = null;
+
+function clearPendingDownVoice() {
+  clearTimeout(downVoiceTimer);
+  downVoiceTimer = null;
+  pendingDownVoice = null;
+}
+
+function stopVoices() {
+  voiceGeneration++;
+  clearTimeout(voiceWatchdog);
+  voiceWatchdog = null;
+  voiceAudio.onended = null;
+  voiceAudio.onerror = null;
+  voiceAudio.pause();
+  voiceAudio.removeAttribute('src');
+  voiceAudio.load();
+  voiceCurrent = null;
+  voiceQueue.length = 0;
+  clearPendingDownVoice();
+  lastDownVoiceAt = 0;
+}
+
+function syncVoiceEnabled(s) {
+  const enabled = s.voiceEnabled !== false && (s.settings || {}).voiceEnabled !== false;
+  if (!enabled && voiceOn) stopVoices();
+  voiceOn = enabled;
+}
+
+function enqueueVoice(fragments, priority, kind) {
+  if (!voiceOn || !Array.isArray(fragments) || !fragments.length) return;
+
+  // Một sự kiện cùng loại chỉ giữ câu đang chờ mới nhất.
+  for (let i = voiceQueue.length - 1; i >= 0; i--) {
+    if (voiceQueue[i].kind === kind) voiceQueue.splice(i, 1);
+  }
+
+  voiceQueue.push({
+    fragments: fragments.slice(),
+    priority,
+    kind,
+    order: ++voiceSequence,
+    index: 0
+  });
+  voiceQueue.sort((a, b) => b.priority - a.priority || a.order - b.order);
+
+  // Tối đa 3 câu, tính cả câu đang phát.
+  const capacity = voiceCurrent ? 2 : 3;
+  if (voiceQueue.length > capacity) voiceQueue.length = capacity;
+  nextVoice();
+}
+
+function nextVoice() {
+  if (!voiceOn || voiceCurrent || !voiceQueue.length) return;
+  voiceCurrent = voiceQueue.shift();
+  playVoiceFragment();
+}
+
+function playVoiceFragment() {
+  if (!voiceOn || !voiceCurrent) return;
+
+  const current = voiceCurrent;
+  if (current.index >= current.fragments.length) {
+    voiceCurrent = null;
+    nextVoice();
+    return;
+  }
+
+  const src = voiceSrc(current.fragments[current.index++]);
+  if (!src) {
+    playVoiceFragment();
+    return;
+  }
+
+  const generation = voiceGeneration;
+  let settled = false;
+  const finish = () => {
+    if (settled || generation !== voiceGeneration || voiceCurrent !== current) return;
+    settled = true;
+    clearTimeout(voiceWatchdog);
+    voiceWatchdog = null;
+    voiceAudio.onended = null;
+    voiceAudio.onerror = null;
+    voiceAudio.pause();
+    playVoiceFragment();
+  };
+
+  voiceAudio.onended = finish;
+  voiceAudio.onerror = finish;
+  voiceWatchdog = setTimeout(finish, 15000);
+  voiceAudio.src = src;
+  try {
+    const playing = voiceAudio.play();
+    if (playing && typeof playing.catch === 'function') playing.catch(finish);
+  } catch (e) {
+    finish();
+  }
+}
+
+function flushDownVoice() {
+  downVoiceTimer = null;
+  const latest = pendingDownVoice;
+  pendingDownVoice = null;
+  if (!voiceOn || !latest) return;
+  lastDownVoiceAt = Date.now();
+  enqueueVoice(nameToFragments(latest.name).concat(['da-guc']), 7, 'down');
+}
+
+function queueDownVoice(d) {
+  if (!voiceOn || !d || !d.name) return;
+  pendingDownVoice = { name: d.name };
+  const delay = Math.max(0, 5000 - (Date.now() - lastDownVoiceAt));
+  if (!delay) {
+    clearTimeout(downVoiceTimer);
+    flushDownVoice();
+  } else if (!downVoiceTimer) {
+    // Trong cửa sổ 5 giây chỉ giữ tên người vừa gục mới nhất.
+    downVoiceTimer = setTimeout(flushDownVoice, delay);
+  }
+}
+
+function clearQueuedBattleVoices() {
+  clearPendingDownVoice();
+  for (let i = voiceQueue.length - 1; i >= 0; i--) {
+    if (voiceQueue[i].kind === 'down' || voiceQueue[i].kind === 'zone') {
+      voiceQueue.splice(i, 1);
+    }
+  }
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
 
 function avatarHtml(f) {
   const initial = escapeHtml((String(f.name || '?').trim().charAt(0)) || '?');
-  const img = f.avatarUrl ? '<img class="av av-img" src="' + escapeHtml(f.avatarUrl) + '" alt="" onerror="this.remove()">' : '';
+  const img = f.avatarUrl
+    ? '<img class="av av-img" src="' + escapeHtml(f.avatarUrl) + '" alt="" decoding="async" onerror="this.remove()">'
+    : '';
   return '<div class="av-wrap"><div class="av av-fb">' + initial + '</div>' + img + '</div>';
 }
+
 function topAvatarHtml(t) {
   const initial = escapeHtml((String(t.name || '?').trim().charAt(0)) || '?');
-  const img = t.avatarUrl ? '<img class="top-av top-av-img" src="' + escapeHtml(t.avatarUrl) + '" alt="" onerror="this.remove()">' : '';
+  const img = t.avatarUrl
+    ? '<img class="top-av top-av-img" src="' + escapeHtml(t.avatarUrl) + '" alt="" decoding="async" onerror="this.remove()">'
+    : '';
   return '<span class="top-av-wrap"><span class="top-av top-av-fb">' + initial + '</span>' + img + '</span>';
 }
-function fighterHeadHtml(f, allFighters) {
-  // Mặt meme làm ĐẦU chiến binh: mỗi người 1 mặt khác nhau trong toàn game
-  // (faceImgIn với danh sách chung s.fighters). Fallback: vòng chữ cái cũ.
-  if (window.MemeFaces) return '<div class="meme-head">' + window.MemeFaces.faceImgIn(f, allFighters || [f], 'meme-face') + '</div>';
-  return avatarHtml(f);
-}
-function fighterInner(f, pct, headHtml) {
-  // Thứ tự từ trên xuống: tên → đầu meme → thân giáp → vũ khí → HP.
+
+function fighterInner(f, pct) {
   return '<div class="fbody">' +
-    '<div class="nm">' + escapeHtml(f.name) + '</div>' +
-    headHtml +
+    '<div class="nm" title="' + escapeHtml(f.name) + '">' + escapeHtml(f.name) + '</div>' +
+    avatarHtml(f) +
     '<div class="torso"></div>' +
-    '<div class="wp">' + (f.alive ? f.weapon.icon : '💀') + '</div>' +
+    '<div class="wp">' + (f.alive ? escapeHtml((f.weapon || {}).icon || '⚔️') : '💀') + '</div>' +
+    '<div class="bonus" hidden></div>' +
     '<div class="hpbar"><i class="' + (pct <= 25 ? 'low' : '') + '" style="width:' + pct + '%"></i></div>' +
-    '<div class="hpnum">' + (f.alive ? f.hp + ' HP' : 'ĐÃ GỤC') + '</div></div>';
+    '<div class="hpnum">' + (f.alive ? escapeHtml(f.hp) + ' HP' : 'ĐÃ GỤC') + '</div>' +
+    '</div>';
 }
+
 function pokeAnim(uid, type, ms) {
   animUntil[uid] = { type, until: Date.now() + ms };
   const el = fighterEls[uid];
   if (!el) return;
   el.classList.remove(type);
-  void el.offsetWidth; // restart animation khi đòn liên tiếp
+  void el.offsetWidth;
   el.classList.add(type);
-  setTimeout(() => { if (el.isConnected && (!animUntil[uid] || Date.now() >= animUntil[uid].until)) el.classList.remove(type); }, ms + 50);
+  setTimeout(() => {
+    if (el.isConnected && (!animUntil[uid] || Date.now() >= animUntil[uid].until)) {
+      el.classList.remove(type);
+    }
+  }, ms + 50);
 }
 
-function playTts(text) {
-  if (!voiceOn || !text) return;
-  ttsQueue.push(text);
-  nextTts();
-}
-function nextTts() {
-  if (ttsPlaying || !ttsQueue.length) return;
-  ttsPlaying = true;
-  const text = ttsQueue.shift();
-  const audio = new Audio('/api/tts?text=' + encodeURIComponent(text));
-  audio.onended = () => { ttsPlaying = false; nextTts(); };
-  audio.onerror = () => {
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'vi-VN';
-      u.onend = () => { ttsPlaying = false; nextTts(); };
-      speechSynthesis.speak(u);
-    } catch (e) { ttsPlaying = false; nextTts(); }
-  };
-  audio.play().catch(() => { ttsPlaying = false; nextTts(); });
-}
-
+let bannerTimer = null;
 function showBanner(title, text, ms) {
   const b = document.getElementById('banner');
   document.getElementById('banner-title').textContent = title;
   document.getElementById('banner-text').textContent = text || '';
   b.classList.add('on');
-  if (ms) setTimeout(() => b.classList.remove('on'), ms);
+  clearTimeout(bannerTimer);
+  if (ms) bannerTimer = setTimeout(() => b.classList.remove('on'), ms);
 }
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function settingDuration(seconds) {
+  const n = Number(seconds);
+  if (seconds == null || !Number.isFinite(n)) return '—';
+  if (n < 60) return n.toLocaleString('vi-VN') + ' giây';
+  const minutes = Math.floor(n / 60);
+  const rest = Number((n % 60).toFixed(3));
+  return minutes + ' phút' + (rest ? ' ' + rest.toLocaleString('vi-VN') + ' giây' : '');
 }
 
 function updateGuide(st) {
-  // Đồng bộ số trên bảng hướng dẫn theo settings thật (mặc định trong HTML
-  // đã = defaultSettings của engine.js; đổi setting ở dashboard vẫn đúng).
   const g = (st && st.settings) || {};
-  const set = (id, v) => { const e = document.getElementById(id); if (e && Number.isFinite(Number(v))) e.textContent = v; };
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    el.textContent = value != null && Number.isFinite(Number(value))
+      ? Number(value).toLocaleString('vi-VN')
+      : '—';
+  };
   set('g-hp', g.startHp);
   set('g-max', g.maxFighters);
-  set('g-dur', Math.round(g.matchDurationS / 60));
   set('g-tap', g.tapDamage);
   set('g-cmt', g.commentDamage);
   set('g-fol', g.followHealHp);
   set('g-bonus', g.maxBonus);
   set('g-gcoins', g.giftHealCoins);
   set('g-ghp', g.giftHealHp);
-  set('g-zone', Math.round(g.zoneAfterS / 60));
   set('g-zint', g.zoneIntervalS);
+  set('g-down', g.downVisibleS);
+  set('g-spot', g.spotlightS);
+  set('g-spam', g.commentSpamS);
+  document.getElementById('g-zone').textContent = settingDuration(g.zoneAfterS);
+  document.getElementById('g-dur').textContent = settingDuration(g.matchDurationS);
 }
+
 let refTimer = null;
 function refSay(text, ms) {
-  // Trọng tài phất cờ + nói 1 câu theo sự kiện thật, rồi về câu mặc định.
   const b = document.getElementById('ref-bubble');
   const r = document.getElementById('referee');
   if (!b || !r) return;
   b.textContent = text;
   r.classList.remove('waving');
-  void r.offsetWidth; // chạy lại animation phất cờ khi sự kiện liên tiếp
+  void r.offsetWidth;
   r.classList.add('waving');
-  if (refTimer) clearTimeout(refTimer);
-  refTimer = setTimeout(() => { b.textContent = '⚔️ Ai sẽ sống sót cuối cùng?'; r.classList.remove('waving'); }, ms || 4000);
+  clearTimeout(refTimer);
+  refTimer = setTimeout(() => {
+    b.textContent = '⚔️ Ai sẽ sống sót cuối cùng?';
+    r.classList.remove('waving');
+  }, ms || 4000);
+}
+
+// 24 vị trí: hai hàng đủ 6 người, ba hàng giữa chừa chỗ trọng tài.
+// Avatar không bị thu nhỏ dưới 64px khi sân đông.
+const crowdedSlots = [];
+for (let row = 0; row < 5; row++) {
+  for (let col = 0; col < 6; col++) {
+    if (row > 0 && row < 4 && (col === 2 || col === 3)) continue;
+    crowdedSlots.push({ x: 140 + col * 160, y: 100 + row * 175 });
+  }
+}
+
+function removeFighter(uid) {
+  if (fighterEls[uid]) fighterEls[uid].remove();
+  delete fighterEls[uid];
+  delete fighterCache[uid];
+  delete animUntil[uid];
+  delete fighterPos[uid];
 }
 
 function render(s) {
+  if (!s) return;
   lastState = s;
   updateGuide(s);
-  // Nhac nen dung chung (shared/music.js) — dong bo theo state moi lan render.
-  if (window.StromMusic) window.StromMusic.sync({ mood: 'battle', enabled: true, volume: 50, energy: (s.phase === 'spotlight' || (s.phase === 'fighting' && s.zoneActive)) ? 2 : (s.phase === 'fighting' ? 1 : 0) });
-  voiceOn = s.settings.voiceEnabled !== false;
+  syncVoiceEnabled(s);
+
+  if (window.StromMusic) {
+    window.StromMusic.sync({
+      mood: 'battle',
+      enabled: true,
+      volume: 50,
+      energy: (s.phase === 'spotlight' || (s.phase === 'fighting' && s.zoneActive))
+        ? 2 : (s.phase === 'fighting' ? 1 : 0)
+    });
+  }
+
+  const fighters = s.fighters || [];
+  const aliveCount = fighters.filter((f) => f.alive).length;
+  const arenaWrap = document.getElementById('arena-wrap');
+
   document.getElementById('demo-badge').classList.toggle('on', !!s.demoActive);
   document.getElementById('match-label').textContent = 'Trận ' + s.matchNo + ' · ' +
-    (s.phase === 'fighting' ? s.fighters.filter((f) => f.alive).length + ' người còn sống' :
-     s.phase === 'spotlight' ? '👑 Vinh danh người thắng' : 'Chờ đủ 2 chiến binh');
+    (s.phase === 'fighting' ? aliveCount + ' người còn sống' :
+      s.phase === 'spotlight' ? '👑 Vinh danh' : 'Chờ đủ 2 chiến binh');
+
   const zl = document.getElementById('zone-label');
-  if (s.phase === 'fighting' && s.zoneActive) {
-    zl.textContent = '⭕ Vòng bo ĐANG SIẾT (lần ' + s.zoneTicks + ')';
+  const zoneActive = s.phase === 'fighting' && s.zoneActive;
+  arenaWrap.classList.toggle('zone-active', !!zoneActive);
+  if (zoneActive) {
+    zl.textContent = '⭕ BO SIẾT · lần ' + s.zoneTicks;
     zl.className = 'zone';
-  } else if (s.phase === 'fighting') {
-    zl.textContent = '⭕ Vòng bo: an toàn';
-    zl.className = 'zone safe';
   } else {
-    zl.textContent = '⭕ Vòng bo: chưa siết';
+    zl.textContent = s.phase === 'fighting' ? '⭕ Vòng bo: an toàn' : '⭕ Vòng bo: chưa siết';
     zl.className = 'zone safe';
   }
-  // Vòng bo thu hẹp: bán kính còn (1 - zonePct*0.7).
+
   const ring = document.getElementById('zone-ring');
-  const shrink = 1 - s.zonePct * 0.7;
+  const zonePct = Math.max(0, Math.min(1, Number(s.zonePct) || 0));
+  const shrink = 1 - zonePct * .7;
   ring.style.width = Math.round(960 * shrink) + 'px';
-  ring.style.height = Math.round(900 * shrink) + 'px';
+  ring.style.height = Math.round(860 * shrink) + 'px';
   ring.style.display = s.phase === 'fighting' ? 'block' : 'none';
 
-  // Xếp chiến binh vòng tròn quanh đấu trường. Giữ lại element .fighter giữa
-  // các lần render (chỉ cập nhật HP/vị trí/class) để animation bob/lunge/
-  // ngã không bị reset mỗi lần innerHTML rebuild.
-  const n = s.fighters.length;
-  const cx = 540, cy = 500, rx = 400, ry = 340;
+  const n = fighters.length;
+  const crowded = n > 10;
+  const cx = 540, cy = 450, rx = 410, ry = 320;
   const wrap = document.getElementById('fighters');
-  // Trọng tài ở giữa sân: ẩn khi chưa có chiến binh (tránh đè dòng chờ).
+  arenaWrap.classList.toggle('crowded', crowded);
   document.getElementById('referee').style.display = n === 0 ? 'none' : '';
+
   if (n === 0) {
-    wrap.classList.remove('crowded');
-    Object.keys(fighterEls).forEach((uid) => { fighterEls[uid].remove(); delete fighterEls[uid]; delete fighterCache[uid]; delete animUntil[uid]; });
-    wrap.innerHTML = '<div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:28px; font-weight:800; text-align:center; text-shadow:0 2px 6px #000;">Chưa có chiến binh nào<br>Bình luận "tham gia" để vào trận!</div>';
-    fightersPlaceholderOn = true;
+    Object.keys(fighterEls).forEach(removeFighter);
+    if (!fightersPlaceholderOn) {
+      wrap.innerHTML =
+        '<div class="empty-arena">⚔️ Đấu trường đang chờ bạn!<br>' +
+        '<strong>Gõ “tham gia”</strong><br>Nhận vũ khí · Vào sân · So tài!</div>';
+      fightersPlaceholderOn = true;
+    }
   } else {
-    if (fightersPlaceholderOn) { wrap.innerHTML = ''; fightersPlaceholderOn = false; }
-    // Đông người: thu nhỏ fighter (CSS .crowded) + fighter ở hàng dưới
-    // (y lớn) vẽ trên fighter hàng trên để tên/avatar không bị che khuất.
-    wrap.classList.toggle('crowded', n > 14);
-    const seen = {};
-    s.fighters.forEach((f, i) => {
+    if (fightersPlaceholderOn) {
+      wrap.innerHTML = '';
+      fightersPlaceholderOn = false;
+    }
+    const seen = new Set();
+    fighters.forEach((f, i) => {
       const ang = -Math.PI / 2 + (n > 1 ? (i / n) * Math.PI * 2 : 0);
-      const x = Math.round(cx + rx * Math.cos(ang));
-      const y = Math.round(cy + ry * Math.sin(ang));
+      const slot = crowded ? crowdedSlots[i % crowdedSlots.length] : null;
+      const x = slot ? slot.x : Math.round(cx + rx * Math.cos(ang));
+      const y = slot ? slot.y : Math.round(cy + ry * Math.sin(ang));
       fighterPos[f.uid] = { x, y };
-      // Hướng về tâm đấu trường (nơi đối thủ đứng) cho lunge / giật lùi.
       const dx = cx - x, dy = cy - y, len = Math.hypot(dx, dy) || 1;
-      const pct = Math.max(0, Math.round(f.hp / f.maxHp * 100));
-      seen[f.uid] = true;
+      const maxHp = Number(f.maxHp) || 1;
+      const pct = Math.max(0, Math.min(100, Math.round(Number(f.hp) / maxHp * 100)));
+      seen.add(String(f.uid));
+
       let el = fighterEls[f.uid];
-      // Mặt meme gán theo danh sách chung toàn game: đổi khi có người vào/ra
-      // nên đưa faceId vào key cache để rebuild đầu khi mặt được gán lại.
-      const faceId = window.MemeFaces ? window.MemeFaces.faceForIn(f, s.fighters) : '';
-      const key = f.name + '|' + faceId + '|' + (f.avatarUrl || '') + '|' + f.weapon.icon + '|' + f.alive;
+      const key = JSON.stringify([f.name, f.avatarUrl || '', (f.weapon || {}).icon, f.alive]);
       if (!el) {
         el = document.createElement('div');
         el.dataset.uid = f.uid;
@@ -346,11 +1148,20 @@ function render(s) {
         fighterEls[f.uid] = el;
         fighterCache[f.uid] = null;
       }
-      if (fighterCache[f.uid] !== key) { el.innerHTML = fighterInner(f, pct, fighterHeadHtml(f, s.fighters)); fighterCache[f.uid] = key; }
+      if (fighterCache[f.uid] !== key) {
+        el.innerHTML = fighterInner(f, pct);
+        fighterCache[f.uid] = key;
+      }
+
       const bar = el.querySelector('.hpbar i');
-      if (bar) { bar.style.width = pct + '%'; bar.className = pct <= 25 ? 'low' : ''; }
-      const hpnum = el.querySelector('.hpnum');
-      if (hpnum) hpnum.textContent = f.alive ? f.hp + ' HP' : 'ĐÃ GỤC';
+      bar.style.width = pct + '%';
+      bar.className = pct <= 25 ? 'low' : '';
+      el.querySelector('.hpnum').textContent = f.alive ? f.hp + ' HP' : 'ĐÃ GỤC';
+
+      const bonus = el.querySelector('.bonus');
+      bonus.hidden = !f.alive || !(Number(f.bonus) > 0);
+      bonus.textContent = '⚡+' + (Number(f.bonus) || 0);
+
       let cls = 'fighter' + (f.alive ? '' : ' down');
       const a = animUntil[f.uid];
       if (f.alive && a && Date.now() < a.until) cls += ' ' + a.type;
@@ -360,50 +1171,87 @@ function render(s) {
       el.style.zIndex = String(6 + Math.round(y / 60));
       el.style.setProperty('--lx', (dx / len).toFixed(3));
       el.style.setProperty('--ly', (dy / len).toFixed(3));
+      el.style.setProperty('--bob-delay', (-i * .17).toFixed(2) + 's');
     });
     Object.keys(fighterEls).forEach((uid) => {
-      if (!seen[uid]) { fighterEls[uid].remove(); delete fighterEls[uid]; delete fighterCache[uid]; delete animUntil[uid]; }
+      if (!seen.has(uid)) removeFighter(uid);
     });
   }
 
   document.getElementById('queue-line').textContent = s.queueCount > 0
-    ? '⏳ Hàng chờ: ' + s.queueCount + ' người (' + s.queueNames.map(escapeHtml).join(', ') + (s.queueCount > 8 ? '…' : '') + ')'
-    : '';
-  document.getElementById('top5').innerHTML = '<h3>🏆 Top sát thương</h3>' + (s.top.length
-    ? s.top.map((t, i) => '<div>' + ['🥇','🥈','🥉','4.','5.'][i] + ' ' + topAvatarHtml(t) + ' ' + escapeHtml(t.name) + ' ' + t.weapon.icon + ' — ' + t.damage + ' dmg' + (t.alive ? '' : ' 💀') + '</div>').join('')
-    : '<div>Chưa có ai đánh…</div>');
-  document.getElementById('downed').innerHTML = '<h3>💀 Đã gục</h3>' + (s.downed.length
-    ? s.downed.slice(-6).reverse().map((d) => '<div>💀 ' + escapeHtml(d.name) + '</div>').join('')
-    : '<div>Chưa ai gục…</div>');
+    ? '⏳ Chờ vào sân: ' + s.queueCount + ' · ' +
+      (s.queueNames || []).join(', ') + (s.queueCount > 8 ? '…' : '')
+    : '💬 Gõ “tham gia” — lên sân thử độ lì nào!';
 
-  document.getElementById('st-fighters').textContent = s.fighters.filter((f) => f.alive).length;
-  document.getElementById('st-online').textContent = s.viewersOnline;
-  document.getElementById('st-hits').textContent = s.stats.hits;
-  document.getElementById('ticker').innerHTML = s.logs.slice(-3).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('');
+  const top = s.top || [];
+  document.getElementById('top5').innerHTML = '<h3>🏆 Top 5 sát thương</h3>' +
+    (top.length ? top.slice(0, 5).map((t, i) =>
+      '<div class="row"><span>' + ['🥇', '🥈', '🥉', '4.', '5.'][i] + '</span>' +
+      topAvatarHtml(t) +
+      '<span class="row-name" title="' + escapeHtml(t.name) + '">' + escapeHtml(t.name) + '</span>' +
+      '<span>' + escapeHtml((t.weapon || {}).icon || '⚔️') + '</span>' +
+      '<span class="damage">' + escapeHtml(t.damage) + '</span>' +
+      (t.alive ? '' : '<span>💀</span>') + '</div>'
+    ).join('') : '<div class="muted">Ai sẽ tung đòn mở màn?</div>');
 
-  if (s.phase === 'spotlight' && s.winner) {
+  const downed = s.downed || [];
+  document.getElementById('downed').innerHTML = '<h3>💀 Đã gục</h3>' +
+    (downed.length ? downed.slice(-6).reverse().map((d) =>
+      '<div class="row"><span>💀</span><span class="row-name" title="' +
+      escapeHtml(d.name) + '">' + escapeHtml(d.name) + '</span></div>'
+    ).join('') : '<div class="muted">Chưa ai nằm nghỉ cả!</div>');
+
+  document.getElementById('st-fighters').textContent = aliveCount;
+  document.getElementById('st-online').textContent = s.viewersOnline || 0;
+  document.getElementById('st-hits').textContent = (s.stats || {}).hits || 0;
+
+  const logs = s.logs || [];
+  document.getElementById('ticker').innerHTML = logs.length
+    ? logs.slice(-3).reverse().map((l) => '<div>' + escapeHtml(l.text) + '</div>').join('')
+    : '<div>📣 Bình luận “tham gia” để nhận chiến binh và vũ khí ngẫu nhiên.</div>' +
+      '<div>❤️ Thả tim đánh địch · 🎯 Gõ đúng tên để nhắm mục tiêu.</div>' +
+      '<div>🏁 Trọng tài đã sẵn sàng. Ai sẽ trụ đến cuối?</div>';
+
+  if (s.phase === 'spotlight') {
     const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
-    showBanner('👑 ' + s.winner.name.toUpperCase() + ' THẮNG TRẬN! 👑', s.winner.weapon.icon + ' ' + s.winner.weapon.name + ' · còn ' + s.winner.hp + ' HP · Trận mới sau ' + left + 's…');
-  } else if (s.phase === 'spotlight') {
-    const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
-    showBanner('🤝 TRẬN HÒA!', 'Không còn ai sống sót. Trận mới sau ' + left + 's…');
+    if (s.winner) {
+      // winner của state có thể chỉ có uid, name, hp.
+      const champion = fighters.find((f) => f.uid === s.winner.uid);
+      const weapon = s.winner.weapon || (champion && champion.weapon);
+      const weaponText = weapon
+        ? ((weapon.icon || '') + ' ' + (weapon.name || '')).trim() + ' · '
+        : '';
+      showBanner(
+        '👑 ' + String(s.winner.name || '').toUpperCase() + ' THẮNG TRẬN!',
+        weaponText + 'Còn ' + s.winner.hp + ' HP · Trụ giỏi quá! Trận mới sau ' + left + 's…'
+      );
+    } else {
+      showBanner('🤝 TRẬN HÒA!', 'Cả sân ngang tài ngang sức! Trận mới sau ' + left + 's…');
+    }
   } else {
     document.getElementById('banner').classList.remove('on');
   }
   updateTimer();
 }
+
 function updateTimer() {
   const s = lastState;
   const el = document.getElementById('timer');
-  if (!s) { el.textContent = ''; return; }
+  if (!s) {
+    el.textContent = '';
+    return;
+  }
   if (s.phase === 'fighting' && s.matchEndsAt) {
     const left = Math.max(0, Math.ceil((s.matchEndsAt - Date.now()) / 1000));
     el.textContent = '⏱ ' + Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0');
   } else if (s.phase === 'spotlight' && s.phaseEndsAt) {
     const left = Math.max(0, Math.ceil((s.phaseEndsAt - Date.now()) / 1000));
     el.textContent = '👑 ' + left + 's';
-  } else el.textContent = '';
+  } else {
+    el.textContent = '';
+  }
 }
+
 function floatText(uid, text, heal) {
   const pos = fighterPos[uid];
   if (!pos) return;
@@ -411,35 +1259,94 @@ function floatText(uid, text, heal) {
   const d = document.createElement('div');
   d.className = 'hit-float' + (heal ? ' heal-float' : '');
   d.textContent = text;
-  d.style.left = (pos.x - 20) + 'px';
-  d.style.top = (pos.y - 90) + 'px';
+  d.style.left = (pos.x - 48) + 'px';
+  d.style.top = (pos.y - 55) + 'px';
   wrap.appendChild(d);
   setTimeout(() => d.remove(), 1500);
 }
 
 socket.on('state-update', render);
+
 socket.on('hit', (d) => {
   if (!d || !d.targetUid) return;
   floatText(d.targetUid, '-' + d.dmg + ' HP', false);
-  pokeAnim(d.targetUid, 'hurt', 300); // bị đánh: giật lùi + chớp đỏ
-  // Người gây sát thương: lao về phía đối thủ + vung vũ khí.
+  pokeAnim(d.targetUid, 'hurt', 300);
+
   let atkUid = d.attackerUid || null;
   if (!atkUid && d.attacker && lastState) {
-    const a = lastState.fighters.find((f) => f.name === d.attacker);
-    if (a) atkUid = a.uid;
+    const attacker = (lastState.fighters || []).find((f) => f.name === d.attacker);
+    if (attacker) atkUid = attacker.uid;
   }
-  if (atkUid && atkUid !== d.targetUid) pokeAnim(atkUid, 'atk', 250);
+
+  const attackerPos = atkUid && fighterPos[atkUid];
+  const targetPos = fighterPos[d.targetUid];
+  if (atkUid && atkUid !== d.targetUid) {
+    // Lao đúng hướng mục tiêu khi có đủ vị trí trên sân.
+    if (attackerPos && targetPos) {
+      const dx = targetPos.x - attackerPos.x;
+      const dy = targetPos.y - attackerPos.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const attackerEl = fighterEls[atkUid];
+      const targetEl = fighterEls[d.targetUid];
+      if (attackerEl) {
+        attackerEl.style.setProperty('--lx', (dx / len).toFixed(3));
+        attackerEl.style.setProperty('--ly', (dy / len).toFixed(3));
+      }
+      if (targetEl) {
+        targetEl.style.setProperty('--lx', (-dx / len).toFixed(3));
+        targetEl.style.setProperty('--ly', (-dy / len).toFixed(3));
+      }
+    }
+    pokeAnim(atkUid, 'atk', 250);
+  }
 });
+
 socket.on('down', (d) => {
-  if (d && d.uid && fighterEls[d.uid]) fighterEls[d.uid].classList.add('down'); // ngã ngay, không chờ state-update
-  if (d && d.name) { playTts(d.name + ' đã gục!'); refSay('💀 ' + d.name + ' đã gục!', 4000); }
+  if (d && d.uid && fighterEls[d.uid]) {
+    fighterEls[d.uid].classList.add('down');
+  }
+  if (d && d.name) {
+    refSay('💀 ' + d.name + ' đã gục! Nằm nghỉ một nhịp nào!', 4000);
+    queueDownVoice(d);
+  }
 });
+
 socket.on('match-win', (d) => {
-  if (d && d.name) { playTts(d.name + ' thắng trận!'); refSay('👑 ' + d.name + ' thắng trận!', 6000); }
-  else refSay('🤝 Trận hòa — không ai sống sót!', 5000);
+  clearQueuedBattleVoices();
+  if (d && d.name) {
+    refSay('👑 ' + d.name + ' thắng trận! Xin một tràng pháo tay!', 6000);
+    enqueueVoice(nameToFragments(d.name).concat(['thang-tran']), 9, 'match-win');
+  } else {
+    refSay('🤝 Trận hòa! Hẹn cả sân so tài trận tới!', 5000);
+    enqueueVoice(['win-draw'], 9, 'match-win');
+  }
 });
-socket.on('zone', () => refSay('⭕ Vòng bo siết! Mọi người −1 HP!', 4000));
-socket.on('match-start', () => refSay('🔥 Trận đấu bắt đầu!', 4000));
+
+socket.on('zone', () => {
+  refSay('⭕ Vòng bo siết! Mọi người −1 HP! Đứng yên cũng mất máu!', 4000);
+  enqueueVoice(['zone'], 6, 'zone');
+});
+
+socket.on('match-start', () => {
+  clearQueuedBattleVoices();
+  lastDownVoiceAt = 0;
+  refSay('🔥 Trận đấu bắt đầu! Vũ khí sẵn sàng, lên nào!', 4000);
+  enqueueVoice(['match-start'], 8, 'match-start');
+});
+
+let stateRequestInFlight = false;
+function pollState() {
+  if (stateRequestInFlight) return;
+  stateRequestInFlight = true;
+  fetch('/api/state')
+    .then((r) => {
+      if (!r.ok) throw new Error('State unavailable');
+      return r.json();
+    })
+    .then(render)
+    .catch(() => {})
+    .finally(() => { stateRequestInFlight = false; });
+}
 
 fetch('/api/state').then((r) => r.json()).then((s) => {
   render(s);
@@ -451,12 +1358,74 @@ fetch('/api/state').then((r) => r.json()).then((s) => {
       n.classList.add('on');
       return;
     }
-    fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ demoMode: true }) })
-      .then(() => fetch('/api/test/demo-start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }))
+    fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ demoMode: true })
+    })
+      .then(() => fetch('/api/test/demo-start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}'
+      }))
       .catch(() => {});
   }
 }).catch(() => {});
-setInterval(() => { if (lastState) render(lastState); }, 1000);
+
+setInterval(() => {
+  if (lastState) render(lastState);
+}, 1000);
+setInterval(pollState, 5000);
 </script>
+
+<!--
+VOICE MANIFEST — ĐẤU TRƯỜNG SINH TỒN
+Giọng thu: TruthTeller.
+Định dạng: MP3, âm lượng đồng đều, cắt sát đầu/cuối câu hoặc mảnh.
+Các mảnh tên và mảnh nối cần nối liền tự nhiên, không chèn nhạc vào từng mảnh.
+
+3 CLIP CỐ ĐỊNH CẦN THU MỚI:
+
+/shared/voice/dau-truong-sinh-ton/match-start.mp3
+Câu thoại chính xác: "Trận đấu bắt đầu!"
+
+/shared/voice/dau-truong-sinh-ton/zone.mp3
+Câu thoại chính xác: "Vòng bo siết! Mọi người trừ một máu!"
+
+/shared/voice/dau-truong-sinh-ton/win-draw.mp3
+Câu thoại chính xác: "Trận đấu kết thúc với tỷ số hòa!"
+
+2 MẢNH NỐI CẦN THU MỚI:
+
+/shared/voice/dau-truong-sinh-ton/frag/da-guc.mp3
+Câu thoại chính xác: "đã gục!"
+
+/shared/voice/dau-truong-sinh-ton/frag/thang-tran.mp3
+Câu thoại chính xác: "thắng trận!"
+
+THƯ VIỆN TÁI DÙNG — KHÔNG CẦN THU LẠI:
+
+/shared/voice/keo-co/frag/
+Tái dùng thư viện 162 mảnh tên/số Kéo Co đã có sẵn.
+Các mảnh tên thuộc NAME_FRAGS, các mảnh số num-*.mp3 và mot-ban.mp3.
+mot-ban.mp3 đọc: "một bạn".
+Âm tiết tên ngoài NAME_FRAGS được bỏ qua.
+Tên hoàn toàn ngoài bản đồ dùng mot-ban.
+
+GHÉP CÂU VÀ ƯU TIÊN:
+
+down: nameToFragments(name) + da-guc; ưu tiên 7.
+Giới hạn một câu down mỗi 5 giây; trong thời gian chờ giữ tên mới nhất.
+match-win có tên: nameToFragments(name) + thang-tran; ưu tiên 9.
+match-win hòa: win-draw; ưu tiên 9.
+match-start: match-start; ưu tiên 8.
+zone: zone; ưu tiên 6.
+hit: chỉ hiệu ứng hình ảnh, không đọc voice.
+
+Hàng đợi tối đa 3 câu tính cả câu đang phát, phát lần lượt từng mảnh.
+Câu đang chờ có ưu tiên cao được phát trước.
+Mảnh lỗi hoặc không phát được sẽ được bỏ qua.
+Chỉ phát khi cả state.voiceEnabled và state.settings.voiceEnabled đều khác false.
+-->
 </body>
 </html>
