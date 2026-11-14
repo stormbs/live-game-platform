@@ -2059,10 +2059,19 @@ function showGift(gift, oldSpectatorPositions, oldPlayerPositions) {
     badge.textContent = '⚡ +' + format(gift.force || 0) + ' lực';
     senderNode.appendChild(badge);
     senderNode.classList.add('buffed');
+    // v13-fix4: viền vàng avatar bằng inline style (thắng mọi rule
+    // stylesheet — rule .puller.buffed .avatar đã deploy nhưng mắt
+    // kiểm chứng vẫn không thấy vàng).
+    const buffAvatar = senderNode.querySelector('.avatar');
+    if (buffAvatar) {
+      buffAvatar.style.border = '4px solid #ffd94d';
+      buffAvatar.style.boxShadow = '0 0 0 6px rgba(255,191,0,.9), 0 0 30px 14px rgba(255,170,0,.95)';
+    }
     const prevBuff = buffTimeouts.get(uid);
     if (prevBuff) clearTimeout(prevBuff);
     buffTimeouts.set(uid, setTimeout(() => {
       senderNode.classList.remove('buffed');
+      if (buffAvatar) { buffAvatar.style.border = ''; buffAvatar.style.boxShadow = ''; }
       badge.remove();
       buffTimeouts.delete(uid);
     }, 6000));
