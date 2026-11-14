@@ -202,7 +202,7 @@ h1.ui-title{
 .light-beam.a{left:-100px;transform:rotate(-19deg)}
 .light-beam.b{right:-100px;transform:rotate(19deg)}
 #stands{
-  position:absolute;top:62px;left:37px;right:37px;height:173px;
+  position:absolute;top:62px;left:37px;right:37px;height:185px;
   z-index:3;border:1px solid #a7d4ee40;border-radius:16px 16px 8px 8px;
   background:
     repeating-linear-gradient(0deg,#0c2439 0 4px,#25445a 4px 8px,#16344b 8px 78px);
@@ -218,7 +218,7 @@ h1.ui-title{
 #spectators{
   display:grid;
   grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-auto-rows:65px;
+  grid-auto-rows:78px;
   grid-auto-flow:row;
   gap:2px 5px;
   padding-top:5px;
@@ -240,26 +240,26 @@ h1.ui-title{
 }
 .spectator-figure{
   position:relative;
-  width:48px;
-  height:49px;
+  width:64px;
+  height:64px;
   margin:0 auto
 }
 .spectator .avatar{
   position:absolute;
-  left:7px;
+  left:10px;
   top:0;
   z-index:2;
-  width:35px;
-  height:35px;
+  width:44px;
+  height:44px;
   border-width:2px;
   box-shadow:0 2px #0005,0 0 0 1px var(--team-color,#9ed4e8)
 }
 .spectator-body{
   position:absolute;
-  left:12px;
-  top:28px;
-  width:25px;
-  height:23px;
+  left:15px;
+  top:36px;
+  width:34px;
+  height:30px;
   z-index:1;
   border:2px solid #071929;
   border-radius:9px 9px 5px 5px;
@@ -403,8 +403,8 @@ h1.ui-title{
   color:#89abc3
 }
 
-.spectator .default-face::before{box-shadow:16px 0 #49342e}
-.spectator .default-face b{font-size:11px}
+.spectator .default-face::before{box-shadow:20px 0 #49342e}
+.spectator .default-face b{font-size:13px}
 .spectator .default-face::after{border-bottom-width:2px}
 
 #stands.cheering .spectator{animation:audience-cheer .45s ease-in-out 3}
@@ -439,26 +439,19 @@ h1.ui-title{
   background:repeating-conic-gradient(#fff1ce 0 25%,#162638 0 50%) 0 0/12px 12px;
   border:2px solid #fff7;border-radius:3px
 }
-.finish span{
+.finish-label{
   position:absolute;
-  top:-152px;
-  left:50%;
-  width:120px;
-  transform:translateX(calc(-50% - 27px)) skewY(10deg);
-  font-size:17px;
+  top:280px;
+  z-index:3;
+  font-size:16px;
   font-weight:900;
-  text-align:center;
-  line-height:1.1;
+  letter-spacing:1px;
   color:#fff4d5;
   text-shadow:0 2px 4px #000;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis
+  white-space:nowrap
 }
-.finish.left span,
-.finish.right span{
-  left:50%
-}
+.finish-label.left{left:10px}
+.finish-label.right{right:10px}
 
 /*
   Các tổ tiên của .athlete và .arms không tạo stacking context.
@@ -490,10 +483,10 @@ h1.ui-title{
   top:40px;
   left:0;
   width:100%;
-  height:340px;
+  height:350px;
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
-  grid-template-rows:repeat(5,64px);
+  grid-template-rows:44px 44px 158px 44px 44px;
   grid-auto-flow:row;
   gap:4px 7px;
   align-content:start
@@ -502,9 +495,82 @@ h1.ui-title{
   position:relative;
   min-width:0;
   width:100%;
-  height:64px;
+  height:100%;
   text-align:center
 }
+
+/* v6: hàng trước 3 nhân vật đầy đủ đúng tầm dây; các ô còn lại là thẻ gọn. */
+.frontline{
+  grid-column:1/-1;
+  grid-row:3;
+  display:flex;
+  justify-content:space-evenly;
+  align-items:stretch;
+  min-width:0
+}
+.frontline .puller{
+  flex:1 1 0;
+  min-width:0;
+  width:auto
+}
+.frontline .athlete{top:36px}
+.frontline .arms{top:36px}
+.puller.tile{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:3px 6px;
+  background:#07182deb;
+  border:1px solid #bbdcff66;
+  border-radius:8px;
+  text-align:left
+}
+.puller.tile .tile-avatar{
+  flex:0 0 34px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  overflow:hidden;
+  border:2px solid #ffffff2e;
+  box-shadow:0 1px 3px #0008;
+  order:1
+}
+.puller.tile .tile-avatar img,
+.puller.tile .tile-avatar .default-face{
+  width:100%;height:100%;object-fit:cover;display:block
+}
+.puller.tile .tile-avatar .default-face::before{box-shadow:15px 0 #49342e}
+.puller.tile .tile-avatar .default-face b{font-size:12px}
+.puller.tile .tile-avatar .default-face::after{border-bottom-width:2px}
+.puller.tile .tile-text{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:1px;
+  order:2
+}
+.puller.tile .nm{
+  position:static;
+  width:auto;
+  height:auto;
+  padding:0;
+  border:none;
+  background:transparent;
+  font-size:13px;
+  text-align:left
+}
+.puller.tile .fc{
+  position:static;
+  width:auto;
+  height:auto;
+  font-size:11px;
+  text-align:left
+}
+.puller.tile .athlete,
+.puller.tile .arms{display:none}
+.puller.front .tile-avatar{display:none}
 .puller[hidden]{display:none!important}
 .nm{
   position:absolute;
@@ -600,7 +666,9 @@ h1.ui-title{
 .puller.arriving .athlete,
 .puller.arriving .arms,
 .puller.arriving .nm,
-.puller.arriving .fc{
+.puller.arriving .fc,
+.puller.arriving .tile-avatar,
+.puller.arriving .tile-text{
   visibility:hidden
 }
 .puller.joined .nm{
@@ -633,7 +701,7 @@ h1.ui-title{
 .body-art .podium-top{fill:#ffe17b;stroke:#9a6a25;stroke-width:2}
 
 .bench{
-  position:absolute;top:397px;left:0;width:100%;height:43px;
+  position:absolute;top:394px;left:0;width:100%;height:36px;
   display:flex;align-items:center;justify-content:center;
   padding:0 8px;z-index:3;color:#ffe9bf;
   text-align:center;font-size:16px;line-height:1.2;font-weight:800;
@@ -981,8 +1049,8 @@ h1.ui-title{
 
     <div class="ground"></div>
     <div class="centerline"></div>
-    <div class="finish left"><span id="finish-xanh">ĐÍCH XANH</span></div>
-    <div class="finish right"><span id="finish-do">ĐÍCH ĐỎ</span></div>
+    <div class="finish left"></div><span class="finish-label left" id="finish-xanh">ĐÍCH XANH</span>
+    <div class="finish right"></div><span class="finish-label right" id="finish-do">ĐÍCH ĐỎ</span>
     <div class="flag-glow" aria-hidden="true"></div>
     <div class="rope" id="rope"></div>
     <div class="flag" id="flag" role="img" aria-label="Cờ buộc giữa dây kéo"></div>
@@ -991,12 +1059,12 @@ h1.ui-title{
 
     <div class="team-side left" id="side-xanh">
       <h2 id="h2-xanh">1 · ĐỘI XANH</h2>
-      <div class="pullers" id="pullers-xanh"></div>
+      <div class="pullers" id="pullers-xanh"><div class="frontline" id="frontline-xanh"></div></div>
       <div class="bench" id="bench-xanh"></div>
     </div>
     <div class="team-side right" id="side-do">
       <h2 id="h2-do">2 · ĐỘI ĐỎ</h2>
-      <div class="pullers" id="pullers-do"></div>
+      <div class="pullers" id="pullers-do"><div class="frontline" id="frontline-do"></div></div>
       <div class="bench" id="bench-do"></div>
     </div>
     <div class="hint" id="hint">Chênh 500 lực → thắng hiệp · Tối đa 180 giây / hiệp</div>
@@ -1303,15 +1371,16 @@ function createPuller(p) {
   element.className = 'puller';
   element.dataset.player = playerKey(p);
   element.innerHTML =
-    '<div class="nm"></div>' +
+    '<div class="tile-text"><div class="nm"></div><div class="fc"></div></div>' +
+    '<div class="tile-avatar"></div>' +
     '<div class="athlete" aria-hidden="true"><div class="figure">' +
     bodyArt() + '<div class="avatar"></div></div></div>' +
-    '<div class="arms" aria-hidden="true">' + armsArt() + '</div>' +
-    '<div class="fc"></div>';
+    '<div class="arms" aria-hidden="true">' + armsArt() + '</div>';
   return element;
 }
 
-function updatePuller(element, p, index, team) {
+
+function updatePuller(element, p, index, team, isFront) {
   const name = playerName(p);
   const nameElement = element.querySelector('.nm');
 
@@ -1320,10 +1389,15 @@ function updatePuller(element, p, index, team) {
   }
 
   element.title = name;
+  element.classList.toggle('front', !!isFront);
+  element.classList.toggle('tile', !isFront);
   element.style.setProperty('--delay', '-' + ((index % 5) * .13) + 's');
 
   const appearance = applyAppearance(element, p, team, index);
-  setAvatar(element.querySelector('.avatar'), p, appearance);
+  const avatarBox = isFront
+    ? element.querySelector('.figure .avatar')
+    : element.querySelector('.tile-avatar');
+  setAvatar(avatarBox, p, appearance);
 
   const forceElement = element.querySelector('.fc');
   const forceText = format(p.force) + ' lực';
@@ -1332,6 +1406,7 @@ function updatePuller(element, p, index, team) {
     forceElement.textContent = forceText;
   }
 }
+
 
 
 function captureSpectators() {
@@ -1347,7 +1422,10 @@ function capturePlayers() {
   for (const team of ['xanh', 'do']) {
     for (const [uid, item] of rosterNodes[team]) {
       if (!item.hidden) {
-        const rect = localRect(item.querySelector('.avatar'));
+        const avatarBox = item.classList.contains('front')
+          ? item.querySelector('.figure .avatar')
+          : item.querySelector('.tile-avatar');
+        const rect = localRect(avatarBox);
         if (rect) result.set(uid, rect);
       }
     }
@@ -1425,17 +1503,20 @@ function paintSpectators(people) {
 
 function paintRoster(team, people) {
   const box = $('pullers-' + team);
+  const frontBox = $('frontline-' + team);
   const nodes = rosterNodes[team];
-  const keys = new Set(people.map(playerKey));
+  // 3 người mạnh nhất đứng hàng trước kéo dây, còn lại hiện thẻ gọn.
+  const sorted = [...people].sort((a, b) => number(b.force) - number(a.force));
+  const keys = new Set(sorted.map(playerKey));
   const joined = hasRendered
-    ? people.filter(p => !previousRoster[team].has(playerKey(p)))
+    ? sorted.filter(p => !previousRoster[team].has(playerKey(p)))
     : [];
 
-  if (people.length) {
+  if (sorted.length) {
     box.querySelector('.empty')?.remove();
   }
 
-  people.forEach((p, index) => {
+  sorted.forEach((p, index) => {
     const uid = playerKey(p);
     let element = nodes.get(uid);
 
@@ -1444,12 +1525,32 @@ function paintRoster(team, people) {
       nodes.set(uid, element);
     }
 
-    updatePuller(element, p, index, team);
-    element.hidden = false;
-    element.style.order = index;
+    // Chỉ hiện tối đa 15 người/đội (3 hàng trước + 12 thẻ); thừa thì ẩn.
+    if (index >= 15) {
+      element.hidden = true;
+      return;
+    }
 
-    if (element.parentNode !== box) {
-      box.appendChild(element);
+    const isFront = index < 3;
+    updatePuller(element, p, index, team, isFront);
+    element.hidden = false;
+
+    if (isFront) {
+      element.style.gridRow = '';
+      element.style.gridColumn = '';
+      element.style.order = index;
+      if (element.parentNode !== frontBox) {
+        frontBox.appendChild(element);
+      }
+    } else {
+      const tileIndex = index - 3;
+      const tileRow = [1, 1, 1, 2, 2, 2, 4, 4, 4, 5, 5, 5][tileIndex];
+      element.style.gridRow = tileRow;
+      element.style.gridColumn = (tileIndex % 3) + 1;
+      element.style.order = '';
+      if (element.parentNode !== box) {
+        box.appendChild(element);
+      }
     }
 
     fitText(element.querySelector('.nm'), 15, 7);
@@ -1464,19 +1565,21 @@ function paintRoster(team, people) {
     }
   }
 
-  if (!people.length && !box.querySelector('.empty')) {
-    box.innerHTML =
-      '<div class="empty">Đội đang đợi bạn<br>Bình luận <b>' +
+  if (!sorted.length && !box.querySelector('.empty')) {
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = 'Đội đang đợi bạn<br>Bình luận <b>' +
       (team === 'xanh' ? '1' : '2') +
-      '</b> để vào đội</div>';
+      '</b> để vào đội';
+    box.appendChild(empty);
   }
 
   previousRoster[team] = keys;
 
   const details = [];
 
-  if (people.length) {
-    details.push(people.length + ' người đang giữ dây');
+  if (sorted.length) {
+    details.push(sorted.length + ' người đang giữ dây');
   }
 
   const bench = number(lastState.teams[team].bench);
@@ -1490,6 +1593,7 @@ function paintRoster(team, people) {
 
   return joined;
 }
+
 
 
 function cancelArrival(team, uid) {
@@ -1509,22 +1613,13 @@ function walkToTeam(p, team, from) {
 
   cancelArrival(team, uid);
 
-  const people = lastState.teams[team].pullers || [];
-  const index = Math.max(
-    0,
-    people.findIndex(person => playerKey(person) === uid)
-  );
+  const targetRect = localRect(target);
 
-  const columnIndex = index % 3;
-  const rowIndex = Math.floor(index / 3);
-  const boxRect = localRect($('pullers-' + team));
+  if (!targetRect) return;
 
-  if (!boxRect) return;
-
-  const column = (boxRect.width - 14) / 3;
   const destination = {
-    x: boxRect.x + columnIndex * (column + 7) + column / 2 - 65,
-    y: boxRect.y + 25 + rowIndex * 68
+    x: targetRect.x + targetRect.width / 2 - 65,
+    y: targetRect.y + 5
   };
 
   const walker = document.createElement('div');
