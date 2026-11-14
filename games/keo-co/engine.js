@@ -114,8 +114,9 @@ function createEngine(ctx) {
   const testTapTotals = {};
   const demoTapTotals = {};
   let demoTimer = null;
-  const DEMO_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khang', 'Linh', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo'];
+  const DEMO_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khang', 'Linh', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo', 'Bảo', 'Cường', 'Đạt', 'Giang', 'Hiếu', 'Khoa', 'Lan', 'Nam', 'Oanh', 'Sơn', 'Tú', 'Vân'];
   const DEMO_CHEERS = ['Cố lên!', 'Kéo mạnh lên!', 'Kéo đi mọi người ơi!', 'Đừng thua nha!', 'Mạnh nữa lên!', 'Cố lên cả đội ơi!'];
+  const DEMO_GIFTS = [{ name: 'Hoa hồng', coins: 1 }, { name: 'Trà sữa', coins: 5 }, { name: 'Kính râm', coins: 10 }, { name: 'Bánh kem', coins: 20 }]; // quà demo định kỳ, tối đa 20 xu = 200 lực
 
   function saveSession() { saveJson(SESSION_FILE, session); }
   function saveSettings() { saveJson(SETTINGS_FILE, settings); }
@@ -474,6 +475,9 @@ function createEngine(ctx) {
 
   // ---- Demo (theo demo-mode-contract) ----
   function demoUid(name) { return 'demo_' + name.toLowerCase().normalize('NFD').replace(/[^a-z]/g, ''); }
+  // Ảnh đại diện demo (ảnh chân dung thật) để thấy mặt nhân vật = avatar người chơi.
+  // i.pravatar.cc là ảnh thật; nếu không tải được, overlay tự rơi về mặt mặc định.
+  function demoAvatar(i) { return `https://i.pravatar.cc/150?img=${((i * 7) % 70) + 1}`; }
   function startDemo() {
     if (session.webhookCount > 0) {
       return { success: false, message: 'Phòng đã có sự kiện thật, không chạy demo được.' };
@@ -482,17 +486,22 @@ function createEngine(ctx) {
       return { success: false, message: 'Bật chế độ thử trước rồi mới chạy demo.' };
     }
     if (session.demoActive) return { success: true, demoActive: true, message: 'Demo đang chạy.' };
-    // Demo v4 — đủ luồng: người mới đến ngồi khán đài trước, rồi mới
-    // comment chọn đội và đi xuống nhập đội. Đợt 0: cả 12 vào khán đài.
-    // Bước demo 1: 6 người nhập đội (3 Xanh + 3 Đỏ). Bước demo 2: 6 người
-    // còn lại nhập đội. Sau đó cứ vài bước lại có khách mới đến khán đài
-    // rồi nhập đội — overlay luôn có dịp trình diễn luồng đầy đủ.
-    DEMO_NAMES.forEach((name) => {
-      handleIntake({ kind: 'join', uid: demoUid(name), name: `Demo ${name}`, avatarUrl: null });
+    // Demo v4 — đủ luồng, dàn theo đợt để người xem thấy từng khoảnh khắc:
+    // Đợt 0: cả 24 người demo vào khán đài (ở đó ~5s).
+    // Đợt 1: 6 người đội Xanh nhập đội — chỉ 1 đội có người nên banner
+    //   "Chờ ghép trận" hiện (~5s).
+    // Đợt 2: 6 người đội Đỏ nhập đội — đủ 2 đội, hiệp tự bắt đầu.
+    // Đợt 3: 12 người còn lại nhập đội (6 Xanh + 6 Đỏ) — mỗi đội 12 người.
+    // Sau đó cứ vài bước lại có khách mới đến khán đài rồi nhập đội
+    // (tối đa ~30 người online, mỗi đội ~15 người) + tặng quà định kỳ
+    // để thấy hiệu ứng quà.
+    DEMO_NAMES.forEach((name, i) => {
+      handleIntake({ kind: 'join', uid: demoUid(name), name: `Demo ${name}`, avatarUrl: demoAvatar(i) });
       // Đặt baseline tap = 0 cho mỗi người demo để bước tap sau luôn có delta thật.
       handleIntake({ kind: 'tap', uid: demoUid(name), name: `Demo ${name}`, totalLikeCount: 0 });
     });
-    let demoStage = 0; // 0 = chờ đợt 1, 1 = chờ đợt 2, 2 = chạy tự do + khách mới
+    let demoStage = 0; // 0 = khán đài, 1 = chỉ Xanh (chờ ghép), 2 = Đỏ vào, 3 = đợt cuối, 4 = tự do
+    let stageSteps = 0; // số bước đã chạy trong stage hiện tại
     let demoStepNo = 0;
     let trickleNo = 0;
     let pendingJoin = null; // { uid, name, team } — khách mới đang chờ nhập đội ở bước sau
@@ -500,18 +509,31 @@ function createEngine(ctx) {
       handleIntake({ kind: 'comment', uid, name, text: team === 'xanh' ? '1' : '2' });
     };
     session.demoActive = true;
-    log('🧪 Demo bắt đầu — 12 người demo vào khán đài, rồi lần lượt nhập đội kéo co.');
+    log('🧪 Demo bắt đầu — 24 người demo vào khán đài, rồi lần lượt nhập đội kéo co.');
     const step = () => {
       if (!session.demoActive) return;
       demoStepNo += 1;
+      stageSteps += 1;
+      // Đợt 0: ở khán đài ~5s (2 bước) để thấy đám đông khán giả.
       if (demoStage === 0) {
-        demoStage = 1;
-        DEMO_NAMES.slice(0, 6).forEach((name, i) => joinTeam(demoUid(name), `Demo ${name}`, i % 2 === 0 ? 'xanh' : 'do'));
+        if (stageSteps >= 2) {
+          demoStage = 1; stageSteps = 0;
+          DEMO_NAMES.slice(0, 6).forEach((name) => joinTeam(demoUid(name), `Demo ${name}`, 'xanh'));
+        }
         return;
       }
+      // Đợt 1: chỉ đội Xanh có người (~5s) — banner "Chờ ghép trận" hiện.
       if (demoStage === 1) {
-        demoStage = 2;
-        DEMO_NAMES.slice(6).forEach((name, i) => joinTeam(demoUid(name), `Demo ${name}`, i % 2 === 0 ? 'xanh' : 'do'));
+        if (stageSteps >= 2) {
+          demoStage = 2; stageSteps = 0;
+          DEMO_NAMES.slice(6, 12).forEach((name) => joinTeam(demoUid(name), `Demo ${name}`, 'do'));
+        }
+        return;
+      }
+      // Đợt 2: đội Đỏ vào — đủ 2 đội, hiệp tự bắt đầu.
+      if (demoStage === 2) {
+        demoStage = 3; stageSteps = 0;
+        DEMO_NAMES.slice(12).forEach((name, i) => joinTeam(demoUid(name), `Demo ${name}`, i % 2 === 0 ? 'xanh' : 'do'));
         return;
       }
       if (pendingJoin) {
@@ -519,13 +541,20 @@ function createEngine(ctx) {
         joinTeam(pj.uid, pj.name, pj.team);
         return;
       }
-      // Cứ 4 bước lại có 1 khách mới đến khán đài (tối đa ~20 người online).
-      if (demoStepNo % 4 === 0 && onlinePlayers().length < 20) {
+      // Cứ 4 bước lại có 1 khách mới đến khán đài (tối đa ~30 người online, mỗi đội ~15).
+      if (demoStepNo % 4 === 0 && onlinePlayers().length < 30) {
         trickleNo += 1;
         const uid = `demo_khach_${trickleNo}`;
         const name = `Khách ${trickleNo}`;
-        handleIntake({ kind: 'join', uid, name, avatarUrl: null });
+        handleIntake({ kind: 'join', uid, name, avatarUrl: demoAvatar(30 + trickleNo) });
         pendingJoin = { uid, name, team: trickleNo % 2 === 1 ? 'xanh' : 'do' };
+        return;
+      }
+      // Cứ 6 bước lại tặng 1 món quà (định kỳ, tối đa 20 xu = 200 lực) để thấy hiệu ứng quà.
+      if (demoStepNo % 6 === 0) {
+        const gift = DEMO_GIFTS[Math.floor(Math.random() * DEMO_GIFTS.length)];
+        const name = DEMO_NAMES[Math.floor(Math.random() * DEMO_NAMES.length)];
+        handleIntake({ kind: 'gift', uid: demoUid(name), name: `Demo ${name}`, giftName: gift.name, coins: gift.coins, qty: 1 });
         return;
       }
       const name = DEMO_NAMES[Math.floor(Math.random() * DEMO_NAMES.length)];

@@ -213,67 +213,200 @@ h1.ui-title{
   position:absolute;top:-12px;left:50%;transform:translateX(-50%);
   padding:3px 16px;background:#18384f;border:1px solid #85bedc66;
   border-radius:20px;font-size:14px;letter-spacing:2px;color:#c9e7f6;
-  white-space:nowrap;font-weight:850
+  white-space:nowrap;font-weight:850;z-index:4
 }
 #spectators{
-  display:grid;grid-template-columns:repeat(12,minmax(0,1fr));
-  grid-template-rows:repeat(2,72px);gap:7px 5px;padding-top:5px;height:100%
+  display:grid;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+  grid-auto-rows:65px;
+  grid-auto-flow:row;
+  gap:2px 5px;
+  padding-top:5px;
+  min-height:100%;
+  height:auto;
+  overflow:visible
 }
 .spectator{
-  position:relative;min-width:0;text-align:center;
+  position:relative;
+  min-width:0;
+  height:63px;
+  text-align:center;
   animation:watch 2.4s ease-in-out infinite;
-  animation-delay:var(--delay,0s)
+  animation-delay:var(--delay,0s);
+  z-index:1
 }
-@keyframes watch{50%{transform:translateY(-3px) rotate(2deg)}}
-.spectator::after{
-  content:"";position:absolute;left:13%;right:13%;top:43px;height:10px;
-  z-index:-1;border-radius:4px;background:#48728b;
-  border-bottom:4px solid #071e30
+@keyframes watch{
+  50%{transform:translateY(-3px) rotate(2deg)}
 }
-.avatar{
-  position:relative;display:grid;place-items:center;overflow:hidden;
-  width:73px;height:73px;border-radius:50%;background:#ffdcad;
-  border:3px solid #fff4d6;box-shadow:0 3px 0 #0005,0 0 0 2px var(--team-color,#83b7d3)
+.spectator-figure{
+  position:relative;
+  width:48px;
+  height:49px;
+  margin:0 auto
 }
-.avatar img{
-  display:block;width:100%;height:100%;object-fit:cover;border-radius:50%
+.spectator .avatar{
+  position:absolute;
+  left:7px;
+  top:0;
+  z-index:2;
+  width:35px;
+  height:35px;
+  border-width:2px;
+  box-shadow:0 2px #0005,0 0 0 1px var(--team-color,#9ed4e8)
+}
+.spectator-body{
+  position:absolute;
+  left:12px;
+  top:28px;
+  width:25px;
+  height:23px;
+  z-index:1;
+  border:2px solid #071929;
+  border-radius:9px 9px 5px 5px;
+  background:var(--shirt,#1e90ff);
+  box-shadow:
+    -7px 11px 0 -4px var(--pants,#174e8c),
+    7px 11px 0 -4px var(--pants,#174e8c)
+}
+.spectator-body::before,
+.spectator-body::after{
+  content:"";
+  position:absolute;
+  top:7px;
+  width:7px;
+  height:15px;
+  border-radius:5px;
+  background:var(--skin,#f0b58b);
+  border:1px solid #754933
+}
+.spectator-body::before{left:-7px;transform:rotate(28deg)}
+.spectator-body::after{right:-7px;transform:rotate(-28deg)}
+.spectator-name{
+  display:block;
+  width:100%;
+  margin-top:1px;
+  color:#e1f1fa;
+  font-size:10px;
+  line-height:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-weight:800;
+  text-shadow:0 1px 2px #000
 }
 .default-face{
-  position:relative;display:block;width:100%;height:100%;
-  border-radius:50%;background:
-    radial-gradient(circle at 22% 65%,#f4a17e 0 7%,transparent 8%),
-    radial-gradient(circle at 78% 65%,#f4a17e 0 7%,transparent 8%),
+  position:relative;
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 22% 65%,var(--skin,#f4a17e) 0 7%,transparent 8%),
+    radial-gradient(circle at 78% 65%,var(--skin,#f4a17e) 0 7%,transparent 8%),
     linear-gradient(#ffe8c7,#f8c48e)
 }
 .default-face::before{
-  content:"";position:absolute;left:25%;top:43%;width:8%;height:12%;
-  border-radius:50%;background:#49342e;box-shadow:27px 0 #49342e
+  content:"";
+  position:absolute;
+  left:25%;
+  top:43%;
+  width:8%;
+  height:12%;
+  border-radius:50%;
+  background:#49342e;
+  box-shadow:27px 0 #49342e
 }
 .default-face::after{
-  content:"";position:absolute;left:37%;top:61%;width:28%;height:17%;
-  border-bottom:3px solid #864a39;border-radius:0 0 50% 50%
+  content:"";
+  position:absolute;
+  left:37%;
+  top:61%;
+  width:28%;
+  height:17%;
+  border-bottom:3px solid #864a39;
+  border-radius:0 0 50% 50%
 }
 .default-face b{
-  position:absolute;top:3%;left:0;width:100%;text-align:center;
-  font-size:19px;color:#8e5b38;font-weight:950
+  position:absolute;
+  top:3%;
+  left:0;
+  width:100%;
+  text-align:center;
+  font-size:19px;
+  color:#8e5b38;
+  font-weight:950;
+  z-index:2
 }
-.spectator .avatar{
-  width:43px;height:43px;margin:0 auto;border-width:2px;
-  box-shadow:0 2px #0005,0 0 0 1px #9ed4e8
+.default-face .hair{
+  position:absolute;
+  left:5%;
+  top:-7%;
+  width:90%;
+  height:47%;
+  z-index:1;
+  background:var(--hair,#49342e);
+  border-radius:55% 55% 30% 30%;
+  transform:rotate(var(--hair-rotate,0deg))
 }
+.default-face .hair::after{
+  content:"";
+  position:absolute;
+  left:4%;
+  top:45%;
+  width:28%;
+  height:55%;
+  border-radius:50%;
+  background:var(--hair,#49342e);
+  box-shadow:calc(100% + 35px) 2px 0 var(--hair,#49342e)
+}
+.default-face.hair-ponytail .hair::before{
+  content:"";
+  position:absolute;
+  right:-24%;
+  top:18%;
+  width:35%;
+  height:65%;
+  border-radius:50%;
+  background:var(--hair,#e5b83f);
+  transform:rotate(18deg)
+}
+.default-face.hair-short .hair{
+  height:38%;
+  border-radius:55% 55% 35% 35%
+}
+.default-face.hair-black .hair{
+  height:43%;
+}
+.default-face.hair-brown .hair{
+  height:40%;
+}
+#stands.cheering .spectator{
+  animation:audience-cheer .45s ease-in-out 3
+}
+@keyframes audience-cheer{
+  40%{transform:translateY(-9px) rotate(-5deg)}
+  75%{transform:translateY(-3px) rotate(5deg)}
+}
+.stands-empty{
+  grid-column:1/-1;
+  grid-row:1/-1;
+  display:grid;
+  place-content:center;
+  text-align:center;
+  color:#afccdf;
+  font-size:22px;
+  line-height:1.5
+}
+.stands-empty small{
+  font-size:17px;
+  color:#89abc3
+}
+
 .spectator .default-face::before{box-shadow:16px 0 #49342e}
 .spectator .default-face b{font-size:11px}
 .spectator .default-face::after{border-bottom-width:2px}
-.spectator-name{
-  display:block;width:100%;margin-top:7px;color:#e1f1fa;
-  font-size:12px;line-height:1.1;white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis;font-weight:750
-}
-.stands-empty{
-  grid-column:1/-1;grid-row:1/-1;display:grid;place-content:center;
-  text-align:center;color:#afccdf;font-size:22px;line-height:1.5
-}
-.stands-empty small{font-size:17px;color:#89abc3}
+
 #stands.cheering .spectator{animation:audience-cheer .45s ease-in-out 3}
 @keyframes audience-cheer{
   40%{transform:translateY(-9px) rotate(-5deg)}
@@ -307,13 +440,26 @@ h1.ui-title{
   border:2px solid #fff7;border-radius:3px
 }
 .finish span{
-  position:absolute;top:253px;width:180px;left:50%;
-  transform:translateX(-50%) skewY(10deg);
-  font-size:17px;font-weight:900;text-align:center;line-height:1.1;
-  color:#fff4d5;text-shadow:0 2px 4px #000;overflow-wrap:anywhere
+  position:absolute;
+  top:-152px;
+  left:50%;
+  width:120px;
+  transform:translateX(calc(-50% - 27px)) skewY(10deg);
+  font-size:17px;
+  font-weight:900;
+  text-align:center;
+  line-height:1.1;
+  color:#fff4d5;
+  text-shadow:0 2px 4px #000;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis
 }
-.finish.left span{left:52px}
-.finish.right span{left:-43px}
+.finish.left span,
+.finish.right span{
+  left:50%
+}
+
 /*
   Các tổ tiên của .athlete và .arms không tạo stacking context.
   Thân z=5, dây z=8, hai tay z=12, bảng tên z=15.
@@ -340,31 +486,67 @@ h1.ui-title{
   background:linear-gradient(90deg,transparent,#06182bd9,transparent)
 }
 .pullers{
-  position:absolute;top:40px;left:0;width:100%;height:340px;
-  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px
+  position:absolute;
+  top:40px;
+  left:0;
+  width:100%;
+  height:340px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-rows:repeat(5,64px);
+  grid-auto-flow:row;
+  gap:4px 7px;
+  align-content:start
 }
 .puller{
-  position:relative;min-width:0;width:100%;height:340px;text-align:center
+  position:relative;
+  min-width:0;
+  width:100%;
+  height:64px;
+  text-align:center
 }
 .puller[hidden]{display:none!important}
 .nm{
-  position:absolute;top:0;left:0;width:100%;height:72px;padding:5px;
-  display:flex;align-items:center;justify-content:center;
-  border:1px solid #bbdcff66;border-bottom:3px solid var(--team-color);
-  border-radius:10px;background:#07182deb;color:#fff;z-index:15;
-  font-size:22px;font-weight:850;line-height:1.08;overflow-wrap:anywhere;
-  text-shadow:0 2px #0005
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:25px;
+  padding:2px 3px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #bbdcff66;
+  border-bottom:2px solid var(--team-color);
+  border-radius:7px;
+  background:#07182deb;
+  color:#fff;
+  z-index:15;
+  font-size:15px;
+  font-weight:850;
+  line-height:1;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-shadow:0 1px #0005
 }
 .athlete{
-  position:absolute;top:82px;left:50%;margin-left:-65px;
-  width:130px;height:230px;z-index:5;
+  position:absolute;
+  top:25px;
+  left:50%;
+  margin-left:-65px;
+  width:130px;
+  height:230px;
+  z-index:5;
+  transform:scale(calc(.53 * var(--figure-scale, 1)));
+  transform-origin:50% 0;
   animation:pull-rhythm var(--beat) ease-in-out infinite;
   animation-delay:var(--delay,0s)
 }
 @keyframes pull-rhythm{
-  0%,100%{transform:translateY(0)}
-  35%{transform:translate(-2px,-3px)}
-  70%{transform:translate(1px,1px)}
+  0%,100%{transform:scale(calc(.53 * var(--figure-scale, 1))) translateY(0)}
+  35%{transform:scale(calc(.53 * var(--figure-scale, 1))) translate(-2px,-3px)}
+  70%{transform:scale(calc(.53 * var(--figure-scale, 1))) translate(1px,1px)}
 }
 .figure{
   position:absolute;inset:0;transform:scaleX(var(--direction))
@@ -383,28 +565,73 @@ h1.ui-title{
   display:block;width:100%;height:100%;transform:scaleX(var(--direction))
 }
 .arms{
-  position:absolute;top:82px;left:50%;margin-left:-65px;
-  width:130px;height:230px;z-index:12;pointer-events:none;
-  transform:scaleX(var(--direction))
+  position:absolute;
+  top:25px;
+  left:50%;
+  margin-left:-65px;
+  width:130px;
+  height:230px;
+  z-index:12;
+  pointer-events:none;
+  transform:scale(calc(.53 * var(--figure-scale, 1))) scaleX(var(--direction));
+  transform-origin:50% 0
 }
-.arms svg{width:130px;height:230px;overflow:visible}
+.arms svg{
+  width:130px;
+  height:230px;
+  overflow:visible
+}
 .fc{
-  position:absolute;top:310px;left:0;width:100%;height:26px;z-index:14;
-  color:#ffe8a7;font-size:20px;font-weight:950;
-  text-shadow:0 2px 3px #38210b;white-space:nowrap
+  position:absolute;
+  top:48px;
+  left:0;
+  width:100%;
+  height:16px;
+  z-index:14;
+  color:#ffe8a7;
+  font-size:12px;
+  font-weight:950;
+  line-height:1;
+  text-shadow:0 1px 3px #38210b;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis
 }
-.puller.arriving .athlete,.puller.arriving .arms,.puller.arriving .nm,
-.puller.arriving .fc{visibility:hidden}
-.puller.joined .nm{animation:joined .9s ease}
+.puller.arriving .athlete,
+.puller.arriving .arms,
+.puller.arriving .nm,
+.puller.arriving .fc{
+  visibility:hidden
+}
+.puller.joined .nm{
+  animation:joined .9s ease
+}
 @keyframes joined{
-  30%{background:#ffe8a7;color:#10283d;box-shadow:0 0 25px #ffd47388}
+  30%{
+    background:#ffe8a7;
+    color:#10283d;
+    box-shadow:0 0 25px #ffd47388
+  }
 }
 .empty{
-  grid-column:1/-1;align-self:center;margin-top:35px;
-  padding:23px 12px;border:1px dashed #b4d6e677;border-radius:16px;
-  background:#071d31cf;color:#e7f2f9;font-size:24px;line-height:1.5;font-weight:800
+  grid-column:1/-1;
+  grid-row:1/-1;
+  align-self:center;
+  margin-top:35px;
+  padding:23px 12px;
+  border:1px dashed #b4d6e677;
+  border-radius:16px;
+  background:#071d31cf;
+  color:#e7f2f9;
+  font-size:24px;
+  line-height:1.5;
+  font-weight:800
 }
 .empty b{color:#ffe09a}
+
+.body-art .podium{fill:#f4c64f;stroke:#8b5d21;stroke-width:3}
+.body-art .podium-top{fill:#ffe17b;stroke:#9a6a25;stroke-width:2}
+
 .bench{
   position:absolute;top:397px;left:0;width:100%;height:43px;
   display:flex;align-items:center;justify-content:center;
@@ -911,64 +1138,90 @@ function fitText(element, maxSize, minSize) {
     element.style.fontSize = size + 'px';
   }
 }
-function defaultFace(name) {
+function defaultFace(name, variant) {
   const face = document.createElement('span');
-  face.className = 'default-face';
+  face.className = 'default-face ' + (variant?.hairClass || 'hair-brown');
+  face.style.setProperty('--skin', variant?.skin || '#f4a17e');
+  face.style.setProperty('--hair', variant?.hair || '#49342e');
+  face.style.setProperty('--hair-rotate', variant?.hairRotate || '0deg');
+
+  const hair = document.createElement('i');
+  hair.className = 'hair';
+  face.appendChild(hair);
+
   const initial = document.createElement('b');
-  initial.textContent = Array.from(String(name).trim())[0]?.toLocaleUpperCase('vi-VN') || '?';
+  initial.textContent =
+    Array.from(String(name).trim())[0]?.toLocaleUpperCase('vi-VN') || '?';
   face.appendChild(initial);
+
   return face;
 }
-function setAvatar(container, p) {
+
+function setAvatar(container, p, variant) {
   const name = playerName(p);
   const url = allowedImage(p.avatarUrl);
-  const signature = JSON.stringify([name, url]);
+  const appearance = variant || appearanceFor(p);
+  const signature = JSON.stringify([
+    name,
+    url,
+    appearance.skin,
+    appearance.hair,
+    appearance.hairClass
+  ]);
+
   if (container.dataset.avatarSignature === signature) return;
+
   container.dataset.avatarSignature = signature;
   container.replaceChildren();
+
   const content = document.createElement('span');
   content.className = 'face-content';
   container.appendChild(content);
+
   if (!url) {
-    content.appendChild(defaultFace(name));
+    content.appendChild(defaultFace(name, appearance));
     return;
   }
+
   const image = document.createElement('img');
   image.alt = 'Avatar của ' + name;
   image.decoding = 'async';
   image.referrerPolicy = 'no-referrer';
   image.addEventListener('error', () => {
     if (content.parentNode === container) {
-      content.replaceChildren(defaultFace(name));
+      content.replaceChildren(defaultFace(name, appearance));
     }
-  }, { once: true });
+  }, { once:true });
+
   image.src = url;
   content.appendChild(image);
 }
 
+
 /* Áo, quần, hai chân và giày hoàn toàn vẽ trong file. */
 function bodyArt() {
   return `<svg class="body-art" viewBox="0 0 130 230" aria-hidden="true">
-    <ellipse cx="63" cy="219" rx="61" ry="10" fill="#34200d" opacity=".38"/>
+    <ellipse class="podium" cx="65" cy="224" rx="62" ry="8"/>
+    <path class="podium-top" d="M8 216Q65 207 122 216L116 225H14Z"/>
     <path d="M58 148L46 174L24 208" fill="none" stroke="#7f5338" stroke-width="24" stroke-linecap="round"/>
-    <path d="M58 148L46 174L24 208" fill="none" stroke="#eeb888" stroke-width="18" stroke-linecap="round"/>
+    <path d="M58 148L46 174L24 208" fill="none" stroke="var(--skin)" stroke-width="18" stroke-linecap="round"/>
     <path d="M79 151L90 177L106 207" fill="none" stroke="#7f5338" stroke-width="24" stroke-linecap="round"/>
-    <path d="M79 151L90 177L106 207" fill="none" stroke="#eeb888" stroke-width="18" stroke-linecap="round"/>
+    <path d="M79 151L90 177L106 207" fill="none" stroke="var(--skin)" stroke-width="18" stroke-linecap="round"/>
     <path d="M29 196L19 210M100 195L109 210" stroke="#fff0d3" stroke-width="20"/>
-    <path d="M29 197L24 205M101 197L106 205" stroke="var(--team-color)" stroke-width="20"/>
+    <path d="M29 197L24 205M101 197L106 205" stroke="var(--pants)" stroke-width="20"/>
     <path d="M14 207Q24 202 33 211L36 219H3Q2 210 14 207Z"
-      fill="#172b3b" stroke="#091929" stroke-width="2"/>
+      fill="#fff" stroke="#091929" stroke-width="2"/>
     <path d="M101 207Q109 202 117 210L129 216V221H94Q90 213 101 207Z"
-      fill="#172b3b" stroke="#091929" stroke-width="2"/>
-    <path d="M4 220H35M95 221H128" stroke="#f2dfb4" stroke-width="4"/>
+      fill="#fff" stroke="#091929" stroke-width="2"/>
+    <path d="M4 220H35M95 221H128" stroke="#cfd8df" stroke-width="4"/>
     <path d="M44 134H86L94 158L71 163L66 151L59 163L37 157Z"
-      fill="#152b40" stroke="#071a2b" stroke-width="3"/>
-    <path d="M66 146V157" stroke="#6b8a9e" stroke-width="2"/>
+      fill="var(--pants)" stroke="#071a2b" stroke-width="3"/>
+    <path d="M66 146V157" stroke="#fff" stroke-width="3"/>
     <g class="torso">
       <path d="M46 64Q63 56 78 69L91 137Q65 151 42 135L31 84Z"
-        fill="var(--team-color)" stroke="#092338" stroke-width="3"/>
-      <path d="M43 80L51 128" stroke="#fff" stroke-opacity=".2" stroke-width="9"/>
-      <path d="M73 79L82 131" stroke="#071b2b" stroke-opacity=".24" stroke-width="10"/>
+        fill="var(--shirt)" stroke="#092338" stroke-width="3"/>
+      <path d="M43 80L51 128" stroke="#fff" stroke-opacity=".95" stroke-width="7"/>
+      <path d="M73 79L82 131" stroke="#fff" stroke-opacity=".8" stroke-width="7"/>
       <path d="M48 65Q60 80 73 69" fill="none" stroke="#fff0cf" stroke-width="5"/>
       <path d="M54 91L60 120" stroke="#fff5d9" stroke-width="5" stroke-linecap="round"/>
       <path d="M41 132Q65 145 87 135" fill="none" stroke="#081f32" stroke-opacity=".45" stroke-width="8"/>
@@ -976,17 +1229,18 @@ function bodyArt() {
   </svg>`;
 }
 
+
 /* Hai cánh tay và hai nắm tay thuộc lớp riêng ở phía trước dây. */
 function armsArt() {
   return `<svg viewBox="0 0 130 230" aria-hidden="true">
     <g fill="none" stroke-linecap="round" stroke-linejoin="round">
       <path d="M46 94L72 116L99 107" stroke="#805437" stroke-width="20"/>
-      <path d="M46 94L72 116L99 107" stroke="#edb482" stroke-width="15"/>
+      <path d="M46 94L72 116L99 107" stroke="var(--skin)" stroke-width="15"/>
       <path d="M45 106L71 130L115 107" stroke="#805437" stroke-width="20"/>
-      <path d="M45 106L71 130L115 107" stroke="#ffd0a0" stroke-width="15"/>
-      <path d="M42 94L49 100M42 104L50 112" stroke="var(--team-color)" stroke-width="22"/>
+      <path d="M45 106L71 130L115 107" stroke="var(--skin)" stroke-width="15"/>
+      <path d="M42 94L49 100M42 104L50 112" stroke="var(--shirt)" stroke-width="22"/>
     </g>
-    <g fill="#ffd09d" stroke="#825338" stroke-width="2">
+    <g fill="var(--skin)" stroke="#825338" stroke-width="2">
       <rect x="92" y="95" width="17" height="25" rx="6" transform="rotate(9 100 107)"/>
       <rect x="109" y="96" width="18" height="25" rx="6" transform="rotate(-5 118 108)"/>
     </g>
@@ -997,6 +1251,51 @@ function armsArt() {
     <path d="M96 115Q91 112 94 107M112 116Q107 112 111 108"
       fill="none" stroke="#825338" stroke-width="2" stroke-linecap="round"/>
   </svg>`;
+}
+
+
+function appearanceFor(p) {
+  const key = playerKey(p);
+  let hash = 0;
+
+  for (const char of key) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+
+  const skins = ['#f4a17e','#e8a878','#c9825d','#ffd0a0','#9d5f45'];
+  const hairs = ['#e5b83f','#5b3828','#171717','#8b4b2c','#d7d7d7'];
+  const shirts = ['#1e90ff','#2677d8','#e63946','#c92f3e','#2388c9'];
+  const pants = ['#1767b5','#145695','#ad2636','#941f2d','#165883'];
+  const hairClasses = ['hair-ponytail','hair-brown','hair-black','hair-short','hair-brown'];
+
+  return {
+    skin: skins[hash % skins.length],
+    hair: hairs[(hash >>> 3) % hairs.length],
+    shirt: shirts[(hash >>> 6) % shirts.length],
+    pants: pants[(hash >>> 9) % pants.length],
+    hairClass: hairClasses[(hash >>> 12) % hairClasses.length],
+    hairRotate: ((hash % 7) - 3) + 'deg',
+    scale: [.88, .94, 1, 1.05, 1.1][(hash >>> 15) % 5]
+  };
+}
+
+function applyAppearance(element, p, team, index) {
+  const appearance = appearanceFor(p);
+  const teamBase = team === 'do'
+    ? ['#e63946','#c92f3e','#ef5966'][index % 3]
+    : ['#1e90ff','#2677d8','#2388c9'][index % 3];
+  const teamPants = team === 'do'
+    ? ['#ad2636','#941f2d','#8f1d2c'][index % 3]
+    : ['#1767b5','#145695','#165883'][index % 3];
+
+  element.style.setProperty('--skin', appearance.skin);
+  element.style.setProperty('--hair', appearance.hair);
+  element.style.setProperty('--shirt', teamBase);
+  element.style.setProperty('--pants', teamPants);
+  element.style.setProperty('--figure-scale', appearance.scale);
+  element.dataset.appearance = JSON.stringify(appearance);
+
+  return appearance;
 }
 
 function createPuller(p) {
@@ -1011,17 +1310,29 @@ function createPuller(p) {
     '<div class="fc"></div>';
   return element;
 }
-function updatePuller(element, p, index) {
+
+function updatePuller(element, p, index, team) {
   const name = playerName(p);
   const nameElement = element.querySelector('.nm');
-  if (nameElement.textContent !== name) nameElement.textContent = name;
+
+  if (nameElement.textContent !== name) {
+    nameElement.textContent = name;
+  }
+
   element.title = name;
-  element.style.setProperty('--delay', '-' + ((index % 3) * .19) + 's');
+  element.style.setProperty('--delay', '-' + ((index % 5) * .13) + 's');
+
+  const appearance = applyAppearance(element, p, team, index);
+  setAvatar(element.querySelector('.avatar'), p, appearance);
+
   const forceElement = element.querySelector('.fc');
   const forceText = format(p.force) + ' lực';
-  if (forceElement.textContent !== forceText) forceElement.textContent = forceText;
-  setAvatar(element.querySelector('.avatar'), p);
+
+  if (forceElement.textContent !== forceText) {
+    forceElement.textContent = forceText;
+  }
 }
+
 
 function captureSpectators() {
   const result = new Map();
@@ -1046,39 +1357,71 @@ function capturePlayers() {
 function paintSpectators(people) {
   const box = $('spectators');
   const current = new Set();
-  if (people.length) box.querySelector('.stands-empty')?.remove();
-  people.slice(0, 24).forEach((p, index) => {
+
+  if (people.length) {
+    box.querySelector('.stands-empty')?.remove();
+  }
+
+  people.forEach((p, index) => {
     const uid = playerKey(p);
     current.add(uid);
+
     let element = spectatorNodes.get(uid);
+
     if (!element) {
       element = document.createElement('div');
       element.className = 'spectator';
       element.dataset.player = uid;
-      element.innerHTML = '<div class="avatar"></div><span class="spectator-name"></span>';
+      element.innerHTML =
+        '<div class="spectator-figure">' +
+          '<div class="avatar"></div>' +
+          '<div class="spectator-body"></div>' +
+        '</div>' +
+        '<span class="spectator-name"></span>';
       spectatorNodes.set(uid, element);
     }
+
+    const appearance = appearanceFor(p);
+    const body = element.querySelector('.spectator-body');
+
     element.style.order = index;
-    element.style.setProperty('--delay', '-' + (index * .17) + 's');
-    const name = playerName(p);
-    element.title = name;
-    element.querySelector('.spectator-name').textContent = name;
-    setAvatar(element.querySelector('.avatar'), p);
-    if (element.parentNode !== box) box.appendChild(element);
+    element.style.setProperty('--delay', '-' + (index * .11) + 's');
+    element.style.setProperty('--skin', appearance.skin);
+    element.style.setProperty('--hair', appearance.hair);
+    element.style.setProperty('--shirt',
+      ['#1e90ff','#e63946','#f2b134','#7b61ff','#2ca58d'][index % 5]);
+    element.style.setProperty('--pants', appearance.pants);
+
+    element.title = playerName(p);
+    element.querySelector('.spectator-name').textContent = playerName(p);
+    setAvatar(element.querySelector('.avatar'), p, appearance);
+
+    body.style.setProperty('--skin', appearance.skin);
+    body.style.setProperty('--shirt',
+      ['#1e90ff','#e63946','#f2b134','#7b61ff','#2ca58d'][index % 5]);
+    body.style.setProperty('--pants', appearance.pants);
+
+    if (element.parentNode !== box) {
+      box.appendChild(element);
+    }
   });
+
   for (const [uid, element] of spectatorNodes) {
     if (!current.has(uid)) {
       element.remove();
       spectatorNodes.delete(uid);
     }
   }
+
   if (!people.length && !box.querySelector('.stands-empty')) {
     box.innerHTML =
       '<div class="stands-empty">KHÁN ĐÀI ĐANG ĐỢI BẠN' +
       '<small>Bình luận 1 hoặc 2 để xuống sân!</small></div>';
   }
+
   $('spectator-count').textContent = people.length;
 }
+
 
 function paintRoster(team, people) {
   const box = $('pullers-' + team);
@@ -1087,38 +1430,30 @@ function paintRoster(team, people) {
   const joined = hasRendered
     ? people.filter(p => !previousRoster[team].has(playerKey(p)))
     : [];
-  const view = rosterViews[team];
-  const now = Date.now();
-  const pages = Math.max(1, Math.ceil(people.length / 3));
 
-  if (joined.length) {
-    const firstIndex = people.findIndex(p => playerKey(p) === playerKey(joined[0]));
-    view.page = Math.floor(Math.max(0, firstIndex) / 3);
-    view.changedAt = now;
-    view.pinnedUntil = now + 2600;
-  } else if (now > view.pinnedUntil && now - view.changedAt >= 6000) {
-    view.page = (view.page + 1) % pages;
-    view.changedAt = now;
+  if (people.length) {
+    box.querySelector('.empty')?.remove();
   }
-  view.page %= pages;
-  const start = view.page * 3;
 
-  if (people.length) box.querySelector('.empty')?.remove();
   people.forEach((p, index) => {
     const uid = playerKey(p);
     let element = nodes.get(uid);
+
     if (!element) {
       element = createPuller(p);
       nodes.set(uid, element);
     }
-    updatePuller(element, p, index);
+
+    updatePuller(element, p, index, team);
+    element.hidden = false;
     element.style.order = index;
-    element.hidden = index < start || index >= start + 3;
-    if (element.parentNode !== box) box.appendChild(element);
-    if (!element.hidden) {
-      fitText(element.querySelector('.nm'), 22, 4);
-      fitText(element.querySelector('.fc'), 20, 10);
+
+    if (element.parentNode !== box) {
+      box.appendChild(element);
     }
+
+    fitText(element.querySelector('.nm'), 15, 7);
+    fitText(element.querySelector('.fc'), 12, 7);
   });
 
   for (const [uid, element] of nodes) {
@@ -1128,26 +1463,34 @@ function paintRoster(team, people) {
       nodes.delete(uid);
     }
   }
+
   if (!people.length && !box.querySelector('.empty')) {
-    box.innerHTML = '<div class="empty">Đội đang đợi bạn<br>Bình luận <b>' +
-      (team === 'xanh' ? '1' : '2') + '</b> để vào đội</div>';
+    box.innerHTML =
+      '<div class="empty">Đội đang đợi bạn<br>Bình luận <b>' +
+      (team === 'xanh' ? '1' : '2') +
+      '</b> để vào đội</div>';
   }
+
   previousRoster[team] = keys;
 
   const details = [];
-  if (people.length > 3) {
-    details.push('Đang xem ' + (start + 1) + '–' +
-      Math.min(start + 3, people.length) + '/' + people.length + ' người kéo');
-    details.push('Luân phiên mỗi 6 giây');
-  } else if (people.length) {
+
+  if (people.length) {
     details.push(people.length + ' người đang giữ dây');
   }
+
   const bench = number(lastState.teams[team].bench);
-  if (bench > 0) details.push('Dự bị: ' + bench);
+
+  if (bench > 0) {
+    details.push('Dự bị: ' + bench);
+  }
+
   $('bench-' + team).textContent = details.join(' · ');
   fitText($('bench-' + team), 16, 10);
+
   return joined;
 }
+
 
 function cancelArrival(team, uid) {
   const key = team + ':' + uid;
@@ -1161,54 +1504,99 @@ function cancelArrival(team, uid) {
 function walkToTeam(p, team, from) {
   const uid = playerKey(p);
   const target = rosterNodes[team].get(uid);
+
   if (!target || !from) return;
+
   cancelArrival(team, uid);
 
   const people = lastState.teams[team].pullers || [];
-  const index = people.findIndex(person => playerKey(person) === uid);
-  const slot = Math.max(0, index) % 3;
+  const index = Math.max(
+    0,
+    people.findIndex(person => playerKey(person) === uid)
+  );
+
+  const columnIndex = index % 3;
+  const rowIndex = Math.floor(index / 3);
   const boxRect = localRect($('pullers-' + team));
+
   if (!boxRect) return;
 
-  const column = (boxRect.width - 16) / 3;
+  const column = (boxRect.width - 14) / 3;
   const destination = {
-    x: boxRect.x + slot * (column + 8) + column / 2 - 65,
-    y: boxRect.y + 82
+    x: boxRect.x + columnIndex * (column + 7) + column / 2 - 65,
+    y: boxRect.y + 25 + rowIndex * 68
   };
+
   const walker = document.createElement('div');
+  const appearance = appearanceFor(p);
+
   walker.className = 'walker';
   walker.style.left = destination.x + 'px';
   walker.style.top = destination.y + 'px';
   walker.style.setProperty('--team-color', teamColor(team));
+  walker.style.setProperty('--skin', appearance.skin);
+  walker.style.setProperty('--hair', appearance.hair);
+  walker.style.setProperty(
+    '--shirt',
+    team === 'do' ? '#e63946' : '#1e90ff'
+  );
+  walker.style.setProperty('--pants', team === 'do' ? '#ad2636' : '#1767b5');
+
   walker.innerHTML =
     '<div class="walker-label"></div><div class="figure">' +
     bodyArt() + '<div class="avatar"></div></div>';
+
   walker.querySelector('.walker-label').textContent = playerName(p);
-  setAvatar(walker.querySelector('.avatar'), p);
+  setAvatar(walker.querySelector('.avatar'), p, appearance);
+
   $('motion-layer').appendChild(walker);
   target.classList.add('arriving');
 
-  const startX = from.x + from.width / 2 - (destination.x + 65);
-  const startY = from.y + from.height / 2 - (destination.y + 36);
+  const startX =
+    from.x + from.width / 2 - (destination.x + 65);
+  const startY =
+    from.y + from.height / 2 - (destination.y + 36);
+
   const animation = walker.animate([
-    { transform: 'translate(' + startX + 'px,' + startY + 'px) scale(.48)', opacity: .95 },
-    { transform: 'translate(' + (startX * .55) + 'px,' + (startY * .45 - 18) + 'px) scale(.77)', opacity: 1, offset: .55 },
-    { transform: 'translate(0,0) scale(1)', opacity: 1 }
-  ], { duration: 1300, easing: 'cubic-bezier(.25,.65,.3,1)', fill: 'forwards' });
+    {
+      transform:
+        'translate(' + startX + 'px,' + startY + 'px) scale(.48)',
+      opacity:.95
+    },
+    {
+      transform:
+        'translate(' + (startX * .55) + 'px,' +
+        (startY * .45 - 18) + 'px) scale(.77)',
+      opacity:1,
+      offset:.55
+    },
+    {
+      transform:'translate(0,0) scale(1)',
+      opacity:1
+    }
+  ], {
+    duration:1300,
+    easing:'cubic-bezier(.25,.65,.3,1)',
+    fill:'forwards'
+  });
 
   const key = team + ':' + uid;
   const arrival = { walker, target, animation };
   arrivals.set(key, arrival);
+
   animation.onfinish = () => {
     if (arrivals.get(key) !== arrival) return;
+
     arrivals.delete(key);
     walker.remove();
     target.classList.remove('arriving');
     target.classList.add('joined');
+
     setTimeout(() => target.classList.remove('joined'), 950);
     burst(team, 800);
   };
 }
+
 function announceJoin(p, team) {
   if (lastState.demoActive || !p.name || p.isDemo || p.demo) return;
   const name = speechName(p.name);
