@@ -233,7 +233,7 @@ function createEngine(ctx) {
     const seg = sp.segment;
     if (sp.type === 'shared') session.lastSharedMiss = !!seg.miss;
     session.history.push({
-      name: sp.winnerName, segment: seg.name, icon: seg.icon, prize: seg.prize,
+      name: sp.winnerName, avatar: sp.winnerAvatar || '', segment: seg.name, icon: seg.icon, prize: seg.prize,
       time: Date.now(), type: sp.type, epic: sp.epic, miss: !!seg.miss,
     });
     if (session.history.length > 100) session.history = session.history.slice(-100);
@@ -703,17 +703,17 @@ function createEngine(ctx) {
     const m = members[Math.floor(Math.random() * members.length)];
     const roll = Math.random();
     if (roll < 0.35) {
-      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'comment', text: DEMO_COMMENTS[Math.floor(Math.random() * DEMO_COMMENTS.length)], isDemo: true });
+      handleIntake({ uid: m.uid, name: m.name, avatar: m.avatar, kind: 'comment', text: DEMO_COMMENTS[Math.floor(Math.random() * DEMO_COMMENTS.length)], isDemo: true });
     } else if (roll < 0.70) {
       m.likeTotal += 5 + Math.floor(Math.random() * 6); // +5..10 tim (trong giới hạn 10/phút)
-      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'tap', totalLikeCount: m.likeTotal, isDemo: true });
+      handleIntake({ uid: m.uid, name: m.name, avatar: m.avatar, kind: 'tap', totalLikeCount: m.likeTotal, isDemo: true });
     } else if (roll < 0.85) {
       const [coins, giftName] = DEMO_GIFTS[Math.floor(Math.random() * DEMO_GIFTS.length)];
-      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'gift', coins, giftName, giftId: 'demo', isDemo: true });
+      handleIntake({ uid: m.uid, name: m.name, avatar: m.avatar, kind: 'gift', coins, giftName, giftId: 'demo', isDemo: true });
     } else if (roll < 0.93) {
-      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'follow', isDemo: true });
+      handleIntake({ uid: m.uid, name: m.name, avatar: m.avatar, kind: 'follow', isDemo: true });
     } else {
-      handleIntake({ uid: m.uid, name: m.name, avatar: '', kind: 'share', isDemo: true });
+      handleIntake({ uid: m.uid, name: m.name, avatar: m.avatar, kind: 'share', isDemo: true });
     }
   }
   function startDemo() {
@@ -742,20 +742,20 @@ function createEngine(ctx) {
     const an = testUid('demo-an');
     const binh = testUid('demo-binh');
     const chi = testUid('demo-chi');
-    handleIntake({ uid: an, name: 'An', avatar: '', kind: 'join' });
-    handleIntake({ uid: binh, name: 'Bình', avatar: '', kind: 'join' });
-    handleIntake({ uid: chi, name: 'Chi', avatar: '', kind: 'join' });
+    handleIntake({ uid: an, name: 'An', avatar: demoAvatar(0), kind: 'join' });
+    handleIntake({ uid: binh, name: 'Bình', avatar: demoAvatar(1), kind: 'join' });
+    handleIntake({ uid: chi, name: 'Chi', avatar: demoAvatar(2), kind: 'join' });
     steps.push('1. An, Bình, Chi join phòng');
     // Mỗi người tap 10 lần (đúng giới hạn 10/phút) = 30đ, comment 2 lần = 30đ.
     // Tap tính theo delta nên cần 2 lần gửi: lần 1 làm mốc (delta 0), lần 2 +10.
     for (const [uid, nm] of [[an, 'An'], [binh, 'Bình'], [chi, 'Chi']]) {
-      handleIntake({ uid, name: nm, avatar: '', kind: 'tap', totalLikeCount: 1 });
-      handleIntake({ uid, name: nm, avatar: '', kind: 'tap', totalLikeCount: 11 });
-      handleIntake({ uid, name: nm, avatar: '', kind: 'comment', text: 'Quay nào!' });
-      handleIntake({ uid, name: nm, avatar: '', kind: 'comment', text: 'May mắn nào!' });
+      handleIntake({ uid, name: nm, avatar: demoAvatar(nm === 'An' ? 0 : nm === 'Bình' ? 1 : 2), kind: 'tap', totalLikeCount: 1 });
+      handleIntake({ uid, name: nm, avatar: demoAvatar(nm === 'An' ? 0 : nm === 'Bình' ? 1 : 2), kind: 'tap', totalLikeCount: 11 });
+      handleIntake({ uid, name: nm, avatar: demoAvatar(nm === 'An' ? 0 : nm === 'Bình' ? 1 : 2), kind: 'comment', text: 'Quay nào!' });
+      handleIntake({ uid, name: nm, avatar: demoAvatar(nm === 'An' ? 0 : nm === 'Bình' ? 1 : 2), kind: 'comment', text: 'May mắn nào!' });
     }
     steps.push('2. Mỗi người tap 10 + comment x2 -> thanh chung 60đ, đủ 50đ -> quay chung (dư 10đ)');
-    handleIntake({ uid: an, name: 'An', avatar: '', kind: 'gift', coins: 50, giftName: 'Heo may mắn', giftId: 'demo' });
+    handleIntake({ uid: an, name: 'An', avatar: demoAvatar(0), kind: 'gift', coins: 50, giftName: 'Heo may mắn', giftId: 'demo' });
     steps.push('3. An gift 50 xu -> 3 lượt quay riêng xếp hàng sau lượt chung');
     steps.push('4. Chờ vòng quay chạy hết các lượt -> xem lịch sử + Top May Mắn');
     saveSession(); broadcast();
