@@ -46,7 +46,7 @@ button{font:inherit}
 .ui-vignette,.ui-grain{pointer-events:none}
 #scaler>.ui-vignette{z-index:30;opacity:.15}
 #scaler>.ui-grain{z-index:31;opacity:.025}
-#ui-toast{z-index:70}
+#ui-toast{z-index:70;top:820px}
 #demo-badge{
   position:absolute;top:35px;right:38px;left:auto;
   z-index:50;font-size:20px
@@ -440,7 +440,7 @@ h1.ui-title{
   transform:perspective(700px) rotateX(30deg)
 }
 .centerline,.finish{
-  position:absolute;top:432px;height:245px;width:8px;z-index:2;
+  position:absolute;top:495px;height:182px;width:8px;z-index:2;
   transform:skewY(-10deg);border-radius:3px
 }
 .centerline{
@@ -449,7 +449,7 @@ h1.ui-title{
 .finish.left{left:51px;background:var(--blue);box-shadow:0 0 20px var(--blue)}
 .finish.right{left:967px;background:var(--red);box-shadow:0 0 20px var(--red)}
 .finish::before{
-  content:"";position:absolute;left:-8px;top:-32px;width:24px;height:30px;
+  content:"";position:absolute;left:-8px;top:auto;bottom:-32px;width:24px;height:30px;
   background:repeating-conic-gradient(#fff1ce 0 25%,#162638 0 50%) 0 0/12px 12px;
   border:2px solid #fff7;border-radius:3px
 }
@@ -509,7 +509,7 @@ h1.ui-title{
   display:flex;align-items:center;justify-content:center;
   padding:2px 4px;border:1px solid #bbdcff66;
   border-bottom:2px solid var(--team-color);
-  border-radius:7px;background:#07182deb;color:#fff;
+  border-radius:7px;background:#07182df2;color:#fff;
   font-size:14px;font-weight:850;line-height:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   text-shadow:0 1px #0005
@@ -1138,7 +1138,8 @@ function playerKey(p) {
   return String(p.uid ?? p.userId ?? p.uniqueId ?? p.id ?? p.name ?? '');
 }
 function playerName(p) {
-  return String(p.name || 'Người chơi');
+  const n = String(p.name ?? '');
+  return n.trim() || 'Người chơi';
 }
 function teamSettings() {
   return lastState?.settings || {};
@@ -1485,7 +1486,10 @@ function paintSpectators(people) {
     }
   }
 
-  if (!people.length && !box.querySelector('.stands-empty')) {
+  const teams = lastState?.teams;
+  const hasPullers = teams &&
+    (((teams.xanh?.pullers || []).length + (teams.do?.pullers || []).length) > 0);
+  if (!people.length && !hasPullers && !box.querySelector('.stands-empty')) {
     box.innerHTML =
       '<div class="stands-empty">KHÁN ĐÀI ĐANG ĐỢI BẠN' +
       '<small>Bình luận 1 hoặc 2 để xuống sân!</small></div>';

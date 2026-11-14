@@ -506,6 +506,7 @@ function createEngine(ctx) {
     let demoStepNo = 0;
     let trickleNo = 0;
     let pendingJoins = []; // [{ uid, name, team, dueStep }] — khách mới đang chờ ở khán đài, nhập đội sau ~15s
+    let trickleLeaveAt = new Map(); // uid -> demoStepNo: khách trickle rời đội sau ~40s (16 bước) để có chỗ cho khách mới
     const joinTeam = (uid, name, team) => {
       handleIntake({ kind: 'comment', uid, name, text: team === 'xanh' ? '1' : '2' });
     };
@@ -548,15 +549,26 @@ function createEngine(ctx) {
       }
       // Khách mới ở khán đài ~15s (6 bước) rồi mới nhập đội — để thấy
       // khán đài luôn có người đứng xem và thấy rõ lượt đi xuống.
+      // Khách trickle rời đội sau ~40s (16 bước) — nhường chỗ cho khách
+      // mới, khán đài không bao giờ cạn (demo không có người rời tự nhiên).
+      for (const [uid, at] of trickleLeaveAt) {
+        if (demoStepNo >= at) {
+          trickleLeaveAt.delete(uid);
+          handleIntake({ kind: 'leave', uid });
+        }
+      }
       const dueJoins = pendingJoins.filter((pj) => demoStepNo >= pj.dueStep);
       if (dueJoins.length) {
         pendingJoins = pendingJoins.filter((pj) => demoStepNo < pj.dueStep);
-        dueJoins.forEach((pj) => joinTeam(pj.uid, pj.name, pj.team));
+        dueJoins.forEach((pj) => {
+          joinTeam(pj.uid, pj.name, pj.team);
+          trickleLeaveAt.set(pj.uid, demoStepNo + 16);
+        });
         return;
       }
       // Cứ 2 bước lại có 1 khách mới đến khán đài (tối đa ~30 người online,
       // mỗi đội ~15; tối đa 4 khách cùng chờ ở khán đài để luôn có người xem).
-      if (demoStepNo % 2 === 0 && onlinePlayers().length < 30 && pendingJoins.length < 4) {
+      if (demoStepNo % 2 === 0 && onlinePlayers().length < 36 && pendingJoins.length < 4) {
         trickleNo += 1;
         const uid = `demo_khach_${trickleNo}`;
         const name = `Khách ${trickleNo}`;
