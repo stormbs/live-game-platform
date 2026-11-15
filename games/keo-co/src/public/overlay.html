@@ -58,6 +58,28 @@ button{font:inherit}
   text-align:center;font-size:21px;font-weight:800
 }
 .demo-note.on{display:block}
+/* v27: nhắc bật tiếng khi trình duyệt chặn autoplay — hiện tới khi user
+   bấm 1 lần (hoặc khi phát thử thành công, vd. OBS cho autoplay thẳng). */
+#sound-prompt{
+  display:none;position:absolute;top:1080px;left:50%;transform:translateX(-50%);
+  z-index:60;padding:16px 26px;border:2px solid #ffdf84;border-radius:18px;
+  background:#12283df5;color:#ffe9b0;text-align:center;cursor:pointer;
+  box-shadow:0 6px 24px #000a,0 0 30px #ffdf8455;
+  animation:sound-pulse 1.6s ease-in-out infinite;pointer-events:auto
+}
+#sound-prompt.on{display:block}
+#sound-prompt b{display:block;font-size:26px;font-weight:950;line-height:1.2}
+#sound-prompt small{display:block;margin-top:4px;font-size:18px;color:#cfe6f5}
+@keyframes sound-pulse{
+  0%,100%{box-shadow:0 6px 24px #000a,0 0 18px #ffdf8433}
+  50%{box-shadow:0 6px 24px #000a,0 0 44px #ffdf84aa}
+}
+#sound-badge{
+  display:none;position:absolute;top:82px;right:38px;z-index:50;
+  padding:6px 12px;border:1px solid #8fd6a066;border-radius:999px;
+  background:#0d2b1ef2;color:#b8f0cd;font-size:18px;font-weight:800
+}
+#sound-badge.on{display:block}
 .masthead{
   position:absolute;top:28px;left:40px;right:40px;height:91px;
   display:flex;align-items:center;justify-content:center;gap:20px
@@ -531,7 +553,7 @@ h1.ui-title{
 .puller.alt .tile-text{top:-36px}
 .puller .tile-text{
   position:absolute;top:-8px;left:50%;transform:translateX(-50%);
-  width:auto;max-width:72px;height:24px;
+  width:auto;max-width:calc(var(--slot,30px) * 2 - 6px);height:24px;
   display:flex;align-items:center;justify-content:center;
   padding:2px 6px;border:1px solid #bbdcff66;
   border-bottom:2px solid var(--team-color);
@@ -539,11 +561,13 @@ h1.ui-title{
   z-index:15;pointer-events:none;white-space:nowrap
 }
 .puller .nm{
-  flex:0 1 auto;min-width:0;max-width:60px;
+  flex:0 1 auto;min-width:0;max-width:calc(var(--slot,30px) * 2 - 16px);
   color:#fff;font-size:12px;font-weight:850;line-height:1;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   text-shadow:0 1px #0005
 }
+/* v27: đông người (>15/đội) thì thu nhỏ hình để 24 người đều vừa hàng. */
+.puller.dense{--figure-scale:.72}
 .puller[hidden]{display:none!important}
 .athlete{
   position:absolute;top:22px;left:0;width:130px;height:230px;
@@ -601,11 +625,13 @@ h1.ui-title{
 .puller.arriving .nm,
 .puller.arriving .fc,
 .puller.arriving .tile-text{visibility:hidden}
+/* v27: hộp "đội đang đợi bạn" dời lên phía trên khung đội (trên đầu người
+   kéo, dưới tiêu đề đội) — bản cũ đặt top:110px đè lên sợi dây. */
 .empty{
-  position:absolute;left:0;right:0;top:110px;
-  padding:23px 12px;border:1px dashed #b4d6e677;border-radius:16px;
-  background:#071d31cf;color:#e7f2f9;font-size:24px;
-  line-height:1.5;font-weight:800;text-align:center
+  position:absolute;left:0;right:0;top:28px;
+  padding:10px 12px;border:1px dashed #b4d6e677;border-radius:16px;
+  background:#071d31cf;color:#e7f2f9;font-size:20px;
+  line-height:1.4;font-weight:800;text-align:center
 }
 .empty b{color:#ffe09a}
 .body-art .podium{fill:#f4c64f;stroke:#8b5d21;stroke-width:3}
@@ -910,6 +936,8 @@ h1.ui-title{
   <div class="ui-toast" id="ui-toast"></div>
   <div class="ui-demo-badge" id="demo-badge">🧪 DEMO</div>
   <div class="demo-note" id="demo-note"></div>
+  <div id="sound-prompt" role="button" aria-label="Bật tiếng"><b>🔊 Bấm vào màn hình để bật tiếng</b><small>Âm thanh + giọng đọc sẽ bật sau 1 lần chạm</small></div>
+  <div id="sound-badge" title="Âm thanh đã bật">🔊 Đã bật tiếng</div>
 
   <header>
     <div class="masthead">
@@ -1117,6 +1145,12 @@ const socket = io();
 let lastState = null;
 let hasRendered = false;
 let voiceOn = true;
+// v27: trình duyệt chặn autoplay âm thanh tới khi user bấm 1 lần. Trước lúc
+// đó voice KHÔNG được phát thử rồi rớt lặng (bản cũ play() reject -> câu
+// trong hàng đợi bị bỏ mất mà màn hình không có tín hiệu gì). autoplayBlocked
+// = phát thử đã bị chặn 1 lần -> chỉ thử lại sau khi user bấm.
+let audioUnlocked = false;
+let autoplayBlocked = false;
 let previousWaitingForMatch = false;
 let previousPhase = '';
 let previousLead = '';
@@ -1478,13 +1512,17 @@ function paintSpectators(people) {
 
     const appearance = appearanceFor(p);
     const body = element.querySelector('.spectator-body');
+    // v27: người kéo về khán đài ăn mừng (phase matchEnd, p.team còn giữ)
+    // thì giữ màu áo đội; khán giả thường (chưa chọn đội) vẫn quay màu.
+    const shirtColor = p.team === 'xanh' ? teamColor('xanh')
+      : p.team === 'do' ? teamColor('do')
+      : ['#1e90ff','#e63946','#f2b134','#7b61ff','#2ca58d'][index % 5];
 
     element.style.order = index;
     element.style.setProperty('--delay', '-' + (index * .11) + 's');
     element.style.setProperty('--skin', appearance.skin);
     element.style.setProperty('--hair', appearance.hair);
-    element.style.setProperty('--shirt',
-      ['#1e90ff','#e63946','#f2b134','#7b61ff','#2ca58d'][index % 5]);
+    element.style.setProperty('--shirt', shirtColor);
     element.style.setProperty('--pants', appearance.pants);
 
     element.title = playerName(p);
@@ -1492,8 +1530,7 @@ function paintSpectators(people) {
     setAvatar(element.querySelector('.avatar'), p, appearance);
 
     body.style.setProperty('--skin', appearance.skin);
-    body.style.setProperty('--shirt',
-      ['#1e90ff','#e63946','#f2b134','#7b61ff','#2ca58d'][index % 5]);
+    body.style.setProperty('--shirt', shirtColor);
     body.style.setProperty('--pants', appearance.pants);
 
     if (element.parentNode !== box) {
@@ -1524,6 +1561,10 @@ function paintSpectators(people) {
 function paintRoster(team, people) {
   const box = $('pullers-' + team);
   const nodes = rosterNodes[team];
+  // v27: lúc vinh danh (matchEnd) dây kéo TRỐNG — mọi người về khán đài ăn
+  // mừng (render() gộp họ vào danh sách khán đài). Cổng này cũng chặn lần
+  // vẽ 250ms gọi trực tiếp paintRoster với pullers cũ.
+  if (lastState?.phase === 'matchEnd') people = [];
   const sorted = [...people].sort((a,b) => number(b.force) - number(a.force));
   const keys = new Set(sorted.map(playerKey));
   const joined = hasRendered
@@ -1531,6 +1572,12 @@ function paintRoster(team, people) {
     : [];
 
   const baseX = team === 'xanh' ? 21 : 621;
+  // v27: MỘT hàng duy nhất dọc dây, mỗi người 1 ô riêng. Ô rộng = chiều
+  // rộng khung đội / số người (kẹp 16–34px): 12 người -> ô 34px, tên 2 tầng
+  // xen kẽ (.alt) không bao giờ chồng; 24 người -> ô ~17px, tên cắt ngắn
+  // có dấu … nhưng vẫn không chồng. Bản cũ cố định 30px + ẩn từ vị trí 16.
+  const slot = Math.max(16, Math.min(34, 420 / Math.max(1, sorted.length)));
+  const dense = sorted.length > 15;
 
   sorted.forEach((p,index) => {
     const uid = playerKey(p);
@@ -1542,18 +1589,21 @@ function paintRoster(team, people) {
       box.appendChild(element);
     }
 
-    if (index >= 15) {
-      element.hidden = true;
-      return;
-    }
-
     updatePuller(element,p,index,team);
     element.hidden = false;
     element.classList.toggle('alt', index % 2 === 1);
+    element.classList.toggle('dense', dense);
+    // applyAppearance() vừa ghi --figure-scale inline theo nhân vật ->
+    // nhân thêm 0.72 khi đông người (class CSS không thắng được inline).
+    if (dense) {
+      const sc = parseFloat(element.style.getPropertyValue('--figure-scale')) || 1;
+      element.style.setProperty('--figure-scale', String(sc * 0.72));
+    }
+    element.style.setProperty('--slot', slot + 'px');
 
     const fieldX = team === 'xanh'
-      ? 470 - index * 30
-      : 610 + index * 30;
+      ? 470 - index * slot
+      : 610 + index * slot;
 
     element.style.left = (fieldX - baseX - 65) + 'px';
     element.style.top = (126 + (index % 2 ? 8 : 0)) + 'px';
@@ -1570,7 +1620,8 @@ function paintRoster(team, people) {
   }
 
   const emptyEl = box.querySelector('.empty');
-  if (!sorted.length) {
+  // Lúc vinh danh không hiện hộp chờ (đội chưa mở lại, trận mới mới nhận người).
+  if (!sorted.length && lastState?.phase !== 'matchEnd') {
     if (!emptyEl) {
       const empty = document.createElement('div');
       empty.className = 'empty';
@@ -1715,6 +1766,28 @@ function refreshMusicVolume() {
   }
 }
 
+// ---- v27: mở tiếng (autoplay) ----
+function showSoundPrompt() {
+  if (audioUnlocked || !voiceOn) return;
+  $('sound-prompt')?.classList.add('on');
+}
+function markAudioUnlocked() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  autoplayBlocked = false;
+  $('sound-prompt')?.classList.remove('on');
+  $('sound-badge')?.classList.add('on');
+}
+// User bấm/phím lần đầu: mở tiếng thật (resume mọi AudioContext) rồi xả
+// hàng đợi voice đang chờ.
+function unlockAudio() {
+  if (audioUnlocked) { fxAudio(); return; }
+  markAudioUnlocked();
+  fxAudio();
+  getFragAudioCtx();
+  playVoiceEntry();
+}
+
 function trimVoiceQueue() {
   // v22: hàng đợi nghẽn -> bỏ thông báo CŨ NHẤT (sequence nhỏ nhất) trong
   // các mục thường, chỉ giữ vài thông báo mới nhất; giữ lại thắng trận (pri>=8).
@@ -1759,6 +1832,9 @@ function enqueueVoiceFile(name, priority) {
 
 function playVoiceEntry() {
   if (!voiceOn || voicePlaying || !voiceQueue.length) return;
+  // v27: phát thử đã bị chặn 1 lần -> không thử lại cho tới khi user bấm
+  // (mỗi lần thử rớt là 1 câu bị bỏ mất mà không ai nghe thấy).
+  if (!audioUnlocked && autoplayBlocked) return;
 
   const now = Date.now();
   while (voiceQueue.length && now - voiceQueue[0].at > 25000) {
@@ -1770,8 +1846,23 @@ function playVoiceEntry() {
   voicePlaying = true;
   refreshMusicVolume();
 
+  // Câu chưa mở tiếng mà AudioContext đang treo (trình duyệt thường) thì
+  // giữ câu lại trong hàng đợi + hiện bảng nhắc bấm để bật tiếng.
+  const blockForAutoplay = () => {
+    autoplayBlocked = true;
+    voicePlaying = false;
+    voiceQueue.unshift(entry);
+    refreshMusicVolume();
+    showSoundPrompt();
+  };
+
   let finished = false;
   if (entry.fragments) {
+    const fragCtx = getFragAudioCtx();
+    if (!audioUnlocked && (!fragCtx || fragCtx.state === 'suspended')) {
+      blockForAutoplay();
+      return;
+    }
     const finishFrag = () => {
       if (finished) return;
       finished = true;
@@ -1799,7 +1890,16 @@ function playVoiceEntry() {
   voiceAudio.src = '/shared/voice/keo-co/' + entry.name + '.mp3';
   voiceAudio.onended = finish;
   voiceAudio.onerror = finish;
-  voiceAudio.play().catch(finish);
+  voiceAudio.play().then(() => {
+    // Phát được (vd. OBS cho autoplay thẳng) -> coi như đã mở tiếng.
+    markAudioUnlocked();
+  }).catch((err) => {
+    if (err && err.name === 'NotAllowedError' && !audioUnlocked) {
+      blockForAutoplay();
+      return;
+    }
+    finish();
+  });
 }
 
 function stopVoice() {
@@ -1921,7 +2021,10 @@ function buildGiftSentence(gift) {
   frags.push('cong');
   frags.push(...numberToFragments(gift.force || 0));
   frags.push('luc-keo');
-  frags.push(COMMENT_FRAGS[commentIndex++ % COMMENT_FRAGS.length]);
+  // v27: câu khích lệ xoay vòng chỉ gắn 1/3 câu quà (bản cũ gắn mọi câu quà
+  // nên voice bình luận chung dồn dập, lấn voice vào/ra đội).
+  const ci = commentIndex++;
+  if (ci % 3 === 0) frags.push(COMMENT_FRAGS[ci % COMMENT_FRAGS.length]);
   return frags;
 }
 
@@ -1951,8 +2054,8 @@ function enqueueVoiceFragments(fragments, priority, kind) {
       if (voiceQueue[i].kind === kind) voiceQueue.splice(i, 1);
     }
   } else {
-    // Câu quà: tối đa 1 câu / 8s để không spam.
-    if (now - lastGiftSentenceAt < 8000) return;
+    // Câu quà: tối đa 1 câu / 12s để không spam (v27: 8s -> 12s).
+    if (now - lastGiftSentenceAt < 12000) return;
     lastGiftSentenceAt = now;
   }
   voiceQueue.push({
@@ -2253,8 +2356,8 @@ function forceFx(s) {
   if (big >= 30) cheerSound();
   if (dx > 0 && dd > 0 && Math.abs(s.force.xanh - s.force.do) <= 100) drumSound();
 }
-document.addEventListener('pointerdown', () => fxAudio(), { passive:true });
-document.addEventListener('keydown', () => fxAudio());
+document.addEventListener('pointerdown', () => unlockAudio(), { passive:true });
+document.addEventListener('keydown', () => unlockAudio());
 
 /* Quà dùng force do engine cung cấp; không đặt lực riêng theo loại quà. */
 /* Quà dùng force do engine cung cấp; không đặt lực riêng theo loại quà. */
@@ -2399,9 +2502,11 @@ function showGift(gift, oldSpectatorPositions, oldPlayerPositions) {
 
   // v14: đọc câu động cụ thể: tên + đội + quà + lực + câu khích lệ.
   // Fallback về clip chung nếu không dựng được câu.
+  // v27: ưu tiên 4 (ngang voice vào/ra) thay vì 6 — câu quà không được
+  // lấn voice vào/ra đội.
   const sentence = buildGiftSentence(gift);
   if (sentence.length) {
-    enqueueVoiceFragments(sentence, 6);
+    enqueueVoiceFragments(sentence, 4);
   } else {
     enqueueVoiceFile(Number(gift.coins) >= 50 ? 'biggift' : 'gift',
       Number(gift.coins) >= 50 ? 6 : 5);
@@ -2533,7 +2638,7 @@ function updateRules(s) {
   document.querySelector('.g-share').textContent = st.shareForce ?? 10;
 
   const threshold = ruleValue(s, ['winThreshold','winForce','forceToWin','roundWinForce'], 500);
-  const duration = ruleValue(s, ['roundDurationSec','roundSeconds','roundDuration','roundTime'], 180);
+  const duration = ruleValue(s, ['roundDurationS','roundDurationSec','roundSeconds','roundDuration','roundTime'], 180);
   const winsNeeded = ruleValue(s, ['winsToMatch','winsToWin','roundsToWin'], 3);
   $('hint').textContent =
     'Chênh ' + format(threshold) + ' lực → thắng hiệp · Tối đa ' + format(duration) + ' giây / hiệp';
@@ -2628,7 +2733,7 @@ function voiceTransitions(s, oldState) {
     : number(s.force.do) > number(s.force.xanh) ? 'do' : '';
 
   if (waiting && !previousWaitingForMatch &&
-      Date.now() - lastWaitingVoiceAt >= 30000) {
+      Date.now() - lastWaitingVoiceAt >= 45000) {
     enqueueVoiceFile('waiting',6);
     lastWaitingVoiceAt = Date.now();
   }
@@ -2646,21 +2751,23 @@ function voiceTransitions(s, oldState) {
   }
 
   // v13: đổi đội dẫn -> gọi tên đội vươn lên; mất đội dẫn (hòa) -> 'close'.
+  // v27: bình luận chung thưa ra (45s) + ưu tiên thấp hơn voice vào/ra đội.
   if (lead && previousLead && lead !== previousLead &&
-      Date.now() - lastCloseVoiceAt >= 20000) {
-    enqueueVoiceFile(lead === 'xanh' ? 'lead-xanh' : 'lead-do',4);
+      Date.now() - lastCloseVoiceAt >= 45000) {
+    enqueueVoiceFile(lead === 'xanh' ? 'lead-xanh' : 'lead-do',3);
     lastCloseVoiceAt = Date.now();
   } else if (!lead && previousLead &&
-      Date.now() - lastCloseVoiceAt >= 20000) {
+      Date.now() - lastCloseVoiceAt >= 45000) {
     enqueueVoiceFile('close',3);
     lastCloseVoiceAt = Date.now();
   }
 
   // v13: đội bị dẫn xa (cờ lệch > 70) -> động viên đội đang thua.
+  // v27: 60s/lần, ưu tiên 2 — không lấn voice vào/ra/thắng.
   const flagPct = number(s.flagPct || 0);
   if (s.phase === 'playing' && Math.abs(flagPct) > 70 &&
-      Date.now() - lastEncourageVoiceAt >= 30000) {
-    enqueueVoiceFile(flagPct > 0 ? 'encourage-do' : 'encourage-xanh',3);
+      Date.now() - lastEncourageVoiceAt >= 60000) {
+    enqueueVoiceFile(flagPct > 0 ? 'encourage-do' : 'encourage-xanh',2);
     lastEncourageVoiceAt = Date.now();
   }
 
@@ -2752,10 +2859,22 @@ function render(s) {
   $('flag').setAttribute('aria-label', 'Cờ kéo: ' + Math.round(flagPct) + '%');
 
   const spectators = Array.isArray(s.spectators) ? s.spectators : [];
-  paintSpectators(spectators);
-  const spectatorKeys = new Set(spectators.map(playerKey));
-  const joinedX = paintRoster('xanh', s.teams.xanh.pullers || []);
-  const joinedD = paintRoster('do', s.teams.do.pullers || []);
+  // v27: lúc vinh danh (matchEnd) dây kéo TRỐNG — toàn bộ người kéo về
+  // khán đài ăn mừng. Engine vẫn giữ team của họ tới khi resetMatch() chạy
+  // sau 20s nên overlay tự gộp họ vào danh sách khán đài để hiển thị
+  // (tối đa 48 người = 4 hàng khán đài, chưa chạm tới dây).
+  const celebrating = s.phase === 'matchEnd';
+  const pullerCelebrants = celebrating
+    ? [...(s.teams.xanh.pullers || []), ...(s.teams.do.pullers || [])]
+    : [];
+  const seenSpectatorUids = new Set(spectators.map(playerKey));
+  const displaySpectators = celebrating
+    ? [...spectators, ...pullerCelebrants.filter(p => !seenSpectatorUids.has(playerKey(p)))].slice(0, 48)
+    : spectators;
+  paintSpectators(displaySpectators);
+  const spectatorKeys = new Set(displaySpectators.map(playerKey));
+  const joinedX = paintRoster('xanh', celebrating ? [] : (s.teams.xanh.pullers || []));
+  const joinedD = paintRoster('do', celebrating ? [] : (s.teams.do.pullers || []));
 
   // v23: voice vào/ra đội CHỈ khi có người THẬT SỰ đổi trạng thái — so đội
   // của từng người với lần render trước (prevTeamOf). Bản cũ gọi
@@ -2796,8 +2915,10 @@ function render(s) {
   // Rời đội: lần trước còn trong đội, lần này không còn trong đội nào và
   // cũng không còn ở khán đài (đã rời phòng / quá 3 phút không hoạt động).
   // Lúc vừa reset hết trận thì mọi người về khán đài — đã có 1 câu tóm tắt
-  // 'reset-stands', không đọc rời từng người.
-  if (!firstRender && !justReset) {
+  // 'reset-stands', không đọc rời từng người. Lúc vinh danh (matchEnd) mọi
+  // người cũng ở khán đài ăn mừng — không đọc rời ai (kể cả người kéo vượt
+  // quá giới hạn 48 người hiển thị ở khán đài).
+  if (!firstRender && !justReset && !celebrating) {
     for (const [uid, oldTeam] of prevTeamOf) {
       if (!currentTeamOf.has(uid) && !spectatorKeys.has(uid)) {
         const p = prevTeamPlayer.get(uid);
@@ -2807,7 +2928,18 @@ function render(s) {
   }
   prevTeamOf = currentTeamOf;
   prevTeamPlayer = currentTeamPlayer;
-  previousSpectators = new Map(spectators.map(p => [playerKey(p), p]));
+  previousSpectators = new Map(displaySpectators.map(p => [playerKey(p), p]));
+  // v27: tiêu đề khán đài đổi theo trạng thái (ăn mừng lúc vinh danh).
+  const standsHeading = document.querySelector('.stands-heading');
+  if (standsHeading) {
+    const headingHtml = celebrating
+      ? '🏆 KHÁN ĐÀI ĂN MỪNG · <span id="spectator-count">' + displaySpectators.length + '</span> NGƯỜI'
+      : 'KHÁN ĐÀI · <span id="spectator-count">' + displaySpectators.length + '</span> KHÁN GIẢ';
+    if (standsHeading.dataset.headingHtml !== headingHtml) {
+      standsHeading.dataset.headingHtml = headingHtml;
+      standsHeading.innerHTML = headingHtml;
+    }
+  }
 
   updateBanner();
   forceFx(s);

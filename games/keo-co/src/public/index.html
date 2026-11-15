@@ -205,8 +205,8 @@
       <ul class="guide">
         <li>Bình luận "xanh" / "đỏ" (hoặc "1" / "2") để vào đội. Chưa chọn đội thì chưa tính lực.</li>
         <li>10 tim = +1 lực · 1 bình luận tính điểm = +1 (chống spam 1/5s) · 1 xu quà = +10 lực · follow +20, share +10 (1 lần/người/hiệp).</li>
-        <li>Cờ chạm vạch đích 1 bên → bên đó thắng hiệp. Hết giờ (mặc định 3 phút), bên đang dẫn thắng hiệp.</li>
-        <li>Thắng 3 hiệp trước (tối đa 5 hiệp) → thắng trận, vinh danh 20s rồi trận mới (đội giữ nguyên, lực về 0).</li>
+        <li id="guide-time">Cờ chạm vạch đích 1 bên → bên đó thắng hiệp. Hết giờ (180s), bên đang dẫn thắng hiệp.</li>
+        <li id="guide-match">Thắng 3 hiệp trước (tối đa 5 hiệp) → thắng trận, vinh danh 20s rồi trận mới (mọi người về khán đài, bình luận 1/2 để vào đội lại).</li>
         <li>Tối đa 24 người kéo dây mỗi bên — người vào sau chờ ở khán đài, vẫn tính lực.</li>
       </ul>
     </div>
@@ -305,6 +305,12 @@ function render(s) {
     $('set-teamxanh-color').value = s.settings.teamXanhColor || '#1E90FF';
     $('set-teamdo-color').value = s.settings.teamDoColor || '#E63946';
   }
+  // v26: "Cách chơi" theo đúng cài đặt hiện tại, không ghi cứng 3 phút / 20s
+  // và không ghi "đội giữ nguyên" (từ v25 hết hiệp/trận đều về khán đài).
+  const gd = document.getElementById('guide-time');
+  if (gd) gd.textContent = 'Cờ chạm vạch đích 1 bên → bên đó thắng hiệp. Hết giờ (' + (s.settings.roundDurationS ?? 180) + 's), bên đang dẫn thắng hiệp.';
+  const gm = document.getElementById('guide-match');
+  if (gm) gm.textContent = 'Thắng ' + (s.settings.roundsToWin ?? 3) + ' hiệp trước (tối đa 5 hiệp) → thắng trận, vinh danh ' + (s.settings.matchCelebrateS ?? 20) + 's rồi trận mới (mọi người về khán đài, bình luận 1/2 để vào đội lại).';
 }
 async function saveSettings() {
   const r = await api('/api/settings', {
