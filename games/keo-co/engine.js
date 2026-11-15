@@ -114,6 +114,7 @@ function createEngine(ctx) {
   const testTapTotals = {};
   const demoTapTotals = {};
   let demoTimer = null;
+  let demoMatchNo = 0; // v23: trận demo đang chạy — đổi số là trận mới (vừa reset), dàn demo nhập đội lại từ đầu
   const DEMO_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khang', 'Linh', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo', 'Bảo', 'Cường', 'Đạt', 'Giang', 'Hiếu', 'Khoa', 'Lan', 'Nam', 'Oanh', 'Sơn', 'Tú', 'Vân'];
   const DEMO_CHEERS = ['Cố lên!', 'Kéo mạnh lên!', 'Kéo đi mọi người ơi!', 'Đừng thua nha!', 'Mạnh nữa lên!', 'Cố lên cả đội ơi!'];
   const DEMO_GIFTS = [{ name: 'Hoa hồng', coins: 1 }, { name: 'Trà sữa', coins: 5 }, { name: 'Kính râm', coins: 10 }, { name: 'Bánh kem', coins: 20 }]; // quà demo định kỳ, tối đa 20 xu = 200 lực
@@ -531,11 +532,23 @@ function createEngine(ctx) {
       handleIntake({ kind: 'comment', uid, name, text: team === 'xanh' ? '1' : '2' });
     };
     session.demoActive = true;
+    demoMatchNo = session.matchNo;
     log('🧪 Demo bắt đầu — 24 người demo vào khán đài, rồi lần lượt nhập đội kéo co.');
     const step = () => {
       if (!session.demoActive) return;
       demoStepNo += 1;
       stageSteps += 1;
+      // v23: hết trận -> resetMatch đẩy hết về khán đài -> dàn demo nhập đội
+      // lại từ đầu theo sóng (trước đây demo nằm khán đài mãi, trận sau chỉ
+      // còn 1-2 khách trickle kéo 1v1 vô nghĩa).
+      if (session.matchNo !== demoMatchNo) {
+        demoMatchNo = session.matchNo;
+        demoStage = 0;
+        stageSteps = 0;
+        pendingJoins = [];
+        trickleLeaveAt.clear();
+        log(`🧪 Trận mới #${demoMatchNo} — dàn demo nhập đội lại theo sóng.`);
+      }
       // Đợt 0: ở khán đài ~10s (4 bước) để thấy đám đông khán giả.
       if (demoStage === 0) {
         if (stageSteps >= 4) {

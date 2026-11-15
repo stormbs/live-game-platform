@@ -234,6 +234,32 @@ test('keo-co: demo start -> lực 2 đội tăng; stop -> dừng; từ chối kh
   } finally { await stopTestServer(t); }
 });
 
+// v23: hết trận -> reset về khán đài -> dàn demo nhập đội LẠI theo sóng
+// (trước đây demo nằm khán đài mãi, trận sau chỉ còn 1-2 khách trickle kéo 1v1).
+test('keo-co v23: demo sau khi hết trận nhập đội lại theo sóng, không nằm khán đài mãi', async () => {
+  const t = await startTestServer();
+  try {
+    const user = uniq('keo_demo23');
+    await enableDemo(t, user);
+    await setSettings(t, user, { roundsToWin: 1, roundDurationS: 8, roundBreakS: 1, winForce: 50, matchCelebrateS: 3 });
+    const start = await fetchJson(t.base, `/o/${GAME}/${user}/api/test/demo-start`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+    });
+    assert.equal(start.json.success, true);
+    // Chờ trận 1 kết thúc -> reset sang trận 2, mọi người về khán đài.
+    let st = await waitFor(t, user, (s) => s.matchNo === 2, 120, 1000);
+    assert.equal(st.matchNo, 2, 'hết trận 1 phải sang trận 2');
+    assert.equal(st.teams.xanh.total, 0, 'vừa reset: đội Xanh trống');
+    assert.equal(st.teams.do.total, 0, 'vừa reset: đội Đỏ trống');
+    assert.ok(st.spectators.length >= 20, 'vừa reset: dàn demo về khán đài');
+    // Chờ dàn demo nhập đội lại theo sóng: 6 Xanh rồi 6 Đỏ (~25s sau reset).
+    st = await waitFor(t, user, (s) => s.matchNo === 2 && s.teams.xanh.total >= 6 && s.teams.do.total >= 6, 150, 1000);
+    assert.equal(st.matchNo, 2, 'vẫn đang trận 2 khi dàn demo nhập đội lại');
+    assert.ok(st.teams.xanh.total >= 6, `đội Xanh phải có >= 6 người demo nhập lại, thực tế ${st.teams.xanh.total}`);
+    assert.ok(st.teams.do.total >= 6, `đội Đỏ phải có >= 6 người demo nhập lại, thực tế ${st.teams.do.total}`);
+  } finally { await stopTestServer(t); }
+});
+
 test('keo-co v4: khán giả ở spectators, chờ ghép trận khi 1 đội, nhập đội giữa hiệp được, lastGift', async () => {
   const t = await startTestServer();
   try {

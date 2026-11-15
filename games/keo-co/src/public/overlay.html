@@ -1133,6 +1133,8 @@ let warningTimer = null;
 let ropeTimer = null;
 let standsTimer = null;
 let previousSpectators = new Map();
+let prevTeamOf = new Map();      // v23: uid -> đội ở lần render trước (phát hiện vào/ra đội thật)
+let prevTeamPlayer = new Map();  // v23: uid -> player ở lần render trước (đọc tên người rời đội)
 let previousGiftSignature = '';
 const seenGifts = new Set();
 const previousForce = { xanh: 0, do: 0 };
@@ -1944,11 +1946,11 @@ function buildJoinSentence(p, team) {
 function enqueueVoiceFragments(fragments, priority, kind) {
   if (!voiceOn || !fragments || !fragments.length) return;
   const now = Date.now();
-  if (kind === 'join') {
-    // v15: vào đội dồn dập -> chỉ giữ sự kiện MỚI NHẤT:
-    // bỏ các câu join đang chờ trong hàng đợi (câu đang đọc dở không cắt).
+  if (kind === 'join' || kind === 'leave') {
+    // v15/v23: vào/ra đội dồn dập -> chỉ giữ sự kiện MỚI NHẤT:
+    // bỏ các câu cùng loại đang chờ trong hàng đợi (câu đang đọc dở không cắt).
     for (let i = voiceQueue.length - 1; i >= 0; i--) {
-      if (voiceQueue[i].kind === 'join') voiceQueue.splice(i, 1);
+      if (voiceQueue[i].kind === kind) voiceQueue.splice(i, 1);
     }
   } else {
     // Câu quà: tối đa 1 câu / 8s để không spam.
@@ -2055,6 +2057,48 @@ function announceJoin(p, team) {
     enqueueVoiceFragments(sentence, 4, 'join');
   } else {
     enqueueVoiceFile(team === 'xanh' ? 'join-xanh' : 'join-do', 4);
+  }
+}
+
+// ---- v23: voice RỜI ĐỘI (trước đây không có — người rời sân biến mất lặng) ----
+let leaveTemplateIndex = 0;
+function buildLeaveSentence(p, team) {
+  const frags = [];
+  const teamFrag = team === 'do' ? 'team-do' : 'team-xanh';
+  const nameFrags = nameToFragments(p.name);
+  const t = leaveTemplateIndex++ % 3;
+  if (t === 1) {
+    frags.push('tam-biet', ...nameFrags);
+  } else if (t === 2) {
+    frags.push(...nameFrags, 'da-roi-san');
+  } else {
+    frags.push(...nameFrags, 'da-roi-khoi-doi', teamFrag);
+  }
+  return frags;
+}
+
+let recentLeaveTimes = [];
+let lastLeaveBurstAt = 0;
+function announceLeave(p, team) {
+  if (!p.name) return;
+  const now = Date.now();
+  // v23: nhiều người rời sân cùng lúc (từ 3 lượt/5s) -> đọc 1 câu tóm tắt
+  // chung thay vì đọc từng người. Chống lặp: tối đa 1 lần/15s.
+  recentLeaveTimes.push(now);
+  recentLeaveTimes = recentLeaveTimes.filter((t) => now - t < 5000);
+  if (recentLeaveTimes.length >= 3) {
+    if (now - lastLeaveBurstAt >= 15000) {
+      lastLeaveBurstAt = now;
+      for (let i = voiceQueue.length - 1; i >= 0; i--) {
+        if (voiceQueue[i].kind === 'leave') voiceQueue.splice(i, 1);
+      }
+      enqueueVoiceFile('leave-burst', 5);
+    }
+    return;
+  }
+  const sentence = buildLeaveSentence(p, team);
+  if (sentence.length) {
+    enqueueVoiceFragments(sentence, 4, 'leave');
   }
 }
 
@@ -2694,9 +2738,24 @@ function render(s) {
   const joinedX = paintRoster('xanh', s.teams.xanh.pullers || []);
   const joinedD = paintRoster('do', s.teams.do.pullers || []);
 
+  // v23: voice vào/ra đội CHỈ khi có người THẬT SỰ đổi trạng thái — so đội
+  // của từng người với lần render trước (prevTeamOf). Bản cũ gọi
+  // announceJoin() cho MỌI người kéo ở MỖI lần render nên voice đọc lặp tên
+  // người cuối danh sách dù không ai mới vào đội.
+  const firstRender = !oldState;
+  const justReset = !!oldState && s.matchNo > (oldState.matchNo || 0)
+    && s.phase === 'idle';
+  if (justReset) {
+    // Hết trận: mọi người về khán đài — đọc 1 câu tóm tắt, không đọc từng người.
+    enqueueVoiceFile('reset-stands', 7);
+  }
+  const currentTeamOf = new Map();
+  const currentTeamPlayer = new Map();
   for (const [team, joined] of [['xanh', joinedX], ['do', joinedD]]) {
     for (const p of joined) {
       const uid = playerKey(p);
+      currentTeamOf.set(uid, team);
+      currentTeamPlayer.set(uid, p);
       if (oldSpectators.has(uid) && !spectatorKeys.has(uid)) {
         walkToTeam(p, team, oldSpectatorPositions.get(uid));
       } else {
@@ -2704,9 +2763,24 @@ function render(s) {
         element?.classList.add('joined');
         setTimeout(() => element?.classList.remove('joined'), 950);
       }
-      announceJoin(p, team);
+      // Chỉ đọc tên khi người này MỚI vào đội này (lần render trước chưa ở đây).
+      if (!firstRender && prevTeamOf.get(uid) !== team) announceJoin(p, team);
     }
   }
+  // Rời đội: lần trước còn trong đội, lần này không còn trong đội nào và
+  // cũng không còn ở khán đài (đã rời phòng / quá 3 phút không hoạt động).
+  // Lúc vừa reset hết trận thì mọi người về khán đài — đã có 1 câu tóm tắt
+  // 'reset-stands', không đọc rời từng người.
+  if (!firstRender && !justReset) {
+    for (const [uid, oldTeam] of prevTeamOf) {
+      if (!currentTeamOf.has(uid) && !spectatorKeys.has(uid)) {
+        const p = prevTeamPlayer.get(uid);
+        if (p) announceLeave(p, oldTeam);
+      }
+    }
+  }
+  prevTeamOf = currentTeamOf;
+  prevTeamPlayer = currentTeamPlayer;
   previousSpectators = new Map(spectators.map(p => [playerKey(p), p]));
 
   updateBanner();
