@@ -260,6 +260,33 @@ test('keo-co v23: demo sau khi hết trận nhập đội lại theo sóng, khô
   } finally { await stopTestServer(t); }
 });
 
+// v25: hết hiệp reset luôn — về khán đài, GIỮ tỉ số, hiệp sau demo nhập đội lại
+test('keo-co v25: hết hiệp reset về khán đài, giữ tỉ số hiệp, hiệp sau demo nhập đội lại', async () => {
+  const t = await startTestServer();
+  try {
+    const user = uniq('keo_demo25');
+    await enableDemo(t, user);
+    await setSettings(t, user, { roundsToWin: 3, roundDurationS: 8, roundBreakS: 1, winForce: 50, matchCelebrateS: 3 });
+    const start = await fetchJson(t.base, `/o/${GAME}/${user}/api/test/demo-start`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+    });
+    assert.equal(start.json.success, true);
+    // Chờ hết hiệp 1 -> sang hiệp 2: đội trống, khán đài đủ người, tỉ số giữ nguyên, vẫn trận 1.
+    let st = await waitFor(t, user, (s) => s.matchRound === 2, 120, 1000);
+    assert.equal(st.matchNo, 1, 'hết hiệp 1 vẫn là trận 1 (chưa hết trận)');
+    assert.equal(st.matchRound, 2);
+    assert.equal(st.teams.xanh.total, 0, 'hết hiệp: đội Xanh trống');
+    assert.equal(st.teams.do.total, 0, 'hết hiệp: đội Đỏ trống');
+    assert.ok(st.spectators.length >= 20, 'hết hiệp: dàn demo về khán đài');
+    assert.ok(st.wins.xanh + st.wins.do <= 1, `sau hiệp 1 tỉ số tối đa 1-0, thực tế ${st.wins.xanh}–${st.wins.do}`);
+    // Chờ dàn demo nhập đội lại theo sóng ở hiệp 2: 6 Xanh rồi 6 Đỏ.
+    st = await waitFor(t, user, (s) => s.matchRound === 2 && s.teams.xanh.total >= 6 && s.teams.do.total >= 6, 150, 1000);
+    assert.equal(st.matchRound, 2, 'vẫn đang hiệp 2 khi dàn demo nhập đội lại');
+    assert.ok(st.teams.xanh.total >= 6, `hiệp 2: đội Xanh phải có >= 6 người demo nhập lại, thực tế ${st.teams.xanh.total}`);
+    assert.ok(st.teams.do.total >= 6, `hiệp 2: đội Đỏ phải có >= 6 người demo nhập lại, thực tế ${st.teams.do.total}`);
+  } finally { await stopTestServer(t); }
+});
+
 test('keo-co v4: khán giả ở spectators, chờ ghép trận khi 1 đội, nhập đội giữa hiệp được, lastGift', async () => {
   const t = await startTestServer();
   try {

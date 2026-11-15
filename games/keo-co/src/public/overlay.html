@@ -2768,6 +2768,13 @@ function render(s) {
     // Hết trận: mọi người về khán đài — đọc 1 câu tóm tắt, không đọc từng người.
     enqueueVoiceFile('reset-stands', 7);
   }
+  // v25: hết hiệp reset luôn — hiệp mới (matchRound tăng + phase idle) thì
+  // mọi người cũng vừa về khán đài: đọc 1 câu tóm tắt 'reset-round'.
+  const justResetRound = !!oldState && s.matchRound > (oldState.matchRound || 0)
+    && s.phase === 'idle';
+  if (justResetRound) {
+    enqueueVoiceFile('reset-round', 7);
+  }
   const currentTeamOf = new Map();
   const currentTeamPlayer = new Map();
   for (const [team, joined] of [['xanh', joinedX], ['do', joinedD]]) {

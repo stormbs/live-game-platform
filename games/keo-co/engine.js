@@ -115,6 +115,7 @@ function createEngine(ctx) {
   const demoTapTotals = {};
   let demoTimer = null;
   let demoMatchNo = 0; // v23: trận demo đang chạy — đổi số là trận mới (vừa reset), dàn demo nhập đội lại từ đầu
+  let demoRoundNo = 0; // v25: hiệp demo đang chạy — đổi số là hiệp mới (vừa reset), dàn demo nhập đội lại từ đầu
   const DEMO_NAMES = ['An', 'Bình', 'Chi', 'Dũng', 'Hà', 'Khang', 'Linh', 'Minh', 'Ngọc', 'Phúc', 'Quân', 'Thảo', 'Bảo', 'Cường', 'Đạt', 'Giang', 'Hiếu', 'Khoa', 'Lan', 'Nam', 'Oanh', 'Sơn', 'Tú', 'Vân'];
   const DEMO_CHEERS = ['Cố lên!', 'Kéo mạnh lên!', 'Kéo đi mọi người ơi!', 'Đừng thua nha!', 'Mạnh nữa lên!', 'Cố lên cả đội ơi!'];
   const DEMO_GIFTS = [{ name: 'Hoa hồng', coins: 1 }, { name: 'Trà sữa', coins: 5 }, { name: 'Kính râm', coins: 10 }, { name: 'Bánh kem', coins: 20 }]; // quà demo định kỳ, tối đa 20 xu = 200 lực
@@ -313,6 +314,12 @@ function createEngine(ctx) {
         ctx.io.emit('match-win', { team: null, wins: { ...session.wins } });
       }
     } else {
+      // v25: hết hiệp reset luôn (lệnh Chủ tịch 15/11) — mọi người về khán
+      // đài, GIỮ tỉ số hiệp; hiệp sau bình luận 1/2 để vào đội lại.
+      Object.values(session.players).forEach((p) => {
+        p.team = null; p.teamJoinedAt = 0;
+      });
+      log(`Hiệp ${session.matchRound} hết — mọi người về khán đài, bình luận 1/2 để vào đội lại hiệp sau.`);
       session.phase = 'roundEnd';
       session.phaseEndsAt = Date.now() + settings.roundBreakS * 1000;
     }
@@ -533,6 +540,7 @@ function createEngine(ctx) {
     };
     session.demoActive = true;
     demoMatchNo = session.matchNo;
+    demoRoundNo = session.matchRound;
     log('🧪 Demo bắt đầu — 24 người demo vào khán đài, rồi lần lượt nhập đội kéo co.');
     const step = () => {
       if (!session.demoActive) return;
@@ -543,11 +551,20 @@ function createEngine(ctx) {
       // còn 1-2 khách trickle kéo 1v1 vô nghĩa).
       if (session.matchNo !== demoMatchNo) {
         demoMatchNo = session.matchNo;
+        demoRoundNo = session.matchRound;
         demoStage = 0;
         stageSteps = 0;
         pendingJoins = [];
         trickleLeaveAt.clear();
         log(`🧪 Trận mới #${demoMatchNo} — dàn demo nhập đội lại theo sóng.`);
+      } else if (session.matchRound !== demoRoundNo) {
+        // v25: hết hiệp reset luôn -> hiệp mới, dàn demo nhập đội lại theo sóng.
+        demoRoundNo = session.matchRound;
+        demoStage = 0;
+        stageSteps = 0;
+        pendingJoins = [];
+        trickleLeaveAt.clear();
+        log(`🧪 Hiệp mới #${demoRoundNo} (trận #${session.matchNo}) — dàn demo nhập đội lại theo sóng.`);
       }
       // Đợt 0: ở khán đài ~10s (4 bước) để thấy đám đông khán giả.
       if (demoStage === 0) {
@@ -728,7 +745,11 @@ function createEngine(ctx) {
   router.post('/api/round/reset', (req, res) => {
     session.matchRound += 1;
     if (session.matchRound > maxRounds()) { resetMatch(); }
-    else { session.phase = 'idle'; session.phaseEndsAt = 0; session.force = { xanh: 0, do: 0 }; saveSession(); broadcast(); }
+    else {
+      // v25: bỏ qua hiệp thủ công cũng reset đội như hiệp kết thúc tự nhiên.
+      Object.values(session.players).forEach((p) => { p.team = null; p.teamJoinedAt = 0; });
+      session.phase = 'idle'; session.phaseEndsAt = 0; session.force = { xanh: 0, do: 0 }; saveSession(); broadcast();
+    }
     res.json({ success: true });
   });
   router.post('/api/round/start', (req, res) => {
