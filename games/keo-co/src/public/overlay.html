@@ -1927,20 +1927,18 @@ function buildGiftSentence(gift) {
 
 let joinTemplateIndex = 0;
 function buildJoinSentence(p, team) {
-  const frags = [];
-  const teamFrag = team === 'do' ? 'team-do' : 'team-xanh';
+  // v24: [tên] + 1 clip câu-trọn-vẹn (thu cả câu một lần -> có ngữ điệu
+  // liền mạch). Bản cũ ghép 5-6 mảnh rời, mỗi từ thu riêng -> nghe máy móc.
+  const teamFrag = team === 'do' ? 'do' : 'xanh';
   const nameFrags = nameToFragments(p.name);
   const t = joinTemplateIndex++ % 4;
-  if (t === 1) {
-    frags.push(...nameFrags, 've-voi-doi', teamFrag, 'roi');
-  } else if (t === 2) {
-    frags.push('chao-mung', ...nameFrags, 'den-voi-doi', teamFrag);
-  } else if (t === 3) {
-    frags.push('doi', teamFrag, 'co-them', ...nameFrags);
-  } else {
-    frags.push(...nameFrags, 'da-vao-san', 'giup-doi', teamFrag);
-  }
-  return frags;
+  const bodies = [
+    'join-body-vao-' + teamFrag,
+    'join-body-ve-' + teamFrag,
+    'join-body-den-' + teamFrag,
+    'join-body-nhap-' + teamFrag,
+  ];
+  return [...nameFrags, bodies[t]];
 }
 
 function enqueueVoiceFragments(fragments, priority, kind) {
@@ -2000,11 +1998,14 @@ async function playFragmentList(fragments, onDone) {
   const ctx = getFragAudioCtx();
   if (!ctx) { playFragmentListLegacy(fragments, onDone); return; }
   const token = ++fragPlayToken;
+  // v24: tải song song HẾT các buffer trước khi lên lịch. Bản cũ await tuần
+  // tự trong vòng lặp: mảnh nào tải chậm thì start() trễ giờ hẹn, câu sau
+  // đè lên đuôi câu trước -> nghe vấp, ngập ngừng, không liền mạch.
+  const bufs = await Promise.all(fragments.map((n) => loadFragBuffer(n)));
+  if (token !== fragPlayToken) return;
   let t = ctx.currentTime + 0.03;
   let lastEnd = t;
-  for (const name of fragments) {
-    if (token !== fragPlayToken) return;
-    const buf = await loadFragBuffer(name);
+  for (const buf of bufs) {
     if (token !== fragPlayToken) return;
     if (!buf) continue;
     const srcNode = ctx.createBufferSource();
@@ -2030,6 +2031,25 @@ function playFragmentListLegacy(fragments, onDone) {
   };
   next();
 }
+
+// ---- v24: làm nóng cache voice ngay khi overlay tải ----
+// Câu đầu tiên cũng phát mượt, không chờ mạng tải từng mảnh.
+// (Danh sách sinh từ thư mục frag/ lúc áp bản v24: 187 mảnh.)
+const VOICE_PRELOAD = ["a", "an", "anh", "b", "bao", "ben-doi", "binh", "bui", "c", "cao", "chao-mung", "chau", "chi", "chu", "cmt-ai-cung-ne", "cmt-cam-on", "cmt-can-ban", "cmt-chay-het-minh", "cmt-chay-luon", "cmt-dinh", "cmt-dinh-cua-chop", "cmt-ganh-doi", "cmt-keo-manh", "cmt-keo-nua", "cmt-manh-qua", "cmt-tru-cot", "co-them", "cong", "cuong", "da-roi-khoi-doi", "da-roi-san", "da-vao-san", "dang", "dat", "demo", "den-voi-doi", "dien", "dinh", "do", "doan", "doi", "duc", "dung", "duong", "gia", "giang", "gift-banh-kem", "gift-bia", "gift-bong-bay", "gift-buom", "gift-ca-phe", "gift-dong-ho", "gift-du-thuyen", "gift-gau-bong", "gift-gau-truc", "gift-hoa-hong", "gift-kem", "gift-keo", "gift-kim-cuong", "gift-kinh-ram", "gift-lau-dai", "gift-may-bay", "gift-meo", "gift-nen", "gift-ngoi-sao", "gift-nhan", "gift-phao-hoa", "gift-rong", "gift-su-tu", "gift-ten-lua", "gift-tho", "gift-tiktok", "gift-tra-sua", "gift-trai-tim", "gift-vuong-mien", "gift-xe-hoi", "giup-doi", "ha", "hai", "hieu", "ho", "hoa", "hoang", "hong", "hung", "huong", "huu", "huy", "huynh", "join-body-den-do", "join-body-den-xanh", "join-body-nhap-do", "join-body-nhap-xanh", "join-body-vao-do", "join-body-vao-xanh", "join-body-ve-do", "join-body-ve-xanh", "khach", "khang", "khanh", "khoa", "kien", "lam", "lan", "le", "leave-body-roi-do", "leave-body-roi-xanh", "linh", "loc", "long", "luc-keo", "luc-keo-cong", "luong", "luu", "ly", "mai", "minh", "mot-ban", "nam", "nga", "nghia", "ngo", "ngoc", "nguyen", "nhung", "num-ba", "num-bay", "num-bon", "num-chin", "num-hai", "num-lam", "num-le", "num-mot", "num-mot2", "num-muoi", "num-muoi-tens", "num-nam", "num-nghin", "num-sau", "num-tam", "num-tram", "oanh", "pham", "phan", "phong", "phuc", "phuong", "qua", "quach", "quan", "quang", "quoc", "roi", "son", "ta", "tai", "tam", "tam-biet", "team-do", "team-xanh", "thai", "thang", "thanh", "thao", "thi", "thu", "tien", "toan", "tran", "trang", "trinh", "trung", "truong", "tu", "tuan", "tung", "van", "van2", "ve-voi-doi", "viet", "vinh", "vo", "vu", "vua-gui", "vua-tang", "xuan", "yen"];
+function preloadVoiceBuffers() {
+  if (!window.AudioContext && !window.webkitAudioContext) return;
+  const queue = VOICE_PRELOAD.slice();
+  let active = 0;
+  const pump = () => {
+    while (active < 4 && queue.length) {
+      const name = queue.shift();
+      active++;
+      loadFragBuffer(name).finally(() => { active--; pump(); });
+    }
+  };
+  pump();
+}
+if (voiceOn) preloadVoiceBuffers();
 
 let recentJoinTimes = [];
 let lastJoinBurstAt = 0;
@@ -2063,18 +2083,17 @@ function announceJoin(p, team) {
 // ---- v23: voice RỜI ĐỘI (trước đây không có — người rời sân biến mất lặng) ----
 let leaveTemplateIndex = 0;
 function buildLeaveSentence(p, team) {
-  const frags = [];
-  const teamFrag = team === 'do' ? 'team-do' : 'team-xanh';
+  // v24: [tên] + 1 clip câu-trọn-vẹn (như join). Mẫu 'Tạm biệt' giữ nguyên:
+  // 'Tạm biệt' là 1 từ đứng riêng nên không cần clip câu.
+  const teamFrag = team === 'do' ? 'do' : 'xanh';
   const nameFrags = nameToFragments(p.name);
   const t = leaveTemplateIndex++ % 3;
   if (t === 1) {
-    frags.push('tam-biet', ...nameFrags);
+    return ['tam-biet', ...nameFrags];
   } else if (t === 2) {
-    frags.push(...nameFrags, 'da-roi-san');
-  } else {
-    frags.push(...nameFrags, 'da-roi-khoi-doi', teamFrag);
+    return [...nameFrags, 'da-roi-san'];
   }
-  return frags;
+  return [...nameFrags, 'leave-body-roi-' + teamFrag];
 }
 
 let recentLeaveTimes = [];
