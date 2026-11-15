@@ -58,18 +58,21 @@ button{font:inherit}
   text-align:center;font-size:21px;font-weight:800
 }
 .demo-note.on{display:block}
-/* v27: nhắc bật tiếng khi trình duyệt chặn autoplay — hiện tới khi user
-   bấm 1 lần (hoặc khi phát thử thành công, vd. OBS cho autoplay thẳng). */
+/* v28: hộp nhắc bật tiếng dời lên mép trên sân (trên nhãn đấu trường),
+   gọn lại 1 dòng — vị trí cũ (giữa sân, top:1080px) đè lên hàng tên trên
+   cùng của người kéo. Chỗ mới chỉ đè lên dải chữ trang trí, không bao giờ
+   chạm tên người kéo hay banner vào hiệp. */
 #sound-prompt{
-  display:none;position:absolute;top:1080px;left:50%;transform:translateX(-50%);
-  z-index:60;padding:16px 26px;border:2px solid #ffdf84;border-radius:18px;
+  display:none;position:absolute;top:704px;left:50%;transform:translateX(-50%);
+  z-index:60;padding:8px 22px;border:2px solid #ffdf84;border-radius:999px;
   background:#12283df5;color:#ffe9b0;text-align:center;cursor:pointer;
   box-shadow:0 6px 24px #000a,0 0 30px #ffdf8455;
-  animation:sound-pulse 1.6s ease-in-out infinite;pointer-events:auto
+  animation:sound-pulse 1.6s ease-in-out infinite;pointer-events:auto;
+  white-space:nowrap
 }
 #sound-prompt.on{display:block}
-#sound-prompt b{display:block;font-size:26px;font-weight:950;line-height:1.2}
-#sound-prompt small{display:block;margin-top:4px;font-size:18px;color:#cfe6f5}
+#sound-prompt b{display:inline;font-size:22px;font-weight:950;line-height:1.2}
+#sound-prompt small{display:inline;margin-left:10px;font-size:16px;color:#cfe6f5}
 @keyframes sound-pulse{
   0%,100%{box-shadow:0 6px 24px #000a,0 0 18px #ffdf8433}
   50%{box-shadow:0 6px 24px #000a,0 0 44px #ffdf84aa}
@@ -210,7 +213,7 @@ h1.ui-title{
   position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none
 }
 .arena-label{
-  position:absolute;top:15px;left:50%;transform:translateX(-50%);
+  position:absolute;top:8px;left:50%;transform:translateX(-50%);
   z-index:2;color:#d7edf9;background:#081c30c9;border:1px solid #9acde93b;
   border-radius:100px;padding:6px 23px;white-space:nowrap;
   font-size:17px;letter-spacing:2px;font-weight:900
@@ -865,8 +868,13 @@ h1.ui-title{
   color:#b0c9dd;font-size:20px
 }
 .ui-statusbar .big{font-size:25px;font-weight:900;color:#fff0c8}
+/* v28: banner dời xuống dưới khán đài (top:1180px) — vị trí cũ (943px) đè
+   lên nhãn ĐÍCH XANH/ĐÍCH ĐỎ (y~980) và đè lên hàng 3 khán đài lúc vinh
+   danh. Chỗ mới: dưới hàng 4 khán đài (~1150), trên dây kéo (1249);
+   banner chỉ hiện khi không đá (vinh danh / thắng hiệp / chờ người),
+   lúc đó sân trống nên không che gì. */
 .banner{
-  position:absolute;top:943px;left:64px;width:952px;height:72px;
+  position:absolute;top:1180px;left:64px;width:952px;height:72px;
   z-index:25;display:none;padding:9px 18px;border:1px solid #ffdf91;
   border-radius:15px;text-align:center;
   background:linear-gradient(120deg,#253f53f5,#102539f5);
@@ -885,6 +893,12 @@ h1.ui-title{
 }
 .banner.waiting{border-color:#9fdbff}
 .banner.waiting h2{color:#d1efff}
+/* v28: lúc vinh danh, khán đài có tới 4 hàng (48 người) — tiêu đề đội và
+   hộp kết quả quà phải dời khỏi vùng khán đài để đủ 4 hàng đều thấy rõ.
+   Tiêu đề đội ẩn hẳn (banner đã nêu đội thắng); hộp quà dời xuống góc
+   trái mặt đất (tránh trọng tài ở giữa, tránh dây kéo). */
+#scaler.celebrating .team-side h2{display:none}
+#scaler.celebrating .gift-result{left:25px;width:420px;top:1260px}
 #motion-layer,#gift-burst{
   position:absolute;inset:0;z-index:45;pointer-events:none;overflow:hidden
 }
@@ -1164,6 +1178,7 @@ let lastTickSecond = null;
 let feedbackTimer = null;
 let lastFeedbackAt = 0;
 let warningTimer = null;
+let drumFlagWarning = false;  // v28: dòng "CỜ GẦN ĐÍCH" đang hiện — tắt ngay khi cờ rời vùng gần đích
 let ropeTimer = null;
 let standsTimer = null;
 let previousSpectators = new Map();
@@ -1512,18 +1527,28 @@ function paintSpectators(people) {
 
     const appearance = appearanceFor(p);
     const body = element.querySelector('.spectator-body');
-    // v27: người kéo về khán đài ăn mừng (phase matchEnd, p.team còn giữ)
-    // thì giữ màu áo đội; khán giả thường (chưa chọn đội) vẫn quay màu.
+    // v28: áo + quần + viền avatar lấy theo team THẬT (p.team) — Xanh
+    // #1E90FF, Đỏ #E63946 (qua teamColor() để khớp màu dashboard nếu streamer
+    // đổi). Người chưa vào đội nào: lúc vinh danh mặc màu trung tính cho
+    // khỏi lẫn với 2 đội; lúc chơi thường khán giả vẫn quay màu cho sinh động.
+    const isCelebrating = lastState?.phase === 'matchEnd';
     const shirtColor = p.team === 'xanh' ? teamColor('xanh')
       : p.team === 'do' ? teamColor('do')
+      : isCelebrating ? '#a5c5da'
       : ['#1e90ff','#e63946','#f2b134','#7b61ff','#2ca58d'][index % 5];
+    const pantsColor = p.team === 'xanh' ? '#1767b5'
+      : p.team === 'do' ? '#ad2636'
+      : isCelebrating ? '#5a6b7a' : appearance.pants;
+    const ringColor = p.team === 'xanh' ? teamColor('xanh')
+      : p.team === 'do' ? teamColor('do') : '#9ed4e8';
 
     element.style.order = index;
     element.style.setProperty('--delay', '-' + (index * .11) + 's');
     element.style.setProperty('--skin', appearance.skin);
     element.style.setProperty('--hair', appearance.hair);
     element.style.setProperty('--shirt', shirtColor);
-    element.style.setProperty('--pants', appearance.pants);
+    element.style.setProperty('--pants', pantsColor);
+    element.style.setProperty('--team-color', ringColor);
 
     element.title = playerName(p);
     element.querySelector('.spectator-name').textContent = playerName(p);
@@ -1531,7 +1556,7 @@ function paintSpectators(people) {
 
     body.style.setProperty('--skin', appearance.skin);
     body.style.setProperty('--shirt', shirtColor);
-    body.style.setProperty('--pants', appearance.pants);
+    body.style.setProperty('--pants', pantsColor);
 
     if (element.parentNode !== box) {
       box.appendChild(element);
@@ -2271,12 +2296,14 @@ function cheerSound() {
   });
   fxTone(ctx, 1318, .36, .4, .11);
 }
-function flashDrum(text) {
+function flashDrum(text, isFlagWarning) {
   const element = $('drum-flash');
   element.textContent = text || 'GIẰNG CO! CÙNG KÉO NÀO!';
   element.classList.remove('on');
   void element.offsetWidth;
   element.classList.add('on');
+  // v28: chỉ dòng cờ gần đích mới bị theo dõi để tắt khi cờ quay về giữa.
+  drumFlagWarning = !!isFlagWarning;
 }
 function drumSound() {
   if (Date.now() - lastDrumAt < 3000) return;
@@ -2863,9 +2890,15 @@ function render(s) {
   // khán đài ăn mừng. Engine vẫn giữ team của họ tới khi resetMatch() chạy
   // sau 20s nên overlay tự gộp họ vào danh sách khán đài để hiển thị
   // (tối đa 48 người = 4 hàng khán đài, chưa chạm tới dây).
+  // v28: statePayload của engine KHÔNG kèm trường team trong pullers (chỉ
+  // có uid/name/avatarUrl/force) nên phải gắn team ở đây — không thì
+  // paintSpectators rơi vào bảng màu luân phiên theo vị trí (Demo An đội
+  // Xanh mặc áo tím/đỏ là vì vậy, không phải do paintSpectators sai).
   const celebrating = s.phase === 'matchEnd';
+  scaler.classList.toggle('celebrating', celebrating);
   const pullerCelebrants = celebrating
-    ? [...(s.teams.xanh.pullers || []), ...(s.teams.do.pullers || [])]
+    ? [...(s.teams.xanh.pullers || []).map(p => ({ ...p, team: 'xanh' })),
+       ...(s.teams.do.pullers || []).map(p => ({ ...p, team: 'do' }))]
     : [];
   const seenSpectatorUids = new Set(spectators.map(playerKey));
   const displaySpectators = celebrating
@@ -3065,7 +3098,7 @@ socket.on('flag-warning', d => {
     teamColor(d.team),
     true
   );
-  flashDrum('⚑ CỜ GẦN ĐÍCH! TĂNG LỰC KÉO NÀO!');
+  flashDrum('⚑ CỜ GẦN ĐÍCH! TĂNG LỰC KÉO NÀO!', true);
 });
 
 /* Giữ luồng demo của v3; engine tự tạo toàn bộ người và sự kiện demo. */
@@ -3131,6 +3164,15 @@ setInterval(() => {
   if (!lastState) return;
   updateTimer();
   updateBanner();
+  // v28: dòng "CỜ GẦN ĐÍCH" chỉ được hiện khi cờ thật sự gần đích.
+  // Engine chỉ phát flag-warning 1 lần khi |cờ| ≥ 75%, nhưng cờ demo đổi
+  // nhanh nên chữ 1.5s còn hiện trong khi cờ đã quay về 0–10% — thấy chữ
+  // thì kiểm tra lại vị trí cờ thật, rời vùng gần đích (< 70, chừa biên
+  // chống nhấp nháy) thì tắt ngay.
+  if (drumFlagWarning && Math.abs(number(lastState.flagPct)) < 70) {
+    $('drum-flash').classList.remove('on');
+    drumFlagWarning = false;
+  }
   for (const team of ['xanh','do']) {
     paintRoster(team, lastState.teams[team].pullers || []);
   }
