@@ -47,7 +47,7 @@ function createEngine(ctx) {
     xanh: { id: 'xanh', name: 'Xanh', color: '#1e90ff', emoji: '🔵' },
     do: { id: 'do', name: 'Đỏ', color: '#e63946', emoji: '🔴' },
   };
-  const MAX_PULLERS = 24;
+  // 17/11: bỏ trần số người kéo/đội — hiện hết, thu nhỏ dần (Chủ tịch chốt 17/11 18:22).
 
   const defaultSettings = {
     tapForce: 0.1,        // lực / 1 tim (delta) — 10 tim = 1 lực
@@ -179,10 +179,10 @@ function createEngine(ctx) {
   function statePayload() {
     const mkTeam = (team) => {
       const all = teamPlayers(team);
-      const pullers = all.slice(0, MAX_PULLERS).map((p) => ({
+      const pullers = all.map((p) => ({
         uid: p.uid, name: p.name, avatarUrl: p.avatarUrl || null, force: p.forceRound,
       }));
-      return { force: session.force[team], pullers, bench: Math.max(0, all.length - MAX_PULLERS), total: all.length };
+      return { force: session.force[team], pullers, bench: 0, total: all.length };
     };
     const top = onlinePlayers()
       .filter((p) => p.team)
